@@ -1,15 +1,17 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "scripts": {
     "smoke:permission-policy": "node smoke/dev-agent-permission-policy-smoke.js",
     "smoke:docs": "node smoke/dev-agent-docs-smoke.js",
     "smoke:agent-interface": "node smoke/dev-agent-interface-smoke.js",
     "smoke:agent-provider": "node smoke/dev-agent-provider-smoke.js",
-    "verify": "npm run smoke:permission-policy && npm run smoke:docs && npm run smoke:agent-interface && npm run smoke:agent-provider",
+    "smoke:agent-live-gate": "node smoke/dev-agent-live-gate-smoke.js",
+    "verify": "npm run smoke:permission-policy && npm run smoke:docs && npm run smoke:agent-interface && npm run smoke:agent-provider && npm run smoke:agent-live-gate",
     "agent:sample": "node tools/agent-task-packet-sample.js",
     "agent:dry-run": "node tools/agent-router-dry-run.js",
-    "agent:local": "node tools/agent-runner-local.js --provider=mock"
+    "agent:local": "node tools/agent-runner-local.js --provider=mock",
+    "agent:live-gate": "node tools/agent-live-gate-check.js"
   }
 }

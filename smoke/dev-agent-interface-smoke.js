@@ -86,9 +86,9 @@ checkKeyword("gemini-packet-012", FILES.geminiPacket012, "Secret Manager");
 console.log("--- provider keyword checks ---");
 checkKeyword("mock-provider", FILES.mockProvider, "mock");
 checkKeyword("mock-provider", FILES.mockProvider, "run");
-checkKeyword("gpt-provider",  FILES.gptProvider,  "LIVE_CALL_ENABLED");
+checkKeyword("gpt-provider",  FILES.gptProvider,  "provider-config");
 checkKeyword("gpt-provider",  FILES.gptProvider,  "disabled");
-checkKeyword("gemini-provider", FILES.geminiProvider, "LIVE_CALL_ENABLED");
+checkKeyword("gemini-provider", FILES.geminiProvider, "provider-config");
 checkKeyword("gemini-provider", FILES.geminiProvider, "disabled");
 
 console.log(`===== result: ${passed} passed / ${failed} failed =====`);

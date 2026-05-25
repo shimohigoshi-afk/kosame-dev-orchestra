@@ -3,6 +3,7 @@
 const mockProvider = require("../providers/mock-provider");
 const gptProvider = require("../providers/gpt-provider");
 const geminiProvider = require("../providers/gemini-provider");
+const { getConfig } = require("../providers/provider-config");
 
 const providers = {
   mock: mockProvider,
@@ -36,6 +37,17 @@ async function main() {
   console.log(`===== agent-runner-local [provider=${providerName}] =====`);
   console.log("task packet:", JSON.stringify(taskPacket, null, 2));
   console.log("");
+
+  if (providerName === "gpt" || providerName === "gemini") {
+    const config = getConfig();
+    console.log("live gate:", {
+      liveCallsRequested: config.liveCallsRequested,
+      openaiKeyPresent: config.openaiKeyPresent,
+      geminiKeyPresent: config.geminiKeyPresent,
+      liveCallsActuallyEnabled: config.liveCallsActuallyEnabled,
+    });
+    console.log("");
+  }
 
   const result = await provider.run(taskPacket);
   console.log("result:", JSON.stringify(result, null, 2));

@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "scripts": {
     "smoke:permission-policy": "node smoke/dev-agent-permission-policy-smoke.js",
@@ -9,11 +9,13 @@
     "smoke:agent-provider": "node smoke/dev-agent-provider-smoke.js",
     "smoke:agent-live-gate": "node smoke/dev-agent-live-gate-smoke.js",
     "smoke:agent-live-call": "node smoke/dev-agent-live-call-implementation-smoke.js",
-    "verify": "npm run smoke:permission-policy && npm run smoke:docs && npm run smoke:agent-interface && npm run smoke:agent-provider && npm run smoke:agent-live-gate && npm run smoke:agent-live-call",
+    "smoke:secret-injection": "node smoke/dev-agent-secret-injection-smoke.js",
+    "verify": "npm run smoke:permission-policy && npm run smoke:docs && npm run smoke:agent-interface && npm run smoke:agent-provider && npm run smoke:agent-live-gate && npm run smoke:agent-live-call && npm run smoke:secret-injection",
     "agent:sample": "node tools/agent-task-packet-sample.js",
     "agent:dry-run": "node tools/agent-router-dry-run.js",
     "agent:local": "node tools/agent-runner-local.js --provider=mock",
     "agent:live-gate": "node tools/agent-live-gate-check.js",
-    "agent:one-shot": "node tools/agent-live-call-one-shot.js"
+    "agent:one-shot": "node tools/agent-live-call-one-shot.js",
+    "agent:one-shot-preflight": "node tools/agent-one-shot-preflight.js"
   }
 }

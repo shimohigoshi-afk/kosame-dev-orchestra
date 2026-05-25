@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "smoke:permission-policy": "node smoke/dev-agent-permission-policy-smoke.js",
-    "verify": "npm run smoke:permission-policy"
+    "smoke:docs": "node smoke/dev-agent-docs-smoke.js",
+    "verify": "npm run smoke:permission-policy && npm run smoke:docs"
   }
 }

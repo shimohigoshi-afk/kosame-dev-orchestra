@@ -16,8 +16,13 @@ function getProviderName() {
   return arg ? arg.replace("--provider=", "") : "mock";
 }
 
+function getLiveFlag() {
+  return process.argv.includes("--live");
+}
+
 const providerName = getProviderName();
 const provider = providers[providerName];
+const liveFlag = getLiveFlag();
 
 if (!provider) {
   console.error(
@@ -41,21 +46,29 @@ async function main() {
   if (providerName === "gpt" || providerName === "gemini") {
     const config = getConfig();
     console.log("live gate:", {
+      liveFlag,
       liveCallsRequested: config.liveCallsRequested,
+      oneShotAllowed: config.oneShotAllowed,
       openaiKeyPresent: config.openaiKeyPresent,
       geminiKeyPresent: config.geminiKeyPresent,
       liveCallsActuallyEnabled: config.liveCallsActuallyEnabled,
+      openaiLiveEnabled: config.openaiLiveEnabled,
+      geminiLiveEnabled: config.geminiLiveEnabled,
     });
+    if (!liveFlag) {
+      console.log("INFO: --live not specified — dry-run mode (no external API call)");
+    }
     console.log("");
   }
 
-  const result = await provider.run(taskPacket);
+  const options = { live: liveFlag };
+  const result = await provider.run(taskPacket, options);
   console.log("result:", JSON.stringify(result, null, 2));
   console.log("===== end =====");
 
   if (!result.success) {
     console.log(
-      `INFO: provider="${providerName}" is not live — dry-run mode. This is expected.`
+      `INFO: provider="${providerName}" dryRun=${result.dryRun} — no external API called.`
     );
   }
 }

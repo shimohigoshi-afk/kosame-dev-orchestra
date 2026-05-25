@@ -1,32 +1,79 @@
 "use strict";
 
-// Gemini provider — live API call is disabled until Human Approval.
-// See docs/ai-dev-team/agent-live-call-gate-v0.1.4.md for the activation procedure.
+// Gemini provider — live API call disabled by default; requires --live flag AND all gate conditions met.
+// See docs/ai-dev-team/agent-live-call-implementation-v0.1.5.md for details.
+// APIキー値は絶対に出力しない。
 
 const { getConfig } = require("./provider-config");
 
-async function run(taskPacket) {
+async function run(taskPacket, options = {}) {
   const config = getConfig();
+  const shouldLive = options.live === true && config.geminiLiveEnabled;
 
-  if (!config.liveCallsActuallyEnabled) {
+  if (!shouldLive) {
     const gate = [
-      `liveCallsRequested=${config.liveCallsRequested}`,
+      `optionsLive=${options.live === true}`,
+      `liveCallsActuallyEnabled=${config.liveCallsActuallyEnabled}`,
       `geminiKeyPresent=${config.geminiKeyPresent}`,
-      `liveCallsActuallyEnabled=false`,
+      `geminiLiveEnabled=${config.geminiLiveEnabled}`,
     ].join(" ");
     return {
       success: false,
       provider: "gemini",
       response: null,
-      error: `gemini provider: live call disabled — ${config.reason} [${gate}]`,
+      error: `gemini provider: dry-run — ${config.reason} [${gate}]`,
       dryRun: true,
     };
   }
 
-  // TODO(v0.1.5): implement Gemini API call here after Human Approval.
-  // const { GoogleGenerativeAI } = require("@google/generative-ai");
-  // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  throw new Error("gemini provider: live path not yet implemented");
+  // Live path — only reached when --live flag and gate conditions are all met.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: taskPacket.input }] }],
+        generationConfig: { maxOutputTokens: config.maxTokens },
+      }),
+    });
+
+    clearTimeout(timer);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        provider: "gemini",
+        response: null,
+        error: `gemini provider: API error ${res.status} ${res.statusText}`,
+        dryRun: false,
+      };
+    }
+
+    const data = await res.json();
+    const text =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "(no content)";
+    return {
+      success: true,
+      provider: "gemini",
+      response: text.slice(0, 500),
+      error: null,
+      dryRun: false,
+    };
+  } catch (e) {
+    clearTimeout(timer);
+    return {
+      success: false,
+      provider: "gemini",
+      response: null,
+      error: `gemini provider: fetch error — ${e.message}`,
+      dryRun: false,
+    };
+  }
 }
 
 module.exports = { name: "gemini", run };

@@ -1,0 +1,9 @@
+{
+  "name": "kosame-dev-orchestra",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "smoke:permission-policy": "node smoke/dev-agent-permission-policy-smoke.js",
+    "verify": "npm run smoke:permission-policy"
+  }
+}

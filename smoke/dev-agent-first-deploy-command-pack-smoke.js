@@ -73,6 +73,9 @@ async function main() {
       else fail("generateFirstDeployCommandPack: returns object");
       if (pack.dryRun === true) ok("generateFirstDeployCommandPack dryRun: true");
       else fail("generateFirstDeployCommandPack dryRun: true");
+      if (typeof pack.imageTagConvention === "string" && pack.imageTagConvention.length > 0)
+        ok("generateFirstDeployCommandPack imageTagConvention: non-empty string");
+      else fail("generateFirstDeployCommandPack imageTagConvention: non-empty string");
 
       // commands are string arrays
       const deployCommands = pack.cloudRunDeploy && pack.cloudRunDeploy.commands;
@@ -119,7 +122,7 @@ async function main() {
       else fail("generateCloudRunDeployCommand: uses passed serviceName");
     } catch (e) { fail("generateCloudRunDeployCommand: executes without throw", e.message); }
 
-    // generateHumanExecutionOrder has step-by-step commands
+    // generateHumanExecutionOrder has step-by-step commands and preDeployFinalCheck
     try {
       const order = deployPackMod.generateHumanExecutionOrder();
       if (order && Array.isArray(order.steps))
@@ -129,6 +132,12 @@ async function main() {
       if (allCmds.every(c => typeof c === "string"))
         ok("generateHumanExecutionOrder: all step commands are strings");
       else fail("generateHumanExecutionOrder: all step commands are strings");
+      if (order.preDeployFinalCheck && typeof order.preDeployFinalCheck === "object")
+        ok("generateHumanExecutionOrder: preDeployFinalCheck is object");
+      else fail("generateHumanExecutionOrder: preDeployFinalCheck is object");
+      if (order.preDeployFinalCheck && Array.isArray(order.preDeployFinalCheck.commands))
+        ok("generateHumanExecutionOrder: preDeployFinalCheck.commands is array");
+      else fail("generateHumanExecutionOrder: preDeployFinalCheck.commands is array");
     } catch (e) { fail("generateHumanExecutionOrder: executes without throw", e.message); }
   }
 
@@ -155,6 +164,15 @@ async function main() {
       else fail("generateFirstDeployResultTemplate dryRun: true");
       if (tmpl.record && typeof tmpl.record === "object") ok("generateFirstDeployResultTemplate record: object");
       else fail("generateFirstDeployResultTemplate record: object");
+      if (typeof tmpl.record.n8nConnectionResult === "string")
+        ok("generateFirstDeployResultTemplate record.n8nConnectionResult: string");
+      else fail("generateFirstDeployResultTemplate record.n8nConnectionResult: string");
+      if (typeof tmpl.record.nextVersionCandidate === "string")
+        ok("generateFirstDeployResultTemplate record.nextVersionCandidate: string");
+      else fail("generateFirstDeployResultTemplate record.nextVersionCandidate: string");
+      if (typeof tmpl.record.troubleshootingNotes === "string")
+        ok("generateFirstDeployResultTemplate record.troubleshootingNotes: string");
+      else fail("generateFirstDeployResultTemplate record.troubleshootingNotes: string");
     } catch (e) { fail("generateFirstDeployResultTemplate: executes without throw", e.message); }
   }
 

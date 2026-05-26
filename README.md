@@ -352,6 +352,32 @@ node tools/pm-agent-first-deploy-command-pack.js  # deploy コマンド確認
 
 ---
 
+## v0.4.1 / v0.4.2 Post-Deploy & First Connection Pack
+
+| ファイル | 役割 | 状態 |
+|---|---|---|
+| `tools/pm-agent-cloud-run-url-smoke-pack.js` | Cloud Run URL smoke コマンド文字列生成 | 実装済み（v0.4.1） |
+| `tools/pm-agent-n8n-first-connection-pack.js` | n8n 初回接続設定・結果テンプレート生成 | 実装済み（v0.4.2） |
+| `tools/pm-agent-secret-manager-readiness-pack.js` | Secret Manager 準備チェックリスト生成 | 実装済み（v0.4.2） |
+| `tools/pm-agent-production-cutover-pack.js` | 本番移行 Go/No-Go チェックリスト・rollback 計画生成 | 実装済み（v0.4.2） |
+| `docs/ai-dev-team/cloud-run-url-smoke-record-v0.4.1.md` | Cloud Run URL smoke 記録テンプレート | 実装済み（v0.4.1） |
+| `docs/ai-dev-team/cloud-run-first-deploy-troubleshooting-v0.4.1.md` | 初回 deploy トラブルシューティング | 実装済み（v0.4.1） |
+| `docs/ai-dev-team/cloud-run-n8n-first-connection-v0.4.2.md` | n8n 初回接続手順 | 実装済み（v0.4.2） |
+| `docs/ai-dev-team/webhook-first-connection-result-record-v0.4.2.md` | webhook / n8n 接続結果記録 | 実装済み（v0.4.2） |
+| `docs/ai-dev-team/cloud-run-secret-manager-readiness-v0.4.2.md` | Secret Manager 準備ガイド | 実装済み（v0.4.2） |
+| `docs/ai-dev-team/cloud-run-production-cutover-notes-v0.4.2.md` | 本番移行メモ・monitoring 計画 | 実装済み（v0.4.2） |
+
+**v0.4.1 / v0.4.2 は deploy 後の確認・接続・監視準備。全操作は Human Approval 後にじゅんやさんが実施する。**
+
+新規 npm scripts（v0.4.1 / v0.4.2）:
+- `npm run pm-agent:cloud-run-url-smoke-pack` — Cloud Run URL smoke コマンド生成
+- `npm run pm-agent:n8n-first-connection-pack` — n8n 接続設定生成
+- `npm run pm-agent:secret-manager-readiness-pack` — Secret Manager readiness チェック生成
+- `npm run pm-agent:production-cutover-pack` — 本番移行 pack 生成
+- `npm run smoke:cloud-run-url-smoke-pack / n8n-first-connection-pack / secret-manager-readiness-pack / production-cutover-pack`
+
+---
+
 ## Human Approval が必要な操作
 
 以下は必ず **じゅんやさんの承認** を得てから実行する：

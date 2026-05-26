@@ -95,3 +95,9 @@ deploy 実行後は `node tools/pm-agent-post-deploy-smoke.js <SERVICE_URL>` で
 - `docs/ai-dev-team/first-cloud-run-deploy-execution-v0.4.0.md` — v0.4.0 deploy 実行手順
 - `docs/ai-dev-team/cloud-run-runtime-ops-pack-v0.3.0.md` — runtime 運用ガイド
 - `docs/ai-dev-team/cloud-run-incident-response-v0.3.0.md` — インシデント対応ガイド
+- `docs/ai-dev-team/cloud-run-url-smoke-record-v0.4.1.md` — deploy 後 URL smoke 記録
+- `docs/ai-dev-team/cloud-run-first-deploy-troubleshooting-v0.4.1.md` — トラブルシューティング
+- `docs/ai-dev-team/cloud-run-n8n-first-connection-v0.4.2.md` — n8n 初回接続
+- `docs/ai-dev-team/webhook-first-connection-result-record-v0.4.2.md` — 接続結果記録
+- `docs/ai-dev-team/cloud-run-secret-manager-readiness-v0.4.2.md` — Secret Manager 準備
+- `docs/ai-dev-team/cloud-run-production-cutover-notes-v0.4.2.md` — 本番移行メモ

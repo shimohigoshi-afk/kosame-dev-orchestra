@@ -147,6 +147,14 @@ function generateHumanExecutionOrder(options) {
     description: "Human Execution Order — v0.4.0 First Cloud Run Deploy",
     note: "じゅんやさんが Cloud Shell で順番通りに実行してください。このツールはコマンドを生成するだけで実行しません。",
     approver: "じゅんやさん",
+    preDeployFinalCheck: {
+      action: "最終 readiness 確認（deploy 前に必ず実施）",
+      commands: [
+        "npm run verify",
+        "npm run pm-agent:deploy-readiness-final-check",
+      ],
+      successCriteria: "全 smoke PASS / readyForHumanDeploy: true",
+    },
     steps: [
       {
         step: 1,
@@ -211,6 +219,7 @@ function generateFirstDeployCommandPack(options) {
     generatedAt: new Date().toISOString(),
     generationPolicy: "Generates command strings only. Does not execute shell commands. No process spawning.",
     note: "全コマンドは文字列生成のみ。実行はじゅんやさんが Cloud Shell で行う。AIは実行しない。",
+    imageTagConvention: "commit hash 推奨 (例: v0.4.0-abc1234)。VERSION_PLACEHOLDER を実値に置き換えてから実行する。",
     cloudBuildSubmit: generateCloudBuildSubmitCommand(opts),
     cloudRunDeploy: generateCloudRunDeployCommand(opts),
     postDeploySmoke: generatePostDeploySmokeCommand(opts),

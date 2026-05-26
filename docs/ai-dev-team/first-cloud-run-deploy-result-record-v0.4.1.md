@@ -86,12 +86,38 @@ PENDING (none / 問題があれば記録)
 
 ---
 
+## n8n 接続結果（v0.4.2）
+
+| 項目 | 値 |
+|---|---|
+| n8n 接続テスト | PENDING (not yet tested / pass / fail) |
+| 接続日時 | YYYY-MM-DD HH:MM:SS |
+| 詳細 | `docs/ai-dev-team/webhook-first-connection-result-record-v0.4.2.md` 参照 |
+
+---
+
+## 次バージョン候補
+
+- v0.5.0 候補: `dryRunOnly: false` 移行（実際の AI ルーティング実行）
+- v0.5.0 候補: Secret Manager 本格接続（OPENAI_API_KEY / GEMINI_API_KEY）
+- v0.5.0 候補: Cloud Run Invoker 認証追加（n8n → Cloud Run の認証強化）
+
+---
+
+## トラブルシューティングメモ
+
+PENDING (none / 問題発生時の対応を記録)
+
+詳細: `docs/ai-dev-team/cloud-run-first-deploy-troubleshooting-v0.4.1.md` 参照
+
+---
+
 ## 次アクション
 
 PENDING (v0.4.1 記録完了後の次ステップを記録)
 
 候補:
-- n8n 接続テスト（Human Approval 後）
+- n8n 接続テスト（Human Approval 後）→ `docs/ai-dev-team/cloud-run-n8n-first-connection-v0.4.2.md`
 - `dryRunOnly: false` 移行設計（v0.5.0 候補）
 - Secret Manager 本格接続（v0.5.0 候補）
 - 認証追加（Cloud Run Invoker）

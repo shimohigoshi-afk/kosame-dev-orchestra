@@ -148,3 +148,16 @@ node tools/pm-agent-first-deploy-result-template.js
 - `docs/ai-dev-team/cloud-run-first-deploy-approval-v0.3.0.md` — 承認チェックリスト
 - `docs/ai-dev-team/cloud-run-post-deploy-verification-v0.3.0.md` — deploy 後確認
 - `docs/ai-dev-team/cloud-run-incident-response-v0.3.0.md` — 障害対応
+
+---
+
+## v0.4.1 / v0.4.2 次ステップ
+
+deploy 完了後は以下のドキュメントに進む:
+
+- `docs/ai-dev-team/first-cloud-run-deploy-result-record-v0.4.1.md` — v0.4.0 deploy 結果記録
+- `docs/ai-dev-team/cloud-run-url-smoke-record-v0.4.1.md` — Cloud Run URL smoke 記録
+- `docs/ai-dev-team/cloud-run-first-deploy-troubleshooting-v0.4.1.md` — トラブルシューティング
+- `docs/ai-dev-team/cloud-run-n8n-first-connection-v0.4.2.md` — n8n 初回接続
+- `docs/ai-dev-team/cloud-run-secret-manager-readiness-v0.4.2.md` — Secret Manager 準備
+- `docs/ai-dev-team/cloud-run-production-cutover-notes-v0.4.2.md` — 本番移行メモ

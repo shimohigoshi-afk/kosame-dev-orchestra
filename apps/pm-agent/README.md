@@ -187,8 +187,37 @@ npm run smoke:cloud-run-launch-pack-max # Launch Pack 全体 smoke
 
 ---
 
+## v0.4.1 / v0.4.2 Post-Deploy & First Connection Pack
+
+deploy 後の URL 確認・n8n 接続・Secret Manager 準備・本番移行用ツール群。
+
+| ツール | 役割 |
+|---|---|
+| `tools/pm-agent-cloud-run-url-smoke-pack.js` | Cloud Run URL smoke コマンド文字列生成（実行しない） |
+| `tools/pm-agent-n8n-first-connection-pack.js` | n8n 接続設定・結果テンプレート生成（接続しない） |
+| `tools/pm-agent-secret-manager-readiness-pack.js` | Secret Manager readiness チェックリスト生成（値アクセスなし） |
+| `tools/pm-agent-production-cutover-pack.js` | Go/No-Go チェックリスト・rollback 計画生成（deploy しない） |
+
+```bash
+# URL smoke コマンド確認（実行しない・文字列生成のみ）
+npm run pm-agent:cloud-run-url-smoke-pack
+
+# n8n 接続設定確認
+npm run pm-agent:n8n-first-connection-pack
+
+# Secret Manager readiness チェックリスト
+npm run pm-agent:secret-manager-readiness-pack
+
+# 本番移行 Go/No-Go チェックリスト
+npm run pm-agent:production-cutover-pack
+```
+
+**全ツールは Human Approval 後にじゅんやさんが実際の操作を実施する。AIは実行しない。**
+
+---
+
 ## v0.2.1 時点のステータス
 
 **HTTP dry-run intake**: HTTP サーバー実装済み。ローカル動作確認済み。Cloud Run deploy はなし。
 
-v0.2.3 で Cloud Run Launch Pack MAX を整備完了。次ステップ: v0.3.0 Human Approval → deploy 実行。
+v0.2.3 で Cloud Run Launch Pack MAX を整備完了。v0.3.0 で Runtime Ops Pack 整備完了。v0.4.0 Human Approval 後にじゅんやさんが deploy 実行。v0.4.1 / v0.4.2 で deploy 後の URL smoke・n8n 接続・Secret Manager・本番移行ツール整備完了。

@@ -23,6 +23,7 @@ v0.7.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場
 | `docs/ai-dev-team/operator-console-api-contract-v0.9.0.md` | コンソール API 契約 |
 | `docs/ai-dev-team/operator-console-security-boundary-v0.9.0.md` | API セキュリティ境界 |
 | `docs/ai-dev-team/operator-console-mvp-foundation-complete-v1.0.0.md` | MVP 基礎完成宣言 |
+| `docs/ai-dev-team/operator-console-practical-mvp-complete-v1.2.0.md` | Practical MVP 完成宣言 |
 
 ---
 

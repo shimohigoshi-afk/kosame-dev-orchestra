@@ -1,0 +1,12 @@
+{
+  "version": "1.0.6",
+  "timestamp": "2026-05-26T14:00:00.000Z",
+  "result": "fail",
+  "summary": "Verification failed: 2 smoke tests failed.",
+  "failedSmoke": [
+    "dev-agent-operator-cli-command-router-smoke.js",
+    "dev-agent-operator-state-reader-writer-smoke.js"
+  ],
+  "nextRepairOwner": "Claude",
+  "commitAllowed": false
+}

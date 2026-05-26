@@ -1,10 +1,30 @@
-# KOSAME Cloud Run PM Agent — v1.0.0 Operator Console MVP Foundation
+# KOSAME Cloud Run PM Agent — v1.2.0 Practical MVP
 
 ## 概要
 
 KOSAME Cloud Run PM Agent は、AI 開発チームのタスクを受け付け・ルーティング・安全ゲートチェックを行う PM エージェント。
 
-v1.0.0 は **Operator Console MVP Foundation** を完成。**オペレーター操作盤の設計・規約・土台を確立。**
+v1.2.0 は **Practical MVP** を完成。**CLI 上で実機運用可能なオペレーター操作盤を実現。**
+
+---
+
+## v1.0.1 - v1.2.0 Practical MVP Tools
+
+| ツール | 役割 |
+|---|---|
+| `tools/operator-cli-command-router.js` | CLI コマンドルーター |
+| `tools/operator-state-reader-writer.js` | 状態管理リーダー・ライター |
+| `tools/operator-next-action-engine.js` | 次アクション判定エンジン |
+| `tools/operator-approval-summary.js` | 承認内容要約生成 |
+| `tools/operator-handoff-cli.js` | Handoff 自動生成 CLI |
+| `tools/verify-result-recorder-cli.js` | 検証結果記録 CLI |
+| `tools/github-actions-recorder-cli.js` | GHA 結果記録 CLI |
+| `tools/operator-local-console-cli.js` | 統合ローカルコンソール |
+| `tools/operator-dashboard-snapshot.js` | ダッシュボードスナップショット生成 |
+| `tools/operator-release-record-pack.js` | リリース完了記録生成 |
+| `tools/operator-claude-escalation-pack.js` | Claude 補修依頼パケット生成 |
+| `tools/operator-gemini-next-work-pack.js` | Gemini 次期作業パケット生成 |
+| `tools/operator-console-practical-mvp-complete-pack.js` | Practical MVP 完成パック |
 
 ---
 

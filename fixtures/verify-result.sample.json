@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "result": {
+    "status": "fail",
+    "failedSmokeTests": [
+      "smoke/dev-agent-operator-local-console-smoke.js"
+    ],
+    "errorSummary": "Module not found: ./operator-cli-status",
+    "nextRepairOwner": "Claude",
+    "commitAllowed": false,
+    "updatedAt": "2026-05-26T00:00:00.000Z"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "summary": {
+    "currentVersion": "0.7.2",
+    "workflowStatus": "Idle",
+    "riskLevel": "Low"
+  },
+  "cards": [
+    {
+      "type": "StatusCard",
+      "id": "version",
+      "title": "Project Version",
+      "value": "0.7.2",
+      "status": "info"
+    },
+    {
+      "type": "StatusCard",
+      "id": "status",
+      "title": "Workflow Status",
+      "value": "Idle",
+      "status": "info"
+    },
+    {
+      "type": "StatusCard",
+      "id": "agent",
+      "title": "Active Agent",
+      "value": "None",
+      "status": "info"
+    },
+    {
+      "type": "StatusCard",
+      "id": "next-action",
+      "title": "Next Action",
+      "value": "Initialize v0.7.3 CLI Status Pack",
+      "status": "warning"
+    }
+  ],
+  "updatedAt": "2026-05-26T00:00:00.000Z"
+}

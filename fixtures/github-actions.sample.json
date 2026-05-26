@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "workflow": {
+    "name": "verify.yml",
+    "runId": "12345678",
+    "status": "completed",
+    "conclusion": "success",
+    "isFinal": true,
+    "isSuccess": true,
+    "url": "https://github.com/shimohigoshi-afk/kosame-dev-orchestra/actions/runs/12345678",
+    "updatedAt": "2026-05-26T00:00:00.000Z"
+  }
+}

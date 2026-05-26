@@ -1,10 +1,10 @@
-# KOSAME Cloud Run PM Agent — v0.7.0 Operator Command Foundation
+# KOSAME Cloud Run PM Agent — v1.0.0 Operator Console MVP Foundation
 
 ## 概要
 
 KOSAME Cloud Run PM Agent は、AI 開発チームのタスクを受け付け・ルーティング・安全ゲートチェックを行う PM エージェント。
 
-v0.7.0 は **Operator Command Foundation** を強化。**オペレーターの全操作を構造化・パケット化。**
+v1.0.0 は **Operator Console MVP Foundation** を完成。**オペレーター操作盤の設計・規約・土台を確立。**
 
 ---
 
@@ -165,6 +165,6 @@ npm run verify
 
 ---
 
-## v0.7.0 時点のステータス
+## v1.0.0 時点のステータス
 
-**KOSAME Dev Orchestra オペレーターコマンド基盤完成**: v0.1.0 から v0.7.0 までの全 100 ファイル以上を整備完了。
+**Operator Console MVP Foundation 完成**: v0.7.1 から v1.0.0 までの各パックを整備し、次期実機実装への準備が完了。

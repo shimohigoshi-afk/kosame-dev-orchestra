@@ -1,0 +1,39 @@
+{
+  "id": "TASK-v0.2.2-impl-001",
+  "title": "Implement HTTP request fixtures and local smoke client",
+  "kind": "implementation",
+  "riskLevel": "low",
+  "targetRepo": "kosame-dev-orchestra",
+  "allowedFiles": [
+    "apps/pm-agent/",
+    "smoke/",
+    "tools/",
+    "fixtures/"
+  ],
+  "forbiddenFiles": [
+    ".env",
+    ".env.*",
+    "node_modules/**",
+    "~/anesty-board/**",
+    "providers/*.secret"
+  ],
+  "context": "Add HTTP request fixtures and a local smoke client to support testing the PM Agent HTTP server before and after Cloud Run deploy. No external API calls. No Secret values.",
+  "acceptanceCriteria": [
+    "fixtures/pm-agent/*.json files exist and parse as valid JSON",
+    "validateTaskPacket passes for all three fixtures",
+    "decideTaskRoute returns expected routing for each fixture",
+    "tools/pm-agent-http-client.js exports requestJson / getHealth / getInfo / postDryRunTask / runLocalClientDemo",
+    "smoke:http-request-fixtures-client passes",
+    "npm run verify passes"
+  ],
+  "verificationCommands": [
+    "node --check tools/pm-agent-http-client.js",
+    "npm run smoke:http-request-fixtures-client",
+    "npm run verify"
+  ],
+  "humanApprovalRequiredFor": [
+    "git commit",
+    "git push",
+    "Any live external API call"
+  ]
+}

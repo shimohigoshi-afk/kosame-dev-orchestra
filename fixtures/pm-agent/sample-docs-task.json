@@ -1,0 +1,33 @@
+{
+  "id": "TASK-v0.2.2-docs-001",
+  "title": "Document HTTP fixture strategy and local smoke client usage",
+  "kind": "docs",
+  "riskLevel": "low",
+  "targetRepo": "kosame-dev-orchestra",
+  "allowedFiles": [
+    "docs/ai-dev-team/",
+    "apps/pm-agent/README.md",
+    "README.md"
+  ],
+  "forbiddenFiles": [
+    ".env",
+    ".env.*",
+    "node_modules/**",
+    "~/anesty-board/**"
+  ],
+  "context": "Write documentation covering the HTTP fixture strategy, the local smoke client design, and how these assets support Cloud Run deploy preparation. Gemini is the recommended owner for documentation, summary, and planning tasks.",
+  "acceptanceCriteria": [
+    "docs/ai-dev-team/http-request-fixtures-local-client-v0.2.2.md exists",
+    "Document covers fixture roles, client usage, and Cloud Run deploy preparation",
+    "Document includes Human Approval boundaries",
+    "Document states deploy is not performed in this version"
+  ],
+  "verificationCommands": [
+    "npm run smoke:docs",
+    "npm run verify"
+  ],
+  "humanApprovalRequiredFor": [
+    "git commit",
+    "git push"
+  ]
+}

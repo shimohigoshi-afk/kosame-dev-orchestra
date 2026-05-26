@@ -1,0 +1,30 @@
+{
+  "id": "TASK-v0.2.2-deploy-001",
+  "title": "Cloud Run PM Agent deploy — Human Approval required (placeholder)",
+  "kind": "deploy",
+  "riskLevel": "critical",
+  "targetRepo": "kosame-dev-orchestra",
+  "allowedFiles": [],
+  "forbiddenFiles": [
+    ".env",
+    ".env.*",
+    "node_modules/**"
+  ],
+  "context": "Placeholder task representing a future Cloud Run deploy action. THIS TASK IS BLOCKED — actual deploy requires Human Approval. No Secret values are stored here. No deploy is performed in v0.2.2.",
+  "acceptanceCriteria": [
+    "Human Approval obtained before any deploy command is run",
+    "Secret Manager values never exposed in logs or documents",
+    "Rollback plan documented and approved",
+    "smoke:http-request-fixtures-client confirms this task is blocked"
+  ],
+  "verificationCommands": [
+    "echo 'Human Approval required — this task must not be executed without approval'"
+  ],
+  "humanApprovalRequiredFor": [
+    "This entire task",
+    "Any Cloud Run configuration change",
+    "Any Secret Manager access",
+    "git push",
+    "Any deploy command"
+  ]
+}

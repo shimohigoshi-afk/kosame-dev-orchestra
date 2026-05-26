@@ -1,14 +1,14 @@
-# cloud-run/ — Cloud Run Launch Pack (v0.5.0)
+# cloud-run/ — Cloud Run Launch Pack (v0.7.0)
 
 ## 概要
 
-v0.5.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場。
+v0.7.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場。
 
-**v0.5.0 段階でも deploy しない。** v0.3.0 で全準備が整い、v0.4.0 で Human Approval を経てじゅんやさんが deploy を実行する運用フローを確立済み。
+**v0.7.0 は Operator Command Foundation を統合。** オペレーター操作の全パケット化とガバナンスを確立。
 
 ---
 
-## v0.4.7 - v0.5.0 Runtime & Governance Packs
+## v0.4.7 - v0.7.0 Runtime & Operator Packs
 
 | ファイル | 役割 |
 |---|---|
@@ -16,6 +16,10 @@ v0.5.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場
 | `docs/ai-dev-team/cost-control-routing-extension-v0.4.8.md` | コスト制御設計 |
 | `docs/ai-dev-team/release-governance-v0.4.9.md` | リリースガバナンス設計 |
 | `docs/ai-dev-team/dev-orchestra-operator-console-foundation-v0.5.0.md` | オペレーターコンソール基盤設計 |
+| `docs/ai-dev-team/operator-command-packet-v0.5.1.md` | オペレーターコマンドパケット定義 |
+| `docs/ai-dev-team/agent-dispatch-queue-v0.5.2.md` | エージェントディスパッチキュー設計 |
+| `docs/ai-dev-team/operator-runbook-v0.6.0.md` | オペレーターランブック正本 |
+| `docs/ai-dev-team/operator-command-foundation-complete-v0.7.0.md` | 基盤土台完成宣言 |
 
 ---
 

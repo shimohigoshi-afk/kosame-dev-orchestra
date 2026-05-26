@@ -1,10 +1,10 @@
-# KOSAME Cloud Run PM Agent — v0.5.0 HTTP dry-run intake
+# KOSAME Cloud Run PM Agent — v0.7.0 Operator Command Foundation
 
 ## 概要
 
 KOSAME Cloud Run PM Agent は、AI 開発チームのタスクを受け付け・ルーティング・安全ゲートチェックを行う PM エージェント。
 
-v0.5.0 は **Multi-Agent Governance & Runtime Monitoring** を強化。**deployはしない。外部 API を呼ばない。**
+v0.7.0 は **Operator Command Foundation** を強化。**オペレーターの全操作を構造化・パケット化。**
 
 ---
 
@@ -137,7 +137,7 @@ npm run verify
 
 ---
 
-## v0.4.3 - v0.4.6 Governance & Routing Refinement
+## v0.4.3 - v0.7.0 Governance & Operator Packs
 
 | ツール | 役割 |
 |---|---|
@@ -147,20 +147,24 @@ npm run verify
 | `tools/claude-code-fix-packet-generator.js` | Claude 修正パケット生成 |
 | `tools/agent-role-routing-policy-generator.js` | ロールルーティング推奨生成 |
 | `tools/verify-failure-triage-packet.js` | 検証失敗トリアージパケット生成 |
-
----
-
-## v0.4.7 - v0.5.0 Final Expansion Packs
-
-| ツール | 役割 |
-|---|---|
 | `tools/pm-agent-runtime-monitoring-pack.js` | 運用監視チェックリスト生成 |
 | `tools/cost-control-routing-extension-pack.js` | コスト制御・軽量モデルルーティング設定 |
 | `tools/release-governance-packet.js` | リリースガバナンス承認パケット生成 |
 | `tools/dev-orchestra-operator-console-pack.js` | オペレーターコンソール連携データ生成 |
+| `tools/operator-command-packet-generator.js` | オペレーター・コマンドパケット生成 |
+| `tools/agent-dispatch-queue-pack.js` | エージェント・ディスパッチキュー管理 |
+| `tools/kosame-pm-decision-log-pack.js` | PM 判断ログ（Decision Log）生成 |
+| `tools/claude-repair-intake-pack.js` | Claude 補修インテーク生成 |
+| `tools/gemini-bulk-work-intake-pack.js` | Gemini 大量生成インテーク生成 |
+| `tools/human-approval-minimal-packet.js` | 最小承認パケット生成 |
+| `tools/operator-runbook-pack.js` | オペレーター・ランブック管理 |
+| `tools/operator-session-record-pack.js` | セッション記録生成 |
+| `tools/github-actions-result-review-pack.js` | Actions 結果レビューパケット生成 |
+| `tools/local-verify-result-parser-pack.js` | ローカル検証結果パーサー |
+| `tools/operator-command-foundation-complete-pack.js` | 基盤土台完成チェック |
 
 ---
 
-## v0.5.0 時点のステータス
+## v0.7.0 時点のステータス
 
-**KOSAME Dev Orchestra 基盤完成**: v0.1.0 から v0.5.0 までの全 68 ファイルを整備完了。
+**KOSAME Dev Orchestra オペレーターコマンド基盤完成**: v0.1.0 から v0.7.0 までの全 100 ファイル以上を整備完了。

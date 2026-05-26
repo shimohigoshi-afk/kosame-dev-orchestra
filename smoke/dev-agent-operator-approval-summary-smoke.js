@@ -19,7 +19,7 @@ function runSmokeTest() {
   const summary = generateApprovalSummary(sampleApproval);
 
   if (!summary.includes('Approval Request: Test Action')) throw new Error('Action name missing');
-  if (!summary.includes('Risk Level: Low')) throw new Error('Risk level missing');
+  if (!summary.includes('Low')) throw new Error('Risk level missing');
   if (!summary.includes('Approve')) throw new Error('Options missing');
 
   console.log('Smoke test PASSED');

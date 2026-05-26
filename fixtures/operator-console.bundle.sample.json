@@ -1,0 +1,30 @@
+{
+  "version": "1.2.2",
+  "timestamp": "2026-05-26T00:00:00.000Z",
+  "bundleType": "operator-console",
+  "state": {
+    "workflowStatus": "Complete",
+    "riskLevel": "Low",
+    "currentVersion": "2.0.0",
+    "activeAgent": "Claude",
+    "lastCommit": "pending-human-approval"
+  },
+  "snapshot": {
+    "timestamp": "2026-05-26T00:00:00.000Z",
+    "milestone": "Local Operator Console Complete",
+    "smokeTestStatus": "all-passed"
+  },
+  "approvalPending": [
+    {
+      "action": "git commit v2.0.0",
+      "approver": "じゅんやさん",
+      "priority": "normal"
+    }
+  ],
+  "lastVerify": {
+    "status": "passed",
+    "timestamp": "2026-05-26T00:00:00.000Z"
+  },
+  "lastActions": null,
+  "dryRun": true
+}

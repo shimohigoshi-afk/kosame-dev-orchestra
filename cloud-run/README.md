@@ -1,10 +1,10 @@
-# cloud-run/ — Cloud Run Launch Pack (v0.7.0)
+# cloud-run/ — Cloud Run Launch Pack (v2.0.0)
 
 ## 概要
 
 v0.7.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場。
 
-**v0.7.0 は Operator Command Foundation を統合。** オペレーター操作の全パケット化とガバナンスを確立。
+**v2.0.0 は Local Operator Console Complete を達成。** 次フェーズ v2.1.x で Cloud Run UI が加わる予定。
 
 ---
 
@@ -24,6 +24,9 @@ v0.7.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場
 | `docs/ai-dev-team/operator-console-security-boundary-v0.9.0.md` | API セキュリティ境界 |
 | `docs/ai-dev-team/operator-console-mvp-foundation-complete-v1.0.0.md` | MVP 基礎完成宣言 |
 | `docs/ai-dev-team/operator-console-practical-mvp-complete-v1.2.0.md` | Practical MVP 完成宣言 |
+| `docs/ai-dev-team/operator-local-console-complete-v1.4.0.md` | Local Console Complete 宣言 |
+| `docs/ai-dev-team/kosame-dev-orchestra-local-operator-complete-v2.0.0.md` | v2.0.0 リリース宣言 |
+| `docs/ai-dev-team/operator-console-cloud-run-ui-entry-v1.5.0.md` | Cloud Run UI 設計（v2.1.x 予定） |
 
 ---
 

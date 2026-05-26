@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.2.5",
+  "timestamp": "2026-05-26T00:00:00.000Z",
+  "totalRegistered": 11,
+  "entries": [
+    { "id": "permission-policy", "script": "smoke:permission-policy", "status": "passed" },
+    { "id": "docs", "script": "smoke:docs", "status": "passed" },
+    { "id": "operator-unified-cli", "script": "smoke:operator-unified-cli", "status": "passed" },
+    { "id": "operator-console-bundle", "script": "smoke:operator-console-bundle", "status": "passed" },
+    { "id": "operator-completion-checklist", "script": "smoke:operator-completion-checklist", "status": "passed" },
+    { "id": "operator-safety-contract", "script": "smoke:operator-safety-contract", "status": "passed" },
+    { "id": "operator-self-review", "script": "smoke:operator-self-review", "status": "passed" },
+    { "id": "operator-handoff-complete", "script": "smoke:operator-handoff-complete", "status": "passed" },
+    { "id": "operator-local-console-complete", "script": "smoke:operator-local-console-complete", "status": "passed" },
+    { "id": "operator-console-complete-release", "script": "smoke:operator-console-complete-release", "status": "passed" },
+    { "id": "kosame-local-operator-complete", "script": "smoke:kosame-local-operator-complete", "status": "passed" }
+  ],
+  "policy": "All entries must pass before release",
+  "dryRun": true
+}

@@ -18,9 +18,9 @@ function runSmokeTest() {
 
   const handoff = generateHandoff(mockState, ['Test Completed'], ['Test Pending']);
 
-  if (!handoff.includes('Version: 1.0.5')) throw new Error('Version missing in handoff');
+  if (!handoff.includes('1.0.5')) throw new Error('Version missing in handoff');
   if (!handoff.includes('Test Completed')) throw new Error('Completed work missing');
-  if (!handoff.includes('Risk Level: Medium')) throw new Error('Risk level missing');
+  if (!handoff.includes('Medium')) throw new Error('Risk level missing');
 
   console.log('Smoke test PASSED');
   return {

@@ -1,10 +1,29 @@
-# KOSAME Cloud Run PM Agent — v1.2.0 Practical MVP
+# KOSAME Cloud Run PM Agent — v2.0.0 Local Operator Console Complete
 
 ## 概要
 
 KOSAME Cloud Run PM Agent は、AI 開発チームのタスクを受け付け・ルーティング・安全ゲートチェックを行う PM エージェント。
 
-v1.2.0 は **Practical MVP** を完成。**CLI 上で実機運用可能なオペレーター操作盤を実現。**
+v2.0.0 は **Local Operator Console Complete** を完成。**CLI 上で実機運用可能なオペレーター操作盤の全機能が揃いました。**
+
+---
+
+## v1.2.1 - v2.0.0 Local Operator Console Complete Tools（新規追加）
+
+| ツール | 役割 |
+|---|---|
+| `tools/operator-unified-cli.js` | 全コマンド統合エントリーポイント |
+| `tools/operator-console-bundle-pack.js` | コンソール状態バンドル生成 |
+| `tools/operator-completion-checklist-pack.js` | 完成チェックリスト |
+| `tools/operator-safety-contract-pack.js` | 安全契約・アクション検証 |
+| `tools/operator-smoke-registry-pack.js` | Smoke テストレジストリ |
+| `tools/operator-self-review-pack.js` | セルフレビュールーブリック |
+| `tools/operator-handoff-complete-pack.js` | 最終引き継ぎ文書生成 |
+| `tools/operator-claude-emotional-escalation-complete-pack.js` | Claude代行完成記録 |
+| `tools/operator-gemini-work-complete-pack.js` | Gemini作業完了記録 |
+| `tools/operator-local-console-complete-pack.js` | ローカルコンソール完成宣言 |
+| `tools/operator-console-complete-release-pack.js` | リリースパック生成 |
+| `tools/kosame-dev-orchestra-local-operator-complete-pack.js` | v2.0.0 完成マイルストーン |
 
 ---
 
@@ -185,6 +204,7 @@ npm run verify
 
 ---
 
-## v1.0.0 時点のステータス
+## v2.0.0 時点のステータス
 
-**Operator Console MVP Foundation 完成**: v0.7.1 から v1.0.0 までの各パックを整備し、次期実機実装への準備が完了。
+**Local Operator Console Complete**: v1.2.1 から v2.0.0 まで全パックを整備し、ローカル CLI 操作盤の完成を達成。
+次フェーズは v2.1.x Cloud Run UI Entry Phase（じゅんやさんの承認後開始）。

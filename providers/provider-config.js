@@ -35,17 +35,58 @@ const timeoutMs = Number.isFinite(rawTimeoutMs)
   ? Math.min(rawTimeoutMs, TIMEOUT_MS_CAP)
   : 15000;
 
-const openaiModel =
+// Lightweight model defaults (env-overridable).
+// Gemini: gemini-2.5-flash-lite as lightweight default.
+// OpenAI: gpt-4o-mini as lightweight default.
+const defaultGeminiModel =
+  typeof process.env.KOSAME_AGENT_MODEL_GEMINI === "string" &&
+  process.env.KOSAME_AGENT_MODEL_GEMINI.length > 0
+    ? process.env.KOSAME_AGENT_MODEL_GEMINI
+    : "gemini-2.5-flash-lite";
+
+const defaultOpenAIModel =
   typeof process.env.KOSAME_AGENT_MODEL_OPENAI === "string" &&
   process.env.KOSAME_AGENT_MODEL_OPENAI.length > 0
     ? process.env.KOSAME_AGENT_MODEL_OPENAI
     : "gpt-4o-mini";
 
-const geminiModel =
-  typeof process.env.KOSAME_AGENT_MODEL_GEMINI === "string" &&
-  process.env.KOSAME_AGENT_MODEL_GEMINI.length > 0
-    ? process.env.KOSAME_AGENT_MODEL_GEMINI
-    : "gemini-1.5-flash";
+// Premium (upper-tier) models — used only for high-risk / high-stakes tasks.
+// Both are env-overridable so Human Approval can redirect to any model.
+const premiumGeminiModel =
+  typeof process.env.KOSAME_AGENT_PREMIUM_MODEL_GEMINI === "string" &&
+  process.env.KOSAME_AGENT_PREMIUM_MODEL_GEMINI.length > 0
+    ? process.env.KOSAME_AGENT_PREMIUM_MODEL_GEMINI
+    : "gemini-2.5-pro";
+
+const premiumOpenAIModel =
+  typeof process.env.KOSAME_AGENT_PREMIUM_MODEL_OPENAI === "string" &&
+  process.env.KOSAME_AGENT_PREMIUM_MODEL_OPENAI.length > 0
+    ? process.env.KOSAME_AGENT_PREMIUM_MODEL_OPENAI
+    : "gpt-4o";
+
+// Lightweight routing policy.
+// - bulkProcessingProvider: 大量処理・下読み・分類・要約は Gemini 寄せ
+// - reviewProvider: 判断・レビュー・PM補助は GPT 寄せ
+// - premiumReviewProvider: 高リスク・高単価・最終レビューは env で切り替え可能
+const premiumReviewProvider =
+  typeof process.env.KOSAME_AGENT_PREMIUM_REVIEW_PROVIDER === "string" &&
+  process.env.KOSAME_AGENT_PREMIUM_REVIEW_PROVIDER.length > 0
+    ? process.env.KOSAME_AGENT_PREMIUM_REVIEW_PROVIDER
+    : "gpt";
+
+const lightweightRoutingPolicy = {
+  bulkProcessingProvider: "gemini",
+  reviewProvider: "gpt",
+  premiumReviewProvider,
+  defaultGeminiModel,
+  defaultOpenAIModel,
+  premiumGeminiModel,
+  premiumOpenAIModel,
+};
+
+// Keep legacy aliases for backward-compat with existing providers.
+const openaiModel = defaultOpenAIModel;
+const geminiModel = defaultGeminiModel;
 
 // Base gate: both env vars must be "true".
 const liveCallsActuallyEnabled = liveCallsRequested && oneShotAllowed;
@@ -67,6 +108,7 @@ function getConfig() {
     liveCallsActuallyEnabled,
     openaiLiveEnabled,
     geminiLiveEnabled,
+    lightweightRoutingPolicy,
     reason: liveCallsActuallyEnabled
       ? "live calls gate open (key presence required per provider)"
       : "live calls disabled — KOSAME_AGENT_LIVE_CALLS_ENABLED or KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL not set to true",

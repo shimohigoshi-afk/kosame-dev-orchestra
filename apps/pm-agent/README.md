@@ -139,9 +139,35 @@ npm run verify
 
 ---
 
+## v0.3.0 Deploy Execution & Runtime Ops Pack
+
+v0.3.0 で deploy 実行前の全準備が完了。v0.4.0 でじゅんやさんが Cloud Shell から deploy 実行。
+
+```bash
+# v0.3.0 最終確認
+npm run pm-agent:deploy-readiness-final-check  # readyForHumanDeploy: true
+
+# v0.4.0 deploy コマンドパック確認（実行はじゅんやさん）
+node tools/pm-agent-first-deploy-command-pack.js
+
+# 全 smoke
+npm run verify
+```
+
+| ツール | 役割 |
+|---|---|
+| `tools/pm-agent-deploy-approval-packet.js` | deploy 承認パケット（humanApprovalRequired: true） |
+| `tools/pm-agent-deploy-readiness-final-check.js` | 最終 readiness チェック（readyForHumanDeploy） |
+| `tools/pm-agent-runtime-ops-packet.js` | runtime 運用・incident response パケット |
+| `tools/pm-agent-webhook-contract-generator.js` | n8n 接続コントラクト生成 |
+| `tools/pm-agent-first-deploy-command-pack.js` | v0.4.0 初回 deploy コマンドパック（文字列のみ） |
+| `tools/pm-agent-first-deploy-result-template.js` | deploy 結果記録テンプレート（v0.4.1 用） |
+
+---
+
 ## Cloud Run Launch Pack（v0.2.3）
 
-v0.2.3 で Cloud Run deploy 直前の全コンポーネントを整備済み。deploy 実行は v0.3.0（Human Approval 後）。
+v0.2.3 で Cloud Run deploy 直前の全コンポーネントを整備済み。v0.3.0 で Runtime Ops Pack を追加し、v0.4.0 Human Approval 後にじゅんやさんが deploy 実行。
 
 | ファイル | 役割 |
 |---|---|

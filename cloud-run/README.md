@@ -1,19 +1,21 @@
-# cloud-run/ — Cloud Run Launch Pack (v0.2.3)
+# cloud-run/ — Cloud Run Launch Pack (v0.5.0)
 
 ## 概要
 
-v0.2.3 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場。
+v0.5.0 Cloud Run Launch Pack MAX の Cloud Run 関連設定ファイル置き場。
 
-**v0.2.3 段階では deploy しない。** v0.3.0 で全準備が整い、v0.4.0 で Human Approval を経てじゅんやさんが deploy を実行する。
+**v0.5.0 段階でも deploy しない。** v0.3.0 で全準備が整い、v0.4.0 で Human Approval を経てじゅんやさんが deploy を実行する運用フローを確立済み。
 
 ---
 
-## ファイル一覧
+## v0.4.7 - v0.5.0 Runtime & Governance Packs
 
 | ファイル | 役割 |
 |---|---|
-| `pm-agent-service.template.yaml` | Cloud Run service 定義テンプレート |
-| `README.md` | このファイル |
+| `docs/ai-dev-team/pm-agent-runtime-monitoring-v0.4.7.md` | 運用監視設計 |
+| `docs/ai-dev-team/cost-control-routing-extension-v0.4.8.md` | コスト制御設計 |
+| `docs/ai-dev-team/release-governance-v0.4.9.md` | リリースガバナンス設計 |
+| `docs/ai-dev-team/dev-orchestra-operator-console-foundation-v0.5.0.md` | オペレーターコンソール基盤設計 |
 
 ---
 

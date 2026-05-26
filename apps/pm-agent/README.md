@@ -1,10 +1,10 @@
-# KOSAME Cloud Run PM Agent — v0.2.1 HTTP dry-run intake
+# KOSAME Cloud Run PM Agent — v0.5.0 HTTP dry-run intake
 
 ## 概要
 
 KOSAME Cloud Run PM Agent は、AI 開発チームのタスクを受け付け・ルーティング・安全ゲートチェックを行う PM エージェント。
 
-v0.2.1 は **HTTP dry-run intake** を実装。Cloud Run に載せる直前構造。**deployはしない。外部 API を呼ばない。**
+v0.5.0 は **Multi-Agent Governance & Runtime Monitoring** を強化。**deployはしない。外部 API を呼ばない。**
 
 ---
 
@@ -120,8 +120,6 @@ node --check apps/pm-agent/pm-agent.js
 node --check apps/pm-agent/task-packet-schema.js
 node --check apps/pm-agent/pm-agent-dry-run.js
 node --check apps/pm-agent/pm-agent-http-server.js
-npm run smoke:cloud-run-pm-agent-foundation
-npm run smoke:http-dry-run-intake
 npm run verify
 ```
 
@@ -129,7 +127,7 @@ npm run verify
 
 ## 禁止事項
 
-- Cloud Run への deploy はしない（v0.2.1 は HTTP 構造のみ）
+- Cloud Run への deploy はしない（v0.5.0 は HTTP 構造のみ）
 - 外部 API を呼ばない（fetch なし）
 - APIキー値・Secret 値を読まない
 - `.env` / GitHub Secrets / Secret Manager を参照しない
@@ -139,85 +137,30 @@ npm run verify
 
 ---
 
-## v0.3.0 Deploy Execution & Runtime Ops Pack
-
-v0.3.0 で deploy 実行前の全準備が完了。v0.4.0 でじゅんやさんが Cloud Shell から deploy 実行。
-
-```bash
-# v0.3.0 最終確認
-npm run pm-agent:deploy-readiness-final-check  # readyForHumanDeploy: true
-
-# v0.4.0 deploy コマンドパック確認（実行はじゅんやさん）
-node tools/pm-agent-first-deploy-command-pack.js
-
-# 全 smoke
-npm run verify
-```
+## v0.4.3 - v0.4.6 Governance & Routing Refinement
 
 | ツール | 役割 |
 |---|---|
-| `tools/pm-agent-deploy-approval-packet.js` | deploy 承認パケット（humanApprovalRequired: true） |
-| `tools/pm-agent-deploy-readiness-final-check.js` | 最終 readiness チェック（readyForHumanDeploy） |
-| `tools/pm-agent-runtime-ops-packet.js` | runtime 運用・incident response パケット |
-| `tools/pm-agent-webhook-contract-generator.js` | n8n 接続コントラクト生成 |
-| `tools/pm-agent-first-deploy-command-pack.js` | v0.4.0 初回 deploy コマンドパック（文字列のみ） |
-| `tools/pm-agent-first-deploy-result-template.js` | deploy 結果記録テンプレート（v0.4.1 用） |
+| `tools/claude-code-approval-policy-generator.js` | 承認ポリシー・チェックリスト生成 |
+| `tools/multi-agent-task-packet-generator.js` | 共通タスクパケット生成 |
+| `tools/gemini-agent-prompt-generator.js` | Gemini プロンプト生成 |
+| `tools/claude-code-fix-packet-generator.js` | Claude 修正パケット生成 |
+| `tools/agent-role-routing-policy-generator.js` | ロールルーティング推奨生成 |
+| `tools/verify-failure-triage-packet.js` | 検証失敗トリアージパケット生成 |
 
 ---
 
-## Cloud Run Launch Pack（v0.2.3）
-
-v0.2.3 で Cloud Run deploy 直前の全コンポーネントを整備済み。v0.3.0 で Runtime Ops Pack を追加し、v0.4.0 Human Approval 後にじゅんやさんが deploy 実行。
-
-| ファイル | 役割 |
-|---|---|
-| `Dockerfile` | Cloud Run 用コンテナイメージ定義 |
-| `.dockerignore` | Secret・.env を exclude |
-| `cloud-run/pm-agent-service.template.yaml` | Cloud Run service 定義テンプレート |
-| `tools/pm-agent-cloud-run-preflight.js` | deploy 前安全性チェック |
-| `tools/pm-agent-deploy-command-generator.js` | gcloud コマンド文字列生成（実行しない） |
-| `tools/pm-agent-post-deploy-smoke.js` | deploy 後 HTTP smoke 検証 |
-
-```bash
-# v0.2.3 Launch Pack 検証
-npm run pm-agent:cloud-run-preflight    # preflight チェック → launchReady: true
-npm run pm-agent:deploy-commands        # deploy コマンド文字列生成（実行しない）
-npm run smoke:cloud-run-launch-pack-max # Launch Pack 全体 smoke
-```
-
----
-
-## v0.4.1 / v0.4.2 Post-Deploy & First Connection Pack
-
-deploy 後の URL 確認・n8n 接続・Secret Manager 準備・本番移行用ツール群。
+## v0.4.7 - v0.5.0 Final Expansion Packs
 
 | ツール | 役割 |
 |---|---|
-| `tools/pm-agent-cloud-run-url-smoke-pack.js` | Cloud Run URL smoke コマンド文字列生成（実行しない） |
-| `tools/pm-agent-n8n-first-connection-pack.js` | n8n 接続設定・結果テンプレート生成（接続しない） |
-| `tools/pm-agent-secret-manager-readiness-pack.js` | Secret Manager readiness チェックリスト生成（値アクセスなし） |
-| `tools/pm-agent-production-cutover-pack.js` | Go/No-Go チェックリスト・rollback 計画生成（deploy しない） |
-
-```bash
-# URL smoke コマンド確認（実行しない・文字列生成のみ）
-npm run pm-agent:cloud-run-url-smoke-pack
-
-# n8n 接続設定確認
-npm run pm-agent:n8n-first-connection-pack
-
-# Secret Manager readiness チェックリスト
-npm run pm-agent:secret-manager-readiness-pack
-
-# 本番移行 Go/No-Go チェックリスト
-npm run pm-agent:production-cutover-pack
-```
-
-**全ツールは Human Approval 後にじゅんやさんが実際の操作を実施する。AIは実行しない。**
+| `tools/pm-agent-runtime-monitoring-pack.js` | 運用監視チェックリスト生成 |
+| `tools/cost-control-routing-extension-pack.js` | コスト制御・軽量モデルルーティング設定 |
+| `tools/release-governance-packet.js` | リリースガバナンス承認パケット生成 |
+| `tools/dev-orchestra-operator-console-pack.js` | オペレーターコンソール連携データ生成 |
 
 ---
 
-## v0.2.1 時点のステータス
+## v0.5.0 時点のステータス
 
-**HTTP dry-run intake**: HTTP サーバー実装済み。ローカル動作確認済み。Cloud Run deploy はなし。
-
-v0.2.3 で Cloud Run Launch Pack MAX を整備完了。v0.3.0 で Runtime Ops Pack 整備完了。v0.4.0 Human Approval 後にじゅんやさんが deploy 実行。v0.4.1 / v0.4.2 で deploy 後の URL smoke・n8n 接続・Secret Manager・本番移行ツール整備完了。
+**KOSAME Dev Orchestra 基盤完成**: v0.1.0 から v0.5.0 までの全 68 ファイルを整備完了。

@@ -1,0 +1,15 @@
+.git
+node_modules
+.env
+.env.*
+npm-debug.log
+coverage
+tmp
+backup
+backups
+*_backup*
+secrets
+secret
+*.pem
+*.key
+service-account*.json

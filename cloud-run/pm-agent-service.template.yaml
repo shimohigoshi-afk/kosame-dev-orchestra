@@ -1,0 +1,56 @@
+# KOSAME Cloud Run PM Agent — Service Template (v0.2.3)
+# THIS IS A TEMPLATE. Replace all PLACEHOLDER values before deploy.
+# DO NOT fill in real project IDs, real image URLs, or real API keys here.
+# Human Approval required before deploy. See cloud-run/README.md.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: SERVICE_NAME_PLACEHOLDER
+  namespace: PROJECT_ID_PLACEHOLDER
+  labels:
+    managed-by: kosame-dev-orchestra
+    version: v0.2.3
+    component: pm-agent
+annotations:
+  run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Max 1 instance to limit cost during initial deploy — adjust after smoke passes
+        autoscaling.knative.dev/maxScale: "1"
+        autoscaling.knative.dev/minScale: "0"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: IMAGE_PLACEHOLDER
+          # Example: gcr.io/PROJECT_ID_PLACEHOLDER/kosame-pm-agent:TAG_PLACEHOLDER
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "8080"
+            # Secret Manager references — DO NOT hardcode values here.
+            # Uncomment and configure after Human Approval:
+            # - name: OPENAI_API_KEY
+            #   valueFrom:
+            #     secretKeyRef:
+            #       key: latest
+            #       name: OPENAI_API_KEY_SECRET_NAME_PLACEHOLDER
+            # - name: GEMINI_API_KEY
+            #   valueFrom:
+            #     secretKeyRef:
+            #       key: latest
+            #       name: GEMINI_API_KEY_SECRET_NAME_PLACEHOLDER
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+  traffic:
+    - percent: 100
+      latestRevision: true

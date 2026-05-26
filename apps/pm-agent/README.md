@@ -139,11 +139,30 @@ npm run verify
 
 ---
 
+## Cloud Run Launch Pack（v0.2.3）
+
+v0.2.3 で Cloud Run deploy 直前の全コンポーネントを整備済み。deploy 実行は v0.3.0（Human Approval 後）。
+
+| ファイル | 役割 |
+|---|---|
+| `Dockerfile` | Cloud Run 用コンテナイメージ定義 |
+| `.dockerignore` | Secret・.env を exclude |
+| `cloud-run/pm-agent-service.template.yaml` | Cloud Run service 定義テンプレート |
+| `tools/pm-agent-cloud-run-preflight.js` | deploy 前安全性チェック |
+| `tools/pm-agent-deploy-command-generator.js` | gcloud コマンド文字列生成（実行しない） |
+| `tools/pm-agent-post-deploy-smoke.js` | deploy 後 HTTP smoke 検証 |
+
+```bash
+# v0.2.3 Launch Pack 検証
+npm run pm-agent:cloud-run-preflight    # preflight チェック → launchReady: true
+npm run pm-agent:deploy-commands        # deploy コマンド文字列生成（実行しない）
+npm run smoke:cloud-run-launch-pack-max # Launch Pack 全体 smoke
+```
+
+---
+
 ## v0.2.1 時点のステータス
 
 **HTTP dry-run intake**: HTTP サーバー実装済み。ローカル動作確認済み。Cloud Run deploy はなし。
 
-次ステップ候補（v0.2.2 以降）:
-- Cloud Run への deploy 設計（Human Approval 必要）
-- n8n / GitHub Actions との接続設計
-- `dryRunOnly: false` への移行準備
+v0.2.3 で Cloud Run Launch Pack MAX を整備完了。次ステップ: v0.3.0 Human Approval → deploy 実行。

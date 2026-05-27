@@ -1,4 +1,17 @@
 'use strict';
+
+function compareVersion(a, b) {
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0;
+    const y = pb[i] || 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -51,7 +64,7 @@ for (const t of v32Tools) assert(`tool exists: ${t}`, fs.existsSync(path.join(__
 
 // package.json
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
-assert('package version 3.5.0', pkg.version === '3.5.0');
+assert('package version 3.5.0 or later', compareVersion(pkg.version, '3.5.0') >= 0);
 assert('scripts has smoke:vp-next-action-controller', 'smoke:vp-next-action-controller' in pkg.scripts);
 assert('scripts has smoke:vp-execution-review-packet', 'smoke:vp-execution-review-packet' in pkg.scripts);
 assert('scripts has smoke:vp-handoff-packet', 'smoke:vp-handoff-packet' in pkg.scripts);

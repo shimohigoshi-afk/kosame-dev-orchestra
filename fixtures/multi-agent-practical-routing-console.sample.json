@@ -1,0 +1,12 @@
+{
+  "version": "5.0.0",
+  "title": "Multi-Agent Practical Routing Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "expectedPrimaryProvider": "gemini",
+  "fallbackProviders": [
+    "grok",
+    "deepseek",
+    "kimi"
+  ]
+}

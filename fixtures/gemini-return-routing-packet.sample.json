@@ -1,0 +1,20 @@
+{
+  "version": "4.6.0",
+  "routingPacketId": "routing-20260527-001",
+  "source": "gemini-preparer",
+  "targets": [
+    {
+      "agent": "claude-implementer",
+      "task": "apply-code-changes",
+      "priority": "high",
+      "context": "src/utils/parser.js"
+    },
+    {
+      "agent": "human-approver",
+      "task": "review-logic-change",
+      "priority": "medium"
+    }
+  ],
+  "dryRun": true,
+  "humanApprovalRequired": true
+}

@@ -1,0 +1,12 @@
+{
+  "version": "4.7.0",
+  "title": "Provider Availability Report Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "expectedPrimaryProvider": "gemini",
+  "fallbackProviders": [
+    "grok",
+    "deepseek",
+    "kimi"
+  ]
+}

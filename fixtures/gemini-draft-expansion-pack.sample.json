@@ -1,0 +1,12 @@
+{
+  "version": "4.8.0",
+  "title": "Gemini Draft Expansion Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "expectedPrimaryProvider": "gemini",
+  "fallbackProviders": [
+    "grok",
+    "deepseek",
+    "kimi"
+  ]
+}

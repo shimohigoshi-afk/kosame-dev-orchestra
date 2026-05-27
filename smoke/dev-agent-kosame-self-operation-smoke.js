@@ -1,5 +1,18 @@
 'use strict';
 
+function compareVersion(a, b) {
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0;
+    const y = pb[i] || 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+
+
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -11,8 +24,8 @@ const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 
 const docPath = path.join(__dirname, '../docs/ai-dev-team/kosame-dev-orchestra-v4.1.0-release-record.md');
 const fixturePath = path.join(__dirname, '../fixtures/kosame-self-operation-smoke.sample.json');
 
-assert.strictEqual(pkg.version, '4.5.0', 'package version 4.5.0');
-console.log('  PASS: package version 4.5.0');
+assert.ok(compareVersion(pkg.version, '4.5.0') >= 0, 'package version 4.5.0 or later');
+console.log('  PASS: package version 4.5.0 or later');
 
 assert.ok(pkg.scripts['smoke:kosame-self-operation-smoke'], 'script exists: smoke:kosame-self-operation-smoke');
 console.log('  PASS: script exists');

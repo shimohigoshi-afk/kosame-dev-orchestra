@@ -1,4 +1,17 @@
 'use strict';
+
+function compareVersion(a, b) {
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0;
+    const y = pb[i] || 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+
 const fs = require('fs');
 const path = require('path');
 
@@ -38,7 +51,7 @@ const tools = [
 for (const t of tools) assert(`tool exists: ${t}`, fs.existsSync(path.join(__dirname, '..', t)));
 
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
-assert('package version 4.0.0', pkg.version === '4.0.0');
+assert('package version 4.0.0 or later', compareVersion(pkg.version, '4.0.0') >= 0);
 assert('scripts has smoke:kosame-vp-practical-console', 'smoke:kosame-vp-practical-console' in pkg.scripts);
 assert('scripts has pm-agent:vp-practical-console', 'pm-agent:vp-practical-console' in pkg.scripts);
 assert('scripts has kosame:next', 'kosame:next' in pkg.scripts);

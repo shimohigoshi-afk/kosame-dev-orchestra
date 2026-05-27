@@ -1,0 +1,12 @@
+{
+  "version": "4.4.0",
+  "title": "Kosame Recovery Runbook Generator Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "status": "clean",
+  "actionsStatus": "success",
+  "verifyStatus": "success",
+  "claudeAvailable": false,
+  "geminiAvailable": false,
+  "expectedRoute": "kosame-vp-self-operation"
+}

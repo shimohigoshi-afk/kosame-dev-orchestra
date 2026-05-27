@@ -1,0 +1,20 @@
+{
+  "version": "6.5.0",
+  "title": "Provider Prompt Router CLI",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleInput": {
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "preferredProvider": null,
+    "goal": "implement release note generator"
+  },
+  "sampleOutput": {
+    "selectedProvider": "claude",
+    "fallbackProviders": ["grok", "deepseek", "kosame"],
+    "safetyBoundary": { "safe": true },
+    "humanApprovalRequired": true
+  }
+}

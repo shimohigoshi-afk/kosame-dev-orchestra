@@ -1,0 +1,12 @@
+{
+  "version": "6.3.0",
+  "title": "Product-specific Generator Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleGenerated": {
+    "productLine": "backoffice",
+    "taskGoal": "implement feature X",
+    "primaryProvider": "claude",
+    "bulkProvider": "gemini"
+  }
+}

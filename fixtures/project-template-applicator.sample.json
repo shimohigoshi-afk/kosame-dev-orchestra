@@ -1,0 +1,12 @@
+{
+  "version": "6.2.0",
+  "title": "Project Template Applicator",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleTemplate": {
+    "projectName": "sample-project",
+    "version": "1.0.0",
+    "productLine": "backoffice",
+    "standardDirectories": ["docs/ai-dev-team", "tools", "smoke", "fixtures"]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "6.1.0",
+  "title": "Real Status Importer Plus",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleSnapshot": {
+    "gitStatus": { "clean": true, "modified": [], "untracked": [], "staged": [], "totalChanges": 0 },
+    "packageVersion": { "version": "6.1.0", "major": 6, "minor": 1, "patch": 0 },
+    "ghRunList": { "total": 2, "passing": 2, "failing": 0, "pending": 0 },
+    "providerStatus": { "allUp": true, "downProviders": [] },
+    "verifyStatus": { "passed": true, "totalSmokes": 10, "failedSmokes": [] }
+  }
+}

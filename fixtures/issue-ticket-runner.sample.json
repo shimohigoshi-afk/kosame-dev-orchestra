@@ -1,0 +1,25 @@
+{
+  "version": "6.4.0",
+  "title": "Issue/Ticket Runner Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleTickets": [
+    {
+      "title": "implement feature X",
+      "type": "implementation",
+      "assignedProvider": "claude",
+      "status": "open",
+      "humanApprovalRequired": false,
+      "completionConditions": ["code written", "smoke passing"],
+      "verificationConditions": ["node --check", "npm run verify"]
+    },
+    {
+      "title": "deploy to production",
+      "type": "deploy",
+      "assignedProvider": "cloudShell",
+      "status": "open",
+      "humanApprovalRequired": true,
+      "approvalGate": { "required": true, "approver": "じゅんやさん" }
+    }
+  ]
+}

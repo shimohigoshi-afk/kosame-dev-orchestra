@@ -1,0 +1,12 @@
+{
+  "version": "5.4.0",
+  "title": "Provider Prompt Template Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleRender": {
+    "provider": "gemini",
+    "taskDescription": "draft a release note",
+    "dataLevel": "A",
+    "ok": true
+  }
+}

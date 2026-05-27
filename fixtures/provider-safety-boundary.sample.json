@@ -1,0 +1,12 @@
+{
+  "version": "5.2.0",
+  "title": "Provider Safety Boundary Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleCheck": {
+    "provider": "gemini",
+    "dataLevel": "A",
+    "inputSummary": "generic code review",
+    "safe": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": "5.9.0",
+  "title": "Verified One-shot Pipeline Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleTask": {
+    "description": "implement release note generator",
+    "provider": "claude",
+    "dataLevel": "A"
+  },
+  "pipelineStages": ["intake", "safety_check", "provider_select", "dispatch", "verify", "report"]
+}

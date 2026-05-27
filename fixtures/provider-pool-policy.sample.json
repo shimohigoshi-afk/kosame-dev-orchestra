@@ -1,0 +1,8 @@
+{
+  "version": "5.1.0",
+  "title": "Provider Pool Policy Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "samplePool": ["kosame", "claude", "gemini"],
+  "maxConcurrentExternal": 2
+}

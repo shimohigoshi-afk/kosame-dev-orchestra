@@ -1,0 +1,10 @@
+{
+  "version": "5.6.0",
+  "title": "Provider Health Auto Reporter",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleReport": {
+    "gemini": { "successRate": 0.95, "latencyMs": 800, "status": "healthy" },
+    "claude": { "successRate": 0.98, "latencyMs": 600, "status": "healthy" }
+  }
+}

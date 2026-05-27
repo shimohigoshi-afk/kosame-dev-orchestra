@@ -1,0 +1,15 @@
+{
+  "version": "6.0.0",
+  "title": "Dev Factory MVP",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleInput": {
+    "projectName": "kosame-dev-orchestra",
+    "repoPath": ".",
+    "taskGoal": "implement release note generator",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "preferredProviders": ["claude", "gemini"]
+  },
+  "productLines": ["sales_dx", "email_reply", "ai_bot", "backoffice", "anesty_board", "cloud_run_launch_pack"]
+}

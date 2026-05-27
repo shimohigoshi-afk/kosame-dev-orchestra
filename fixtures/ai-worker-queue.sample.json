@@ -1,0 +1,10 @@
+{
+  "version": "5.8.0",
+  "title": "AI Worker Queue Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleQueue": [
+    { "provider": "claude", "taskType": "bugfix", "priority": "high", "dataLevel": "A", "status": "queued" },
+    { "provider": "gemini", "taskType": "draft",  "priority": "normal", "dataLevel": "A", "status": "queued" }
+  ]
+}

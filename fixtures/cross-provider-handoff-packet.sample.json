@@ -1,0 +1,14 @@
+{
+  "version": "5.7.0",
+  "title": "Cross-Provider Handoff Packet",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleHandoff": {
+    "fromProvider": "kosame",
+    "toProvider": "claude",
+    "taskSummary": "implement release note generator",
+    "dataLevel": "A",
+    "completedSteps": ["design", "review"],
+    "remainingSteps": ["implementation", "verify"]
+  }
+}

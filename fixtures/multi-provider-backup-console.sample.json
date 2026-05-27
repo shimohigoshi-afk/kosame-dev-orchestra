@@ -1,0 +1,12 @@
+{
+  "version": "5.5.0",
+  "title": "Multi-Provider Backup Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "sampleSelection": {
+    "primary": "gemini",
+    "unavailable": [],
+    "dataLevel": "A",
+    "selected": "grok"
+  }
+}

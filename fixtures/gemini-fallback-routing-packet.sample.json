@@ -1,0 +1,59 @@
+{
+  "packetType": "gemini_fallback_routing_packet",
+  "version": "2.1.0",
+  "timestamp": "2026-05-27T00:00:00.000Z",
+  "geminiStatus": {
+    "stopReason": "auth_error",
+    "stopDetail": "metadata server application default credentials / refresh_token error",
+    "triggerClassification": "metadata_server_error",
+    "isAuthError": true,
+    "isQuotaError": false
+  },
+  "originalTask": {
+    "description": "v2.1.0 AI Provider Routing & Kosame Approval Delegation の実装",
+    "targetVersion": "2.1.0",
+    "targetFiles": [
+      "docs/ai-dev-team/provider-routing-policy-v2.1.0.md",
+      "tools/provider-health-status.js",
+      "tools/gemini-fallback-routing-packet.js",
+      "tools/operator-decision-engine-v2.1.0.js"
+    ],
+    "constraints": [
+      "既存構造を壊さない",
+      "npm run verifyが通ること",
+      "git push禁止",
+      "deploy禁止"
+    ]
+  },
+  "currentState": {
+    "packageVersion": "2.0.0",
+    "verifyStatus": "passed",
+    "lastKnownGoodCommit": "76d0e3b"
+  },
+  "progress": {
+    "filesModified": [],
+    "filesNotYetModified": [
+      "docs/ai-dev-team/provider-routing-policy-v2.1.0.md",
+      "tools/provider-health-status.js",
+      "tools/gemini-fallback-routing-packet.js",
+      "tools/operator-decision-engine-v2.1.0.js"
+    ],
+    "estimatedCompletion": "partial"
+  },
+  "claudeInstructions": [
+    "このpacketはGemini課長の停止によりClaudeへの引き継ぎとして生成されました",
+    "originalTask.descriptionに従いタスクを継続してください",
+    "Geminiが途中まで実施した場合はprogress.filesModifiedを確認してください",
+    "filesNotYetModifiedを優先的に完了してください",
+    "完了後はnpm run verifyを実行してください",
+    "完了報告はこさめ副社長へ行い、approval packetを生成してください"
+  ],
+  "safetyConstraints": [
+    "git push禁止（じゅんやさん最終YES後のみ）",
+    "git tag禁止（じゅんやさん最終YES後のみ）",
+    "deploy禁止",
+    "rm -rf禁止",
+    "Secret/.env/APIkey読み取り禁止"
+  ],
+  "dryRun": true
+}

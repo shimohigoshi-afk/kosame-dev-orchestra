@@ -1,0 +1,10 @@
+{
+  "version": "2.1.0",
+  "timestamp": "2026-05-27T00:00:00.000Z",
+  "gemini": "gemini_auth_error",
+  "claude": "claude_available",
+  "cloudShell": "cloud_shell_verify_required",
+  "githubActions": "github_actions_success",
+  "approvalGate": "approval_required",
+  "dryRun": true
+}

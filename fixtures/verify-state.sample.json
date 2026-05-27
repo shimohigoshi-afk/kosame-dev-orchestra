@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "passedCount": 420,
+  "failedCount": 0,
+  "failedSmokes": [],
+  "durationMs": 45000,
+  "logText": "PASS: 420 / 420"
+}

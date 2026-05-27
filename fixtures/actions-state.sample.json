@@ -1,0 +1,9 @@
+{
+  "runListText": "success\tKOSAME Dev Orchestra Verify\tmain\t2min\nsuccess\tPM Agent Launch Readiness\tmain\t1min",
+  "workflowName": "KOSAME Dev Orchestra Verify",
+  "branch": "main",
+  "jobResults": [
+    { "name": "verify", "conclusion": "success" },
+    { "name": "readiness", "conclusion": "success" }
+  ]
+}

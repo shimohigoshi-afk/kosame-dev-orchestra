@@ -1,0 +1,8 @@
+{
+  "gitStatusSbText": "## main...origin/main\n M tools/foo.js\n?? tools/new-untracked.js",
+  "headCommit": "abc1234def5678",
+  "originCommit": "abc1234def5678",
+  "packageVersion": "3.2.0",
+  "latestTag": "v3.1.0",
+  "branch": "main"
+}

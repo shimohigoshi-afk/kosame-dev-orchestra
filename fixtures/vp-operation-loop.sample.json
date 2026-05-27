@@ -1,0 +1,51 @@
+{
+  "_description": "VP Operation Loop sample input/output for v3.5.0",
+  "input": {
+    "rawData": {
+      "packageVersion": "3.5.0",
+      "repo": {
+        "gitStatusSbText": "## main...origin/main\n",
+        "headCommit": "abc1234"
+      },
+      "actions": {
+        "status": "success",
+        "conclusion": "success",
+        "jobResults": []
+      },
+      "verify": {
+        "exitCode": 0,
+        "passedCount": 420,
+        "failedCount": 0
+      },
+      "providerHealth": {
+        "gemini": "gemini_auth_error",
+        "claude": "claude_available"
+      }
+    },
+    "sessionGoal": "v3.5.0 release preparation",
+    "commandOperation": "status",
+    "session_id": "session-2026-05-27-001"
+  },
+  "expectedOutput": {
+    "loop": "kosame-vp-operation-loop",
+    "loop_version": "3.5.0",
+    "primaryNextAction": "release",
+    "requiresHumanApproval": true,
+    "overallHealth": "healthy",
+    "dryRun": true,
+    "completedPhases": ["state_read", "decision_report", "safe_command_proposal", "human_approval_gate", "next_dispatch", "handoff"]
+  },
+  "_notes": {
+    "phaseCount": 7,
+    "phases": ["state_read", "decision_report", "safe_command_proposal", "human_approval_gate", "execution_review", "next_dispatch", "handoff"],
+    "verdicts": {
+      "release_candidate": "verify PASS + Actions success",
+      "success": "command succeeded, verify next",
+      "claude_repair": "FAIL detected in output",
+      "gemini_expand": "Gemini quota/auth error",
+      "failure": "generic failure"
+    },
+    "junyaApprovalRequired": ["git push", "git tag", "deploy", "cloud_run", "secret", "billing"],
+    "safeAutoActions": ["npm run verify", "git status", "git log", "git diff", "node --check"]
+  }
+}

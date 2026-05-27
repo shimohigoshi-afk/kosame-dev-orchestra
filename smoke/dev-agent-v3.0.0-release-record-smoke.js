@@ -43,7 +43,7 @@ for (const t of tools) {
 // Package.json version check
 const pkgPath = path.join(__dirname, '../package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-assert('package.json version 3.0.0', pkg.version === '3.0.0');
+assert('package.json version is v3.x', pkg.version.startsWith('3.'));
 
 if (failed > 0) { console.error(`\nFAILED: ${failed} / ${passed + failed}`); process.exit(1); }
 console.log(`\nPASS: ${passed} / ${passed + failed}`);

@@ -1,0 +1,22 @@
+{
+  "task_id": "task-v2.2.0-001",
+  "task_title": "v2.2.0 Provider Router Practical Pack 実装",
+  "task_type": "bulk_generation",
+  "target_files": [
+    "docs/ai-dev-team/provider-routing-policy-v2.2.0.md",
+    "tools/provider-routing-request-pack.js",
+    "tools/provider-routing-result-pack.js"
+  ],
+  "urgency": "normal",
+  "risk_level": "Low",
+  "needs_bulk_generation": true,
+  "needs_precise_repair": false,
+  "needs_architecture_judgment": false,
+  "needs_cloud_shell_verify": false,
+  "blocked_provider": ["gemini"],
+  "forbidden_actions": ["git push", "deploy", "git tag"],
+  "human_approval_required": false,
+  "version": "2.2.0",
+  "timestamp": "2026-05-27T00:00:00.000Z",
+  "dryRun": true
+}

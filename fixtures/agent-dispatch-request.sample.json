@@ -1,0 +1,24 @@
+{
+  "request_id": "dr-v2.3.0-001",
+  "task_id": "task-v2.3.0-001",
+  "task_title": "v2.3.0 Agent Dispatch Execution Pack 実装",
+  "task_description": "Dispatch request/queue/result/priority/blockerのtools・docs・smokeを追加する",
+  "assigned_agent": "claude",
+  "priority": "normal",
+  "risk_level": "Low",
+  "target_files": [
+    "tools/agent-dispatch-request-pack.js",
+    "tools/agent-dispatch-queue-v2.3.0.js",
+    "tools/agent-blocker-detection.js"
+  ],
+  "constraints": ["既存構造を壊さない", "npm run verifyが通ること"],
+  "forbidden_actions": ["git push", "deploy", "git tag"],
+  "requires_verify": true,
+  "requires_human_approval": false,
+  "timeout_minutes": 60,
+  "fallback_agent": "human",
+  "status": "pending",
+  "version": "2.3.0",
+  "created_at": "2026-05-27T00:00:00.000Z",
+  "dryRun": true
+}

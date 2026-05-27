@@ -1,0 +1,14 @@
+{
+  "workflowName": "CI",
+  "status": "success",
+  "conclusion": "success",
+  "runId": "12345678",
+  "branch": "main",
+  "commit": "abc1234def5678",
+  "durationSeconds": 187,
+  "jobResults": [
+    { "name": "build", "conclusion": "success" },
+    { "name": "test", "conclusion": "success" },
+    { "name": "lint", "conclusion": "success" }
+  ]
+}

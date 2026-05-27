@@ -1,0 +1,16 @@
+{
+  "packageVersion": "2.6.0",
+  "headCommit": "abc1234def5678",
+  "originCommit": "abc1234def5678",
+  "branch": "main",
+  "hasUncommittedChanges": false,
+  "uncommittedFiles": [],
+  "untrackedFiles": [],
+  "actionsStatus": "success",
+  "verifyStatus": "passed",
+  "providerHealth": {
+    "gemini": "gemini_available",
+    "claude": "claude_available"
+  },
+  "activeSession": "session-2026-05-27"
+}

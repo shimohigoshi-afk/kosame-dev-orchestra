@@ -1,0 +1,10 @@
+{
+  "targetVersion": "2.9.0",
+  "packageVersion": "2.9.0",
+  "headCommit": "abc1234def5678",
+  "actionsStatus": "success",
+  "verifyPassed": 94,
+  "verifyFailed": 0,
+  "releaseDocsPath": "docs/ai-dev-team/kosame-dev-orchestra-v2.9.0-release-record.md",
+  "releaseNotesUrl": ""
+}

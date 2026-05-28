@@ -1,0 +1,202 @@
+{
+  "version": "7.0.0",
+  "title": "Practical Dev Factory Runtime",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "runtimeId": "runtime-sample-project-implementation-1779997308151",
+  "projectName": "sample-project",
+  "repoPath": ".",
+  "normalizedTask": {
+    "taskGoal": "implement release note generator",
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "hasBlockedKeyword": false,
+    "safeForExternal": true
+  },
+  "realStatusSummary": {
+    "productLine": "backoffice",
+    "rawStatus": "git clean, smoke passing, ready for next task",
+    "importedAt": "2026-05-28T19:41:48.151Z",
+    "statusClass": "provided",
+    "note": "Real status imported from operator input. Verify against actual repo before proceeding."
+  },
+  "workBreakdown": {
+    "taskGoal": "implement release note generator",
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "phases": [
+      {
+        "phase": "intake",
+        "owner": "kosame",
+        "requiresHumanApproval": false
+      },
+      {
+        "phase": "design",
+        "owner": "kosame",
+        "requiresHumanApproval": false
+      },
+      {
+        "phase": "implementation",
+        "owner": "claude",
+        "requiresHumanApproval": true
+      },
+      {
+        "phase": "bulk_draft",
+        "owner": "gemini",
+        "requiresHumanApproval": true
+      },
+      {
+        "phase": "verify",
+        "owner": "cloudShell",
+        "requiresHumanApproval": true
+      },
+      {
+        "phase": "repair_loop",
+        "owner": "claude",
+        "requiresHumanApproval": true
+      },
+      {
+        "phase": "release",
+        "owner": "human",
+        "requiresHumanApproval": true
+      }
+    ]
+  },
+  "providerRoute": {
+    "selectedProvider": "claude",
+    "reason": "implementation task → claude",
+    "fallbacks": [
+      "grok",
+      "deepseek",
+      "kosame"
+    ]
+  },
+  "executionPackets": [
+    {
+      "provider": "claude",
+      "taskType": "implementation",
+      "productLine": "backoffice",
+      "prompt": "You are a precise implementation engineer.\nTask: implement release note generator\nProductLine: backoffice\nDo not read secrets, .env, or API key values. Return result as JSON.",
+      "tier": "primary",
+      "humanApprovalRequired": true
+    },
+    {
+      "provider": "grok",
+      "taskType": "implementation",
+      "productLine": "backoffice",
+      "prompt": "You are a breakthrough analyst.\nTask: implement release note generator\nProductLine: backoffice\nProvide alternative designs. No confidential data.",
+      "tier": "secondary",
+      "isFallback": true
+    },
+    {
+      "provider": "deepseek",
+      "taskType": "implementation",
+      "productLine": "backoffice",
+      "prompt": "You are a fallback code proposer.\nTask: implement release note generator\nInput must be anonymized. No secrets or customer data.",
+      "tier": "fallback",
+      "isFallback": true
+    },
+    {
+      "provider": "kosame",
+      "taskType": "implementation",
+      "productLine": "backoffice",
+      "prompt": "こさめ副社長として判断してください。\nタスク: implement release note generator\nProductLine: backoffice\n判断結果をJSON形式で返してください。",
+      "tier": "internal",
+      "isFallback": true
+    }
+  ],
+  "verificationPlan": {
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "steps": [
+      {
+        "step": "node --check on new JS files",
+        "required": true
+      },
+      {
+        "step": "npm run smoke for new packs",
+        "required": true
+      },
+      {
+        "step": "npm run verify (full suite)",
+        "required": true
+      },
+      {
+        "step": "git diff --stat (confirm non-empty)",
+        "required": true
+      },
+      {
+        "step": "git status --short review",
+        "required": true
+      }
+    ],
+    "humanApprovalRequired": true
+  },
+  "repairLoopPlan": {
+    "enabled": true,
+    "maxRetries": 3,
+    "repairOwner": "claude",
+    "escalationOnFailure": "kosame",
+    "gateOnEachRetry": false,
+    "steps": [
+      {
+        "step": "Capture failure output",
+        "owner": "cloudShell",
+        "auto": true
+      },
+      {
+        "step": "Route to claude for repair",
+        "owner": "claude",
+        "auto": true
+      },
+      {
+        "step": "Re-run smoke / verify",
+        "owner": "cloudShell",
+        "auto": true
+      },
+      {
+        "step": "Escalate to kosame if 3 fails",
+        "owner": "kosame",
+        "auto": false
+      }
+    ]
+  },
+  "humanApprovalPacket": {
+    "requestedBy": "practical-dev-factory-runtime",
+    "projectName": "sample-project",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "actionsRequiringApproval": [
+      "git commit",
+      "git push",
+      "git tag",
+      "deploy",
+      "docker build",
+      "gcloud run deploy"
+    ],
+    "humanApprovalRequired": true,
+    "approver": "じゅんやさん (final YES only — does not return to worker)",
+    "note": "じゅんやさんは最終YESのみ。作業員に戻さない。"
+  },
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ],
+  "recommendedNextAction": "Dispatch to claude — review execution packets and await human approval"
+}

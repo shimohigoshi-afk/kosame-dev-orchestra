@@ -1,0 +1,105 @@
+{
+  "version": "7.2.0",
+  "title": "Task Execution Packet Generator",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "packetId": "exec-implement-release-n-implementation-1779997308200",
+  "taskGoal": "implement release note generator",
+  "taskType": "implementation",
+  "productLine": "backoffice",
+  "riskLevel": "low",
+  "dataLevel": "A",
+  "provider": "claude",
+  "repoPath": ".",
+  "allowedFiles": [
+    "./tools/**",
+    "./smoke/**",
+    "./fixtures/**",
+    "./docs/ai-dev-team/**"
+  ],
+  "deniedFiles": [
+    "./.env",
+    "./.env.*",
+    "./*.pem",
+    "./*.key",
+    "./secrets/**",
+    "./credentials/**",
+    "./**/node_modules/**",
+    "./.git/**",
+    "./Dockerfile",
+    "./cloud-run/**",
+    "./apps/pm-agent/**"
+  ],
+  "verifyCommands": [
+    {
+      "command": "node --check {newFiles}",
+      "description": "Syntax check all new/modified JS files",
+      "required": true
+    },
+    {
+      "command": "npm run smoke:{packSlug}",
+      "description": "Run specific smoke test for this pack",
+      "required": true
+    },
+    {
+      "command": "npm run verify",
+      "description": "Run full verification suite",
+      "required": true
+    },
+    {
+      "command": "git diff --stat HEAD",
+      "description": "Confirm non-empty diff",
+      "required": true
+    },
+    {
+      "command": "git status --short",
+      "description": "Confirm clean working tree (no untracked junk)",
+      "required": true
+    }
+  ],
+  "doneCriteria": [
+    "All new JS files pass node --check",
+    "Smoke test for this pack passes",
+    "npm run verify passes without errors",
+    "git diff --stat HEAD is non-empty",
+    "No new secrets or .env values exposed",
+    "Task goal completed: implement release note generator",
+    "New tool file created and exported correctly",
+    "Fixture file exists and is valid JSON"
+  ],
+  "forbiddenActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ],
+  "reportFormat": {
+    "format": "JSON",
+    "requiredFields": ["status", "summary", "filesChanged", "verifyResult", "issues", "nextAction"],
+    "statusValues": ["success", "failure", "incomplete", "needs_repair", "pending_approval"],
+    "provider": "claude",
+    "taskType": "implementation"
+  },
+  "dataLevelNote": "Level A data: all providers allowed (anonymize before dispatch to deepseek/kimi)",
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy"
+  ],
+  "recommendedNextAction": "Execute task using claude. Complete all verifyCommands. Report in JSON format."
+}

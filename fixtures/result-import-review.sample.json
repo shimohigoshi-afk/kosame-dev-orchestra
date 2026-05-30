@@ -1,0 +1,46 @@
+{
+  "version": "7.3.0",
+  "title": "Result Import & Review Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "importId": "import-claude-implement-release-n-1779997308300",
+  "taskGoal": "implement release note generator",
+  "taskType": "implementation",
+  "productLine": "backoffice",
+  "provider": "claude",
+  "normalizedResult": {
+    "provider": "claude",
+    "taskGoal": "implement release note generator",
+    "rawResult": "PASS: all smoke tests passed. npm run verify: OK. Files changed: tools/release-note-generator.js, smoke/dev-agent-release-note-smoke.js, fixtures/release-note.sample.json",
+    "rawTruncated": false,
+    "importedAt": "2026-05-30T00:00:00.000Z"
+  },
+  "reviewDecision": {
+    "status": "success",
+    "issueCount": 0,
+    "issues": [],
+    "approved": true,
+    "requiresRepair": false,
+    "requiresHumanApproval": false,
+    "reviewedAt": "2026-05-30T00:00:00.000Z"
+  },
+  "recommendedNextAction": "Route to kosame for final review and approval packet generation",
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "version": "7.1.0",
+  "title": "Provider Prompt Router Real Use Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "taskType": "implementation",
+  "productLine": "backoffice",
+  "riskLevel": "low",
+  "dataLevel": "A",
+  "taskGoal": "implement release note generator",
+  "hasBlockedKeyword": false,
+  "providerRoute": {
+    "selectedProvider": "claude",
+    "reason": "implementation task → claude",
+    "fallbacks": ["grok", "deepseek", "kosame"]
+  },
+  "promptPacket": {
+    "provider": "claude",
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "prompt": "You are a precise implementation engineer working on backoffice.\nContext: Backoffice productLine: Internal workflow automation. Sanitize employee data before external dispatch.\nTask: implement release note generator\nTaskType: implementation\nDo not read secrets, .env, or API key values. Return result as JSON.",
+    "tier": "primary",
+    "humanApprovalRequired": true
+  },
+  "safetyCheck": {
+    "safe": true,
+    "reason": "within safety boundary"
+  },
+  "contextualGuidance": {
+    "productLineGuidance": "Backoffice productLine: Internal workflow automation. Sanitize employee data before external dispatch.",
+    "riskNote": "Risk level low: proceed per routing policy.",
+    "taskTypeNote": "Implementation: claude preferred. Verify with node --check and npm run smoke."
+  },
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ],
+  "recommendedNextAction": "Dispatch to claude — review prompt packet and await human approval"
+}

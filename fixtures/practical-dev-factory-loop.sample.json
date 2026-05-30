@@ -1,0 +1,84 @@
+{
+  "version": "7.5.0",
+  "title": "Practical Dev Factory Loop",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "loopId": "loop-sample-project-implementation-1779997308500",
+  "projectName": "sample-project",
+  "repoPath": ".",
+  "taskGoal": "implement release note generator",
+  "productLine": "backoffice",
+  "taskType": "implementation",
+  "riskLevel": "low",
+  "dataLevel": "A",
+  "levelCBlocked": false,
+  "providerRoute": {
+    "selectedProvider": "claude",
+    "reason": "implementation task → claude",
+    "fallbacks": ["grok", "deepseek", "kosame"]
+  },
+  "executionPacket": {
+    "packetId": "exec-implement-release-n-implementation-1779997308200",
+    "taskGoal": "implement release note generator",
+    "taskType": "implementation",
+    "provider": "claude",
+    "allowedFiles": ["./tools/**", "./smoke/**", "./fixtures/**", "./docs/ai-dev-team/**"],
+    "deniedFiles": ["./.env", "./.env.*", "./*.pem", "./*.key"],
+    "verifyCommands": ["node --check {newFiles}", "npm run smoke:{packSlug}", "npm run verify"],
+    "doneCriteria": ["All new JS files pass node --check", "Smoke test passes", "npm run verify passes"],
+    "forbiddenActions": ["git push", "git tag", "deploy", "Secret value read"]
+  },
+  "importedResult": {
+    "importId": "import-claude-implement-release-n-1779997308300",
+    "provider": "claude",
+    "reviewDecision": {
+      "status": "incomplete",
+      "approved": false,
+      "requiresRepair": false,
+      "requiresHumanApproval": false
+    }
+  },
+  "reviewDecision": {
+    "status": "incomplete",
+    "issueCount": 0,
+    "issues": [],
+    "approved": false,
+    "requiresRepair": false,
+    "requiresHumanApproval": false
+  },
+  "repairLoop": null,
+  "finalApprovalPacket": {
+    "requestedBy": "practical-dev-factory-loop",
+    "projectName": "sample-project",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "reviewStatus": "incomplete",
+    "approved": false,
+    "commitGate": { "allowed": false, "requiresHumanApproval": true },
+    "pushGate":   { "allowed": false, "requiresHumanApproval": true },
+    "tagGate":    { "allowed": false, "requiresHumanApproval": true },
+    "deployGate": { "allowed": false, "requiresHumanApproval": true },
+    "approver": "じゅんやさん (final YES only — does not return to worker)",
+    "humanApprovalRequired": true
+  },
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ],
+  "recommendedNextAction": "Dispatch to claude using executionPacket — report result in JSON format"
+}

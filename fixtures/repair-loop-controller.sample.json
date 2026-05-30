@@ -1,0 +1,51 @@
+{
+  "version": "7.4.0",
+  "title": "Repair Loop Controller",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "repairId": "repair-syntax_error-implement-release-n-1779997308400",
+  "failureType": "syntax_error",
+  "taskGoal": "implement release note generator",
+  "taskType": "implementation",
+  "productLine": "backoffice",
+  "currentProvider": "claude",
+  "attempt": 1,
+  "maxRetries": 3,
+  "escalationRequired": false,
+  "repairRoute": {
+    "failureType": "syntax_error",
+    "repairProvider": "claude",
+    "fallbackProvider": "grok",
+    "escalationProvider": "kosame",
+    "reason": "Syntax error → claude fix"
+  },
+  "repairPrompt": "You are a repair engineer. Fix the following failure.\nTask: implement release note generator\nFailureType: syntax_error\nError:\nSyntaxError: Unexpected token } at line 42\nDo not read secrets or .env values. Return fixed code as JSON with filesChanged and summary fields.",
+  "repairSteps": [
+    { "step": 1, "action": "Capture full error output", "owner": "cloudShell", "auto": true },
+    { "step": 2, "action": "Dispatch repair prompt to claude", "owner": "claude", "auto": true },
+    { "step": 3, "action": "Apply fix to codebase", "owner": "claude", "auto": false },
+    { "step": 4, "action": "Run node --check on changed files", "owner": "cloudShell", "auto": true },
+    { "step": 5, "action": "Run npm run verify", "owner": "cloudShell", "auto": true },
+    { "step": 6, "action": "Evaluate result (attempt 1/3)", "owner": "cloudShell", "auto": true },
+    { "step": 7, "action": "Loop back if still failing", "owner": "system", "auto": true }
+  ],
+  "blockedDangerousActions": [
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "git clean",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance policy sharing",
+    "health check info sharing",
+    "personal name in minutes sharing"
+  ],
+  "recommendedNextAction": "Dispatch repair prompt to claude (attempt 1/3)"
+}

@@ -1,0 +1,199 @@
+{
+  "version": "8.0.0",
+  "title": "Full Orchestra Planning Layer",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "planningId": "planning-sample-project-implementation-1780163336011",
+  "projectName": "sample-project",
+  "repoPath": ".",
+  "taskGoal": "implement release note generator",
+  "productLine": "backoffice",
+  "taskType": "implementation",
+  "riskLevel": "low",
+  "dataLevel": "A",
+  "currentStatus": "git clean, smoke passing",
+  "normalizedGoal": {
+    "rawGoal": "implement release note generator",
+    "normalizedGoal": "implement release note generator",
+    "taskType": "implementation",
+    "productLine": "backoffice",
+    "normalizedAt": "2026-05-30T17:48:56.011Z"
+  },
+  "agentRoles": [
+    {
+      "agentId": "kosame",
+      "role": "PM / 統合 / 安全ゲート / 最終判断 / 採否判定",
+      "responsibilities": [
+        "task intake",
+        "planning",
+        "merge decision",
+        "final approval",
+        "safety gate"
+      ],
+      "canEditRepo": false,
+      "canApprove": true,
+      "blockedByDataLevel": false,
+      "blockedReason": null
+    },
+    {
+      "agentId": "gemini",
+      "role": "仕様整理 / docs / fixture / assert / 候補出し",
+      "responsibilities": [
+        "spec clarification",
+        "documentation",
+        "fixture generation",
+        "assertion candidate",
+        "bulk draft"
+      ],
+      "canEditRepo": false,
+      "canApprove": false,
+      "blockedByDataLevel": false,
+      "blockedReason": null
+    },
+    {
+      "agentId": "claude",
+      "role": "実装 / 修正 / verify / 差分整理",
+      "responsibilities": [
+        "implementation",
+        "fix",
+        "verify",
+        "diff summary",
+        "repair"
+      ],
+      "canEditRepo": true,
+      "canApprove": false,
+      "blockedByDataLevel": false,
+      "blockedReason": null
+    },
+    {
+      "agentId": "grok",
+      "role": "弱点指摘 / 突破案 / 堂々巡り防止",
+      "responsibilities": [
+        "weakness detection",
+        "breakthrough proposal",
+        "loop prevention",
+        "alternative design"
+      ],
+      "canEditRepo": false,
+      "canApprove": false,
+      "blockedByDataLevel": false,
+      "blockedReason": null
+    },
+    {
+      "agentId": "human",
+      "role": "commit / push / tag / deploy / Secret / 課金 / 本番影響の最終YES",
+      "responsibilities": [
+        "commit",
+        "push",
+        "tag",
+        "deploy",
+        "secret management",
+        "billing",
+        "production decision"
+      ],
+      "canEditRepo": true,
+      "canApprove": true,
+      "blockedByDataLevel": false,
+      "blockedReason": null
+    }
+  ],
+  "workLanes": [
+    {
+      "lane": "planning",
+      "owner": "kosame",
+      "parallel": false,
+      "note": "PM intake and task normalization"
+    },
+    {
+      "lane": "spec",
+      "owner": "gemini",
+      "parallel": true,
+      "note": "Spec clarification and fixture drafting"
+    },
+    {
+      "lane": "weakness",
+      "owner": "grok",
+      "parallel": true,
+      "note": "Weakness detection and breakthrough proposal"
+    },
+    {
+      "lane": "implementation",
+      "owner": "claude",
+      "parallel": false,
+      "note": "Code implementation and verify (after spec/weakness done)"
+    },
+    {
+      "lane": "merge_review",
+      "owner": "kosame",
+      "parallel": false,
+      "note": "Merge decision and adopt/reject/escalate"
+    },
+    {
+      "lane": "final_approval",
+      "owner": "human",
+      "parallel": false,
+      "note": "commit / push / tag / deploy final YES"
+    }
+  ],
+  "safetyBoundary": {
+    "dataLevel": "A",
+    "riskLevel": "low",
+    "externalProviderAllowed": true,
+    "levelCNote": null,
+    "criticalRiskNote": null,
+    "blockedProviders": [],
+    "repoEditOwner": "claude only — Gemini/Grok must not edit repo directly"
+  },
+  "approvalGates": [
+    {
+      "gate": "spec_approval",
+      "owner": "kosame",
+      "required": true,
+      "note": "kosame approves spec before implementation starts"
+    },
+    {
+      "gate": "impl_approval",
+      "owner": "kosame",
+      "required": true,
+      "note": "kosame reviews claude diff before merge"
+    },
+    {
+      "gate": "commit_gate",
+      "owner": "human",
+      "required": true,
+      "note": "human YES required before git commit"
+    },
+    {
+      "gate": "push_gate",
+      "owner": "human",
+      "required": true,
+      "note": "human YES required before git push"
+    },
+    {
+      "gate": "tag_gate",
+      "owner": "human",
+      "required": true,
+      "note": "human YES required before git tag"
+    },
+    {
+      "gate": "deploy_gate",
+      "owner": "human",
+      "required": true,
+      "note": "human YES required before deploy"
+    }
+  ],
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Build parallel work packet — dispatch spec to Gemini and weakness review to Grok simultaneously"
+}

@@ -1,0 +1,68 @@
+{
+  "version": "9.5.0",
+  "title": "Autonomous Repair & Retry Board",
+  "dryRun": true,
+  "humanApprovalRequired": false,
+  "repairBoardId": "repair-implementation-1780163351197",
+  "failureClassification": {
+    "classified": "syntax_error",
+    "original": "syntax_error",
+    "attemptCount": 0
+  },
+  "retryTargetAgent": {
+    "agent": "claude",
+    "action": "fix syntax error in implementation",
+    "maxRetries": 3,
+    "shouldStop": false,
+    "stopReason": null
+  },
+  "repairInstructionPacket": {
+    "failureType": "syntax_error",
+    "failedStep": "implementation",
+    "errorSummary": "SyntaxError: Unexpected token } at line 42",
+    "repairOwner": "claude",
+    "repairAction": "fix syntax error in implementation",
+    "repairSteps": [
+      "Read error summary carefully",
+      "Identify root cause in failing file",
+      "Apply minimal fix (no unrelated changes)",
+      "Re-run node --check on modified files",
+      "Re-run relevant smoke test",
+      "Re-run npm run verify",
+      "Report result to こさめ"
+    ],
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "noAutoFileWrite": true,
+    "note": "自動修正を実行しない。実ファイルを書き換えない。repair instruction packetを生成するだけ。",
+    "generatedAt": "2026-05-30T17:49:11.197Z"
+  },
+  "retryLimit": 3,
+  "escalationPolicy": {
+    "escalateTo": "claude (retry)",
+    "maxRetries": 3,
+    "escalateAfterRetries": 3,
+    "highRiskEscalation": null
+  },
+  "stopConditions": [
+    "repeated_failure: 3+ consecutive failures → stop and escalate",
+    "safety_block: always escalate to kosame — no auto retry",
+    "human_approval_required: always route to human — never auto-bypass",
+    "provider_unavailable after all fallbacks tried → escalate to kosame",
+    "riskLevel=critical: no auto retry — always human approval first"
+  ],
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Route repair instruction to claude"
+}

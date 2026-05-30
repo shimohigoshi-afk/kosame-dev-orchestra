@@ -1,0 +1,136 @@
+{
+  "version": "8.5.0",
+  "title": "Multi-Agent Parallel Work Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "parallelWorkId": "parallel-sample-project-1780163341957",
+  "projectName": "sample-project",
+  "taskGoal": "implement release note generator",
+  "productLine": "backoffice",
+  "taskType": "implementation",
+  "dataLevel": "A",
+  "riskLevel": "low",
+  "parallelMode": "full",
+  "maxConcurrentAgents": 3,
+  "agentTaskPackets": [
+    {
+      "agentId": "kosame",
+      "role": "PM / 統合 / 安全ゲート",
+      "prompt": "こさめ副社長として、以下タスクのPM判断をしてください。\nタスク: implement release note generator\nProductLine: backoffice\n判断結果をJSON形式で返してください。repoは触らないでください。",
+      "canEditRepo": false,
+      "tier": "internal",
+      "levelCBlocked": false,
+      "blockedReason": null,
+      "taskGoal": "implement release note generator",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "humanApprovalRequired": true,
+      "dryRun": true
+    },
+    {
+      "agentId": "gemini",
+      "role": "仕様整理 / docs / fixture / assert",
+      "prompt": "You are a spec clarification and documentation specialist.\nTask: implement release note generator\nProductLine: backoffice\nProvide: spec clarification, fixture candidates, assert candidates. No customer data. Do NOT edit the repo directly.",
+      "canEditRepo": false,
+      "tier": "primary",
+      "levelCBlocked": false,
+      "blockedReason": null,
+      "taskGoal": "implement release note generator",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "humanApprovalRequired": true,
+      "dryRun": true
+    },
+    {
+      "agentId": "claude",
+      "role": "実装 / 修正 / verify",
+      "prompt": "You are a precise implementation engineer.\nTask: implement release note generator\nProductLine: backoffice\nDo not read secrets, .env, or API key values. Return result as JSON. You are the only agent allowed to edit the repo.",
+      "canEditRepo": true,
+      "tier": "primary",
+      "levelCBlocked": false,
+      "blockedReason": null,
+      "taskGoal": "implement release note generator",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "humanApprovalRequired": true,
+      "dryRun": true
+    },
+    {
+      "agentId": "grok",
+      "role": "弱点指摘 / 突破案 / 堂々巡り防止",
+      "prompt": "You are a weakness detector and breakthrough analyst.\nTask: implement release note generator\nProductLine: backoffice\nProvide: weakness list, breakthrough proposals, loop prevention suggestions. No confidential data. Do NOT edit the repo.",
+      "canEditRepo": false,
+      "tier": "secondary",
+      "levelCBlocked": false,
+      "blockedReason": null,
+      "taskGoal": "implement release note generator",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "humanApprovalRequired": true,
+      "dryRun": true
+    }
+  ],
+  "executionOrder": [
+    {
+      "step": 1,
+      "agentIds": [
+        "kosame"
+      ],
+      "parallel": false,
+      "note": "PM intake first"
+    },
+    {
+      "step": 2,
+      "agentIds": [
+        "gemini",
+        "grok"
+      ],
+      "parallel": true,
+      "note": "Gemini+Grok run in parallel"
+    },
+    {
+      "step": 3,
+      "agentIds": [
+        "claude"
+      ],
+      "parallel": false,
+      "note": "Claude implements after spec/weakness done"
+    }
+  ],
+  "conflictPolicy": {
+    "simultaneousEditsPolicy": "denied",
+    "repoEditOwner": "claude",
+    "conflictResolution": "kosame arbitrates — Gemini/Grok outputs are text only, not file patches",
+    "deniedActions": [
+      "Gemini editing repo files directly",
+      "Grok editing repo files directly",
+      "Multiple agents editing same file simultaneously"
+    ]
+  },
+  "deniedSharedEdits": [
+    "Gemini must not edit repo — text output only",
+    "Grok must not edit repo — text output only",
+    "kosame must not edit repo directly — routes to claude",
+    "No two agents may edit the same file simultaneously"
+  ],
+  "safetyBoundary": {
+    "dataLevel": "A",
+    "riskLevel": "low",
+    "externalProviderAllowed": true,
+    "repoEditOwner": "claude only"
+  },
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Dispatch Gemini+Grok in parallel (step 2), then Claude after both complete (step 3)"
+}

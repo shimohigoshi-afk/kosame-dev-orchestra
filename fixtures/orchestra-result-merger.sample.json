@@ -1,0 +1,102 @@
+{
+  "version": "9.0.0",
+  "title": "Orchestra Result Merger",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "mergerId": "merger-implement-release-note-g-1780163350326",
+  "originalTask": "implement release note generator",
+  "normalizedResults": {
+    "gemini": {
+      "agentId": "gemini",
+      "status": "received",
+      "summary": "Spec clarification complete. Fixtures generated. No concerns.",
+      "concerns": [
+        "Potential issue detected in result text"
+      ],
+      "adoptable": false
+    },
+    "grok": {
+      "agentId": "grok",
+      "status": "received",
+      "summary": "Weakness analysis complete. 2 potential edge cases identified.",
+      "concerns": [],
+      "adoptable": true
+    },
+    "claude": {
+      "agentId": "claude",
+      "status": "received",
+      "summary": "Implementation complete. All smoke tests pass. npm run verify: OK.",
+      "concerns": [],
+      "adoptable": true
+    }
+  },
+  "adoptedItems": [
+    {
+      "agentId": "grok",
+      "summary": "Weakness analysis complete. 2 potential edge cases identified."
+    },
+    {
+      "agentId": "claude",
+      "summary": "Implementation complete. All smoke tests pass. npm run verify: OK."
+    }
+  ],
+  "rejectedItems": [
+    {
+      "agentId": "gemini",
+      "concerns": [
+        "Potential issue detected in result text"
+      ]
+    }
+  ],
+  "unresolvedItems": [],
+  "mergeDecisionPacket": {
+    "mergeDecisionType": "partial_adopt",
+    "originalTask": "implement release note generator",
+    "adoptedCount": 2,
+    "rejectedCount": 1,
+    "unresolvedCount": 0,
+    "noRealFileMerge": true,
+    "note": "実ファイルの自動マージは禁止。このパケットは採用判断のみを含む。コードの自動適用はしない。",
+    "adoptedSummaries": [
+      {
+        "agentId": "grok",
+        "summary": "Weakness analysis complete. 2 potential edge cases identified."
+      },
+      {
+        "agentId": "claude",
+        "summary": "Implementation complete. All smoke tests pass. npm run verify: OK."
+      }
+    ],
+    "rejectedReasons": [
+      {
+        "agentId": "gemini",
+        "concerns": [
+          "Potential issue detected in result text"
+        ]
+      }
+    ],
+    "unresolvedItems": [],
+    "generatedAt": "2026-05-30T17:49:10.327Z"
+  },
+  "reviewDecision": "partial_adopt",
+  "humanReviewRequired": false,
+  "safetyBoundary": {
+    "dataLevel": "A",
+    "riskLevel": "low"
+  },
+  "verificationSummary": "npm run verify PASS",
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Partial adopt — route to こさめ for merge arbitration before proceeding"
+}

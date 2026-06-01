@@ -1,0 +1,1152 @@
+{
+  "version": "10.5.0",
+  "title": "Full Orchestra Runtime Probe / Usage Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "probeId": "probe-kosame-dev-orchestra-1780331288821",
+  "runtimeFunctionUsed": "buildPacket",
+  "inputSummary": {
+    "projectName": "kosame-dev-orchestra",
+    "repoPath": ".",
+    "taskGoal": "probe full orchestra runtime",
+    "productLine": "backoffice",
+    "taskType": "implementation",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "currentStatus": "git clean, smoke passing",
+    "probeMode": "dry-run",
+    "geminiResultProvided": true,
+    "grokResultProvided": true,
+    "claudeResultProvided": true
+  },
+  "packetPresence": {
+    "orchestraId": true,
+    "planningPacket": true,
+    "parallelWorkPacket": true,
+    "mergedReviewPacket": true,
+    "repairRetryPacket": true,
+    "finalRuntimePacket": true,
+    "finalApprovalPacket": true
+  },
+  "safetySummary": {
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "noRealApiExecution": true,
+    "noRealFileEdit": true,
+    "buildPacketAvailable": true,
+    "buildError": null,
+    "probeMode": "dry-run"
+  },
+  "approvalGateSummary": {
+    "commitGate": {
+      "required": true,
+      "note": "git commit requires explicit human YES"
+    },
+    "pushGate": {
+      "required": true,
+      "note": "git push requires explicit human YES"
+    },
+    "tagGate": {
+      "required": true,
+      "note": "git tag requires explicit human YES"
+    },
+    "deployGate": {
+      "required": true,
+      "note": "deploy requires explicit human YES"
+    }
+  },
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Probe passed — route runtimePacket to v11.0.0 First Practical Orchestra Task Runner",
+  "probePassed": true,
+  "runtimePacket": {
+    "version": "10.0.0",
+    "title": "Full Orchestra Agent Runtime",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "orchestraId": "orchestra-kosame-dev-orchestra-implementation-1780331288821",
+    "projectName": "kosame-dev-orchestra",
+    "repoPath": ".",
+    "taskGoal": "probe full orchestra runtime",
+    "productLine": "backoffice",
+    "taskType": "implementation",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "levelCBlocked": false,
+    "planningPacket": {
+      "version": "8.0.0",
+      "title": "Full Orchestra Planning Layer",
+      "dryRun": true,
+      "humanApprovalRequired": true,
+      "planningId": "planning-kosame-dev-orchestra-implementation-1780331288821",
+      "projectName": "kosame-dev-orchestra",
+      "repoPath": ".",
+      "taskGoal": "probe full orchestra runtime",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "riskLevel": "low",
+      "dataLevel": "A",
+      "currentStatus": "git clean, smoke passing",
+      "normalizedGoal": {
+        "rawGoal": "probe full orchestra runtime",
+        "normalizedGoal": "probe full orchestra runtime",
+        "taskType": "implementation",
+        "productLine": "backoffice",
+        "normalizedAt": "2026-06-01T16:28:08.822Z"
+      },
+      "agentRoles": [
+        {
+          "agentId": "kosame",
+          "role": "PM / 統合 / 安全ゲート / 最終判断 / 採否判定",
+          "responsibilities": [
+            "task intake",
+            "planning",
+            "merge decision",
+            "final approval",
+            "safety gate"
+          ],
+          "canEditRepo": false,
+          "canApprove": true,
+          "blockedByDataLevel": false,
+          "blockedReason": null
+        },
+        {
+          "agentId": "gemini",
+          "role": "仕様整理 / docs / fixture / assert / 候補出し",
+          "responsibilities": [
+            "spec clarification",
+            "documentation",
+            "fixture generation",
+            "assertion candidate",
+            "bulk draft"
+          ],
+          "canEditRepo": false,
+          "canApprove": false,
+          "blockedByDataLevel": false,
+          "blockedReason": null
+        },
+        {
+          "agentId": "claude",
+          "role": "実装 / 修正 / verify / 差分整理",
+          "responsibilities": [
+            "implementation",
+            "fix",
+            "verify",
+            "diff summary",
+            "repair"
+          ],
+          "canEditRepo": true,
+          "canApprove": false,
+          "blockedByDataLevel": false,
+          "blockedReason": null
+        },
+        {
+          "agentId": "grok",
+          "role": "弱点指摘 / 突破案 / 堂々巡り防止",
+          "responsibilities": [
+            "weakness detection",
+            "breakthrough proposal",
+            "loop prevention",
+            "alternative design"
+          ],
+          "canEditRepo": false,
+          "canApprove": false,
+          "blockedByDataLevel": false,
+          "blockedReason": null
+        },
+        {
+          "agentId": "human",
+          "role": "commit / push / tag / deploy / Secret / 課金 / 本番影響の最終YES",
+          "responsibilities": [
+            "commit",
+            "push",
+            "tag",
+            "deploy",
+            "secret management",
+            "billing",
+            "production decision"
+          ],
+          "canEditRepo": true,
+          "canApprove": true,
+          "blockedByDataLevel": false,
+          "blockedReason": null
+        }
+      ],
+      "workLanes": [
+        {
+          "lane": "planning",
+          "owner": "kosame",
+          "parallel": false,
+          "note": "PM intake and task normalization"
+        },
+        {
+          "lane": "spec",
+          "owner": "gemini",
+          "parallel": true,
+          "note": "Spec clarification and fixture drafting"
+        },
+        {
+          "lane": "weakness",
+          "owner": "grok",
+          "parallel": true,
+          "note": "Weakness detection and breakthrough proposal"
+        },
+        {
+          "lane": "implementation",
+          "owner": "claude",
+          "parallel": false,
+          "note": "Code implementation and verify (after spec/weakness done)"
+        },
+        {
+          "lane": "merge_review",
+          "owner": "kosame",
+          "parallel": false,
+          "note": "Merge decision and adopt/reject/escalate"
+        },
+        {
+          "lane": "final_approval",
+          "owner": "human",
+          "parallel": false,
+          "note": "commit / push / tag / deploy final YES"
+        }
+      ],
+      "safetyBoundary": {
+        "dataLevel": "A",
+        "riskLevel": "low",
+        "externalProviderAllowed": true,
+        "levelCNote": null,
+        "criticalRiskNote": null,
+        "blockedProviders": [],
+        "repoEditOwner": "claude only — Gemini/Grok must not edit repo directly"
+      },
+      "approvalGates": [
+        {
+          "gate": "spec_approval",
+          "owner": "kosame",
+          "required": true,
+          "note": "kosame approves spec before implementation starts"
+        },
+        {
+          "gate": "impl_approval",
+          "owner": "kosame",
+          "required": true,
+          "note": "kosame reviews claude diff before merge"
+        },
+        {
+          "gate": "commit_gate",
+          "owner": "human",
+          "required": true,
+          "note": "human YES required before git commit"
+        },
+        {
+          "gate": "push_gate",
+          "owner": "human",
+          "required": true,
+          "note": "human YES required before git push"
+        },
+        {
+          "gate": "tag_gate",
+          "owner": "human",
+          "required": true,
+          "note": "human YES required before git tag"
+        },
+        {
+          "gate": "deploy_gate",
+          "owner": "human",
+          "required": true,
+          "note": "human YES required before deploy"
+        }
+      ],
+      "blockedDangerousActions": [
+        "git push",
+        "git tag",
+        "deploy",
+        "gcloud deploy",
+        "docker build",
+        "secret",
+        ".env",
+        "api key",
+        "customer data",
+        "destructive action",
+        "rm -rf"
+      ],
+      "recommendedNextAction": "Build parallel work packet — dispatch spec to Gemini and weakness review to Grok simultaneously"
+    },
+    "parallelWorkPacket": {
+      "version": "8.5.0",
+      "title": "Multi-Agent Parallel Work Pack",
+      "dryRun": true,
+      "humanApprovalRequired": true,
+      "parallelWorkId": "parallel-kosame-dev-orchestra-1780331288822",
+      "projectName": "kosame-dev-orchestra",
+      "taskGoal": "probe full orchestra runtime",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "dataLevel": "A",
+      "riskLevel": "low",
+      "parallelMode": "full",
+      "maxConcurrentAgents": 3,
+      "agentTaskPackets": [
+        {
+          "agentId": "kosame",
+          "role": "PM / 統合 / 安全ゲート",
+          "prompt": "こさめ副社長として、以下タスクのPM判断をしてください。\nタスク: probe full orchestra runtime\nProductLine: backoffice\n判断結果をJSON形式で返してください。repoは触らないでください。",
+          "canEditRepo": false,
+          "tier": "internal",
+          "levelCBlocked": false,
+          "blockedReason": null,
+          "taskGoal": "probe full orchestra runtime",
+          "productLine": "backoffice",
+          "taskType": "implementation",
+          "humanApprovalRequired": true,
+          "dryRun": true
+        },
+        {
+          "agentId": "gemini",
+          "role": "仕様整理 / docs / fixture / assert",
+          "prompt": "You are a spec clarification and documentation specialist.\nTask: probe full orchestra runtime\nProductLine: backoffice\nProvide: spec clarification, fixture candidates, assert candidates. No customer data. Do NOT edit the repo directly.",
+          "canEditRepo": false,
+          "tier": "primary",
+          "levelCBlocked": false,
+          "blockedReason": null,
+          "taskGoal": "probe full orchestra runtime",
+          "productLine": "backoffice",
+          "taskType": "implementation",
+          "humanApprovalRequired": true,
+          "dryRun": true
+        },
+        {
+          "agentId": "claude",
+          "role": "実装 / 修正 / verify",
+          "prompt": "You are a precise implementation engineer.\nTask: probe full orchestra runtime\nProductLine: backoffice\nDo not read secrets, .env, or API key values. Return result as JSON. You are the only agent allowed to edit the repo.",
+          "canEditRepo": true,
+          "tier": "primary",
+          "levelCBlocked": false,
+          "blockedReason": null,
+          "taskGoal": "probe full orchestra runtime",
+          "productLine": "backoffice",
+          "taskType": "implementation",
+          "humanApprovalRequired": true,
+          "dryRun": true
+        },
+        {
+          "agentId": "grok",
+          "role": "弱点指摘 / 突破案 / 堂々巡り防止",
+          "prompt": "You are a weakness detector and breakthrough analyst.\nTask: probe full orchestra runtime\nProductLine: backoffice\nProvide: weakness list, breakthrough proposals, loop prevention suggestions. No confidential data. Do NOT edit the repo.",
+          "canEditRepo": false,
+          "tier": "secondary",
+          "levelCBlocked": false,
+          "blockedReason": null,
+          "taskGoal": "probe full orchestra runtime",
+          "productLine": "backoffice",
+          "taskType": "implementation",
+          "humanApprovalRequired": true,
+          "dryRun": true
+        }
+      ],
+      "executionOrder": [
+        {
+          "step": 1,
+          "agentIds": [
+            "kosame"
+          ],
+          "parallel": false,
+          "note": "PM intake first"
+        },
+        {
+          "step": 2,
+          "agentIds": [
+            "gemini",
+            "grok"
+          ],
+          "parallel": true,
+          "note": "Gemini+Grok run in parallel"
+        },
+        {
+          "step": 3,
+          "agentIds": [
+            "claude"
+          ],
+          "parallel": false,
+          "note": "Claude implements after spec/weakness done"
+        }
+      ],
+      "conflictPolicy": {
+        "simultaneousEditsPolicy": "denied",
+        "repoEditOwner": "claude",
+        "conflictResolution": "kosame arbitrates — Gemini/Grok outputs are text only, not file patches",
+        "deniedActions": [
+          "Gemini editing repo files directly",
+          "Grok editing repo files directly",
+          "Multiple agents editing same file simultaneously"
+        ]
+      },
+      "deniedSharedEdits": [
+        "Gemini must not edit repo — text output only",
+        "Grok must not edit repo — text output only",
+        "kosame must not edit repo directly — routes to claude",
+        "No two agents may edit the same file simultaneously"
+      ],
+      "safetyBoundary": {
+        "dataLevel": "A",
+        "riskLevel": "low",
+        "externalProviderAllowed": true,
+        "repoEditOwner": "claude only"
+      },
+      "blockedDangerousActions": [
+        "git push",
+        "git tag",
+        "deploy",
+        "gcloud deploy",
+        "docker build",
+        "secret",
+        ".env",
+        "api key",
+        "customer data",
+        "destructive action",
+        "rm -rf"
+      ],
+      "recommendedNextAction": "Dispatch Gemini+Grok in parallel (step 2), then Claude after both complete (step 3)"
+    },
+    "mergedReviewPacket": {
+      "version": "9.0.0",
+      "title": "Orchestra Result Merger",
+      "dryRun": true,
+      "humanApprovalRequired": true,
+      "mergerId": "merger-probe-full-orchestra-run-1780331288823",
+      "originalTask": "probe full orchestra runtime",
+      "normalizedResults": {
+        "gemini": {
+          "agentId": "gemini",
+          "status": "received",
+          "summary": "Spec clarification complete. Fixtures generated.",
+          "concerns": [],
+          "adoptable": true
+        },
+        "grok": {
+          "agentId": "grok",
+          "status": "received",
+          "summary": "Weakness analysis complete. No critical issues.",
+          "concerns": [
+            "Potential issue detected in result text"
+          ],
+          "adoptable": false
+        },
+        "claude": {
+          "agentId": "claude",
+          "status": "received",
+          "summary": "Implementation complete. All smoke tests pass. npm run verify: OK.",
+          "concerns": [],
+          "adoptable": true
+        }
+      },
+      "adoptedItems": [
+        {
+          "agentId": "gemini",
+          "summary": "Spec clarification complete. Fixtures generated."
+        },
+        {
+          "agentId": "claude",
+          "summary": "Implementation complete. All smoke tests pass. npm run verify: OK."
+        }
+      ],
+      "rejectedItems": [
+        {
+          "agentId": "grok",
+          "concerns": [
+            "Potential issue detected in result text"
+          ]
+        }
+      ],
+      "unresolvedItems": [],
+      "mergeDecisionPacket": {
+        "mergeDecisionType": "partial_adopt",
+        "originalTask": "probe full orchestra runtime",
+        "adoptedCount": 2,
+        "rejectedCount": 1,
+        "unresolvedCount": 0,
+        "noRealFileMerge": true,
+        "note": "実ファイルの自動マージは禁止。このパケットは採用判断のみを含む。コードの自動適用はしない。",
+        "adoptedSummaries": [
+          {
+            "agentId": "gemini",
+            "summary": "Spec clarification complete. Fixtures generated."
+          },
+          {
+            "agentId": "claude",
+            "summary": "Implementation complete. All smoke tests pass. npm run verify: OK."
+          }
+        ],
+        "rejectedReasons": [
+          {
+            "agentId": "grok",
+            "concerns": [
+              "Potential issue detected in result text"
+            ]
+          }
+        ],
+        "unresolvedItems": [],
+        "generatedAt": "2026-06-01T16:28:08.824Z"
+      },
+      "reviewDecision": "partial_adopt",
+      "humanReviewRequired": false,
+      "safetyBoundary": {
+        "dataLevel": "A",
+        "riskLevel": "low",
+        "externalProviderAllowed": true,
+        "levelCNote": null,
+        "criticalRiskNote": null,
+        "blockedProviders": [],
+        "repoEditOwner": "claude only — Gemini/Grok must not edit repo directly"
+      },
+      "verificationSummary": "npm run verify PASS",
+      "blockedDangerousActions": [
+        "git push",
+        "git tag",
+        "deploy",
+        "gcloud deploy",
+        "docker build",
+        "secret",
+        ".env",
+        "api key",
+        "customer data",
+        "destructive action",
+        "rm -rf"
+      ],
+      "recommendedNextAction": "Partial adopt — route to こさめ for merge arbitration before proceeding"
+    },
+    "repairRetryPacket": {
+      "version": "9.5.0",
+      "title": "Autonomous Repair & Retry Board",
+      "dryRun": true,
+      "humanApprovalRequired": true,
+      "repairBoardId": "repair-final-approval-1780331288824",
+      "failureClassification": {
+        "classified": "human_approval_required",
+        "original": "human_approval_required",
+        "attemptCount": 0
+      },
+      "retryTargetAgent": {
+        "agent": "human",
+        "action": "route to じゅんやさん for final YES/NO",
+        "maxRetries": 1,
+        "shouldStop": false,
+        "stopReason": null
+      },
+      "repairInstructionPacket": {
+        "failureType": "human_approval_required",
+        "failedStep": "final_approval",
+        "errorSummary": "(no error summary)",
+        "repairOwner": "human",
+        "repairAction": "route to じゅんやさん for final YES/NO",
+        "repairSteps": [
+          "Review escalation summary",
+          "Provide final YES/NO decision",
+          "じゅんやさんは最終YESのみ — 作業員に戻さない"
+        ],
+        "riskLevel": "low",
+        "dataLevel": "A",
+        "noAutoFileWrite": true,
+        "note": "自動修正を実行しない。実ファイルを書き換えない。repair instruction packetを生成するだけ。",
+        "generatedAt": "2026-06-01T16:28:08.824Z"
+      },
+      "retryLimit": 1,
+      "escalationPolicy": {
+        "escalateTo": "claude (retry)",
+        "maxRetries": 1,
+        "escalateAfterRetries": 1,
+        "highRiskEscalation": null
+      },
+      "stopConditions": [
+        "repeated_failure: 3+ consecutive failures → stop and escalate",
+        "safety_block: always escalate to kosame — no auto retry",
+        "human_approval_required: always route to human — never auto-bypass",
+        "provider_unavailable after all fallbacks tried → escalate to kosame",
+        "riskLevel=critical: no auto retry — always human approval first"
+      ],
+      "blockedDangerousActions": [
+        "git push",
+        "git tag",
+        "deploy",
+        "gcloud deploy",
+        "docker build",
+        "secret",
+        ".env",
+        "api key",
+        "customer data",
+        "destructive action",
+        "rm -rf"
+      ],
+      "recommendedNextAction": "Route repair instruction to human"
+    },
+    "loopPacket": {
+      "version": "7.5.0",
+      "title": "Practical Dev Factory Loop",
+      "dryRun": true,
+      "humanApprovalRequired": true,
+      "loopId": "loop-kosame-dev-orchestra-implementation-1780331288824",
+      "projectName": "kosame-dev-orchestra",
+      "repoPath": ".",
+      "taskGoal": "probe full orchestra runtime",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "riskLevel": "low",
+      "dataLevel": "A",
+      "levelCBlocked": false,
+      "runtimePacket": {
+        "version": "7.0.0",
+        "title": "Practical Dev Factory Runtime",
+        "dryRun": true,
+        "humanApprovalRequired": true,
+        "runtimeId": "runtime-kosame-dev-orchestra-implementation-1780331288825",
+        "projectName": "kosame-dev-orchestra",
+        "repoPath": ".",
+        "normalizedTask": {
+          "taskGoal": "probe full orchestra runtime",
+          "taskType": "implementation",
+          "productLine": "backoffice",
+          "riskLevel": "low",
+          "dataLevel": "A",
+          "hasBlockedKeyword": false,
+          "safeForExternal": true
+        },
+        "realStatusSummary": {
+          "productLine": "backoffice",
+          "rawStatus": "git clean, smoke passing",
+          "importedAt": "2026-06-01T16:28:08.825Z",
+          "statusClass": "provided",
+          "note": "Real status imported from operator input. Verify against actual repo before proceeding."
+        },
+        "workBreakdown": {
+          "taskGoal": "probe full orchestra runtime",
+          "taskType": "implementation",
+          "productLine": "backoffice",
+          "phases": [
+            {
+              "phase": "intake",
+              "owner": "kosame",
+              "requiresHumanApproval": false
+            },
+            {
+              "phase": "design",
+              "owner": "kosame",
+              "requiresHumanApproval": false
+            },
+            {
+              "phase": "implementation",
+              "owner": "claude",
+              "requiresHumanApproval": true
+            },
+            {
+              "phase": "bulk_draft",
+              "owner": "gemini",
+              "requiresHumanApproval": true
+            },
+            {
+              "phase": "verify",
+              "owner": "cloudShell",
+              "requiresHumanApproval": true
+            },
+            {
+              "phase": "repair_loop",
+              "owner": "claude",
+              "requiresHumanApproval": true
+            },
+            {
+              "phase": "release",
+              "owner": "human",
+              "requiresHumanApproval": true
+            }
+          ]
+        },
+        "providerRoute": {
+          "selectedProvider": "claude",
+          "reason": "implementation task → claude",
+          "fallbacks": [
+            "grok",
+            "deepseek",
+            "kosame"
+          ]
+        },
+        "executionPackets": [
+          {
+            "provider": "claude",
+            "taskType": "implementation",
+            "productLine": "backoffice",
+            "prompt": "You are a precise implementation engineer.\nTask: probe full orchestra runtime\nProductLine: backoffice\nDo not read secrets, .env, or API key values. Return result as JSON.",
+            "tier": "primary",
+            "humanApprovalRequired": true
+          },
+          {
+            "provider": "grok",
+            "taskType": "implementation",
+            "productLine": "backoffice",
+            "prompt": "You are a breakthrough analyst.\nTask: probe full orchestra runtime\nProductLine: backoffice\nProvide alternative designs. No confidential data.",
+            "tier": "secondary",
+            "isFallback": true
+          },
+          {
+            "provider": "deepseek",
+            "taskType": "implementation",
+            "productLine": "backoffice",
+            "prompt": "You are a fallback code proposer.\nTask: probe full orchestra runtime\nInput must be anonymized. No secrets or customer data.",
+            "tier": "fallback",
+            "isFallback": true
+          },
+          {
+            "provider": "kosame",
+            "taskType": "implementation",
+            "productLine": "backoffice",
+            "prompt": "こさめ副社長として判断してください。\nタスク: probe full orchestra runtime\nProductLine: backoffice\n判断結果をJSON形式で返してください。",
+            "tier": "internal",
+            "isFallback": true
+          }
+        ],
+        "verificationPlan": {
+          "taskType": "implementation",
+          "productLine": "backoffice",
+          "steps": [
+            {
+              "step": "node --check on new JS files",
+              "required": true
+            },
+            {
+              "step": "npm run smoke for new packs",
+              "required": true
+            },
+            {
+              "step": "npm run verify (full suite)",
+              "required": true
+            },
+            {
+              "step": "git diff --stat (confirm non-empty)",
+              "required": true
+            },
+            {
+              "step": "git status --short review",
+              "required": true
+            }
+          ],
+          "humanApprovalRequired": true
+        },
+        "repairLoopPlan": {
+          "enabled": true,
+          "maxRetries": 3,
+          "repairOwner": "claude",
+          "escalationOnFailure": "kosame",
+          "gateOnEachRetry": false,
+          "steps": [
+            {
+              "step": "Capture failure output",
+              "owner": "cloudShell",
+              "auto": true
+            },
+            {
+              "step": "Route to claude for repair",
+              "owner": "claude",
+              "auto": true
+            },
+            {
+              "step": "Re-run smoke / verify",
+              "owner": "cloudShell",
+              "auto": true
+            },
+            {
+              "step": "Escalate to kosame if 3 fails",
+              "owner": "kosame",
+              "auto": false
+            }
+          ]
+        },
+        "humanApprovalPacket": {
+          "requestedBy": "practical-dev-factory-runtime",
+          "projectName": "kosame-dev-orchestra",
+          "productLine": "backoffice",
+          "riskLevel": "low",
+          "actionsRequiringApproval": [
+            "git commit",
+            "git push",
+            "git tag",
+            "deploy",
+            "docker build",
+            "gcloud run deploy"
+          ],
+          "humanApprovalRequired": true,
+          "approver": "じゅんやさん (final YES only — does not return to worker)",
+          "note": "じゅんやさんは最終YESのみ。作業員に戻さない。"
+        },
+        "blockedDangerousActions": [
+          "git commit",
+          "git push",
+          "git tag",
+          "deploy",
+          "docker build",
+          "gcloud run deploy",
+          "rm -rf",
+          "git reset --hard",
+          "git clean",
+          "Secret value read",
+          ".env value read",
+          "API key value read",
+          "customer data sharing",
+          "insurance policy sharing",
+          "health check info sharing",
+          "personal name in minutes sharing"
+        ],
+        "recommendedNextAction": "Dispatch to claude — review execution packets and await human approval"
+      },
+      "providerRoute": {
+        "selectedProvider": "claude",
+        "reason": "implementation task → claude",
+        "fallbacks": [
+          "grok",
+          "deepseek",
+          "kosame"
+        ]
+      },
+      "executionPacket": {
+        "version": "7.2.0",
+        "title": "Task Execution Packet Generator",
+        "dryRun": true,
+        "humanApprovalRequired": true,
+        "packetId": "exec-probe-full-orchestra-implementation-1780331288827",
+        "taskGoal": "probe full orchestra runtime",
+        "taskType": "implementation",
+        "productLine": "backoffice",
+        "riskLevel": "low",
+        "dataLevel": "A",
+        "provider": "claude",
+        "repoPath": ".",
+        "allowedFiles": [
+          "./tools/**",
+          "./smoke/**",
+          "./fixtures/**",
+          "./docs/ai-dev-team/**"
+        ],
+        "deniedFiles": [
+          "./.env",
+          "./.env.*",
+          "./*.pem",
+          "./*.key",
+          "./secrets/**",
+          "./credentials/**",
+          "./**/node_modules/**",
+          "./.git/**",
+          "./Dockerfile",
+          "./cloud-run/**",
+          "./apps/pm-agent/**"
+        ],
+        "verifyCommands": [
+          {
+            "command": "node --check {newFiles}",
+            "description": "Syntax check all new/modified JS files",
+            "required": true
+          },
+          {
+            "command": "npm run smoke:{packSlug}",
+            "description": "Run specific smoke test for this pack",
+            "required": true
+          },
+          {
+            "command": "npm run verify",
+            "description": "Run full verification suite",
+            "required": true
+          },
+          {
+            "command": "git diff --stat HEAD",
+            "description": "Confirm non-empty diff",
+            "required": true
+          },
+          {
+            "command": "git status --short",
+            "description": "Confirm clean working tree (no untracked junk)",
+            "required": true
+          }
+        ],
+        "doneCriteria": [
+          "All new JS files pass node --check",
+          "Smoke test for this pack passes",
+          "npm run verify passes without errors",
+          "git diff --stat HEAD is non-empty",
+          "No new secrets or .env values exposed",
+          "Task goal completed: probe full orchestra runtime",
+          "New tool file created and exported correctly",
+          "Fixture file exists and is valid JSON"
+        ],
+        "forbiddenActions": [
+          "git commit",
+          "git push",
+          "git tag",
+          "deploy",
+          "docker build",
+          "gcloud run deploy",
+          "rm -rf",
+          "git reset --hard",
+          "git clean",
+          "Secret value read",
+          ".env value read",
+          "API key value read",
+          "customer data sharing",
+          "insurance policy sharing",
+          "health check info sharing",
+          "personal name in minutes sharing"
+        ],
+        "reportFormat": {
+          "format": "JSON",
+          "requiredFields": [
+            "status",
+            "summary",
+            "filesChanged",
+            "verifyResult",
+            "issues",
+            "nextAction"
+          ],
+          "statusValues": [
+            "success",
+            "failure",
+            "incomplete",
+            "needs_repair",
+            "pending_approval"
+          ],
+          "exampleStructure": {
+            "status": "success",
+            "summary": "Brief description of what was done",
+            "filesChanged": [
+              "tools/example-pack.js",
+              "smoke/dev-agent-example-smoke.js"
+            ],
+            "verifyResult": "npm run verify PASS",
+            "issues": [],
+            "nextAction": "Route to kosame for final review"
+          },
+          "provider": "claude",
+          "taskType": "implementation"
+        },
+        "dataLevelNote": "Level A data: all providers allowed (anonymize before dispatch to deepseek/kimi)",
+        "blockedDangerousActions": [
+          "git commit",
+          "git push",
+          "git tag",
+          "deploy",
+          "docker build",
+          "gcloud run deploy",
+          "rm -rf",
+          "git reset --hard",
+          "git clean",
+          "Secret value read",
+          ".env value read",
+          "API key value read",
+          "customer data sharing",
+          "insurance policy sharing",
+          "health check info sharing",
+          "personal name in minutes sharing"
+        ],
+        "recommendedNextAction": "Execute task using claude. Complete all verifyCommands. Report in JSON format."
+      },
+      "importedResult": {
+        "version": "7.3.0",
+        "title": "Result Import & Review Pack",
+        "dryRun": true,
+        "humanApprovalRequired": true,
+        "importId": "import-claude-probe-full-orchestra-1780331288827",
+        "taskGoal": "probe full orchestra runtime",
+        "taskType": "implementation",
+        "productLine": "backoffice",
+        "provider": "claude",
+        "normalizedResult": {
+          "provider": "claude",
+          "taskGoal": "probe full orchestra runtime",
+          "rawResult": "Implementation complete. All smoke tests pass. npm run verify: OK.",
+          "rawTruncated": false,
+          "importedAt": "2026-06-01T16:28:08.827Z"
+        },
+        "reviewDecision": {
+          "status": "success",
+          "issueCount": 0,
+          "issues": [],
+          "approved": true,
+          "requiresRepair": false,
+          "requiresHumanApproval": false,
+          "reviewedAt": "2026-06-01T16:28:08.828Z"
+        },
+        "recommendedNextAction": "Route to kosame for final review and approval packet generation",
+        "blockedDangerousActions": [
+          "git commit",
+          "git push",
+          "git tag",
+          "deploy",
+          "docker build",
+          "gcloud run deploy",
+          "rm -rf",
+          "git reset --hard",
+          "git clean",
+          "Secret value read",
+          ".env value read",
+          "API key value read",
+          "customer data sharing",
+          "insurance policy sharing",
+          "health check info sharing",
+          "personal name in minutes sharing"
+        ]
+      },
+      "reviewDecision": {
+        "status": "success",
+        "issueCount": 0,
+        "issues": [],
+        "approved": true,
+        "requiresRepair": false,
+        "requiresHumanApproval": false,
+        "reviewedAt": "2026-06-01T16:28:08.828Z"
+      },
+      "repairLoop": null,
+      "finalApprovalPacket": {
+        "requestedBy": "practical-dev-factory-loop",
+        "projectName": "kosame-dev-orchestra",
+        "productLine": "backoffice",
+        "riskLevel": "low",
+        "dataLevel": "A",
+        "reviewStatus": "success",
+        "approved": true,
+        "commitGate": {
+          "allowed": false,
+          "requiresHumanApproval": true,
+          "note": "git commit requires explicit human YES"
+        },
+        "pushGate": {
+          "allowed": false,
+          "requiresHumanApproval": true,
+          "note": "git push requires explicit human YES"
+        },
+        "tagGate": {
+          "allowed": false,
+          "requiresHumanApproval": true,
+          "note": "git tag requires explicit human YES"
+        },
+        "deployGate": {
+          "allowed": false,
+          "requiresHumanApproval": true,
+          "note": "deploy requires explicit human YES"
+        },
+        "approver": "じゅんやさん (final YES only — does not return to worker)",
+        "note": "じゅんやさんは最終YESのみ。作業員に戻さない。",
+        "humanApprovalRequired": true,
+        "generatedAt": "2026-06-01T16:28:08.828Z"
+      },
+      "blockedDangerousActions": [
+        "git commit",
+        "git push",
+        "git tag",
+        "deploy",
+        "docker build",
+        "gcloud run deploy",
+        "rm -rf",
+        "git reset --hard",
+        "git clean",
+        "Secret value read",
+        ".env value read",
+        "API key value read",
+        "customer data sharing",
+        "insurance policy sharing",
+        "health check info sharing",
+        "personal name in minutes sharing"
+      ],
+      "recommendedNextAction": "Task succeeded — route to kosame for final approval packet review"
+    },
+    "finalRuntimePacket": {
+      "runtimeSummary": "Full Orchestra dry-run cycle completed",
+      "projectName": "kosame-dev-orchestra",
+      "taskGoal": "probe full orchestra runtime",
+      "productLine": "backoffice",
+      "taskType": "implementation",
+      "riskLevel": "low",
+      "dataLevel": "A",
+      "cycleSteps": [
+        {
+          "step": 1,
+          "label": "Planning Layer",
+          "packetId": "planning-kosame-dev-orchestra-implementation-1780331288821",
+          "status": "generated"
+        },
+        {
+          "step": 2,
+          "label": "Parallel Work Pack",
+          "packetId": "parallel-kosame-dev-orchestra-1780331288822",
+          "status": "generated"
+        },
+        {
+          "step": 3,
+          "label": "Orchestra Result Merger",
+          "packetId": "merger-probe-full-orchestra-run-1780331288823",
+          "status": "generated"
+        },
+        {
+          "step": 4,
+          "label": "Repair Retry Board",
+          "packetId": "repair-final-approval-1780331288824",
+          "status": "generated"
+        }
+      ],
+      "dryRun": true,
+      "noRealExecution": true,
+      "note": "All packets are dry-run only. No API calls made. No files auto-applied. Human approval required for all destructive actions.",
+      "generatedAt": "2026-06-01T16:28:08.828Z"
+    },
+    "finalApprovalPacket": {
+      "requestedBy": "full-orchestra-agent-runtime",
+      "projectName": "kosame-dev-orchestra",
+      "productLine": "backoffice",
+      "riskLevel": "low",
+      "dataLevel": "A",
+      "reviewDecision": "partial_adopt",
+      "commitGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git commit requires explicit human YES"
+      },
+      "pushGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git push requires explicit human YES"
+      },
+      "tagGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git tag requires explicit human YES"
+      },
+      "deployGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "deploy requires explicit human YES"
+      },
+      "approver": "じゅんやさん (final YES only — does not return to worker)",
+      "note": "じゅんやさんは最終YESのみ。作業員に戻さない。commit / push / tag / deploy はここで止まる。",
+      "humanApprovalRequired": true,
+      "generatedAt": "2026-06-01T16:28:08.828Z"
+    },
+    "blockedDangerousActions": [
+      "git push",
+      "git tag",
+      "deploy",
+      "gcloud deploy",
+      "docker build",
+      "secret",
+      ".env",
+      "api key",
+      "customer data",
+      "destructive action",
+      "rm -rf"
+    ],
+    "recommendedNextAction": "Orchestra cycle complete — route finalApprovalPacket to じゅんやさん for final YES/NO"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "version": "12.5.0",
+  "title": "Claude Execution Prompt Exporter",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "exporterId": "exporter-1780332817059",
+  "claudePrompt": "# Claude Implementation Prompt\n\n## Task\nKOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する\n\n## allowedFiles\n触ってよいファイル (these files may be edited after human approval):\n- ./tools/**\n- ./smoke/**\n- ./fixtures/**\n- ./docs/ai-dev-team/**\n- ./README.md\n\n## deniedFiles\n触ってはいけないファイル (NEVER edit these):\n- ./.env\n- ./.env.*\n- ./*.pem\n- ./*.key\n- ./secrets/**\n- ./credentials/**\n- ./**/node_modules/**\n- ./.git/**\n- ./Dockerfile\n- ./cloud-run/**\n- ./apps/pm-agent/**\n\n## Implementation Scope\n実装範囲: allowedFiles の範囲内での編集のみ。\n\n## verifyCommands\n検証コマンド (run in order after implementation):\n- node --check {newFiles}\n- npm run smoke:{packSlug}\n- npm run verify\n- git diff --stat HEAD\n- git status --short\n\n## doneCriteria\n完了条件:\n- All new JS files pass node --check\n- Smoke test passes\n- npm run verify passes\n- git diff --stat HEAD is non-empty\n- No new secrets or .env values exposed\n\n## forbiddenActions\n禁止事項:\n- git add\n- git commit\n- git push\n- git tag\n- deploy\n- docker build\n- gcloud run deploy\n- rm -rf\n- git reset --hard\n- Secret value read\n- .env value read\n- API key value read\n- customer data sharing\n- insurance data sharing\n\n## Report Format\n報告形式: JSON\n{ \"status\": \"success|failure\", \"filesChanged\": [...], \"verifyResult\": \"...\", \"issues\": [] }\n\n## Safety Rules\n- git add / git commit / git push / git tag はしない\n- Secret / .env / API key は読まない\n- 実API呼び出し禁止\n- deploy / docker build / gcloud deploy 禁止\n- 顧客情報 / 保険証券 / 健診情報 / 個人名入り議事録は扱わない",
+  "allowedFiles": [
+    "./tools/**",
+    "./smoke/**",
+    "./fixtures/**",
+    "./docs/ai-dev-team/**",
+    "./README.md"
+  ],
+  "deniedFiles": [
+    "./.env",
+    "./.env.*",
+    "./*.pem",
+    "./*.key",
+    "./secrets/**",
+    "./credentials/**",
+    "./**/node_modules/**",
+    "./.git/**",
+    "./Dockerfile",
+    "./cloud-run/**",
+    "./apps/pm-agent/**"
+  ],
+  "verifyCommands": [
+    "node --check {newFiles}",
+    "npm run smoke:{packSlug}",
+    "npm run verify",
+    "git diff --stat HEAD",
+    "git status --short"
+  ],
+  "doneCriteria": [
+    "All new JS files pass node --check",
+    "Smoke test passes",
+    "npm run verify passes",
+    "git diff --stat HEAD is non-empty",
+    "No new secrets or .env values exposed"
+  ],
+  "forbiddenActions": [
+    "git add",
+    "git commit",
+    "git push",
+    "git tag",
+    "deploy",
+    "docker build",
+    "gcloud run deploy",
+    "rm -rf",
+    "git reset --hard",
+    "Secret value read",
+    ".env value read",
+    "API key value read",
+    "customer data sharing",
+    "insurance data sharing"
+  ],
+  "approvalGates": {
+    "commitGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git commit requires explicit human YES"
+    },
+    "pushGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git push requires explicit human YES"
+    },
+    "tagGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git tag requires explicit human YES"
+    },
+    "deployGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "deploy requires explicit human YES"
+    }
+  },
+  "safetyNotes": [
+    "git add / commit / push / tag はしない",
+    "Secret / .env / API key は読まない",
+    "実API呼び出し禁止",
+    "Gemini / Grok は repo 編集不可",
+    "Claude のみ repo 編集候補 (このpackでは編集しない)",
+    "じゅんやさんは final YES のみ"
+  ],
+  "noRealApiExecution": true,
+  "noRealFileEdit": true,
+  "exportPassed": true,
+  "recommendedNextAction": "Export passed — paste claudePrompt into Claude Code session. Await result. Route to kosame for review."
+}

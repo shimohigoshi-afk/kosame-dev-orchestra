@@ -1,0 +1,208 @@
+{
+  "version": "12.0.0",
+  "title": "First Real Docs Task Packet",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "docsTaskPacketId": "docs-task-docs-001-1780332817012",
+  "normalizedDocsTask": {
+    "taskId": "docs-001",
+    "taskGoal": "KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する",
+    "taskType": "docs",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "isDocsTask": true,
+    "noRealFileEdit": true,
+    "noRealApiExecution": true
+  },
+  "targetFilePlan": [
+    {
+      "file": "README.md",
+      "editAllowed": true,
+      "note": "low-risk docs file"
+    }
+  ],
+  "allowedEditPlan": {
+    "files": [
+      "./tools/**",
+      "./smoke/**",
+      "./fixtures/**",
+      "./docs/ai-dev-team/**",
+      "./README.md"
+    ],
+    "note": "Only these files may be edited after human approval"
+  },
+  "deniedEditPlan": {
+    "files": [
+      "./.env",
+      "./.env.*",
+      "./*.pem",
+      "./*.key",
+      "./secrets/**",
+      "./credentials/**",
+      "./**/node_modules/**",
+      "./.git/**",
+      "./Dockerfile",
+      "./cloud-run/**",
+      "./apps/pm-agent/**"
+    ],
+    "blocked": true,
+    "note": "These files must never be edited"
+  },
+  "providerPromptPackets": {
+    "geminiPacket": {
+      "provider": "gemini",
+      "role": "構成案 / 見出し案 / docs観点",
+      "canEditRepo": false,
+      "dryRun": true,
+      "prompt": "You are a documentation structure specialist.\nTask: KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する\nProductLine: backoffice\nProvide: README section structure, heading proposals, content outline.\nDo NOT edit the repo directly. No customer data."
+    },
+    "grokPacket": {
+      "provider": "grok",
+      "role": "弱点指摘 / 読み手の詰まり確認",
+      "canEditRepo": false,
+      "dryRun": true,
+      "prompt": "You are a documentation weakness detector.\nTask: KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する\nProductLine: backoffice\nProvide: clarity issues, reader pain points, missing sections.\nNo confidential data. Do NOT edit the repo."
+    },
+    "claudePacket": {
+      "provider": "claude",
+      "role": "実装候補。このpackでは編集しない",
+      "canEditRepo": true,
+      "dryRun": true,
+      "allowedFiles": [
+        "./tools/**",
+        "./smoke/**",
+        "./fixtures/**",
+        "./docs/ai-dev-team/**",
+        "./README.md"
+      ],
+      "deniedFiles": [
+        "./.env",
+        "./.env.*",
+        "./*.pem",
+        "./*.key",
+        "./secrets/**",
+        "./credentials/**",
+        "./**/node_modules/**",
+        "./.git/**",
+        "./Dockerfile",
+        "./cloud-run/**",
+        "./apps/pm-agent/**"
+      ],
+      "prompt": "You are a precise implementation engineer.\nTask: KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する\nProductLine: backoffice\nThis is a docs task packet. Do NOT edit files in this pack.\nGenerate the implementation plan only.\nDo not read secrets, .env, or API key values.",
+      "note": "Claude is the only agent allowed to edit repo. In this pack, do not edit — plan only."
+    },
+    "kosamePacket": {
+      "provider": "kosame",
+      "role": "統合 / 安全ゲート",
+      "canEditRepo": false,
+      "dryRun": true,
+      "prompt": "こさめ副社長として、以下docsタスクの統合・安全ゲート判断をしてください。\nタスク: KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する\nProductLine: backoffice\n判断結果をJSON形式で返してください。"
+    },
+    "humanApprovalPacket": {
+      "provider": "human",
+      "role": "じゅんやさん final YES only",
+      "canEditRepo": true,
+      "dryRun": false,
+      "commitGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git commit requires explicit じゅんやさん YES"
+      },
+      "pushGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git push requires explicit じゅんやさん YES"
+      },
+      "tagGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "git tag requires explicit じゅんやさん YES"
+      },
+      "deployGate": {
+        "allowed": false,
+        "requiresHumanApproval": true,
+        "note": "deploy requires explicit じゅんやさん YES"
+      },
+      "note": "じゅんやさんは最終YESのみ。作業員に戻さない。"
+    }
+  },
+  "verificationPlan": {
+    "steps": [
+      {
+        "step": "node --check on new JS files",
+        "required": true,
+        "category": "syntax"
+      },
+      {
+        "step": "npm run smoke for new packs",
+        "required": true,
+        "category": "smoke"
+      },
+      {
+        "step": "npm run verify (full suite)",
+        "required": true,
+        "category": "verify"
+      },
+      {
+        "step": "git diff --stat HEAD (non-empty)",
+        "required": true,
+        "category": "git status"
+      },
+      {
+        "step": "git status --short (clean)",
+        "required": true,
+        "category": "git status"
+      }
+    ],
+    "humanApprovalRequired": true
+  },
+  "approvalPacket": {
+    "requestedBy": "first-real-docs-task-packet",
+    "projectName": "kosame-dev-orchestra",
+    "productLine": "backoffice",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "taskGoal": "KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtime / v11.0.0 First Practical Orchestra Task Runnerの説明を追加する",
+    "commitGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git commit requires explicit human YES"
+    },
+    "pushGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git push requires explicit human YES"
+    },
+    "tagGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "git tag requires explicit human YES"
+    },
+    "deployGate": {
+      "allowed": false,
+      "requiresHumanApproval": true,
+      "note": "deploy requires explicit human YES"
+    },
+    "approver": "じゅんやさん (final YES only)",
+    "humanApprovalRequired": true,
+    "generatedAt": "2026-06-01T16:53:37.013Z"
+  },
+  "rollbackNote": "This is a docs task packet. No actual file edits were made. If implementation proceeds and fails: git checkout -- README.md. git reset --hard HEAD requires explicit human approval.",
+  "noRealApiExecution": true,
+  "noRealFileEdit": true,
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Route providerPromptPackets to each provider. Then send claudePacket to v12.5.0 Claude Execution Prompt Exporter."
+}

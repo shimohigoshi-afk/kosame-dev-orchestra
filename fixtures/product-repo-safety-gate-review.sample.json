@@ -1,0 +1,78 @@
+{
+  "version": "23.5.0",
+  "title": "Product Repo Safety Gate Review Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "safetyGateReviewId": "safety-gate-1780600000000",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "safetyChecklist": {
+    "dryRun is true": true,
+    "humanApprovalRequired": true,
+    "targetProduct is known": true,
+    "secret boundary defined": true,
+    "customer data boundary defined": true,
+    "regulated data boundary reviewed": true,
+    "deploy risk acknowledged": true,
+    "git ops require human YES": true,
+    "no auto-deploy": true,
+    "dangerousActionsDenied present": true,
+    "allowedFileZones present": true,
+    "deniedFileZones present": true,
+    "rollbackPlan present": true
+  },
+  "secretBoundaryReview": {
+    "rule": "No API keys, OAuth tokens, DB credentials",
+    "files": [".env*", "secrets/**", "credentials/**"]
+  },
+  "customerDataBoundaryReview": {
+    "rule": "No lead PII (name/email/phone/address) in code, prompts, or logs",
+    "mock": "Use anonymized/synthetic fixtures only"
+  },
+  "regulatedDataBoundaryReview": {
+    "applicable": false,
+    "note": "No regulated data (insurance/health/financial) applies"
+  },
+  "deployRiskReview": {
+    "riskLevel": "medium",
+    "note": "Staging required before production. No auto-deploy."
+  },
+  "gitOperationReview": {
+    "requiresHumanYes": ["git add", "git commit", "git push", "git tag", "git reset --hard", "git clean -f"],
+    "autoApproved": ["git status --short", "git log --oneline -5", "git diff --stat HEAD"],
+    "note": "No git write operations are auto-approved. All require explicit じゅんやさん YES."
+  },
+  "allowedActions": [
+    "Read src files in allowed zones (dry-run)",
+    "Run node --check on edited files",
+    "Run npm run verify (non-destructive)",
+    "Run git status --short",
+    "Run git diff --stat HEAD",
+    "Generate dry-run packet",
+    "Export Claude prompt (no execution)"
+  ],
+  "blockedActions": [
+    "git add (without human YES)",
+    "git commit (without human YES)",
+    "git push (without human YES)",
+    "git tag (without human YES)",
+    "deploy / gcloud deploy / docker build",
+    "rm -rf / git reset --hard / git clean -f",
+    "Read .env / secrets / credentials",
+    "Access customer PII / insurance data / health records / financial data",
+    "Run arbitrary shell commands without human review"
+  ],
+  "humanApprovalGates": [
+    "こさめ/GPT PM: task scope and safety review before dispatch",
+    "Claude: implementation + node --check before staging any file",
+    "こさめ/GPT PM: diff review and verification result review before commit",
+    "じゅんやさん: explicit final YES before git add / commit / push / tag / deploy"
+  ],
+  "safetyGatePassed": true,
+  "blockerItems": [],
+  "finalDecision": "approve",
+  "finalDecisionOptions": ["approve", "revise", "reject", "hold"],
+  "recommendedNextAction": "Safety gate passed. Proceed to First Real Product Repo Execution Prompt Pack (v24.0.0).",
+  "noRealRepoAccess": true,
+  "noRealExecution": true
+}

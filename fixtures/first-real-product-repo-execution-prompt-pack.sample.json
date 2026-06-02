@@ -1,0 +1,54 @@
+{
+  "version": "24.0.0",
+  "title": "First Real Product Repo Execution Prompt Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "executionPromptPackId": "exec-prompt-pack-1780600000000",
+  "targetProduct": "sales_dx",
+  "targetRepo": "kosame-sales-dx",
+  "claudeRole": "Implementation Engineer — 営業DX / 実プロダクトrepo作業",
+  "taskScope": "営業DXにリード向けメール一括返信機能を追加する",
+  "filesAllowedToTouch": ["src/leads/**", "src/components/**", "tests/**", "docs/**"],
+  "filesForbiddenToTouch": [".env*", "secrets/**", "credentials/**", "config/production.*"],
+  "commandsAllowed": [
+    "node --check <editedFile>",
+    "npm run verify (or equivalent)",
+    "npm test (non-destructive)",
+    "git status --short",
+    "git diff --stat HEAD",
+    "git log --oneline -5",
+    "cat README.md",
+    "ls -la (read-only)"
+  ],
+  "commandsForbidden": [
+    "git add (without explicit じゅんやさん YES)",
+    "git commit (without explicit じゅんやさん YES)",
+    "git push (without explicit じゅんやさん YES)",
+    "git tag (without explicit じゅんやさん YES)",
+    "git reset --hard (without explicit じゅんやさん YES)",
+    "git clean -f (without explicit じゅんやさん YES)",
+    "rm -rf <anything>",
+    "deploy / gcloud deploy / docker build / docker push",
+    "cat .env / cat .env.* / cat secrets/**"
+  ],
+  "reportFormat": {
+    "returnAsJsonPacket": true,
+    "requiredFields": ["editedFiles", "diffSummary", "nodeCheckResult", "verifyResult", "smokeResult", "remainingRisks", "rollbackNote", "gitStatusOutput"],
+    "handoffTarget": "Product Verification & Handoff Collector (v18.5.0)",
+    "note": "Stop at commit candidate. Do NOT git add / commit / push without explicit じゅんやさん YES."
+  },
+  "rollbackInstruction": "git checkout -- <file> for each changed file. git reset --hard requires じゅんやさん YES.",
+  "promptReady": true,
+  "promptBlockedReasons": [],
+  "handoffToKosame": {
+    "target": "Kosame/GPT PM",
+    "status": "PROMPT_READY",
+    "taskScope": "営業DXにリード向けメール一括返信機能を追加する",
+    "targetProduct": "sales_dx",
+    "targetRepo": "kosame-sales-dx",
+    "actionRequired": "Review exportedExecutionPrompt. Present to じゅんやさん for final YES before sending to Claude."
+  },
+  "noRealRepoEdit": true,
+  "noRealExecution": true,
+  "note": "exportedExecutionPromptは実プロダクトrepoへ投げる直前の確認用。じゅんやさんのYES後のみ実行。"
+}

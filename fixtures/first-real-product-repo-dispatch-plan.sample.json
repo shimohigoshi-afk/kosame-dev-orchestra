@@ -1,0 +1,49 @@
+{
+  "version": "23.0.0",
+  "title": "First Real Product Repo Dispatch Plan",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "dispatchPlanId": "dispatch-plan-1780600000000",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "taskTitle": "メール一括返信機能の追加",
+  "taskGoal": "営業DXにリード向けメール一括返信機能を追加する",
+  "businessContext": "営業担当者が複数リードへ一括フォローアップメールを送れるようにする",
+  "priority": "high",
+  "recommendedProvider": "Claude (implementation)",
+  "dispatchOrder": [
+    { "step": 1, "action": "Product Repo Connection Prep (v21.5.0)", "provider": "Claude/こさめ", "required": true },
+    { "step": 2, "action": "Safety Gate Review (v23.5.0)",            "provider": "こさめ/GPT",    "required": true },
+    { "step": 3, "action": "Execution Prompt Export (v24.0.0)",       "provider": "Claude",        "required": true },
+    { "step": 4, "action": "Human final YES — じゅんやさん",          "provider": "Human",         "required": true },
+    { "step": 5, "action": "Claude executes in product repo",         "provider": "Claude",        "required": true },
+    { "step": 6, "action": "Verification & Handoff Collector",        "provider": "Claude/こさめ", "required": true },
+    { "step": 7, "action": "Release Candidate Packet Builder",        "provider": "こさめ/GPT",    "required": true }
+  ],
+  "requiredInputs": ["taskGoal", "targetProduct", "taskTitle", "businessContext", "allowedFileZones", "deniedFileZones"],
+  "missingInputs": [],
+  "allowedFileZones": ["src/leads/**", "src/components/**", "tests/**", "docs/**"],
+  "deniedFileZones": [".env*", "secrets/**", "credentials/**", "config/production.*", "src/auth/**"],
+  "verificationPlan": {
+    "steps": [
+      { "step": "node --check on all edited files", "required": true },
+      { "step": "npm run verify (or product equivalent)", "required": true },
+      { "step": "git status --short", "required": true },
+      { "step": "git diff --stat HEAD", "required": true }
+    ],
+    "productSpecific": ["npm run test (sales_dx)"]
+  },
+  "rollbackPlan": {
+    "fileLevel": "git checkout -- <file> for each changed file",
+    "repoLevel": "git reset --hard HEAD requires explicit じゅんやさん YES",
+    "branchLevel": "Delete work branch: git branch -d feature/<taskId> (requires じゅんやさん YES)",
+    "note": "No automated rollback. Human decision required for any hard reset in kosame-sales-dx."
+  },
+  "isKnownProduct": true,
+  "dispatchReady": true,
+  "notReadyReasons": [],
+  "recommendedNextAction": "Dispatch plan ready. Proceed to Product Repo Safety Gate Review (v23.5.0).",
+  "dangerousActionsDenied": ["git add (automated)", "git commit (automated)", "git push (automated)", "git tag (automated)", "deploy (any form)", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean -f", "read .env or .env.*", "read secrets/**", "access customer PII", "access insurance / health / financial records"],
+  "noRealRepoAccess": true,
+  "noRealExecution": true
+}

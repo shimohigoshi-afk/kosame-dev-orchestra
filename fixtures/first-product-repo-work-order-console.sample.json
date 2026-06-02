@@ -1,0 +1,32 @@
+{
+  "version": "25.0.0",
+  "title": "First Product Repo Work Order Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "workOrderId": "work-order-1780700000000",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "taskTitle": "メール一括返信機能の追加",
+  "taskGoal": "営業DXにリード向けメール一括返信機能を追加する",
+  "businessContext": "営業担当者が複数リードへ一括フォローアップメールを送れるようにする",
+  "productContext": "営業DX: リード管理・営業活動支援プロダクト。リードPIIはコード・ログ・promptに含めない。",
+  "userIntent": "src/leads/bulk-email-reply.js を新規作成してUIに接続する",
+  "implementationScope": "src/leads/bulk-email-reply.js と tests/leads/bulk-email-reply.test.js を新規作成",
+  "filesAllowedToTouch": ["src/leads/**", "src/components/**", "tests/**", "docs/**", "README.md"],
+  "filesForbiddenToTouch": [".env*", "secrets/**", "credentials/**", "config/production.*", "src/auth/**"],
+  "commandsAllowed": ["node --check <editedFile>", "npm run verify (or product equivalent)", "npm test (non-destructive only)", "git status --short", "git diff --stat HEAD"],
+  "commandsForbidden": ["git add (without explicit じゅんやさん YES)", "git commit (without explicit じゅんやさん YES)", "git push (without explicit じゅんやさん YES)", "git tag (without explicit じゅんやさん YES)", "deploy / gcloud deploy / docker build / docker push"],
+  "reportFormat": {
+    "format": "JSON packet",
+    "requiredFields": ["editedFiles", "diffSummary", "nodeCheckResult", "verifyResult", "smokeResult", "remainingRisks", "rollbackNote", "gitStatusOutput"],
+    "instruction": "Stop at commit candidate. Return JSON report. Do NOT git add / commit / push without explicit じゅんやさん YES.",
+    "handoffTarget": "First Product Repo Handoff & Result Import Pack (v26.0.0)"
+  },
+  "isKnownProduct": true,
+  "workOrderReady": true,
+  "notReadyReasons": [],
+  "recommendedNextAction": "Work order ready. Proceed to External Repo Preflight Command Pack (v25.5.0).",
+  "dangerousActionsDenied": ["git add (automated)", "git commit (automated)", "git push (automated)", "git tag (automated)", "deploy (any form)", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean -f", "read .env or secrets", "access customer PII", "access insurance / health / financial records"],
+  "noRealRepoEdit": true,
+  "noRealExecution": true
+}

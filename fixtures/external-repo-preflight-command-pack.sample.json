@@ -1,0 +1,54 @@
+{
+  "version": "25.5.0",
+  "title": "External Repo Preflight Command Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "preflightPackId": "preflight-1780700000000",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "repoPath": "/home/shimohigoshi/kosame-sales-dx",
+  "shellType": "bash",
+  "safeReadCommands": [
+    "ls -la /home/shimohigoshi/kosame-sales-dx",
+    "cd /home/shimohigoshi/kosame-sales-dx && git status --short",
+    "cd /home/shimohigoshi/kosame-sales-dx && git log --oneline -5",
+    "cd /home/shimohigoshi/kosame-sales-dx && git branch",
+    "node --version",
+    "npm --version"
+  ],
+  "forbiddenCommands": [
+    "rm -rf <anything>",
+    "git reset --hard (without explicit YES)",
+    "git clean -f (without explicit YES)",
+    "git push (without explicit YES)",
+    "git tag (without explicit YES)",
+    "git add (without explicit YES)",
+    "git commit (without explicit YES)",
+    "deploy / gcloud deploy / docker build / docker push",
+    "cat .env / cat .env.* / cat secrets/**"
+  ],
+  "gitSafetyCheck": {
+    "safeOps": ["git status", "git log", "git diff (read-only)", "git branch", "git stash list"],
+    "unsafeOps": ["git add", "git commit", "git push", "git tag", "git reset --hard", "git clean -f"],
+    "note": "git write operations require explicit じゅんやさん YES"
+  },
+  "secretSafetyCheck": {
+    "checkItems": ["Confirm .env is NOT in git staging", "Confirm no API keys in edited files", "Confirm no OAuth tokens in code"],
+    "note": "Manual check required. No automated secret scanning."
+  },
+  "backupRecommendation": {
+    "step1": "Cloud Shell / PowerShell: save current terminal session log",
+    "step2": "git stash (if any local changes) before starting",
+    "step3": "Note current git log --oneline -3 output as baseline",
+    "step4": "Keep rollback note ready: git checkout -- <file> for each changed file",
+    "note": "No automated backup. Human confirmation required before any destructive action."
+  },
+  "isKnownProduct": true,
+  "isKnownShell": true,
+  "preflightReady": true,
+  "notReadyReasons": [],
+  "recommendedNextAction": "Preflight pack ready. Human reviews commands, executes in Cloud Shell / PowerShell, then proceeds to execution prompt.",
+  "noRealCommandExecution": true,
+  "noRealRepoAccess": true,
+  "note": "このpacketは実コマンドを実行しない。コマンド候補のみ出力する。実行はじゅんやさんYES後に人間が行う。"
+}

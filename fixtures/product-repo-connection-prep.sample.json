@@ -1,0 +1,49 @@
+{
+  "version": "21.5.0",
+  "title": "Product Repo Connection Prep Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "connectionPrepId": "connection-prep-1780500000000",
+  "productType": "sales_dx",
+  "taskId": "product-task-1780500000000",
+  "repoPathCandidate": "/home/shimohigoshi/kosame-sales-dx",
+  "repoExistenceCheckPlan": {
+    "note": "dry-run only — do not actually execute these commands without human YES",
+    "commands": [
+      "ls /home/shimohigoshi/kosame-sales-dx",
+      "cd /home/shimohigoshi/kosame-sales-dx && git status --short",
+      "cd /home/shimohigoshi/kosame-sales-dx && git log --oneline -3"
+    ]
+  },
+  "branchPolicy": {
+    "defaultBranch": "main",
+    "workBranch": "feature/<taskId>",
+    "requiresPR": true
+  },
+  "safeReadCommands": [
+    "git status --short",
+    "git log --oneline -5",
+    "git diff --stat HEAD",
+    "ls -la",
+    "cat README.md",
+    "node --check <file>"
+  ],
+  "safeWriteZones": ["src/leads/**", "src/components/**", "tests/**", "docs/**"],
+  "deniedZones": [".env*", "secrets/**", "credentials/**", "config/production.*", "src/auth/**"],
+  "secretAndEnvPolicy": "Do not read .env / secrets / config/production. Never echo or log API keys.",
+  "customerDataPolicy": "No lead PII in code, prompts, or logs. Use anonymized fixtures only.",
+  "verificationCommands": ["node --check <editedFile>", "npm run verify", "npm test", "git status --short"],
+  "rollbackPolicy": "git checkout -- <file> for individual files. git reset --hard requires explicit human YES.",
+  "humanApprovalGates": [
+    "こさめ/GPT PM: task scope review before repo access",
+    "Claude: implementation and node --check before staging",
+    "こさめ/GPT PM: diff review before commit",
+    "じゅんやさん: final YES before git add / commit / push / tag"
+  ],
+  "connectionReady": true,
+  "notReadyReasons": [],
+  "recommendedNextAction": "Connection prep complete. Proceed to First Product Repo Claude Prompt Exporter (v22.0.0).",
+  "dangerousActionsDenied": ["git add", "git commit", "git push", "git tag", "deploy", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean -f", "cat .env", "cat secrets", "read api key"],
+  "noRealRepoAccess": true,
+  "noRealExecution": true
+}

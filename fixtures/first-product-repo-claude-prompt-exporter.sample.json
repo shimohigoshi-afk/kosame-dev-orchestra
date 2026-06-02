@@ -1,0 +1,51 @@
+{
+  "version": "22.0.0",
+  "title": "First Product Repo Claude Prompt Exporter",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "promptExporterId": "prompt-export-1780500000000",
+  "targetProduct": "sales_dx",
+  "targetRepo": "kosame-sales-dx",
+  "claudeRole": "Implementation Engineer — 営業DX機能実装担当",
+  "taskScope": "営業DXにリード向けメール一括返信機能を追加する",
+  "filesAllowedToTouch": ["src/leads/**", "src/components/**", "tests/**", "docs/**"],
+  "filesForbiddenToTouch": [".env*", "secrets/**", "credentials/**", "config/production.*"],
+  "implementationSteps": [
+    "Review task scope and allowed file zones",
+    "Create or modify only files within allowed zones",
+    "Run node --check on every edited file",
+    "Run npm run verify (or equivalent)",
+    "Run git status --short to confirm only intended files changed",
+    "Collect diff summary and verification results",
+    "Return JSON result packet — DO NOT git add / commit / push"
+  ],
+  "verificationCommands": ["node --check <editedFile>", "npm run verify", "git status --short"],
+  "reportFormat": {
+    "sections": ["editedFiles", "diffSummary", "nodeCheckResult", "verifyResult", "smokeResult", "remainingRisks", "rollbackNote"],
+    "format": "JSON packet",
+    "handoffTarget": "Product Verification & Handoff Collector (v18.5.0)"
+  },
+  "forbiddenActions": [
+    "git add (automated)",
+    "git commit (automated)",
+    "git push (automated)",
+    "git tag (automated)",
+    "deploy (any form)",
+    "gcloud deploy",
+    "docker build",
+    "rm -rf",
+    "git reset --hard",
+    "git clean -f",
+    "read .env or .env.*",
+    "read secrets/** or credentials/**",
+    "read or write API keys",
+    "access customer PII",
+    "access insurance / health / financial records"
+  ],
+  "rollbackInstruction": "git checkout -- <file> for each changed file. git reset --hard requires じゅんやさん explicit YES.",
+  "promptReady": true,
+  "promptBlockedReasons": [],
+  "noRealRepoEdit": true,
+  "noRealExecution": true,
+  "note": "exportedPromptは実プロダクトrepoへの投げる直前に確認する。実行前にじゅんやさんのYESが必要。"
+}

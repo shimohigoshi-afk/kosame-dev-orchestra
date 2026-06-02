@@ -1,0 +1,31 @@
+{
+  "version": "18.0.0",
+  "title": "Product Template Applicator Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "templateId": "template-1780400000000",
+  "productType": "sales_dx",
+  "productLabel": "営業DX",
+  "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加する",
+  "recommendedFiles": [
+    "docs/spec/feature-spec.md",
+    "src/leads/csv-export.js",
+    "tests/leads/csv-export.test.js",
+    "docs/release/release-notes.md"
+  ],
+  "requiredSmoke": ["smoke:leads-feature", "smoke:integration"],
+  "runbookDraft": "1. Review feature spec\n2. Implement in src/leads/\n3. Add tests\n4. Run npm verify\n5. Handoff to Kosame PM",
+  "launchChecklist": [
+    "Feature spec reviewed by こさめ",
+    "Implementation reviewed by Claude",
+    "Tests passing (npm verify)",
+    "Release notes drafted",
+    "じゅんやさん final YES"
+  ],
+  "ownerRoles": { "pm": "こさめ/GPT", "impl": "Claude", "review": "Gemini", "finalApproval": "じゅんやさん" },
+  "isKnownProduct": true,
+  "supportedProducts": ["sales_dx", "anesty_board", "backoffice_agent", "email_reply_bot", "cloud_run_pm_agent"],
+  "noRealFileCreation": true,
+  "noRealExecution": true,
+  "note": "このpacket自体は実ファイル作成・commit・push・deployを行わない。じゅんやさんのYES後に進む。"
+}

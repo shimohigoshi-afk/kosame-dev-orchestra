@@ -1,0 +1,43 @@
+{
+  "version": "18.5.0",
+  "title": "Product Verification & Handoff Collector",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "verificationCollectorId": "verify-handoff-1780400000000",
+  "productType": "sales_dx",
+  "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加した",
+  "editedFiles": ["src/leads/csv-export.js", "tests/leads/csv-export.test.js"],
+  "diffSummary": { "present": true, "raw": "2 files changed, 45 insertions(+)" },
+  "nodeCheckResult": { "passed": true, "raw": "ok" },
+  "npmVerifyResult": { "passed": true, "raw": "All tests passed." },
+  "productSmokeResult": { "passed": true, "raw": "PASS: all smoke" },
+  "rollbackNote": "git checkout -- src/leads/csv-export.js",
+  "handoffToKosame": {
+    "target": "Kosame/GPT PM",
+    "status": "READY",
+    "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加した",
+    "summary": "Implementation verified. Ready for Kosame/GPT PM review and release candidate build.",
+    "actionRequired": "Review verification results and proceed to Product Release Candidate Packet Builder (v19.0.0)."
+  },
+  "handoffToGemini": {
+    "target": "Gemini",
+    "status": "READY",
+    "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加した",
+    "summary": "Implementation verified. Ready for Gemini review and release candidate build.",
+    "actionRequired": "Review verification results and proceed to Product Release Candidate Packet Builder (v19.0.0)."
+  },
+  "handoffToGrok": {
+    "target": "Grok",
+    "status": "READY",
+    "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加した",
+    "summary": "Implementation verified. Ready for Grok review and release candidate build.",
+    "actionRequired": "Review verification results and proceed to Product Release Candidate Packet Builder (v19.0.0)."
+  },
+  "remainingRisks": [],
+  "allPassed": true,
+  "recommendedNextAction": "All verifications passed. Proceed to Product Release Candidate Packet Builder (v19.0.0).",
+  "dangerousActionsDenied": ["git commit", "git push", "git tag", "git add", "deploy", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean", "secret", ".env", "api key", "customer data"],
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealDeploy": true
+}

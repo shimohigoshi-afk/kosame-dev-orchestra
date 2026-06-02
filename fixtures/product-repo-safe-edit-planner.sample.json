@@ -1,0 +1,30 @@
+{
+  "version": "17.5.0",
+  "title": "Product Repo Safe Edit Planner",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "planId": "safe-edit-plan-1780400000000",
+  "productType": "sales_dx",
+  "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加する",
+  "repoPolicy": {
+    "repoName": "kosame-sales-dx",
+    "approvalGates": ["こさめ/GPT PM approval", "Claude implementation review", "じゅんやさん final YES"]
+  },
+  "editableAreas": ["./src/leads/**", "./src/components/**", "./tests/**", "./docs/**"],
+  "deniedAreas": ["./.env*", "./secrets/**", "./config/production.*", "./src/auth/**"],
+  "secretBoundary": "No API keys, OAuth tokens, or DB credentials may be read or written",
+  "customerDataBoundary": "No lead PII (name/email/phone) may be included in code or prompts",
+  "safeFirstStep": "Create feature branch spec in docs/ before any src/ edits",
+  "verificationPlan": [
+    { "step": "node --check on all edited files", "required": true },
+    { "step": "npm run verify", "required": true },
+    { "step": "git status --short", "required": true },
+    { "step": "git diff --stat HEAD", "required": true },
+    { "step": "npm run test:leads", "required": false }
+  ],
+  "approvalGates": ["こさめ/GPT PM approval", "Claude implementation review", "じゅんやさん final YES"],
+  "isKnownProduct": true,
+  "dangerousActionsDenied": ["git add", "git commit", "git push", "git tag", "deploy", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean", "read .env", "read secrets", "read customer data"],
+  "noRealRepoEdit": true,
+  "noRealExecution": true
+}

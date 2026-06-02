@@ -1,0 +1,20 @@
+{
+  "version": "17.0.0",
+  "title": "Cross-Repo Claude Execution Prompt Builder",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "promptId": "prompt-1780400000000",
+  "targetRepo": "kosame-sales-dx",
+  "productType": "sales_dx",
+  "taskGoal": "営業DXリード管理画面にCSVエクスポート機能を追加する",
+  "allowedFiles": ["./src/leads/**", "./src/components/**", "./tests/**", "./docs/**", "./README.md"],
+  "deniedFiles": ["./.env", "./.env.*", "./secrets/**", "./credentials/**", "./config/production.*", "./node_modules/**", "./.git/**"],
+  "implementationScope": "営業DXリード管理画面にCSVエクスポート機能を追加する",
+  "forbiddenActions": ["git add", "git commit", "git push", "git tag", "deploy", "gcloud deploy", "docker build", "rm -rf", "git reset --hard", "git clean", "read .env", "read secrets", "read api key", "access customer data", "access personal info"],
+  "verifyCommands": ["node --check <editedFile>", "npm run verify", "npm test", "git status --short", "git diff --stat HEAD"],
+  "doneCriteria": ["All target files updated as specified", "node --check passes on all edited files", "npm run verify passes", "git status shows only intended files changed", "No secrets / .env / API keys read or modified"],
+  "reportFormat": { "sections": ["diff summary", "node --check result", "verify result", "smoke result", "remaining risks"], "format": "JSON packet", "handoffTarget": "Post-Edit Verification Collector (v18.5.0)" },
+  "rollbackPolicy": "git checkout -- <file> for individual files. git reset --hard requires explicit human approval.",
+  "noRealRepoEdit": true,
+  "noRealExecution": true
+}

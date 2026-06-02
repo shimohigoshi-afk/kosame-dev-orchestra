@@ -1,0 +1,21 @@
+{
+  "version": "19.5.0",
+  "title": "Productization Readiness Review Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "readinessReviewId": "readiness-review-1780400000000",
+  "productType": "all",
+  "allRequiredPassed": true,
+  "missingItems": [],
+  "blockerItems": [],
+  "safeToPrototype": true,
+  "notReadyReasons": [],
+  "nextActions": [
+    "Productization readiness confirmed.",
+    "Proceed to Productization Prototype Pack (v20.0.0).",
+    "Present to じゅんやさん for final YES."
+  ],
+  "finalDecision": "approve",
+  "finalDecisionOptions": ["approve", "revise", "reject", "hold"],
+  "noRealExecution": true
+}

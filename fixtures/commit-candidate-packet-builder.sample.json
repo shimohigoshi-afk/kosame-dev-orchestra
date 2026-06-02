@@ -1,0 +1,71 @@
+{
+  "version": "16.0.0",
+  "title": "Commit Candidate Packet Builder",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "packetId": "commit-candidate-1780335174517",
+  "taskGoal": "v14.5.0–v16.0.0 packs implementation",
+  "intendedFiles": [
+    "tools/approval-packet-practical-review-runner-pack.js",
+    "tools/first-safe-docs-edit-execution-pack.js",
+    "tools/post-edit-verification-collector-pack.js",
+    "tools/commit-candidate-packet-builder-pack.js",
+    "package.json"
+  ],
+  "deniedFiles": [".env", ".env.*", "secrets/**"],
+  "stagedFilesPreview": [
+    { "file": "tools/approval-packet-practical-review-runner-pack.js", "action": "add", "note": "dry-run only — not actually staged" },
+    { "file": "tools/first-safe-docs-edit-execution-pack.js", "action": "add", "note": "dry-run only — not actually staged" },
+    { "file": "tools/post-edit-verification-collector-pack.js", "action": "add", "note": "dry-run only — not actually staged" },
+    { "file": "tools/commit-candidate-packet-builder-pack.js", "action": "add", "note": "dry-run only — not actually staged" },
+    { "file": "package.json", "action": "add", "note": "dry-run only — not actually staged" }
+  ],
+  "diffStatPreview": {
+    "note": "dry-run preview only — run `git diff --stat HEAD` for actual diff",
+    "files": [
+      { "file": "tools/approval-packet-practical-review-runner-pack.js", "estimate": "N lines changed (actual TBD)" },
+      { "file": "tools/first-safe-docs-edit-execution-pack.js", "estimate": "N lines changed (actual TBD)" },
+      { "file": "tools/post-edit-verification-collector-pack.js", "estimate": "N lines changed (actual TBD)" },
+      { "file": "tools/commit-candidate-packet-builder-pack.js", "estimate": "N lines changed (actual TBD)" },
+      { "file": "package.json", "estimate": "N lines changed (actual TBD)" }
+    ]
+  },
+  "commitMessageCandidate": "v16.0.0 Add Approval Practical Review, Safe Docs Edit, Verification Collector, Commit Candidate Builder\n\n- dryRun: true\n- humanApprovalRequired: true\n- 対象ファイル: tools/approval-packet-practical-review-runner-pack.js, tools/first-safe-docs-edit-execution-pack.js, tools/post-edit-verification-collector-pack.js, tools/commit-candidate-packet-builder-pack.js, package.json",
+  "tagCandidate": "v16.0.0",
+  "prePushChecklist": [
+    { "item": "git status shows only intended files", "required": true, "note": "run: git status --short" },
+    { "item": "git diff --stat matches expected changes", "required": true, "note": "run: git diff --stat HEAD" },
+    { "item": "npm run verify passes (all smoke green)", "required": true, "note": "run: npm run verify" },
+    { "item": "node --check on all new/edited JS files", "required": true, "note": "run: node --check <file>" },
+    { "item": "rollbackNote is documented", "required": true, "note": "git checkout -- <files> to revert." },
+    { "item": "humanApprovalRequired: じゅんやさんの最終YES取得済み", "required": true, "note": "explicit YES only" },
+    { "item": "commit message reviewed and approved", "required": true, "note": "see commitMessageCandidate" },
+    { "item": "tag candidate reviewed (if applicable)", "required": false, "note": "see tagCandidate" }
+  ],
+  "githubActionsChecklist": [
+    "Confirm GitHub Actions CI triggered after push",
+    "Check Actions tab for green status",
+    "Review test results and lint output",
+    "Confirm no unexpected workflow failures",
+    "Notify こさめ/GPT PM of CI result before tagging"
+  ],
+  "rollbackNote": "git checkout -- <files> to revert. git reset --hard requires explicit human approval.",
+  "isDeniedFileIncluded": false,
+  "verifyPassed": true,
+  "nodeCheckPassed": true,
+  "readyForHumanReview": true,
+  "safeNextAction": "Commit candidate packet ready. Present to じゅんやさん for explicit final YES before any git operation.",
+  "dangerousActionsDenied": [
+    "git add", "git commit", "git push", "git tag",
+    "deploy", "gcloud deploy", "docker build",
+    "rm -rf", "git reset --hard", "git clean",
+    "secret", ".env", "api key"
+  ],
+  "absolutelyForbidden": [
+    "git add (automated)",
+    "git commit (automated)",
+    "git push (automated)",
+    "git tag (automated)"
+  ],
+  "note": "このpacketは git add / git commit / git push / git tag を実行しない。じゅんやさんの明示的YESが必要。"
+}

@@ -1,0 +1,52 @@
+{
+  "version": "15.0.0",
+  "title": "First Safe Docs Edit Execution Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "packId": "safe-docs-edit-1780335174517",
+  "taskGoal": "README.mdにv15.0.0 First Safe Docs Edit Execution Packの説明を追加する",
+  "allowedFiles": [
+    "./docs/ai-dev-team/**",
+    "./README.md"
+  ],
+  "deniedFiles": [
+    "./.env",
+    "./.env.*",
+    "./secrets/**",
+    "./credentials/**",
+    "./tools/**",
+    "./smoke/**",
+    "./fixtures/**",
+    "./package.json"
+  ],
+  "editScope": [
+    { "file": "README.md", "isAllowed": true, "isDenied": false }
+  ],
+  "editScopeDesc": "Add v15.0.0 section to README.md",
+  "verifyCommands": [
+    "node --check <editedFile>",
+    "npm run verify",
+    "git status --short"
+  ],
+  "doneCriteria": [
+    "Target docs file updated with specified content",
+    "node --check passes",
+    "npm run verify passes",
+    "git status shows only intended files changed"
+  ],
+  "rollbackHint": "git checkout -- <file> to revert individual docs file.",
+  "dangerousActionsDenied": [
+    "git add", "git commit", "git push", "git tag",
+    "deploy", "gcloud deploy", "docker build",
+    "rm -rf", "git reset --hard", "git clean",
+    "secret", ".env", "api key"
+  ],
+  "allAllowed": true,
+  "anyDenied": false,
+  "readyToPresent": true,
+  "noRealFileEdit": true,
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealTag": true,
+  "note": "このpacket自体は実ファイル編集・commit・push・tagを自動実行しない。じゅんやさんのYESが必要。"
+}

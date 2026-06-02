@@ -1,0 +1,36 @@
+{
+  "version": "14.5.0",
+  "title": "Approval Packet Practical Review Runner",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "reviewerId": "review-1780335174517",
+  "riskLevel": "low",
+  "checklist": {
+    "dryRun is true": true,
+    "humanApprovalRequired": true,
+    "taskGoal present": true,
+    "targetFiles present": true,
+    "rollbackNote present": true,
+    "verificationPlan ready": true,
+    "claudePrompt ready": true,
+    "approveToDeploy is false": true,
+    "approveToReadSecrets is false": true,
+    "approveToUseRealApi is false": true,
+    "noRealApiExecution": true,
+    "noRealFileEdit": true
+  },
+  "checklistPassed": true,
+  "dangerousActionsFound": [],
+  "missingApprovalItems": [],
+  "finalDecision": "approve",
+  "finalDecisionOptions": ["approve", "revise", "reject", "hold"],
+  "dangerousActionGates": [
+    "git push", "git tag", "git commit", "git add",
+    "deploy", "gcloud deploy", "docker build",
+    "secret", ".env", "api key", "customer data",
+    "rm -rf", "git reset --hard", "git clean"
+  ],
+  "safeNextAction": "Approval packet passed review. Present to じゅんやさん for explicit final YES before any execution.",
+  "noRealApiExecution": true,
+  "noRealExecution": true
+}

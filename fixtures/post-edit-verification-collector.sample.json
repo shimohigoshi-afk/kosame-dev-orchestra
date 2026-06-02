@@ -1,0 +1,39 @@
+{
+  "version": "15.5.0",
+  "title": "Post-Edit Verification Collector",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "collectorId": "verify-collect-1780335174517",
+  "taskGoal": "README.mdにv15.0.0 First Safe Docs Edit Execution Packの説明を追加した",
+  "editedFiles": ["README.md"],
+  "diffSummary": {
+    "present": true,
+    "raw": "1 file changed, 5 insertions(+)"
+  },
+  "nodeCheckResult": {
+    "passed": true,
+    "raw": "ok"
+  },
+  "verifyResult": {
+    "passed": true,
+    "raw": "All smoke tests passed."
+  },
+  "smokeResult": {
+    "passed": true,
+    "raw": "PASS: all smoke"
+  },
+  "rollbackNote": "git checkout -- README.md if needed.",
+  "remainingRisks": [],
+  "allPassed": true,
+  "readyForCommitReview": true,
+  "recommendedNextAction": "All verifications passed. Ready to build commit candidate packet (v16.0.0).",
+  "dangerousActionsDenied": [
+    "git commit", "git push", "git tag", "git add",
+    "deploy", "gcloud deploy", "docker build",
+    "rm -rf", "git reset --hard", "git clean",
+    "secret", ".env", "api key"
+  ],
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealTag": true
+}

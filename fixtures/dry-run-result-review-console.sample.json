@@ -1,0 +1,111 @@
+{
+  "version": "13.5.0",
+  "title": "Dry Run Result Review Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "reviewConsoleId": "review-kosame-dev-orchestra-1780335447417",
+  "inputSummary": {
+    "projectName": "kosame-dev-orchestra",
+    "taskGoal": "KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtimeの説明を追加する",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "reviewMode": "dry-run",
+    "targetFilesCount": 1,
+    "allowedFilesCount": 5,
+    "deniedFilesCount": 4,
+    "dryRunPacketProvided": true
+  },
+  "generatedPacketSummary": {
+    "available": true,
+    "dryRunConsoleId": "e2e-kosame-dev-orchestra-1780335447409",
+    "usageConsolePacket": true,
+    "docsTaskPacket": true,
+    "claudeExecutionPromptPacket": true,
+    "finalApprovalPacket": true,
+    "claudePromptPresent": true,
+    "providerPromptPackets": true,
+    "endToEndPassed": true
+  },
+  "providerRoleSummary": {
+    "available": true,
+    "gemini": {
+      "role": "構成案 / 見出し案 / docs観点",
+      "canEditRepo": false
+    },
+    "grok": {
+      "role": "弱点指摘 / 読み手の詰まり確認",
+      "canEditRepo": false
+    },
+    "claude": {
+      "role": "実装候補。このpackでは編集しない",
+      "canEditRepo": true
+    },
+    "kosame": {
+      "role": "統合 / 安全ゲート",
+      "canEditRepo": false
+    },
+    "humanApproval": {
+      "role": "じゅんやさん final YES only",
+      "canEditRepo": true
+    },
+    "note": "Gemini/Grok must not edit repo. Claude is the only candidate. Human/じゅんやさんは final YES only."
+  },
+  "fileTouchSummary": {
+    "targetFiles": [
+      "README.md"
+    ],
+    "targetCount": 1,
+    "dangerousTargets": [],
+    "hasDangerousTarget": false,
+    "allTargetsAllowed": true,
+    "deniedFilesSet": true,
+    "deniedCount": 4,
+    "note": "OK: no dangerous files in targetFiles"
+  },
+  "safetyReview": {
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "isLowRisk": true,
+    "isLevelCBlocked": false,
+    "hasDangerousFile": false,
+    "noRealApiExecution": true,
+    "noRealFileEdit": true,
+    "secretsBlocked": true,
+    "customerDataBlocked": true,
+    "issueCount": 0,
+    "issues": [],
+    "safetyPassed": true
+  },
+  "approvalReadiness": {
+    "safetyPassed": true,
+    "verificationPlanReady": true,
+    "approvalPacketReady": true,
+    "humanApprovalRequired": true,
+    "readyForHumanReview": true,
+    "note": "Review passed safety checks — ready for じゅんやさん review"
+  },
+  "unresolvedItems": [],
+  "reviewerDecisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "blockedDangerousActions": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "recommendedNextAction": "Review passed — route to v14.0.0 First Human Approval Packet Console for じゅんやさん YES/NO",
+  "noRealApiExecution": true,
+  "noRealFileEdit": true,
+  "reviewPassed": true
+}

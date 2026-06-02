@@ -1,0 +1,85 @@
+{
+  "version": "14.0.0",
+  "title": "First Human Approval Packet Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "humanApprovalConsoleId": "approval-1780335174517",
+  "approvalSummary": {
+    "taskGoal": "KOSAME Dev Orchestra READMEにv10.0.0 Full Orchestra Agent Runtimeの説明を追加する",
+    "riskLevel": "low",
+    "dataLevel": "A",
+    "targetFiles": [
+      "README.md"
+    ],
+    "approvalMode": "dry-run",
+    "reviewPassed": false,
+    "allChecklistItemsPass": true,
+    "humanApprovalRequired": true,
+    "dryRun": true
+  },
+  "yesNoDecisionPacket": {
+    "approveToSendClaudePrompt": true,
+    "approveToAllowFileEditCandidate": true,
+    "approveToRunVerifyAfterEdit": true,
+    "approveToCommitAfterHumanReview": false,
+    "approveToPushAfterHumanReview": false,
+    "approveToTagAfterHumanReview": false,
+    "approveToDeploy": false,
+    "approveToReadSecrets": false,
+    "approveToUseRealApi": false,
+    "note": "approveToDeploy / approveToReadSecrets / approveToUseRealApi は常に false。git commit/push/tag も Human final YES 必須。"
+  },
+  "executionReadiness": {
+    "claudePromptReady": true,
+    "verificationPlanReady": true,
+    "rollbackNoteReady": true,
+    "humanApprovalRequired": true,
+    "readyToProceed": false,
+    "note": "readyToProceed is always false until じゅんやさん gives explicit YES"
+  },
+  "approvalChecklist": {
+    "task goal is low risk": true,
+    "target files are allowed": true,
+    "denied files are protected": true,
+    "no Secret / .env / API key": true,
+    "no customer data": true,
+    "no real API execution": true,
+    "no deploy": true,
+    "rollback note present": true,
+    "verification plan present": true,
+    "Claude prompt present": true,
+    "final YES only preserved": true
+  },
+  "dangerousActionGates": [
+    "git push",
+    "git tag",
+    "deploy",
+    "gcloud deploy",
+    "docker build",
+    "secret",
+    ".env",
+    "api key",
+    "customer data",
+    "destructive action",
+    "rm -rf"
+  ],
+  "safeToProceedReasons": [
+    "riskLevel is low",
+    "dataLevel A: external provider allowed",
+    "claude prompt is ready"
+  ],
+  "stopReasons": [
+    "review console did not pass"
+  ],
+  "rollbackNote": "This is a docs task packet. No actual file edits were made. If implementation proceeds and fails: git checkout -- README.md. git reset --hard HEAD requires explicit human approval.",
+  "finalDecisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "noRealApiExecution": true,
+  "noRealFileEdit": true,
+  "recommendedNextAction": "Approval packet has issues (1) — resolve before presenting to じゅんやさん",
+  "approvalPacketPassed": false
+}

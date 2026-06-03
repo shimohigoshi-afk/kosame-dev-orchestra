@@ -1,0 +1,116 @@
+{
+  "version": "33.0.0",
+  "title": "Product Repo First Touch Dry Run Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "firstTouchDryRunId": "first-touch-dry-run-1780486069325",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "firstTouchPurpose": "Email Reply BOT repoへの初回接触前確認。docs/smoke/README を read-only 確認し、初回docs整備タスクのスコープを確定する。",
+  "safeReadOnlyPlan": [
+    {
+      "cmd": "ls -la /path/to/kosame-email-reply-bot/",
+      "purpose": "top-level directory structure確認"
+    },
+    {
+      "cmd": "cat /path/to/kosame-email-reply-bot/package.json",
+      "purpose": "scripts / dependencies確認"
+    },
+    {
+      "cmd": "cat /path/to/kosame-email-reply-bot/README.md",
+      "purpose": "README内容確認"
+    },
+    {
+      "cmd": "git -C /path/to/kosame-email-reply-bot log --oneline -5",
+      "purpose": "最新5コミット確認 (read-only)"
+    },
+    {
+      "cmd": "git -C /path/to/kosame-email-reply-bot status",
+      "purpose": "working tree状態確認 (read-only)"
+    },
+    {
+      "cmd": "find /path/to/kosame-email-reply-bot/docs -name \"*.md\" 2>/dev/null | head -10",
+      "purpose": "docs構造確認"
+    },
+    {
+      "cmd": "node --version",
+      "purpose": "ランタイムバージョン確認"
+    }
+  ],
+  "allowedFirstTouchAreas": [
+    "docs/**",
+    "README.md",
+    "smoke/**",
+    "runbook/**",
+    "package.json (read-only)"
+  ],
+  "forbiddenFirstTouchAreas": [
+    ".env",
+    ".env.*",
+    "secrets/**",
+    "credentials/**",
+    "config/secrets/**",
+    "src/auth/**",
+    "src/payment/**",
+    "insurance/**",
+    "health/**",
+    "production.config.*",
+    ".ssh/**",
+    "private/**"
+  ],
+  "commandsToPreview": [
+    "ls -la /path/to/kosame-email-reply-bot/",
+    "cat /path/to/kosame-email-reply-bot/package.json",
+    "cat /path/to/kosame-email-reply-bot/README.md",
+    "git -C /path/to/kosame-email-reply-bot log --oneline -5",
+    "git -C /path/to/kosame-email-reply-bot status",
+    "find /path/to/kosame-email-reply-bot/docs -name \"*.md\" 2>/dev/null | head -10",
+    "node --version"
+  ],
+  "commandsForbidden": [
+    "git add",
+    "git commit",
+    "git push",
+    "git tag",
+    "git reset --hard",
+    "git clean -f",
+    "rm -rf",
+    "npm run deploy",
+    "gcloud deploy",
+    "docker build",
+    "cat .env",
+    "cat secrets/**",
+    "cat credentials/**"
+  ],
+  "expectedObservations": [
+    "kosame-email-reply-bot repo structure が確認できる",
+    "package.json の scripts セクションが読める",
+    "README.md があれば内容が確認できる",
+    "git log で最近のコミット履歴が読める",
+    "docs/ ディレクトリ構造が分かる",
+    "No .env or secrets files are accessed",
+    "本番影響なし、Secret読取なし の状態でfirst touch完了"
+  ],
+  "backupBeforeTouchRequired": false,
+  "notReadyReasons": [],
+  "dryRunReady": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "First touch dry-run ready for kosame-email-reply-bot. Human performs safe read-only inspection. No edits until v34 Controlled Task Launch.",
+  "noRealFileEdit": true,
+  "noRealGitCommit": true,
+  "noRealGitPush": true,
+  "noRealDeploy": true,
+  "noSecretRead": true
+}

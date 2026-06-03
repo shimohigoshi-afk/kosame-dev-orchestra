@@ -1,0 +1,128 @@
+{
+  "version": "34.0.0",
+  "title": "Product Repo First Controlled Task Launch Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "controlledLaunchId": "controlled-launch-1780486069371",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "launchTaskTitle": "docs整備: README.md に目次と概要セクションを追加する",
+  "launchTaskGoal": "Email Reply BOT の README.md を整備して開発者が理解しやすくする",
+  "allowedFiles": [
+    "docs/**",
+    "README.md",
+    "smoke/**"
+  ],
+  "forbiddenFiles": [
+    ".env*",
+    "secrets/**",
+    "credentials/**",
+    "src/auth/**"
+  ],
+  "allowedCommands": [
+    "node --check <file>",
+    "npm run verify",
+    "git status (read-only)",
+    "git log --oneline (read-only)",
+    "ls (read-only)",
+    "cat <allowed_file> (read-only)",
+    "find docs/ -name \"*.md\" (read-only)"
+  ],
+  "forbiddenCommands": [
+    "git add (without explicit human YES)",
+    "git commit (without explicit human YES)",
+    "git push",
+    "git tag",
+    "git reset --hard",
+    "git clean -f",
+    "rm -rf",
+    "gcloud deploy",
+    "docker build",
+    "npm run deploy",
+    "cat .env",
+    "cat secrets/**",
+    "cat credentials/**"
+  ],
+  "claudePromptToLaunch": "# KOSAME Dev Orchestra — Controlled Task Launch\n\n## Target Repo\nkosame-email-reply-bot (email_reply_bot)\n\n## Task Title\ndocs整備: README.md に目次と概要セクションを追加する\n\n## Task Goal\nEmail Reply BOT の README.md を整備して開発者が理解しやすくする\n\n## Allowed File Zones\ndocs/**, README.md, smoke/**\n\n## Forbidden File Zones (DO NOT TOUCH)\n.env*, secrets/**, credentials/**, src/auth/**\n.env / secrets/** / credentials/** / production.config.* / .ssh/**\n\n## Allowed Commands\n- node --check <file>\n- npm run verify\n- git status (read-only)\n- git log --oneline -5 (read-only)\n- ls / find / cat (read-only, within allowed zones only)\n\n## FORBIDDEN Commands (DO NOT EXECUTE)\n- git add\n- git commit\n- git push\n- git tag\n- git reset --hard / git clean -f\n- rm -rf\n- gcloud deploy / docker build / npm run deploy\n- cat .env / cat secrets/** / cat credentials/**\n\n## Safety Rules\n1. Do NOT commit, push, or tag any changes.\n2. Do NOT read .env, secrets, credentials, or any customer PII.\n3. Do NOT access insurance / health / financial records.\n4. Do NOT perform any deploy operation.\n5. Stop after: file edits + node --check + npm run verify.\n6. Generate a handoff report listing: changedFiles, nodeCheckResult, verificationResult, gitStatusOutput.\n7. Flag any out-of-scope findings immediately without acting on them.\n\n## Handoff Report Format (Required at the end)\n- launchTaskTitle: docs整備: README.md に目次と概要セクションを追加する\n- targetProduct: email_reply_bot\n- changedFiles: [list all modified/created files]\n- nodeCheckResult: [pass/fail per file]\n- verificationResult: [npm run verify output summary]\n- gitStatusOutput: [git status --short output]\n- sensitiveContentFound: false (if true, STOP and report)\n- dangerousOpsPerformed: [] (must be empty — if not empty, report immediately)\n- readyForResultReview: true/false\n",
+  "preLaunchChecklist": [
+    {
+      "item": "v32 Product Repo Selection decided",
+      "required": true
+    },
+    {
+      "item": "v33 First Touch Dry Run completed",
+      "required": true
+    },
+    {
+      "item": "v27 Connection Bridge ready",
+      "required": true
+    },
+    {
+      "item": "v25 Work Order confirmed",
+      "required": true
+    },
+    {
+      "item": "Task scope and allowed file zones confirmed by human",
+      "required": true
+    },
+    {
+      "item": "No secrets / customer data in task scope",
+      "required": true
+    },
+    {
+      "item": "Human issued YES for this launch",
+      "required": true
+    }
+  ],
+  "postLaunchReportFormat": {
+    "requiredFields": [
+      "launchTaskTitle",
+      "targetProduct",
+      "targetRepoCandidate",
+      "changedFiles",
+      "nodeCheckResult",
+      "verificationResult",
+      "gitStatusOutput",
+      "sensitiveContentFound (must be false)",
+      "dangerousOpsPerformed (must be empty)",
+      "readyForResultReview"
+    ],
+    "forbiddenFields": [
+      "secretValues",
+      "envValues",
+      "customerPII",
+      "insuranceData",
+      "commitHash (not yet committed)",
+      "pushConfirmation"
+    ]
+  },
+  "rollbackInstruction": "git checkout -- <file> for each changed file in kosame-email-reply-bot. git reset --hard requires explicit じゅんやさん YES.",
+  "commitStopRule": [
+    "Do NOT run git add / git commit / git push / git tag",
+    "Stop at file edit + node --check + npm run verify",
+    "Generate handoff report listing: changed files, verification result, git status output",
+    "Wait for human review via v29 Result Review Console before any git operation",
+    "Any commit / push / tag requires explicit じゅんやさん YES"
+  ],
+  "blockedReasons": [],
+  "launchReady": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "Launch packet ready. Copy claudePromptToLaunch into Claude Code for kosame-email-reply-bot. Review implementation plan before any file edits. Collect handoff report for v29 Result Review.",
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealTag": true,
+  "noRealDeploy": true,
+  "noSecretRead": true
+}

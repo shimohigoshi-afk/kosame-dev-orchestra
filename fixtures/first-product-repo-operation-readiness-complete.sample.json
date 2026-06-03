@@ -1,0 +1,173 @@
+{
+  "version": "35.0.0",
+  "title": "First Product Repo Operation Readiness Complete",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "readinessCompleteId": "readiness-complete-1780486069424",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "readinessStages": [
+    {
+      "stageId": "v30_e2e_prototype",
+      "name": "E2E Operation Prototype (v30)",
+      "required": true
+    },
+    {
+      "stageId": "v31_node24_readiness",
+      "name": "Node24 Readiness (v31)",
+      "required": false
+    },
+    {
+      "stageId": "v32_repo_selection",
+      "name": "Product Repo Selection (v32)",
+      "required": true
+    },
+    {
+      "stageId": "v33_first_touch_dry_run",
+      "name": "First Touch Dry Run (v33)",
+      "required": true
+    },
+    {
+      "stageId": "v27_connection_bridge",
+      "name": "Connection Bridge (v27)",
+      "required": true
+    },
+    {
+      "stageId": "v25_work_order",
+      "name": "Work Order (v25)",
+      "required": true
+    },
+    {
+      "stageId": "v28_dry_run_dispatch",
+      "name": "Dry Run Dispatch (v28)",
+      "required": true
+    },
+    {
+      "stageId": "v34_launch_packet",
+      "name": "Controlled Task Launch Packet (v34)",
+      "required": true
+    }
+  ],
+  "completedStages": [
+    "v30_e2e_prototype",
+    "v31_node24_readiness",
+    "v32_repo_selection",
+    "v33_first_touch_dry_run",
+    "v27_connection_bridge",
+    "v25_work_order",
+    "v28_dry_run_dispatch",
+    "v34_launch_packet"
+  ],
+  "missingStages": [],
+  "safetyBoundary": {
+    "noRealRepoEdit": "Product repo files not modified until explicit human YES + controlled launch",
+    "noRealGitOps": "No git add/commit/push/tag without explicit human YES",
+    "noRealDeploy": "No deploy in any readiness stage",
+    "noSecretRead": "No .env / secrets / credentials accessed",
+    "noCustomerData": "No PII / insurance / health / financial data accessed"
+  },
+  "humanApprovalContract": {
+    "requiredFor": [
+      "Any git add / commit / push / tag",
+      "Any deploy operation",
+      "Any file edit in target product repo",
+      "Launching Claude Code on target repo",
+      "Any operation outside allowed file zones"
+    ],
+    "approvalChain": [
+      "Step 1: こさめ/GPT PM reviews stage outputs and issues approval",
+      "Step 2: じゅんやさん issues final YES for any git or deploy operations"
+    ]
+  },
+  "firstTaskCandidate": "docs整備: README.md の目次・概要セクションを追加する",
+  "firstTaskRiskLevel": "low",
+  "firstTaskAllowedScope": [
+    "docs/**",
+    "README.md",
+    "smoke/**"
+  ],
+  "firstTaskForbiddenScope": [
+    ".env*",
+    "secrets/**",
+    "src/auth/**"
+  ],
+  "providerRoleMap": {
+    "Kosame/GPT": [
+      "PM: repo selection and task scoping",
+      "Safety gate: approve/hold/reject at each stage",
+      "Final review before presenting commit candidate to じゅんやさん"
+    ],
+    "Claude": [
+      "Packet generation: connection bridge, work order, launch packet",
+      "File edits within approved zones only after human YES",
+      "Verification: node --check and test suite",
+      "Handoff report generation (no git operations)"
+    ],
+    "Gemini": [
+      "Bulk work intake support",
+      "Draft expansion for documentation tasks",
+      "Fallback provider when Claude unavailable"
+    ],
+    "Grok": [
+      "Research and analysis support",
+      "Secondary review of implementation plans",
+      "Read-only external context lookup"
+    ],
+    "DeepSeek": [
+      "Code analysis and review support",
+      "Alternative implementation suggestions"
+    ],
+    "Kimi": [
+      "Long-context document review",
+      "Multi-file consistency analysis"
+    ],
+    "Cloud Shell": [
+      "CLI execution environment (node, npm, git log/status)",
+      "node --check and smoke runs",
+      "Safe read-only inspection commands"
+    ],
+    "Human": [
+      "じゅんやさん: final YES for all commit/push/tag/deploy",
+      "こさめ/GPT PM: safety gate and approval delegation",
+      "Task intake, scope confirmation, and launch approval"
+    ]
+  },
+  "finalReadinessDecision": "approve",
+  "decisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "nextVersionCandidates": [
+    {
+      "version": "v36.0.0",
+      "suggestion": "First Real Product Repo Task Execution — execute controlled launch packet on target repo with human gate"
+    },
+    {
+      "version": "v37.0.0",
+      "suggestion": "First Real Product Repo Commit Candidate — git add/commit with じゅんやさん YES"
+    }
+  ],
+  "notReadyReasons": [],
+  "readyForFirstRealProductRepoTask": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "Readiness complete for kosame-email-reply-bot. Proceed to v36 First Real Product Repo Task Execution. こさめ/GPT PM approval required, then じゅんやさん final YES before Claude Code launch.",
+  "noRealRepoEdit": true,
+  "noRealGitCommit": true,
+  "noRealGitPush": true,
+  "noRealDeploy": true,
+  "noSecretRead": true
+}

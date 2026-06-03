@@ -1,0 +1,131 @@
+{
+  "version": "32.0.0",
+  "title": "First Product Repo Selection Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "repoSelectionId": "repo-selection-1780486069270",
+  "productCandidates": [
+    {
+      "product": "sales_dx",
+      "repoCandidate": "kosame-sales-dx",
+      "businessImpact": "medium",
+      "implementationRisk": "low",
+      "safetyRisk": "low",
+      "secretRequired": false,
+      "productionImpact": false,
+      "regulatedData": false,
+      "firstTouchSuitability": "high",
+      "rationale": "顧客向け営業DXツール。本番影響なし・Secret不要・docsやREADME中心で低リスク初回作業が可能。"
+    },
+    {
+      "product": "email_reply_bot",
+      "repoCandidate": "kosame-email-reply-bot",
+      "businessImpact": "medium",
+      "implementationRisk": "low",
+      "safetyRisk": "low",
+      "secretRequired": false,
+      "productionImpact": false,
+      "regulatedData": false,
+      "firstTouchSuitability": "high",
+      "rationale": "メール自動返信BOT。ドキュメント・smoke・runbook作業から始めやすく低リスク。Secret不要・本番影響なし。"
+    },
+    {
+      "product": "cloud_run_pm_agent",
+      "repoCandidate": "kosame-dev-orchestra",
+      "businessImpact": "high",
+      "implementationRisk": "low",
+      "safetyRisk": "low",
+      "secretRequired": false,
+      "productionImpact": false,
+      "regulatedData": false,
+      "firstTouchSuitability": "medium",
+      "rationale": "このorchestration repo自身。既に運用中でsmoke充実。ただし自己改変リスクあり。既存テスト破壊に注意。"
+    },
+    {
+      "product": "anesty_board",
+      "repoCandidate": "kosame-anesty-board",
+      "businessImpact": "high",
+      "implementationRisk": "medium",
+      "safetyRisk": "high",
+      "secretRequired": true,
+      "productionImpact": true,
+      "regulatedData": true,
+      "firstTouchSuitability": "low",
+      "rationale": "保険・健診情報を扱う規制データあり。Secret必須・本番影響大・最初の投入候補としてはhold推奨。"
+    },
+    {
+      "product": "backoffice_agent",
+      "repoCandidate": "kosame-backoffice-agent",
+      "businessImpact": "high",
+      "implementationRisk": "medium",
+      "safetyRisk": "medium",
+      "secretRequired": true,
+      "productionImpact": true,
+      "regulatedData": false,
+      "firstTouchSuitability": "low",
+      "rationale": "社内バックオフィス処理。Secret必要・本番影響あり。初回は低リスク箇所（docs/runbook）に限定するなら条件付き可。"
+    }
+  ],
+  "recommendedFirstProduct": {
+    "product": "email_reply_bot",
+    "repoCandidate": "kosame-email-reply-bot",
+    "businessImpact": "medium",
+    "implementationRisk": "low",
+    "safetyRisk": "low",
+    "secretRequired": false,
+    "productionImpact": false,
+    "regulatedData": false,
+    "firstTouchSuitability": "high",
+    "rationale": "メール自動返信BOT。ドキュメント・smoke・runbook作業から始めやすく低リスク。Secret不要・本番影響なし。"
+  },
+  "selectionReason": "こさめ/GPT PM判断: Email Reply BOTはSecret不要・本番影響なし・docs整備から始めやすい。",
+  "businessImpact": "medium",
+  "implementationRisk": "low",
+  "safetyRisk": "low",
+  "holdProducts": [
+    {
+      "product": "anesty_board",
+      "reason": "保険・健診情報を扱う規制データあり。Secret必須・本番影響大・最初の投入候補としてはhold推奨。"
+    },
+    {
+      "product": "backoffice_agent",
+      "reason": "社内バックオフィス処理。Secret必要・本番影響あり。初回は低リスク箇所（docs/runbook）に限定するなら条件付き可。"
+    }
+  ],
+  "repoReadinessAssumption": [
+    "kosame-email-reply-bot repo exists on host (not verified in dry-run)",
+    "Repo is git-initialized with at least one commit",
+    "No secrets in working tree root",
+    "docs/ or README.md exists for low-risk first task"
+  ],
+  "requiredHumanInputs": [
+    "selectedProduct",
+    "businessPriorityConfirmed",
+    "firstTaskScopeConfirmed"
+  ],
+  "missingInputs": [],
+  "decisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "selectionReady": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "Product selected: email_reply_bot. Proceed to v33 First Touch Dry Run Pack.",
+  "noRealRepoAccess": true,
+  "noRealCommit": true,
+  "noRealDeploy": true
+}

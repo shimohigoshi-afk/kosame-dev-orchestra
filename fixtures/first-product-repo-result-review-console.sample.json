@@ -1,0 +1,115 @@
+{
+  "version": "29.0.0",
+  "title": "First Product Repo Result Review Console",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "resultReviewId": "result-review-1780484970780",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "claudeReportInputSummary": "2 files created: src/leads/bulk-email-reply.js, tests/leads/bulk-email-reply.test.js. No secrets accessed.",
+  "changedFilesReview": {
+    "files": [
+      "src/leads/bulk-email-reply.js",
+      "tests/leads/bulk-email-reply.test.js"
+    ],
+    "count": 2,
+    "allowedCheck": {
+      "clean": true,
+      "reason": "All files within allowed zones"
+    },
+    "forbiddenCheck": {
+      "clean": true,
+      "found": []
+    }
+  },
+  "verificationReview": {
+    "passed": true,
+    "raw": "All tests passed. 0 errors.",
+    "note": "Verification suite passed"
+  },
+  "safetyReview": {
+    "secretLeak": {
+      "found": [
+        "secret"
+      ],
+      "clean": false
+    },
+    "customerDataLeak": {
+      "found": [],
+      "clean": true
+    },
+    "dangerousOps": {
+      "found": [],
+      "clean": true
+    },
+    "overallSafe": false
+  },
+  "businessIntentReview": {
+    "inputNote": "営業DXのリード向け一括メール返信機能。スコープ内のみ変更。",
+    "aligned": true,
+    "note": "Business intent described — human PM review required before approve"
+  },
+  "allowedFilesCheck": {
+    "clean": true,
+    "reason": "All files within allowed zones"
+  },
+  "forbiddenFilesCheck": {
+    "clean": true,
+    "found": []
+  },
+  "secretLeakCheck": {
+    "found": [
+      "secret"
+    ],
+    "clean": false
+  },
+  "customerDataLeakCheck": {
+    "found": [],
+    "clean": true
+  },
+  "dangerousOperationCheck": {
+    "found": [],
+    "clean": true
+  },
+  "acceptedItems": [
+    "verification passed",
+    "all files within allowed zones",
+    "no forbidden files touched",
+    "no customer data leak detected",
+    "no dangerous operations detected"
+  ],
+  "rejectedItems": [
+    "secret leak: secret"
+  ],
+  "blockerItems": [],
+  "reviewDecision": "hold",
+  "decisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "commitCandidateReady": false,
+  "needsHumanApproval": true,
+  "notReadyReasons": [
+    "Critical issues: secret leak: secret"
+  ],
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "HOLD: Sensitive content detected. Do not proceed. Escalate to じゅんやさん and こさめ/GPT PM immediately.",
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealTag": true,
+  "noRealDeploy": true
+}

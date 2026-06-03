@@ -1,0 +1,306 @@
+{
+  "version": "30.0.0",
+  "title": "First End-to-End Product Repo Operation Prototype",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "operationPrototypeId": "e2e-prototype-1780484771356",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "supportedProductTypes": [
+    "sales_dx",
+    "anesty_board",
+    "backoffice_agent",
+    "email_reply_bot",
+    "cloud_run_pm_agent"
+  ],
+  "endToEndFlow": [
+    {
+      "stage": 1,
+      "name": "Intake",
+      "actor": "Human + Kosame/GPT",
+      "tool": "repo-task-intake-console-pack",
+      "description": "Receive task request from じゅんやさん / こさめ/GPT PM"
+    },
+    {
+      "stage": 2,
+      "name": "Product Repo Task Packet",
+      "actor": "Claude",
+      "tool": "first-product-repo-task-packet-pack",
+      "description": "Generate task packet with scope, goals, allowed file zones"
+    },
+    {
+      "stage": 3,
+      "name": "Connection Bridge",
+      "actor": "Claude",
+      "tool": "first-real-product-repo-connection-bridge-pack",
+      "description": "Build dry-run connection bridge to target repo (v27)"
+    },
+    {
+      "stage": 4,
+      "name": "Work Order",
+      "actor": "Claude",
+      "tool": "first-product-repo-work-order-console-pack",
+      "description": "Generate detailed work order with file zones and rollback plan (v25)"
+    },
+    {
+      "stage": 5,
+      "name": "External Repo Preflight",
+      "actor": "Claude",
+      "tool": "external-repo-preflight-command-pack",
+      "description": "Safety preflight checks before any edits (v25.5)"
+    },
+    {
+      "stage": 6,
+      "name": "Execution Prompt Pack",
+      "actor": "Claude",
+      "tool": "first-real-product-repo-execution-prompt-pack",
+      "description": "Generate Claude execution prompt for target repo (v24)"
+    },
+    {
+      "stage": 7,
+      "name": "Dry Run Dispatch",
+      "actor": "Claude + Human approval",
+      "tool": "first-product-repo-dry-run-dispatch-console-pack",
+      "description": "Dispatch console dry-run — describe what Claude will do, no real execution (v28)"
+    },
+    {
+      "stage": 8,
+      "name": "Handoff & Result Import",
+      "actor": "Claude + Human review",
+      "tool": "first-product-repo-handoff-result-import-pack",
+      "description": "Import Claude result report; scan for safety issues (v26)"
+    },
+    {
+      "stage": 9,
+      "name": "Result Review",
+      "actor": "Kosame/GPT PM + Claude",
+      "tool": "first-product-repo-result-review-console-pack",
+      "description": "Review imported results: approve / revise / reject / hold (v29)"
+    },
+    {
+      "stage": 10,
+      "name": "Commit Candidate Decision",
+      "actor": "Human (じゅんやさん)",
+      "tool": "commit-candidate-packet-builder-pack",
+      "description": "Final commit/push/tag decision — じゅんやさん YES required"
+    }
+  ],
+  "providerRoleMap": {
+    "Kosame/GPT": [
+      "PM: intake review and task scoping",
+      "Safety gate: approve/hold/reject at each stage",
+      "Integration judge: cross-stage consistency check",
+      "Final review before presenting to じゅんやさん"
+    ],
+    "Claude": [
+      "Implementation: generate task packets, work orders, execution prompts",
+      "Dry-run execution: edit files within approved zones only",
+      "Verification: run node --check and test suite",
+      "Handoff: generate result report for review"
+    ],
+    "Gemini": [
+      "Bulk work intake support",
+      "Draft expansion for large refactors",
+      "Fallback provider when Claude unavailable"
+    ],
+    "Grok": [
+      "Research and analysis support",
+      "External information lookup (read-only)",
+      "Secondary review layer"
+    ],
+    "DeepSeek": [
+      "Code analysis and review support",
+      "Alternative implementation suggestions",
+      "Read-only research tasks"
+    ],
+    "Kimi": [
+      "Document review and summarization",
+      "Long-context analysis tasks",
+      "Multi-file consistency review"
+    ],
+    "Cloud Shell": [
+      "CLI execution environment (gcloud, node, npm)",
+      "git status / git log (read-only)",
+      "node --check and smoke runs"
+    ],
+    "Human": [
+      "じゅんやさん: final YES for all commit/push/tag/deploy",
+      "こさめ/GPT PM: safety gate and approval delegation",
+      "Task intake and scope confirmation",
+      "Review and hold/reject authority at any stage"
+    ]
+  },
+  "humanApprovalContract": {
+    "requiredFor": [
+      "Any git add / commit / push / tag",
+      "Any deploy operation",
+      "Any file edit beyond dry-run packet generation",
+      "Any Secret / .env / credential access attempt",
+      "Any customer data access attempt",
+      "Any operation outside allowed file zones"
+    ],
+    "approvalChain": [
+      "Step 1: こさめ/GPT PM reviews and approves stage output",
+      "Step 2: じゅんやさん issues final YES before git or deploy operations"
+    ],
+    "blockedWithoutApproval": [
+      "git commit",
+      "git push",
+      "git tag",
+      "deploy",
+      "docker build",
+      "gcloud deploy"
+    ]
+  },
+  "safetyBoundary": {
+    "noRealRepoEdit": "Target repo files are not modified during dry-run phases",
+    "noRealGitOps": "No git add/commit/push/tag executed without explicit human YES",
+    "noRealDeploy": "No deploy executed in any phase of this prototype",
+    "noSecretRead": "No .env, secrets/**, or credentials/** read at any stage",
+    "noCustomerData": "No PII, insurance, health, or financial data accessed",
+    "dryRunOnly": "All stage outputs are packets/plans — no external side effects"
+  },
+  "secretBoundary": {
+    "rule": "No .env / secrets / credentials read at any stage",
+    "status": "enforced"
+  },
+  "customerDataBoundary": {
+    "rule": "No PII / insurance / health / financial data accessed at any stage",
+    "status": "enforced"
+  },
+  "allowedOperationModes": [
+    "dry_run_only",
+    "dry_run_dispatch",
+    "dry_run_review",
+    "human_approved_edit",
+    "readonly_bridge",
+    "packet_generation"
+  ],
+  "blockedOperationModes": [
+    "direct_deploy",
+    "auto_push",
+    "auto_tag",
+    "secret_inspection",
+    "customer_data_scan",
+    "destructive_cleanup"
+  ],
+  "stageOutputs": [
+    {
+      "stage": 1,
+      "name": "Intake",
+      "status": "provided",
+      "outputSummary": "営業DXリード向け一括返信機能 — intake confirmed",
+      "tool": "repo-task-intake-console-pack",
+      "actor": "Human + Kosame/GPT"
+    },
+    {
+      "stage": 2,
+      "name": "Product Repo Task Packet",
+      "status": "provided",
+      "outputSummary": "task packet generated — scope: src/leads/**",
+      "tool": "first-product-repo-task-packet-pack",
+      "actor": "Claude"
+    },
+    {
+      "stage": 3,
+      "name": "Connection Bridge",
+      "status": "provided",
+      "outputSummary": "bridge-123: kosame-sales-dx, dry_run_readonly",
+      "tool": "first-real-product-repo-connection-bridge-pack",
+      "actor": "Claude"
+    },
+    {
+      "stage": 4,
+      "name": "Work Order",
+      "status": "provided",
+      "outputSummary": "work order generated — allowed: src/leads/**, tests/**",
+      "tool": "first-product-repo-work-order-console-pack",
+      "actor": "Claude"
+    },
+    {
+      "stage": 5,
+      "name": "External Repo Preflight",
+      "status": "provided",
+      "outputSummary": "preflight passed — no secrets, no forbidden files",
+      "tool": "external-repo-preflight-command-pack",
+      "actor": "Claude"
+    },
+    {
+      "stage": 6,
+      "name": "Execution Prompt Pack",
+      "status": "provided",
+      "outputSummary": "execution prompt generated for Claude",
+      "tool": "first-real-product-repo-execution-prompt-pack",
+      "actor": "Claude"
+    },
+    {
+      "stage": 7,
+      "name": "Dry Run Dispatch",
+      "status": "provided",
+      "outputSummary": "dry-run dispatch console ready",
+      "tool": "first-product-repo-dry-run-dispatch-console-pack",
+      "actor": "Claude + Human approval"
+    },
+    {
+      "stage": 8,
+      "name": "Handoff & Result Import",
+      "status": "provided",
+      "outputSummary": "handoff import: 2 files, verification passed",
+      "tool": "first-product-repo-handoff-result-import-pack",
+      "actor": "Claude + Human review"
+    },
+    {
+      "stage": 9,
+      "name": "Result Review",
+      "status": "provided",
+      "outputSummary": "result review: approve, commitCandidateReady=true",
+      "tool": "first-product-repo-result-review-console-pack",
+      "actor": "Kosame/GPT PM + Claude"
+    },
+    {
+      "stage": 10,
+      "name": "Commit Candidate Decision",
+      "status": "provided",
+      "outputSummary": "pending じゅんやさん YES",
+      "tool": "commit-candidate-packet-builder-pack",
+      "actor": "Human (じゅんやさん)"
+    }
+  ],
+  "stageBlockers": [],
+  "commitCandidateDecision": {
+    "decision": "pending_human_yes",
+    "reason": "All dry-run stages passed. Awaiting こさめ/GPT PM review, then じゅんやさん final YES.",
+    "readyForCommit": false,
+    "humanApprovalRequired": true,
+    "note": "readyForCommit will become true only after explicit じゅんやさん YES"
+  },
+  "nextVersionCandidates": [
+    {
+      "version": "v31.0.0",
+      "suggestion": "First Real Repo Edit with Human Gate — execute one approved edit in real target repo with full safety checks"
+    },
+    {
+      "version": "v32.0.0",
+      "suggestion": "First Commit Candidate Execution — execute git add/commit with じゅんやさん YES"
+    }
+  ],
+  "productRepoOperationPrototypePassed": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "noRealRepoEdit": true,
+  "noRealGitCommit": true,
+  "noRealGitPush": true,
+  "noRealDeploy": true,
+  "noRealSecretRead": true
+}

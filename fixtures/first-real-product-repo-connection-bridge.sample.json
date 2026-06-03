@@ -1,0 +1,99 @@
+{
+  "version": "27.0.0",
+  "title": "First Real Product Repo Connection Bridge",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "connectionBridgeId": "bridge-1780484769525",
+  "targetProduct": "sales_dx",
+  "targetRepoCandidate": "kosame-sales-dx",
+  "repoPathCandidate": "/home/shimohigoshi/kosame-sales-dx",
+  "repoKind": "nodejs_webapp",
+  "branchPolicy": {
+    "defaultBranch": "main",
+    "workBranch": "feature/*",
+    "forbidden": [
+      "main (direct push)",
+      "release/*"
+    ]
+  },
+  "connectionAssumptions": [
+    "kosame-sales-dx repo exists at /home/shimohigoshi/kosame-sales-dx",
+    "Working on feature/lead-bulk-email branch",
+    "Scope limited to src/leads/** and tests/**"
+  ],
+  "safeReadOnlyChecks": [
+    "read CLAUDE.md if present",
+    "list top-level directory structure (ls)",
+    "read package.json scripts",
+    "read README if present",
+    "check node version",
+    "check git log (read-only)"
+  ],
+  "forbiddenChecks": [
+    "read .env or .env.* files",
+    "read secrets/** directory",
+    "read credentials/**",
+    "access customer PII tables",
+    "access insurance or health records",
+    "execute deploy commands",
+    "execute gcloud commands",
+    "execute docker commands",
+    "execute git push / git tag"
+  ],
+  "requiredHumanInputs": [
+    "repoExistsConfirmed",
+    "branchNameForWork",
+    "taskScopeConfirmed",
+    "allowedFileZonesConfirmed"
+  ],
+  "missingHumanInputs": [],
+  "secretBoundary": {
+    "rule": "No .env, secrets/**, or credential files may be read by Claude during this connection",
+    "enforcement": "dry-run only — Claude must not access these paths",
+    "status": "enforced"
+  },
+  "customerDataBoundary": {
+    "rule": "No customer PII, insurance, health, or financial records may be accessed",
+    "enforcement": "dry-run only",
+    "status": "enforced"
+  },
+  "regulatedDataBoundary": {
+    "rule": "No HIPAA / personal data / insurance policy data may be read or modified",
+    "enforcement": "dry-run only",
+    "applicableProducts": [
+      "anesty_board",
+      "backoffice_agent"
+    ],
+    "status": "enforced"
+  },
+  "allowedConnectionMode": "dry_run_readonly_bridge_only",
+  "blockedConnectionModes": [
+    "direct_deploy",
+    "auto_push",
+    "auto_tag",
+    "secret_inspection",
+    "customer_data_scan",
+    "destructive_cleanup"
+  ],
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "connectionBridgeReady": true,
+  "notReadyReasons": [],
+  "recommendedNextAction": "Connection bridge ready. Proceed to v28 Dry Run Dispatch Console with this bridge as input.",
+  "noRealRepoAccess": true,
+  "noRealSecretRead": true,
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealDeploy": true
+}

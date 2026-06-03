@@ -1,0 +1,212 @@
+'use strict';
+
+const TOOL_META = {
+  version: '40.0.0',
+  title: 'KOSAME Dev Orchestra Initial Completion Pack',
+  slug: 'kosame-dev-orchestra-initial-completion-pack'
+};
+
+const DANGEROUS_ACTIONS_DENIED = [
+  'deploy (any form)',
+  'docker build',
+  'gcloud deploy',
+  'git push (automated)',
+  'git tag (automated)',
+  'git commit (automated)',
+  'git add (automated)',
+  'secret read',
+  'env read',
+  'customer data read',
+  'destructive delete (rm -rf, git clean -f, git reset --hard)'
+];
+
+const COMPLETED_CAPABILITIES = [
+  { id: 'agent_foundation',      name: 'Agent基盤 (v1–v10)',                 status: 'complete', detail: 'provider routing / dispatch queue / live gate / secret injection boundary' },
+  { id: 'operator_console',      name: 'Operator Console (v11–v16)',          status: 'complete', detail: 'CLI / dashboard / approval board / handoff generator' },
+  { id: 'multi_provider',        name: 'Multi-Provider Routing (v17–v20)',     status: 'complete', detail: 'Gemini/Grok fallback / cost control / provider health' },
+  { id: 'dev_factory',           name: 'Dev Factory (v21–v24)',               status: 'complete', detail: 'full orchestra planning / parallel work / task runner' },
+  { id: 'product_repo_prep',     name: 'Product Repo Preparation (v25–v26)',  status: 'complete', detail: 'work order / preflight / execution prompt / handoff import' },
+  { id: 'connection_bridge',     name: 'Connection Bridge (v27–v30)',         status: 'complete', detail: 'dry-run bridge / dispatch console / result review / E2E prototype' },
+  { id: 'repo_selection',        name: 'Repo Selection & Readiness (v31–v35)', status: 'complete', detail: 'Node24 readiness / repo selection / first touch / launch packet / readiness complete' },
+  { id: 'final_gate_and_manual', name: 'Final Gate & Manual (v36–v40)',        status: 'complete', detail: 'final gate / launch handoff / acceptance gate / operating manual / initial completion' }
+];
+
+const END_TO_END_OPERATION_FLOW = [
+  'Intake → Product Selection (v32) → Connection Bridge (v27) → Work Order (v25)',
+  'Preflight (v25.5) → First Touch Dry Run (v33) → Launch Packet (v34)',
+  'Final Gate (v36) → Launch Handoff (v37) → Dry-run Dispatch (v28)',
+  'Claude Code Execution (controlled) → Handoff Import (v26)',
+  'Acceptance Gate (v38) → Commit Candidate → じゅんやさん YES → git ops'
+];
+
+const SAFETY_BOUNDARY = {
+  dryRunDesign:         'All operations are dry-run by default until explicit Human YES',
+  humanApprovalGates:   'Final gate (v36) + Acceptance gate (v38) + じゅんやさん YES for all git ops',
+  deployBlocked:        'deploy / docker build / gcloud deploy always blocked without Human YES',
+  secretBlocked:        '.env / secrets / credentials read always blocked',
+  customerDataBlocked:  'PII / insurance / health / financial data always blocked',
+  destructiveBlocked:   'rm -rf / git reset --hard / git clean -f always blocked'
+};
+
+const HUMAN_APPROVAL_CONTRACT = {
+  junyaYes:    'Final YES for: git add / commit / push / tag / deploy / any destructive operation',
+  kosameGPT:   'PM gate: approve/hold/reject at each stage before escalating to じゅんやさん',
+  escalation:  'Any sensitive content detection → immediate escalation to じゅんやさん + こさめ/GPT'
+};
+
+const PROVIDER_ROLE_MAP = {
+  'じゅんやさん (Human)':  ['最終YES担当', 'git/deploy operations実行', 'リスク判断最終権限'],
+  'Kosame/GPT':            ['PM・安全ゲート・統合判断', '各ステージ承認', 'エスカレーション判断'],
+  'Claude':                ['実装担当', '許可ゾーン内ファイル編集', 'packet/tool/doc生成', 'handoff report生成'],
+  'Gemini':                ['Bulk work / draft expansion / fallback'],
+  'Grok':                  ['Research / analysis / secondary review'],
+  'DeepSeek':              ['Code analysis / alternative suggestions'],
+  'Kimi':                  ['Long-context document review'],
+  'Cloud Shell':           ['CLI (node/npm/git status read-only)', 'safe inspection commands']
+};
+
+const KNOWN_LIMITATIONS = [
+  'Real product repo editing has not been executed yet — dry-run only through v40',
+  'git operations (add/commit/push/tag) require Human manual execution — no auto-commit',
+  'Node.js 20 GitHub Actions deprecation warning still present — v31 migration plan ready but not applied',
+  'ANESTY Board is high-risk (regulated data) — requires separate safe-scope definition before first touch',
+  'Multi-product parallel operations not yet operational — single product sequential mode only'
+];
+
+const NEXT_PHASE_PLAN = [
+  { version: 'v41.0.0', action: 'First Real Product Repo Task Execution: email_reply_bot docs整備 (低リスク初回)' },
+  { version: 'v42.0.0', action: 'First Commit Candidate Execution: git add/commit with じゅんやさん YES' },
+  { version: 'v43.0.0', action: 'GitHub Actions Node24 migration: workflow edit after local verify passes' },
+  { version: 'v44.0.0', action: 'Multi-product parallel operations: sales_dx + email_reply_bot 並列作業' }
+];
+
+const INITIAL_COMPLETION_CRITERIA = [
+  { criterion: 'dryRun安全設計がある',                           key: 'dryRunDesign' },
+  { criterion: 'humanApprovalGatesがある',                       key: 'humanApprovalGates' },
+  { criterion: 'deploy/secret/customerData/destructiveがblocked', key: 'dangerousActionsBlocked' },
+  { criterion: 'resultReviewとacceptanceGateがある',             key: 'reviewAndGatePresent' },
+  { criterion: 'operatingManualがある',                          key: 'operatingManualPresent' },
+  { criterion: 'GitHub Actions verifyが通る状態',               key: 'githubActionsReady' }
+];
+
+function buildInitialCompletion(input) {
+  const completionId = `initial-completion-${Date.now()}`;
+
+  const flags = input.flags || {};
+  const criteriaResults = INITIAL_COMPLETION_CRITERIA.map(c => ({
+    criterion: c.criterion,
+    key:       c.key,
+    passed:    flags[c.key] !== false
+  }));
+
+  const allCriteriaPassed = criteriaResults.every(c => c.passed);
+  const initialCompletionPassed = allCriteriaPassed;
+
+  const productRepoOperationReadiness = {
+    email_reply_bot:    { readyForFirstTask: true,  firstTaskCandidate: 'docs整備: README.md の目次・概要セクションを追加する', riskLevel: 'low' },
+    sales_dx:           { readyForFirstTask: true,  firstTaskCandidate: 'docs整備: README.md の概要セクションを追加する', riskLevel: 'low' },
+    cloud_run_pm_agent: { readyForFirstTask: true,  firstTaskCandidate: 'docs整備: 既存docsのタイポ修正', riskLevel: 'low' },
+    backoffice_agent:   { readyForFirstTask: false, firstTaskCandidate: 'docs/runbook限定であれば可 (human confirmation required)', riskLevel: 'medium' },
+    anesty_board:       { readyForFirstTask: false, firstTaskCandidate: 'HOLD — regulated data. Safe scope must be defined first.', riskLevel: 'high' }
+  };
+
+  const githubActionsReadiness = {
+    status:          'ready_with_node20_warning',
+    currentVersion:  'node-version: "20"',
+    targetVersion:   'node-version: "24"',
+    migrationPlan:   'v31 Node24 Readiness Pack — migration draft ready, human YES needed for actual edit',
+    verifyPasses:    true
+  };
+
+  const backupAndRecoveryReadiness = {
+    status:          'manual_backup_recommended',
+    policy:          'HOME backup before major changes (confirmed done)',
+    rollback:        'git checkout -- <file> for file-level; git revert for commit-level',
+    destructiveRule: 'git reset --hard requires explicit じゅんやさん YES — otherwise forbidden'
+  };
+
+  const manualReadiness = {
+    status:       'complete',
+    manualVersion: '39.0.0',
+    coverage:     'v1–v40 all capabilities documented'
+  };
+
+  let finalDecision;
+  if (!initialCompletionPassed) {
+    finalDecision = 'revise';
+  } else {
+    finalDecision = 'approve';
+  }
+
+  const recommendedNextAction = initialCompletionPassed
+    ? 'Initial completion approved. KOSAME Dev Orchestra v1–v40 仕組みの初期完成。' +
+      '次フェーズ: v41 First Real Product Repo Task Execution (email_reply_bot docs整備).'
+    : `Initial completion not fully passed. Review criteria: ${criteriaResults.filter(c => !c.passed).map(c => c.criterion).join('; ')}`;
+
+  return {
+    version:                     TOOL_META.version,
+    title:                       TOOL_META.title,
+    dryRun:                      true,
+    humanApprovalRequired:       true,
+    initialCompletionId:         completionId,
+    completionVersion:           '40.0.0',
+    completedCapabilities:       COMPLETED_CAPABILITIES,
+    versionMilestoneSummary: [
+      'v1–v10:  Agent基盤',
+      'v11–v16: Operator Console',
+      'v17–v20: Multi-Provider Routing',
+      'v21–v24: Dev Factory',
+      'v25–v26: Product Repo Preparation',
+      'v27–v30: Connection Bridge & E2E Prototype',
+      'v31–v35: Node24 Readiness & First Touch',
+      'v36–v40: Final Gate, Manual & Initial Completion'
+    ],
+    endToEndOperationFlow:       END_TO_END_OPERATION_FLOW,
+    safetyBoundary:              SAFETY_BOUNDARY,
+    humanApprovalContract:       HUMAN_APPROVAL_CONTRACT,
+    providerRoleMap:             PROVIDER_ROLE_MAP,
+    productRepoOperationReadiness,
+    githubActionsReadiness,
+    backupAndRecoveryReadiness,
+    manualReadiness,
+    initialCompletionCriteria:   criteriaResults,
+    knownLimitations:            KNOWN_LIMITATIONS,
+    nextPhasePlan:               NEXT_PHASE_PLAN,
+    initialCompletionPassed,
+    finalDecisionOptions:        ['approve', 'revise', 'reject', 'hold'],
+    finalDecision,
+    dangerousActionsDenied:      DANGEROUS_ACTIONS_DENIED,
+    recommendedNextAction,
+    noRealRepoEdit:              true,
+    noRealGitCommit:             true,
+    noRealGitPush:               true,
+    noRealDeploy:                true,
+    noSecretRead:                true
+  };
+}
+
+function main() {
+  console.log(JSON.stringify(buildInitialCompletion({
+    flags: {
+      dryRunDesign:          true,
+      humanApprovalGates:    true,
+      dangerousActionsBlocked: true,
+      reviewAndGatePresent:  true,
+      operatingManualPresent: true,
+      githubActionsReady:    true
+    }
+  }), null, 2));
+}
+
+if (require.main === module) main();
+
+module.exports = {
+  TOOL_META,
+  DANGEROUS_ACTIONS_DENIED,
+  COMPLETED_CAPABILITIES,
+  END_TO_END_OPERATION_FLOW,
+  SAFETY_BOUNDARY,
+  PROVIDER_ROLE_MAP,
+  INITIAL_COMPLETION_CRITERIA,
+  buildInitialCompletion
+};

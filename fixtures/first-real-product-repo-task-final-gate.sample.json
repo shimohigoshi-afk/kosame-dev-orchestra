@@ -1,0 +1,140 @@
+{
+  "version": "36.0.0",
+  "title": "First Real Product Repo Task Final Gate",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "finalGateId": "final-gate-1780488102170",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "firstTaskCandidate": "docs整備: README.md に目次・概要セクションを追加する",
+  "finalSafetyChecklist": [
+    {
+      "item": "v35 Readiness Complete passed",
+      "key": "readinessCompletePassed",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "v34 Controlled Launch Packet generated",
+      "key": "launchPacketReady",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "v33 First Touch Dry Run completed",
+      "key": "firstTouchDone",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "v32 Product Repo Selection decided",
+      "key": "selectionDecided",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "v27 Connection Bridge ready",
+      "key": "bridgeReady",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "Task scope limited to docs/smoke/runbook/README",
+      "key": "lowRiskScopeConfirmed",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "No Secret / .env / API key in task scope",
+      "key": "noSecretInScope",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "No customer PII in task scope",
+      "key": "noCustomerDataInScope",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "No deploy in task scope",
+      "key": "noDeployInScope",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "こさめ/GPT PM approval obtained",
+      "key": "kosameApproval",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "item": "じゅんやさん final YES issued",
+      "key": "junyaYes",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "repoSelectionReview": {
+    "status": "passed"
+  },
+  "firstTouchReview": {
+    "status": "passed"
+  },
+  "controlledLaunchReview": {
+    "status": "passed"
+  },
+  "readinessReview": {
+    "status": "passed"
+  },
+  "humanApprovalContract": {
+    "requiredFor": [
+      "Any file edit in target repo",
+      "Claude Code launch",
+      "Any git operation",
+      "Any deploy"
+    ],
+    "approvalChain": [
+      "Step 1: こさめ/GPT PM approves",
+      "Step 2: じゅんやさん issues final YES"
+    ]
+  },
+  "allowedScope": [
+    "docs/**",
+    "README.md",
+    "smoke/**"
+  ],
+  "forbiddenScope": [
+    ".env*",
+    "secrets/**",
+    "credentials/**"
+  ],
+  "blockerItems": [],
+  "finalGateDecision": "approve",
+  "decisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "readyForLaunchHandoff": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "Final gate approved for kosame-email-reply-bot. Proceed to v37 Launch Handoff packet. Do NOT launch Claude Code until launch handoff packet is reviewed and human YES issued.",
+  "noRealRepoEdit": true,
+  "noRealGitCommit": true,
+  "noRealGitPush": true,
+  "noRealDeploy": true,
+  "noSecretRead": true
+}

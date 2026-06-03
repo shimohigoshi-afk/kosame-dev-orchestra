@@ -1,0 +1,104 @@
+{
+  "version": "37.0.0",
+  "title": "First Real Product Repo Launch Handoff",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "launchHandoffId": "launch-handoff-1780488102225",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "launchObjective": "docs整備: README.md に目次・概要セクションを追加する",
+  "claudeRole": "Implement objective within allowed zones, run verification, generate handoff report. No git operations.",
+  "kosameRole": "PM gate: review each stage output. Approve or hold before じゅんやさん YES.",
+  "humanRole": "じゅんやさん: final YES for any git add/commit/push/tag/deploy.",
+  "allowedFiles": [
+    "docs/**",
+    "README.md",
+    "smoke/**"
+  ],
+  "forbiddenFiles": [
+    ".env*",
+    "secrets/**",
+    "credentials/**"
+  ],
+  "allowedCommands": [
+    "node --check",
+    "npm run verify",
+    "git status (read-only)",
+    "git log (read-only)",
+    "ls/find/cat in allowed zones"
+  ],
+  "forbiddenCommands": [
+    "git add",
+    "git commit",
+    "git push",
+    "git tag",
+    "git reset --hard",
+    "git clean -f",
+    "rm -rf",
+    "gcloud deploy",
+    "docker build",
+    "cat .env"
+  ],
+  "preflightCommands": [
+    "git -C /path/to/kosame-email-reply-bot status",
+    "git -C /path/to/kosame-email-reply-bot log --oneline -3",
+    "node --version",
+    "cat /path/to/kosame-email-reply-bot/package.json"
+  ],
+  "implementationPrompt": "# KOSAME Dev Orchestra — Final Launch Handoff Prompt\n\n## Target Repo\nkosame-email-reply-bot (email_reply_bot)\n\n## Objective\ndocs整備: README.md に目次・概要セクションを追加する\n\n## Your Role (Claude)\n- Implement the objective within allowed file zones only\n- Run node --check on all changed files\n- Run npm run verify (or equivalent) after edits\n- Generate a structured handoff report — do NOT commit or push\n\n## Allowed Files\n- docs/**\n- README.md\n- smoke/**\n\n## Forbidden Files (DO NOT READ OR MODIFY)\n- .env*\n- secrets/**\n- credentials/**\n- .env / .env.* / secrets/** / credentials/** / production.config.*\n- src/auth/** / src/payment/** / insurance/** / health/**\n- .ssh/** / private/**\n\n## Allowed Commands\n- node --check <file>\n- npm run verify\n- git status (read-only)\n- git log --oneline -5 (read-only)\n- ls / find / cat within allowed zones only\n\n## ABSOLUTELY FORBIDDEN Commands\n- git add\n- git commit\n- git push\n- git tag\n- git reset --hard\n- git clean -f\n- rm -rf\n- gcloud deploy\n- docker build\n- npm run deploy\n- cat .env / cat secrets/** / cat credentials/**\n\n## Safety Rules\n1. Do NOT commit, push, or tag any changes.\n2. Do NOT read .env, secrets/**, credentials/**, or any API key files.\n3. Do NOT access insurance, health, or financial records.\n4. Do NOT access customer PII.\n5. Do NOT perform any deploy operation.\n6. Stop immediately if you encounter sensitive content and report it.\n7. Stop after: file edits + node --check + npm run verify.\n\n## Handoff Report (Required at completion)\nProvide a JSON report with:\n- objective: (task title)\n- targetProduct: email_reply_bot\n- changedFiles: [list all modified/created files]\n- nodeCheckResult: { passed: true/false, details: \"...\" }\n- verificationResult: { passed: true/false, summary: \"...\" }\n- gitStatusOutput: (git status --short output)\n- sensitiveContentFound: false  ← must be false\n- dangerousOpsPerformed: []     ← must be empty\n- readyForResultReview: true/false\n- notes: (any observations within scope)\n",
+  "verificationCommands": [
+    "node --check <changed_file>",
+    "npm run verify"
+  ],
+  "reportFormat": {
+    "requiredFields": [
+      "objective",
+      "targetProduct",
+      "changedFiles",
+      "nodeCheckResult",
+      "verificationResult",
+      "gitStatusOutput",
+      "sensitiveContentFound",
+      "dangerousOpsPerformed",
+      "readyForResultReview"
+    ],
+    "sensitiveContentFound": "must be false",
+    "dangerousOpsPerformed": "must be empty array"
+  },
+  "stopConditions": [
+    "Sensitive content (Secret / .env / API key / 顧客情報 / 保険証券) found in any file → STOP immediately",
+    "Forbidden file zone touched → STOP immediately",
+    "Dangerous operation attempted (git push / deploy / rm -rf) → STOP immediately",
+    "Verification suite (npm run verify) fails → STOP and report, do not commit",
+    "node --check fails on any changed file → STOP and report"
+  ],
+  "rollbackInstruction": "git checkout -- <file> for each changed file in kosame-email-reply-bot. git reset --hard requires じゅんやさん YES.",
+  "commitCandidateStopRule": [
+    "Do NOT run git add / git commit / git push / git tag",
+    "Stop at: file edit + node --check + npm run verify",
+    "Generate handoff report: changedFiles / nodeCheckResult / verificationResult / gitStatusOutput",
+    "Wait for human review via v38 Result Acceptance Gate",
+    "git add / commit / push / tag require explicit じゅんやさん YES after こさめ/GPT PM review"
+  ],
+  "blockerItems": [],
+  "launchHandoffReady": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "Launch handoff ready. Copy implementationPrompt into Claude Code for kosame-email-reply-bot. After Claude returns handoff report, review via v38 Result Acceptance Gate.",
+  "noRealRepoEdit": true,
+  "noRealGitCommit": true,
+  "noRealGitPush": true,
+  "noRealDeploy": true,
+  "noSecretRead": true
+}

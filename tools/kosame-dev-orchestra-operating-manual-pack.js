@@ -1,0 +1,190 @@
+'use strict';
+
+const TOOL_META = {
+  version: '39.0.0',
+  title: 'KOSAME Dev Orchestra Operating Manual Pack',
+  slug: 'kosame-dev-orchestra-operating-manual-pack'
+};
+
+const DANGEROUS_ACTIONS_DENIED = [
+  'deploy (any form)',
+  'docker build',
+  'gcloud deploy',
+  'git push (automated)',
+  'git tag (automated)',
+  'git commit (automated)',
+  'git add (automated)',
+  'secret read',
+  'env read',
+  'customer data read',
+  'destructive delete (rm -rf, git clean -f, git reset --hard)'
+];
+
+const OVERVIEW = {
+  projectName:   'KOSAME Dev Orchestra',
+  purpose:       'AI開発チームが複数のプロダクトrepoを安全に運用・管理するためのオーケストレーションシステム',
+  safetyFirst:   'すべての実プロダクトrepo操作は dry-run → human approval → controlled launch の順で行う',
+  noAutoOps:     'deploy / git push / git tag / Secret読取 / 顧客情報アクセスは常にHuman YESが必要',
+  currentPhase:  'v40.0.0: 仕組みの初期完成。次フェーズは初回実プロダクトrepo投入。'
+};
+
+const PROVIDER_ROLE_MAP = {
+  'じゅんやさん (Human)': [
+    '最終YES担当: 全git commit / push / tag / deploy の最終承認',
+    'リスク判断: hold/reject/approve の最終権限',
+    '実プロダクトrepo作業の最終ゴー/ノーゴー判断'
+  ],
+  'Kosame/GPT': [
+    'PM・安全ゲート・統合判断担当',
+    '各ステージ出力のレビューと承認',
+    'リスク評価とholdレコメンド',
+    'じゅんやさんへのエスカレーション判断'
+  ],
+  'Claude': [
+    '実装担当: packet生成 / tool作成 / file edit',
+    '許可ゾーン内でのファイル編集',
+    'node --check / npm run verify 実行',
+    'handoff report生成 (git操作なし)'
+  ],
+  'Gemini': [
+    'Bulk work intake support',
+    'Draft expansion for documentation',
+    'Fallback provider when Claude unavailable'
+  ],
+  'Grok': [
+    'Research and analysis support',
+    'Secondary review of implementation plans'
+  ],
+  'DeepSeek': [
+    'Code analysis and alternative suggestions'
+  ],
+  'Kimi': [
+    'Long-context document review',
+    'Multi-file consistency analysis'
+  ],
+  'Cloud Shell': [
+    'CLI execution environment',
+    'git status / git log (read-only)',
+    'node --check and smoke runs'
+  ]
+};
+
+const VERSION_MILESTONES = [
+  { range: 'v1–v10',   summary: 'Agent基盤構築: provider routing / dispatch queue / live gate / secret injection' },
+  { range: 'v11–v16',  summary: 'Operator console: CLI / dashboard / approval board / handoff generator' },
+  { range: 'v17–v20',  summary: 'Multi-provider: fallback routing / Gemini/Grok dispatch / cost control' },
+  { range: 'v21–v24',  summary: 'Dev Factory: full orchestra planning / parallel work / task runner' },
+  { range: 'v25–v26',  summary: 'Product repo準備: work order / preflight / execution prompt / handoff import' },
+  { range: 'v27–v30',  summary: 'Connection bridge / dry-run dispatch / result review / E2E prototype' },
+  { range: 'v31–v35',  summary: 'Node24 readiness / repo selection / first touch dry-run / launch packet / readiness complete' },
+  { range: 'v36–v40',  summary: 'Final gate / launch handoff / acceptance gate / operating manual / initial completion' }
+];
+
+const STANDARD_OPERATION_FLOW = [
+  { step: 1,  name: 'Intake',                  actor: 'Human + Kosame/GPT', description: 'タスク受付・スコープ確認' },
+  { step: 2,  name: 'Product Selection (v32)',  actor: 'Kosame/GPT',         description: '投入repo候補選定' },
+  { step: 3,  name: 'Connection Bridge (v27)',  actor: 'Claude',             description: 'dry-run接続準備' },
+  { step: 4,  name: 'Work Order (v25)',         actor: 'Claude',             description: '作業指示書生成' },
+  { step: 5,  name: 'Preflight (v25.5)',        actor: 'Claude',             description: '安全プリフライト' },
+  { step: 6,  name: 'First Touch Dry Run (v33)',actor: 'Human',              description: 'repo構造の read-only確認' },
+  { step: 7,  name: 'Launch Packet (v34)',      actor: 'Claude',             description: 'controlled launch prompt生成' },
+  { step: 8,  name: 'Final Gate (v36)',         actor: 'Kosame/GPT + Human', description: '最終承認ゲート' },
+  { step: 9,  name: 'Launch Handoff (v37)',     actor: 'Claude',             description: 'Claude Codeへのhandoff生成' },
+  { step: 10, name: 'Dry-run Dispatch (v28)',   actor: 'Claude + Human',     description: 'dispatch console確認' },
+  { step: 11, name: 'Claude Code実行',          actor: 'Claude (controlled)', description: '許可ゾーン内ファイル編集 + verify' },
+  { step: 12, name: 'Handoff Import (v26)',     actor: 'Claude + Human',     description: 'Claude報告を受け入れ' },
+  { step: 13, name: 'Acceptance Gate (v38)',    actor: 'Kosame/GPT + Human', description: '受け入れゲート判定' },
+  { step: 14, name: 'Commit Candidate',        actor: 'Kosame/GPT',         description: 'こさめPMレビュー後じゅんやさんYES' },
+  { step: 15, name: 'git add/commit/push/tag', actor: 'Human',              description: 'じゅんやさんが手動実行' }
+];
+
+const HUMAN_APPROVAL_GATES = [
+  { gate: 'Step 8:  Final Gate (v36)',      approver: 'こさめ/GPT PM + じゅんやさん', action: 'Claude Code launch approval' },
+  { gate: 'Step 13: Acceptance Gate (v38)', approver: 'こさめ/GPT PM',               action: 'Commit candidate approval' },
+  { gate: 'Step 14: Commit Candidate',      approver: 'じゅんやさん',                 action: 'Final YES for git operations' },
+  { gate: 'Any Sensitive Content Found',    approver: 'じゅんやさん + こさめ/GPT',    action: 'HOLD — immediate escalation' }
+];
+
+const SAFE_COMMAND_POLICY = {
+  alwaysAllowed: ['node --check', 'npm run verify', 'git status (read-only)', 'git log (read-only)', 'ls', 'find', 'cat (allowed zones only)'],
+  requiresHumanYes: ['git add', 'git commit', 'git push', 'git tag'],
+  alwaysBlocked: ['git reset --hard', 'git clean -f', 'rm -rf', 'gcloud deploy', 'docker build', 'npm run deploy', 'cat .env', 'cat secrets/**']
+};
+
+const TROUBLESHOOTING_NOTES = [
+  { issue: 'Smoke test fails', resolution: 'Run node --check on changed file first. Check for syntax errors. Do NOT commit.' },
+  { issue: 'Sensitive content detected', resolution: 'HOLD immediately. Escalate to じゅんやさん and こさめ/GPT. Do NOT proceed.' },
+  { issue: 'Verification suite fails', resolution: 'Stop. Fix failing test. Re-run verify. Do NOT commit until passing.' },
+  { issue: 'Out-of-zone file touched', resolution: 'REJECT and revert the file. git checkout -- <file>. Report to こさめ/GPT.' },
+  { issue: 'GitHub Actions fails', resolution: 'Investigate locally. Check node --check and npm run verify. Do NOT force push.' },
+  { issue: 'CI deprecated action warning (Node.js 20)', resolution: 'Use v31 Node24 Readiness Pack for migration plan.' }
+];
+
+const NEXT_VERSION_CANDIDATES = [
+  { version: 'v41.0.0', description: 'First Real Product Repo Task Execution — 初回実プロダクトrepo作業の実行 (email_reply_bot docs)' },
+  { version: 'v42.0.0', description: 'First Commit Candidate Execution — 初回実commit with じゅんやさん YES' },
+  { version: 'v43.0.0', description: 'Multi-Product Parallel Operations — 複数プロダクトの並列作業管理' }
+];
+
+function buildOperatingManual(input) {
+  const manualId   = `operating-manual-${Date.now()}`;
+  const manualReady = true;
+
+  return {
+    version:                   TOOL_META.version,
+    title:                     TOOL_META.title,
+    dryRun:                    true,
+    humanApprovalRequired:     true,
+    operatingManualId:         manualId,
+    overview:                  OVERVIEW,
+    supportedProductTypes:     ['sales_dx', 'anesty_board', 'backoffice_agent', 'email_reply_bot', 'cloud_run_pm_agent'],
+    providerRoleMap:           PROVIDER_ROLE_MAP,
+    standardOperationFlow:     STANDARD_OPERATION_FLOW,
+    versionMilestones:         VERSION_MILESTONES,
+    humanApprovalGates:        HUMAN_APPROVAL_GATES,
+    forbiddenActions:          DANGEROUS_ACTIONS_DENIED,
+    safeCommandPolicy:         SAFE_COMMAND_POLICY,
+    firstProductRepoTaskProcedure: {
+      summary:  'v32 Selection → v33 FirstTouch → v27 Bridge → v25 WorkOrder → v34 LaunchPacket → v36 FinalGate → v37 LaunchHandoff → Claude実行 → v38 AcceptanceGate → commit candidate',
+      keyRules: ['docs/smoke/runbookから始める', 'Secret/customerData読取禁止', 'commit/push は必ずじゅんやさんYES後']
+    },
+    resultImportProcedure: {
+      summary:  'Claude報告 → v26 HandoffImport → v29/v38 ResultReview/AcceptanceGate → commit candidate決定',
+      keyRules: ['sensitiveContentFound: false 必須', 'dangerousOpsPerformed: [] 必須', 'forbiddenFiles: なし 必須']
+    },
+    commitCandidateProcedure: {
+      summary:  'Acceptance Gate approve → こさめGPT PM review → じゅんやさん YES → git add/commit/push/tag (Human実行)',
+      keyRules: ['Claudeは git操作を自動実行しない', 'Human が手動でgit操作する']
+    },
+    rollbackProcedure: {
+      fileLevel:  'git checkout -- <file>',
+      commitLevel: 'git revert <commit> (じゅんやさん YES必要)',
+      destructive: 'git reset --hard は絶対にじゅんやさん YES が必要。原則禁止。'
+    },
+    troubleshootingNotes:      TROUBLESHOOTING_NOTES,
+    nextVersionCandidates:     NEXT_VERSION_CANDIDATES,
+    manualReady,
+    dangerousActionsDenied:    DANGEROUS_ACTIONS_DENIED,
+    noRealRepoEdit:            true,
+    noRealGitCommit:           true,
+    noRealDeploy:              true
+  };
+}
+
+function main() {
+  console.log(JSON.stringify(buildOperatingManual({}), null, 2));
+}
+
+if (require.main === module) main();
+
+module.exports = {
+  TOOL_META,
+  DANGEROUS_ACTIONS_DENIED,
+  OVERVIEW,
+  PROVIDER_ROLE_MAP,
+  VERSION_MILESTONES,
+  STANDARD_OPERATION_FLOW,
+  HUMAN_APPROVAL_GATES,
+  SAFE_COMMAND_POLICY,
+  buildOperatingManual
+};

@@ -1,0 +1,102 @@
+{
+  "version": "38.0.0",
+  "title": "First Real Product Repo Result Acceptance Gate",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "acceptanceGateId": "acceptance-gate-1780488293430",
+  "targetProduct": "email_reply_bot",
+  "targetRepoCandidate": "kosame-email-reply-bot",
+  "reportedTaskSummary": "README.md に目次・概要セクションを追加。1ファイル変更。検証パス。Secretなし。",
+  "changedFilesReview": {
+    "files": [
+      "README.md"
+    ],
+    "count": 1,
+    "allowedZones": [
+      "docs/**",
+      "README.md",
+      "smoke/**"
+    ]
+  },
+  "verificationReview": {
+    "passed": true,
+    "raw": "All tests passed."
+  },
+  "safetyReview": {
+    "secretLeak": {
+      "found": [
+        "secret"
+      ],
+      "clean": false
+    },
+    "customerDataLeak": {
+      "found": [],
+      "clean": true
+    },
+    "dangerousOps": {
+      "found": [],
+      "clean": true
+    },
+    "overallSafe": false
+  },
+  "businessIntentReview": {
+    "note": "Email Reply BOT の README 整備完了。docs限定変更。",
+    "aligned": true
+  },
+  "forbiddenScopeReview": {
+    "clean": true,
+    "found": []
+  },
+  "secretLeakReview": {
+    "found": [
+      "secret"
+    ],
+    "clean": false
+  },
+  "customerDataLeakReview": {
+    "found": [],
+    "clean": true
+  },
+  "dangerousOperationReview": {
+    "found": [],
+    "clean": true
+  },
+  "acceptedItems": [
+    "verification passed",
+    "all files within allowed zones",
+    "no forbidden scope files",
+    "no customer data leak detected",
+    "no dangerous operations"
+  ],
+  "rejectedItems": [
+    "secret leak: secret"
+  ],
+  "blockerItems": [],
+  "acceptanceDecision": "hold",
+  "decisionOptions": [
+    "approve",
+    "revise",
+    "reject",
+    "hold"
+  ],
+  "commitCandidateReady": false,
+  "needsHumanApproval": true,
+  "dangerousActionsDenied": [
+    "deploy (any form)",
+    "docker build",
+    "gcloud deploy",
+    "git push (automated)",
+    "git tag (automated)",
+    "git commit (automated)",
+    "git add (automated)",
+    "secret read",
+    "env read",
+    "customer data read",
+    "destructive delete (rm -rf, git clean -f, git reset --hard)"
+  ],
+  "recommendedNextAction": "HOLD: Critical issue detected (secret leak: secret). Escalate to じゅんやさん immediately. Do NOT proceed.",
+  "noRealCommit": true,
+  "noRealPush": true,
+  "noRealTag": true,
+  "noRealDeploy": true
+}

@@ -1,0 +1,1 @@
+{ "_description": "ANESTY Board Productization Plan Pack fixture v94.0.0", "input": {}, "expectedOutput": { "version": "94.0.0", "dryRun": true, "humanApprovalRequired": true, "discordWebhookBlocked": true, "autoPostBlocked": true }, "_notes": { "noAnestyRepoMutation": true, "noRealSNSPost": true, "discordNotConnected": true } }

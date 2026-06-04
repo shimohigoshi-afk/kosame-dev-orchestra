@@ -1,0 +1,1 @@
+{ "_description": "Email Reply BOT MVP Launch Plan Pack fixture v92.0.0", "input": {}, "expectedOutput": { "version": "92.0.0", "dryRun": true, "humanApprovalRequired": true, "autoSendBlocked": true, "draftOnlyPolicyEnabled": true }, "_notes": { "noRealGmailSend": true, "pdfSeparationRequired": true } }

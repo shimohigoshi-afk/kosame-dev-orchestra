@@ -1,0 +1,1 @@
+{ "_description": "Sales DX First Product Launch Plan Pack fixture v91.0.0", "input": {}, "expectedOutput": { "version": "91.0.0", "dryRun": true, "humanApprovalRequired": true, "firstUseCaseRealSend": false }, "_notes": { "noRealData": true, "noRealSend": true, "noDeployExecuted": true, "guardianClassRequired": true } }

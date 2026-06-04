@@ -1,0 +1,1 @@
+{ "_description": "BackOffice Agent MVP Launch Plan Pack fixture v93.0.0", "input": {}, "expectedOutput": { "version": "93.0.0", "dryRun": true, "humanApprovalRequired": true, "taxJudgmentForbidden": true, "legalJudgmentForbidden": true, "laborJudgmentForbidden": true }, "_notes": { "noRealSend": true, "noRealContract": true, "noRealBilling": true } }

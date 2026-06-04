@@ -1,0 +1,1 @@
+{ "_description": "Executive Dashboard Snapshot Pack fixture v76.0.0", "input": {}, "expectedOutput": { "version": "76.0.0", "dryRun": true, "humanApprovalRequired": true, "completedMilestonesCount": 8, "latestStableVersion": "v75.0.0" }, "_notes": { "milestones": ["v44","v47","v50","v55","v60","v65","v70","v75"], "noSecretRead": true, "noDeployExecuted": true } }

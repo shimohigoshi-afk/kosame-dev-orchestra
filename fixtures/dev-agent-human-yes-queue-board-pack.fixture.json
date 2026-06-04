@@ -1,0 +1,1 @@
+{ "_description": "Human YES Queue Board Pack fixture v78.0.0", "input": {}, "expectedOutput": { "version": "78.0.0", "dryRun": true, "humanApprovalRequired": true, "autoProceedAllowed": false, "decisionOptions": ["YES","NO","HOLD"], "pendingCount": 9 }, "_notes": { "noAIAutoYes": true, "junyaFinalYes": true } }

@@ -1,0 +1,30 @@
+{
+  "_description": "Operation Board Task Template Bank Pack fixture for v49.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "49.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "templateCount": 9,
+    "templateIds": [
+      "docs_update",
+      "smoke_addition",
+      "readme_update",
+      "runbook_update",
+      "cloudrun_preflight_update",
+      "acceptance_gate_update",
+      "operation_board_update",
+      "product_repo_controlled_task",
+      "handoff_doc_update"
+    ]
+  },
+  "_notes": {
+    "allTemplatesHaveForbiddenCommands": true,
+    "forbiddenIncludesDeployGitPushTagRmRf": true,
+    "productRepoTemplateExists": true,
+    "productRepoForbidsBotJs": true,
+    "humanApprovalRequiredAllTemplates": true,
+    "noSecretRead": true,
+    "noDeployExecuted": true
+  }
+}

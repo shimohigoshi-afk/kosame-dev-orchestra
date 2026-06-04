@@ -1,0 +1,29 @@
+{
+  "_description": "Practical Build Line Pack fixture for v50.0.0",
+  "input": {
+    "templateId": "docs_update",
+    "safetyOverrides": {}
+  },
+  "expectedOutput": {
+    "version": "50.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "safetyGate": { "passed": true, "blockers": [] },
+    "acceptanceGate": { "commitCandidate": true, "humanApprovalRequired": true, "blockers": [] }
+  },
+  "blockedScenario": {
+    "input": { "templateId": "docs_update", "safetyOverrides": { "secretTouched": true } },
+    "expectedOutput": {
+      "safetyGate": { "passed": false },
+      "acceptanceGate": { "commitCandidate": false }
+    }
+  },
+  "_notes": {
+    "buildLineComponents": ["operationBoard", "selectedTaskTemplate", "claudePromptPacket", "safetyGate", "verificationPlan", "acceptanceGate", "humanApprovalPacket", "nextAction"],
+    "noActualGitCommit": true,
+    "noActualDeploy": true,
+    "noSecretRead": true,
+    "humanFinalYes": true,
+    "dryRunOnly": true
+  }
+}

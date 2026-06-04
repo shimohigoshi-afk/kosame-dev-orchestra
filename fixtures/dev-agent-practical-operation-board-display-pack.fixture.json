@@ -1,0 +1,32 @@
+{
+  "_description": "Practical Operation Board Display Pack fixture for v48.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "48.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "target": {
+      "product": "KOSAME Dev Orchestra",
+      "task": "Practical visual operation line",
+      "repo": "/home/shimohigoshi/kosame-dev-orchestra",
+      "version": "48.0.0",
+      "commit": "HEAD"
+    },
+    "boardTextSections": ["TARGET", "STAGE", "AGENTS", "DANGER GATES", "NEXT ACTION", "ACCEPTANCE"],
+    "allDangerGatesBlocked": true
+  },
+  "_notes": {
+    "noArgsRequired": true,
+    "defaultPacketFilled": true,
+    "productNotDash": true,
+    "taskNotDash": true,
+    "repoNotDash": true,
+    "versionIs48": true,
+    "ansiColorUsed": true,
+    "plainTextReadable": true,
+    "humanFinalYes": true,
+    "noSecretRead": true,
+    "noDeployExecuted": true,
+    "discordNotConnected": true
+  }
+}

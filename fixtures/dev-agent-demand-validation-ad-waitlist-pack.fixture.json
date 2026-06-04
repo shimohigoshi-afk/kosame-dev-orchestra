@@ -1,0 +1,23 @@
+{
+  "_description": "Demand Validation Ad / Waitlist Pack fixture for v63.0.0",
+  "input": { "productIdea": "AI議事録自動化ツール" },
+  "expectedOutput": {
+    "version": "63.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "validationChannels": ["x_post", "x_ads", "meta_ads", "organic_sns", "existing_customer_interview"],
+    "adBudgetIsExampleOnly": true,
+    "noRealAdLaunch": true
+  },
+  "cpaClassification": {
+    "200": "strong_signal",
+    "500": "moderate_signal",
+    "1500": "weak_or_no_signal"
+  },
+  "_notes": {
+    "noRealAd": true,
+    "noRealSNS": true,
+    "budgetIsExample": true,
+    "cpaIsGuidance": true
+  }
+}

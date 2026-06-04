@@ -1,0 +1,22 @@
+{
+  "_description": "Landing Page Requirement Pack fixture for v62.0.0",
+  "input": {
+    "productIdea": "AI議事録自動化ツール",
+    "targetUser": "中小企業の営業担当者",
+    "headline": "会議の議事録を30秒で自動生成。営業担当者の30分を取り戻す。"
+  },
+  "expectedOutput": {
+    "version": "62.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "headlineExists": true,
+    "waitlistCTAExists": true,
+    "realLPNotPublished": true
+  },
+  "_notes": {
+    "dryRunOnly": true,
+    "noRealLP": true,
+    "noRealAd": true,
+    "noPersonalDataCollection": true
+  }
+}

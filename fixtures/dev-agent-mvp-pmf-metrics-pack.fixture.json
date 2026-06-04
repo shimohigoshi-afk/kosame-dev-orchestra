@@ -1,0 +1,30 @@
+{
+  "_description": "MVP / PMF Metrics Pack fixture for v64.0.0",
+  "input": {
+    "productIdea": "AI議事録自動化ツール",
+    "cvr": 0.015,
+    "retention30d": 0.20,
+    "ltv": 3000,
+    "cac": 500
+  },
+  "expectedOutput": {
+    "version": "64.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "cvrStatus": "signal",
+    "retentionStatus": "pmf_candidate",
+    "ltvCacStatus": "healthy"
+  },
+  "thresholds": {
+    "cvr_signal": 0.01,
+    "cvr_strong": 0.02,
+    "retention30d_pmf": 0.15,
+    "pmf_survey_strong": 0.40
+  },
+  "_notes": {
+    "noRealPayment": true,
+    "noRealUserData": true,
+    "aiInfraIncludedInLTVCAC": true,
+    "numbersAreGuidanceOnly": true
+  }
+}

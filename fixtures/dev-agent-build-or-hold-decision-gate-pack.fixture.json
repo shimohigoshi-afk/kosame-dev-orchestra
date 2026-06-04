@@ -1,0 +1,25 @@
+{
+  "_description": "Build or Hold Decision Gate Pack fixture for v65.0.0",
+  "scenarios": {
+    "cpa200": { "input": { "targetUser": "営業担当", "actualCpa": 200 }, "expectedDecision": "BUILD" },
+    "cpa500": { "input": { "targetUser": "営業担当", "actualCpa": 500 }, "expectedDecision": "VALIDATE_MORE" },
+    "cpa1500": { "input": { "targetUser": "営業担当", "actualCpa": 1500 }, "expectedDecision": "PIVOT" },
+    "noData": { "input": { "targetUser": "営業担当" }, "expectedDecision": "VALIDATE_MORE" },
+    "scale": { "input": { "targetUser": "営業担当", "retention30d": 0.20, "ltv": 3000, "cac": 500 }, "expectedDecision": "SCALE" },
+    "noUser": { "input": {}, "expectedDecision": "HOLD" },
+    "waitlistZero": { "input": { "targetUser": "営業担当", "waitlistCount": 0 }, "expectedDecision": "HOLD" }
+  },
+  "expectedOutput": {
+    "version": "65.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "decisionOptions": ["BUILD", "HOLD", "PIVOT", "VALIDATE_MORE", "SCALE"]
+  },
+  "_notes": {
+    "junyaFinalYes": true,
+    "noRealAd": true,
+    "noRealLP": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true
+  }
+}

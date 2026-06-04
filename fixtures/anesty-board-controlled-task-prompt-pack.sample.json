@@ -1,0 +1,93 @@
+{
+  "version": "43.0.0",
+  "title": "ANESTY Board Controlled Task Prompt Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "noRealGitCommit": true,
+  "noRealDeploy": true,
+  "noSecretRead": true,
+  "anestyControlledPromptPackId": "anesty-controlled-prompt-pack-1780488102400",
+  "targetProduct": "anesty_board",
+  "targetRepo": "/home/shimohigoshi/anesty-board",
+  "taskTitle": "v87.0.8 成功記録 docs 追加",
+  "taskGoal": "ANESTY Board repo の docs に v87.0.8 Gemini-first routing smoke テスト成功記録を追加する",
+  "claudeRole": "docs / smoke-records / runbook / README 系ファイルの編集・追加のみ担当",
+  "kosameRole": "PM・安全ゲート・統合判断 / 各ステージ承認 / エスカレーション判断",
+  "humanRole": "git add / commit / push / tag の最終 YES 担当",
+  "allowedFiles": [
+    "docs/ai-dev-team/*.md",
+    "docs/smoke-records/*.md",
+    "docs/runbook/*.md",
+    "docs/pm/*.md",
+    "smoke/README.md"
+  ],
+  "forbiddenFiles": [
+    "bot.js",
+    "BOARD_CANON.js",
+    ".env",
+    ".env.*",
+    "secrets/**",
+    "credentials/**",
+    ".github/workflows/**",
+    "node_modules/**",
+    "*.log",
+    "package-lock.json (編集禁止)"
+  ],
+  "allowedCommands": [
+    "node --check <file>",
+    "npm run verify",
+    "git status --short",
+    "git diff --stat",
+    "git log --oneline -5",
+    "ls / cat / head / tail (read-only inspection)",
+    "find . -name \"*.md\" (read-only search)"
+  ],
+  "forbiddenCommands": [
+    "git add",
+    "git commit",
+    "git push",
+    "git tag",
+    "git reset --hard",
+    "git clean -f",
+    "git checkout -- .",
+    "rm -rf",
+    "npm run deploy",
+    "docker build",
+    "gcloud deploy",
+    "gcloud run deploy",
+    "cat .env",
+    "cat secrets/**",
+    "printenv (全環境変数出力)"
+  ],
+  "preflightCommands": [
+    "git status --short",
+    "git log --oneline -5",
+    "node --version",
+    "npm --version"
+  ],
+  "verificationCommands": [
+    "npm run verify",
+    "git status --short",
+    "git diff --stat"
+  ],
+  "reportFormat": {
+    "addedFiles": "追加・変更ファイル一覧",
+    "npmVerifyResult": "npm run verify 結果 (PASS/FAIL)",
+    "gitStatusResult": "git status --short 結果",
+    "commitCandidateReady": "commit 候補に進めるか (YES/NO)",
+    "remainingRisk": "残リスク一覧"
+  },
+  "rollbackInstruction": [
+    "追加した docs .md ファイルを削除するだけで revert 完了",
+    "git checkout -- docs/ で docs/ 以下の変更をすべて取り消し可能",
+    "本体ロジックには触れていないため、revert リスクは最小"
+  ],
+  "commitCandidateStopRule": "npm run verify PASS 後、git status --short を確認して停止する。git add / commit / push は実行しない。じゅんやさんの YES を待つ。",
+  "promptReady": true,
+  "blockerItems": [],
+  "recommendedNextAction": [
+    "v44: ANESTY Board First Controlled Task Trial Pack — 初回 controlled task の trial ready 判定を生成する",
+    "その後: じゅんやさん YES のもとで実際にこの prompt を ANESTY Board の Claude Code へ投入する"
+  ],
+  "generatedAt": "2026-06-04T00:00:00.000Z"
+}

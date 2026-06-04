@@ -1,0 +1,75 @@
+{
+  "version": "41.0.0",
+  "title": "First Real Repo Trial Success Record Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "noRealGitCommit": true,
+  "noRealDeploy": true,
+  "noSecretRead": true,
+  "trialSuccessRecordId": "trial-success-record-1780488102400",
+  "targetProduct": "anesty_board",
+  "targetRepo": "anesty-board",
+  "targetRepoPath": "/home/shimohigoshi/anesty-board",
+  "testedVersion": "v87.0.8-gemini-first-routing-smoke",
+  "testedCommit": "d7a3d3e",
+  "testedTag": "v87.0.8-gemini-first-routing-smoke",
+  "trialPurpose": [
+    "KOSAME Dev Orchestra v40.0.0 完成後の初回実repo投入テストとして ANESTY Board を対象に実施",
+    "smoke / verify / backup の安全チェックのみを行い、本体ロジックへの編集は行わなかった",
+    "安全境界・ヒューマン承認契約が実環境で機能することを確認した"
+  ],
+  "checksPerformed": [
+    { "checkId": "smoke:dev-agent-routing", "result": "PASS", "note": "dev-agent routing smoke passed" },
+    { "checkId": "smoke:cloudrun",           "result": "PASS", "note": "Cloud Run smoke passed" },
+    { "checkId": "npm run verify",            "result": "PASS", "note": "VERIFY_EXIT=0" },
+    { "checkId": "HOME backup",               "result": "PASS", "note": "HOME backup created successfully" }
+  ],
+  "verificationResults": {
+    "smokeDevAgentRouting": "PASS",
+    "smokeCloudRun": "PASS",
+    "npmRunVerify": "PASS",
+    "verifyExit": 0,
+    "finalStatus": "clean"
+  },
+  "backupResult": {
+    "status": "success",
+    "location": "HOME backup",
+    "note": "HOME backup created before any checks were run"
+  },
+  "safetyBoundary": {
+    "dryRunDesign": "All operations are dry-run by default until explicit Human YES",
+    "humanApprovalGates": "じゅんやさん YES required for all git ops / deploy / destructive actions",
+    "deployBlocked": "deploy / docker build / gcloud deploy always blocked without Human YES",
+    "secretBlocked": ".env / secrets / credentials / API key read always blocked",
+    "customerDataBlocked": "PII / insurance / health / financial data always blocked",
+    "destructiveBlocked": "rm -rf / git reset --hard / git clean -f always blocked",
+    "repoScope": "KOSAME Dev Orchestra repo only — ANESTY Board repo not touched during this record creation"
+  },
+  "humanApprovalContract": {
+    "junyaYes": "Final YES for: git add / commit / push / tag / deploy / any destructive operation",
+    "kosameGPT": "PM gate: approve/hold/reject at each stage before escalating to じゅんやさん",
+    "escalation": "Any sensitive content detection → immediate escalation to じゅんやさん + こさめ/GPT"
+  },
+  "successCriteria": [
+    { "criterion": "smoke:dev-agent-routing PASS",          "met": true },
+    { "criterion": "smoke:cloudrun PASS",                    "met": true },
+    { "criterion": "npm run verify PASS (VERIFY_EXIT=0)",    "met": true },
+    { "criterion": "HOME backup created",                    "met": true },
+    { "criterion": "git status clean after checks",          "met": true },
+    { "criterion": "No secret / .env / PII accessed",        "met": true }
+  ],
+  "trialSucceeded": true,
+  "lessonsLearned": [
+    "smoke / verify / backup の安全チェックは ANESTY Board 環境で正常動作することを確認",
+    "実repo投入テストは KOSAME Dev Orchestra の安全境界設計が有効であることを示す",
+    "初回は docs / smoke / runbook 系の低リスク作業に限定するという方針が適切",
+    "本体ロジック (bot.js / BOARD_CANON.js / deploy / Secret) には触れないルールを維持できた"
+  ],
+  "recommendedNextAction": [
+    "v42: ANESTY Board Next Task Selection Console — 次の低リスクタスク候補を選定する",
+    "v43: ANESTY Board Controlled Task Prompt Pack — Claude Code へ投げる controlled prompt を生成する",
+    "v44: ANESTY Board First Controlled Task Trial Pack — 初回 controlled task の trial ready 判定を生成する",
+    "その後: じゅんやさん YES のもと ANESTY Board への実タスク投入を開始する"
+  ],
+  "generatedAt": "2026-06-04T00:00:00.000Z"
+}

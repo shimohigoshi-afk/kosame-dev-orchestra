@@ -1,0 +1,121 @@
+{
+  "version": "42.0.0",
+  "title": "ANESTY Board Next Task Selection Console Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "noRealGitCommit": true,
+  "noRealDeploy": true,
+  "noSecretRead": true,
+  "anestyNextTaskSelectionId": "anesty-next-task-selection-1780488102400",
+  "targetProduct": "anesty_board",
+  "targetRepoCandidate": "/home/shimohigoshi/anesty-board",
+  "candidateTasks": [
+    {
+      "taskId": "task_docs_pm_ops",
+      "taskTitle": "docs/pm 運用整理",
+      "description": "docs/pm ディレクトリの既存ドキュメントを整理・索引化する",
+      "targetFiles": ["docs/pm/**/*.md"],
+      "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**"],
+      "implementationRisk": "very_low",
+      "safetyRisk": "very_low",
+      "businessImpact": "low",
+      "recommended": false,
+      "holdReason": null
+    },
+    {
+      "taskId": "task_v87_success_docs",
+      "taskTitle": "v87.0.8 成功記録 docs 追加",
+      "description": "smoke テスト成功記録を docs/ai-dev-team または docs/smoke-records に追加する",
+      "targetFiles": ["docs/ai-dev-team/*.md", "docs/smoke-records/*.md"],
+      "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**"],
+      "implementationRisk": "very_low",
+      "safetyRisk": "very_low",
+      "businessImpact": "low",
+      "recommended": true,
+      "holdReason": null
+    },
+    {
+      "taskId": "task_smoke_routing_readme",
+      "taskTitle": "smoke-dev-agent-routing の README 化",
+      "description": "ANESTY Board の dev-agent-routing smoke テストの目的・手順・結果を README.md に記載する",
+      "targetFiles": ["smoke/README.md", "docs/smoke-records/*.md"],
+      "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**"],
+      "implementationRisk": "very_low",
+      "safetyRisk": "very_low",
+      "businessImpact": "medium",
+      "recommended": false,
+      "holdReason": null
+    },
+    {
+      "taskId": "task_cloudrun_preflight_docs",
+      "taskTitle": "Cloud Run preflight docs 補強",
+      "description": "Cloud Run の preflight チェックリストと運用手順を docs に追加する",
+      "targetFiles": ["docs/cloudrun/*.md", "docs/runbook/*.md"],
+      "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**", ".github/workflows/**"],
+      "implementationRisk": "low",
+      "safetyRisk": "very_low",
+      "businessImpact": "medium",
+      "recommended": false,
+      "holdReason": null
+    },
+    {
+      "taskId": "task_runbook_no_bot",
+      "taskTitle": "Discord 本体ロジックに触らない範囲の runbook 整備",
+      "description": "bot.js / BOARD_CANON.js に触れずに運用 runbook を docs/runbook 以下に整備する",
+      "targetFiles": ["docs/runbook/*.md"],
+      "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**"],
+      "implementationRisk": "very_low",
+      "safetyRisk": "very_low",
+      "businessImpact": "medium",
+      "recommended": false,
+      "holdReason": null
+    }
+  ],
+  "recommendedTask": {
+    "taskId": "task_v87_success_docs",
+    "taskTitle": "v87.0.8 成功記録 docs 追加",
+    "description": "smoke テスト成功記録を docs/ai-dev-team または docs/smoke-records に追加する",
+    "targetFiles": ["docs/ai-dev-team/*.md", "docs/smoke-records/*.md"],
+    "forbiddenFiles": ["bot.js", "BOARD_CANON.js", ".env", "secrets/**"]
+  },
+  "selectionReason": [
+    "v87.0.8 成功記録 docs 追加は、既に実施済みの smoke テスト結果を文書化するだけであり、コードへの変更がない",
+    "対象ファイルは docs/ai-dev-team または docs/smoke-records 以下の .md ファイルのみ",
+    "bot.js / BOARD_CANON.js / .env / secrets には一切触れない",
+    "低リスク初回タスクとして最適 — 失敗しても revert は docs ファイルを削除するだけ"
+  ],
+  "businessImpact": "low",
+  "implementationRisk": "very_low",
+  "safetyRisk": "very_low",
+  "allowedScope": [
+    "docs/**/*.md",
+    "smoke/README.md",
+    "docs/smoke-records/*.md",
+    "docs/ai-dev-team/*.md",
+    "docs/runbook/*.md",
+    "docs/pm/*.md"
+  ],
+  "forbiddenScope": [
+    "bot.js — Discord 本体ロジック",
+    "BOARD_CANON.js — ボード正規化ロジック",
+    ".env / secrets / .env.* / credentials — Secret 類",
+    "API key / Secret Manager 値の読取",
+    ".github/workflows — CI/CD 設定",
+    "deploy / docker build / gcloud deploy",
+    "git add / git commit / git push / git tag",
+    "顧客情報 / 保険証券 / 健診情報 / 個人名入り議事録",
+    "rm -rf / git reset --hard / git clean -f"
+  ],
+  "requiredInputs": [
+    "ANESTY Board repo の最新 HEAD commit hash",
+    "ANESTY Board repo のディレクトリ構造 (docs/ 以下)",
+    "v87.0.8 smoke テスト結果の詳細ログ"
+  ],
+  "missingInputs": [],
+  "recommendedNextAction": [
+    "v43: ANESTY Board Controlled Task Prompt Pack — Claude Code へ投げる controlled prompt を生成する",
+    "v44: ANESTY Board First Controlled Task Trial Pack — 初回 controlled task の trial ready 判定を生成する",
+    "その後: じゅんやさん YES のもと ANESTY Board への実タスク投入を開始する"
+  ],
+  "generatedAt": "2026-06-04T00:00:00.000Z"
+}

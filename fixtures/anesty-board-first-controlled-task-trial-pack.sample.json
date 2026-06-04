@@ -1,0 +1,94 @@
+{
+  "version": "44.0.0",
+  "title": "ANESTY Board First Controlled Task Trial Pack",
+  "dryRun": true,
+  "humanApprovalRequired": true,
+  "noRealGitCommit": true,
+  "noRealDeploy": true,
+  "noSecretRead": true,
+  "anestyFirstControlledTrialId": "anesty-first-controlled-trial-1780488102400",
+  "targetProduct": "anesty_board",
+  "targetRepo": "/home/shimohigoshi/anesty-board",
+  "selectedTask": {
+    "taskId": "task_v87_success_docs",
+    "taskTitle": "v87.0.8 成功記録 docs 追加",
+    "targetFiles": ["docs/ai-dev-team/*.md", "docs/smoke-records/*.md"]
+  },
+  "trialObjective": [
+    "ANESTY Board repo に対して初回 controlled task (低リスク docs 追加) を安全に実行する",
+    "安全境界・ヒューマン承認契約が実環境で機能することを再確認する",
+    "commit 候補まで進め、じゅんやさんの最終 YES を待つ"
+  ],
+  "launchReadiness": {
+    "promptGenerated": true,
+    "safetyBoundaryDefined": true,
+    "allowedScopeDefined": true,
+    "forbiddenScopeDefined": true,
+    "verificationPlanDefined": true,
+    "acceptanceCriteriaDefined": true,
+    "humanApprovalContractDefined": true
+  },
+  "safetyBoundary": {
+    "dryRunDesign": "All operations are dry-run by default until explicit Human YES",
+    "humanApprovalGates": "じゅんやさん YES required for all git ops / deploy / destructive actions",
+    "deployBlocked": "deploy / docker build / gcloud deploy always blocked",
+    "secretBlocked": ".env / secrets / credentials / API key read always blocked",
+    "customerDataBlocked": "PII / insurance / health / financial data always blocked",
+    "destructiveBlocked": "rm -rf / git reset --hard / git clean -f always blocked",
+    "botLogicBlocked": "bot.js / BOARD_CANON.js — 本体ロジックへの編集は常にブロック",
+    "repoScope": "ANESTY Board repo の docs 系ファイルのみ対象"
+  },
+  "allowedScope": [
+    "docs/ai-dev-team/*.md — 追加のみ",
+    "docs/smoke-records/*.md — ディレクトリ作成 + 追加のみ"
+  ],
+  "forbiddenScope": [
+    "bot.js — 本体ロジック (触るだけで trialReady = false)",
+    "BOARD_CANON.js — ボード正規化ロジック (触るだけで trialReady = false)",
+    ".env / secrets / API key — 読取禁止 (触るだけで trialReady = false)",
+    ".github/workflows — CI/CD (変更禁止)",
+    "deploy / docker build / gcloud deploy (実行禁止)",
+    "git add / commit / push / tag (実行禁止)",
+    "rm -rf / git reset --hard / git clean -f (実行禁止)",
+    "顧客情報 / 保険証券 / 健診情報 / 個人名入り議事録 (読取禁止)"
+  ],
+  "expectedChangedFiles": [
+    "docs/ai-dev-team/anesty-board-v87.0.8-smoke-success-record.md (新規)",
+    "docs/smoke-records/ (ディレクトリ新規 + .md ファイル新規、任意)"
+  ],
+  "verificationPlan": [
+    "npm run verify を実行して既存テストが壊れていないことを確認する",
+    "git status --short で変更ファイルを確認する",
+    "変更ファイルが docs/** のみであることを確認する",
+    "bot.js / BOARD_CANON.js / .env に変更がないことを確認する"
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "npm run verify PASS",                            "required": true },
+    { "criterion": "変更ファイルが docs/** のみ",                     "required": true },
+    { "criterion": "bot.js / BOARD_CANON.js / .env 変更なし",        "required": true },
+    { "criterion": "git add / commit / push / tag 未実行",           "required": true },
+    { "criterion": "Secret / .env / API key 未読取",                 "required": true },
+    { "criterion": "deploy / docker build / gcloud deploy 未実行",   "required": true }
+  ],
+  "resultReviewPlan": [
+    "Claude の完了報告を Kosame/GPT がレビューする",
+    "変更ファイル一覧・git status を確認する",
+    "安全境界違反がないかチェックする",
+    "問題なければ じゅんやさんへ最終 YES を求める",
+    "じゅんやさん YES → git add / commit / push を実行する"
+  ],
+  "humanApprovalContract": {
+    "junyaYes": "git add / commit / push / tag の最終 YES",
+    "kosameGPT": "Claude の完了報告レビュー / 安全境界チェック / じゅんやさんへのエスカレーション判断",
+    "escalation": "安全境界違反検知 → 即座に じゅんやさん + こさめ/GPT へエスカレーション"
+  },
+  "trialReady": true,
+  "blockerItems": [],
+  "nextAction": [
+    "じゅんやさん / Kosame/GPT の最終承認を得る",
+    "Claude Code へ claudePromptToLaunch を投入する",
+    "Claude の完了報告を待つ",
+    "Kosame/GPT がレビュー → じゅんやさん YES → git add / commit / push"
+  ],
+  "generatedAt": "2026-06-04T00:00:00.000Z"
+}

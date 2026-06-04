@@ -1,0 +1,62 @@
+{
+  "_description": "Visual Status JSON Export Pack fixture for v47.0.0",
+  "input": {
+    "product": "ANESTY Board",
+    "task": "v87.0.9 docs/runbook controlled task",
+    "repo": "/home/shimohigoshi/anesty-board",
+    "commit": "302f692",
+    "blockers": []
+  },
+  "expectedOutput": {
+    "schemaVersion": "1.0.0",
+    "orchestraVersion": "47.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "discordWebhookSent": false,
+    "externalRequestSent": false,
+    "stages": [
+      { "name": "Intake",                "status": "DONE"    },
+      { "name": "Work Order",            "status": "DONE"    },
+      { "name": "Safety Gate",           "status": "DONE"    },
+      { "name": "Claude Prompt",         "status": "READY"   },
+      { "name": "Claude Implementation", "status": "WAITING" },
+      { "name": "Verify",                "status": "WAITING" },
+      { "name": "Acceptance Gate",       "status": "WAITING" },
+      { "name": "Human Approval",        "status": "WAITING" }
+    ],
+    "agents": [
+      { "name": "KOSAME / GPT",   "status": "PM_READY"        },
+      { "name": "Claude / Kuro",  "status": "WAITING"         },
+      { "name": "Gemini",         "status": "STANDBY"         },
+      { "name": "Grok",           "status": "STANDBY"         },
+      { "name": "GitHub Actions", "status": "WAITING"         },
+      { "name": "Cloud Shell",    "status": "READY"           },
+      { "name": "Human / Junya",  "status": "APPROVAL_PENDING" }
+    ],
+    "dangerGates": [
+      { "name": "Secret read",        "status": "BLOCKED", "action": "deny" },
+      { "name": ".env read",          "status": "BLOCKED", "action": "deny" },
+      { "name": "deploy",             "status": "BLOCKED", "action": "deny" },
+      { "name": "git push by AI",     "status": "BLOCKED", "action": "deny" },
+      { "name": "customer data read", "status": "BLOCKED", "action": "deny" },
+      { "name": "destructive delete", "status": "BLOCKED", "action": "deny" }
+    ],
+    "acceptance": {
+      "commitCandidate": true,
+      "humanApprovalRequired": true,
+      "blockers": []
+    },
+    "nextAction": "Claude Codeへcontrolled taskを貼る → 完了報告をこさめへ戻す"
+  },
+  "_notes": {
+    "useCases": ["CLI display", "Markdown report", "Discord notification (future)", "Web dashboard (future)"],
+    "discordNotConnected": true,
+    "noWebhookSend": true,
+    "noWebServer": true,
+    "jsonOnly": true,
+    "humanFinalYes": true,
+    "allDangerGatesBlocked": true,
+    "noSecretRead": true,
+    "noDeployExecuted": true
+  }
+}

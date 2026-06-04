@@ -1,0 +1,57 @@
+{
+  "_description": "CLI Operation Board Pack fixture for v45.0.0",
+  "input": {
+    "product": "ANESTY Board",
+    "task": "v87.0.9 docs/runbook controlled task",
+    "repo": "/home/shimohigoshi/anesty-board",
+    "version": "45.0.0",
+    "commit": "302f692",
+    "blockers": []
+  },
+  "expectedOutput": {
+    "version": "45.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "stages": [
+      { "name": "Intake",                "status": "DONE"    },
+      { "name": "Work Order",            "status": "DONE"    },
+      { "name": "Safety Gate",           "status": "DONE"    },
+      { "name": "Claude Prompt",         "status": "READY"   },
+      { "name": "Claude Implementation", "status": "WAITING" },
+      { "name": "Verify",                "status": "WAITING" },
+      { "name": "Acceptance Gate",       "status": "WAITING" },
+      { "name": "Human Approval",        "status": "WAITING" }
+    ],
+    "agents": [
+      { "name": "KOSAME / GPT",   "status": "PM_READY"        },
+      { "name": "Claude / Kuro",  "status": "WAITING"         },
+      { "name": "Gemini",         "status": "STANDBY"         },
+      { "name": "Grok",           "status": "STANDBY"         },
+      { "name": "GitHub Actions", "status": "WAITING"         },
+      { "name": "Cloud Shell",    "status": "READY"           },
+      { "name": "Human / Junya",  "status": "APPROVAL_PENDING" }
+    ],
+    "dangerGates": [
+      { "name": "Secret read",        "status": "BLOCKED" },
+      { "name": ".env read",          "status": "BLOCKED" },
+      { "name": "deploy",             "status": "BLOCKED" },
+      { "name": "git push by AI",     "status": "BLOCKED" },
+      { "name": "customer data read", "status": "BLOCKED" },
+      { "name": "destructive delete", "status": "BLOCKED" }
+    ],
+    "acceptance": {
+      "commitCandidate": true,
+      "humanApprovalRequired": true,
+      "blockers": []
+    },
+    "nextAction": "Claude Codeへcontrolled taskを貼る → 完了報告をこさめへ戻す"
+  },
+  "_notes": {
+    "boardTextSections": ["TARGET", "STAGE", "AGENTS", "DANGER GATES", "NEXT ACTION", "ACCEPTANCE"],
+    "allDangerGatesBlocked": true,
+    "humanFinalYes": true,
+    "discordNotConnected": true,
+    "noSecretRead": true,
+    "noDeployExecuted": true
+  }
+}

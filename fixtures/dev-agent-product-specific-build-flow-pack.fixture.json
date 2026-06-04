@@ -1,0 +1,17 @@
+{
+  "_description": "Product-Specific Build Flow Pack fixture for v57.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "57.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "productTypes": ["discord_ai_board", "sales_dx_pipeline", "backoffice_agent", "email_reply_bot", "cloud_run_pm_agent", "dev_orchestra_core"]
+  },
+  "_notes": {
+    "salesDxHighRisk": "customer/insurance data is critical gate",
+    "anetyBoardBotJsGate": "bot.js / BOARD_CANON.js are gates",
+    "cloudRunDeployGate": "gcloud deploy / IAM change are gates",
+    "noDeployExecuted": true,
+    "noSecretRead": true
+  }
+}

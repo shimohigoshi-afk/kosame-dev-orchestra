@@ -1,0 +1,25 @@
+{
+  "_description": "Release Train Planner Pack fixture for v59.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "59.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "releaseLanes": ["now", "next", "hold", "external_review", "production_gate"],
+    "candidateCount": 6
+  },
+  "laneAssignmentRules": {
+    "blockers": "hold",
+    "externalReviewRequired": "external_review",
+    "productionImpact": "production_gate",
+    "readyLowRisk": "now",
+    "readyOrPlanning": "next"
+  },
+  "_notes": {
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true,
+    "salesDxInHold": "due to customer/insurance data boundary not defined"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_description": "Cross-Product Risk Router Pack fixture for v58.0.0",
+  "scenarios": {
+    "docs": { "input": { "taskType": "docs_update" }, "expectedRoute": "CLAUDE_CODE" },
+    "longText": { "input": { "taskType": "long_text_review" }, "expectedRoute": "GEMINI_REVIEW" },
+    "breakthrough": { "input": { "taskType": "breakthrough_proposal" }, "expectedRoute": "GROK_REVIEW" },
+    "secret": { "input": { "secretAccess": true }, "expectedRoute": "HUMAN_APPROVAL" },
+    "deploy": { "input": { "deployRequired": true }, "expectedRoute": "HUMAN_APPROVAL" },
+    "customerData": { "input": { "customerDataAccess": true }, "expectedRoutes": ["HUMAN_APPROVAL", "KOSAME_PM"] },
+    "lowConfidence": { "input": { "confidence": "low", "dataSensitivity": "critical" }, "expectedRoute": "HOLD" }
+  },
+  "_notes": {
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true
+  }
+}

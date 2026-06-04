@@ -1,0 +1,25 @@
+{
+  "_description": "Multi-Product Operation Complete Pack fixture for v60.0.0",
+  "input": { "blockers": [] },
+  "expectedOutput": {
+    "version": "60.0.0",
+    "orchestraVersion": "60.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "completePackReady": true,
+    "contains": ["portfolioOperationBoard", "productSpecificBuildFlows", "crossProductRiskRouter", "releaseTrainPlanner", "humanApprovalPacket", "externalReviewPolicy", "completeCriteria"]
+  },
+  "blockedScenario": {
+    "input": { "blockers": ["sales_dx data boundary not defined"] },
+    "expectedOutput": { "completePackReady": false }
+  },
+  "_notes": {
+    "multiProductOS": "KOSAME Dev OrchestraはANESTY Board専用ではない",
+    "80to90Percent": "通常開発の80〜90%を内製",
+    "10Percent": "残り10%は専門レビュー",
+    "junyaFinalYes": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true,
+    "discordNotConnected": true
+  }
+}

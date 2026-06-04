@@ -1,0 +1,18 @@
+{
+  "_description": "Product Portfolio Operation Board Pack fixture for v56.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "56.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "productIds": ["anesty_board", "sales_dx", "backoffice_agent", "email_reply_bot", "cloud_run_pm_agent", "kosame_dev_orchestra"],
+    "allHumanApprovalRequired": true,
+    "allDangerGatesBlocked": true
+  },
+  "_notes": {
+    "noRealRepoRead": true,
+    "repoPathIsStringOnly": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true
+  }
+}

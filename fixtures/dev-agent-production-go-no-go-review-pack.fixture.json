@@ -1,0 +1,32 @@
+{
+  "_description": "Production Go/No-Go Review Pack fixture for v53.0.0",
+  "scenarios": {
+    "clean": {
+      "input": { "allRequiredChecksPassed": true, "deployApproved": true, "rollbackPlanReady": true },
+      "expectedDecision": "GO"
+    },
+    "secretLeak": {
+      "input": { "secretLeakRisk": true },
+      "expectedDecision": "NO_GO"
+    },
+    "deployUnapproved": {
+      "input": { "deployApproved": false },
+      "expectedDecision": "HOLD"
+    },
+    "noRollback": {
+      "input": { "rollbackPlanReady": false },
+      "expectedDecision": "HOLD"
+    },
+    "dataUnknown": {
+      "input": { "customerDataBoundaryUnknown": true, "customerDataSeverity": "critical" },
+      "expectedDecision": "NO_GO"
+    }
+  },
+  "_notes": {
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "finalHumanApprover": "じゅんやさん",
+    "noDeployExecuted": true,
+    "noSecretRead": true
+  }
+}

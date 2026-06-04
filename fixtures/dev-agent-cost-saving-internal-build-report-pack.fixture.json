@@ -1,0 +1,19 @@
+{
+  "_description": "Cost-Saving Internal Build Report Pack fixture for v54.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "54.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "costSavingNoteIsNonBinding": true,
+    "costSavingNoteIsExampleOnly": true
+  },
+  "_notes": {
+    "noCurrencyAmountsHardcoded": true,
+    "internalBuildRatio": "80-90% internal",
+    "externalReviewRatio": "10% security/compliance/infra experts",
+    "noDeployExecuted": true,
+    "noSecretRead": true,
+    "humanFinalYes": true
+  }
+}

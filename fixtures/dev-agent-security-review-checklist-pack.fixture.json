@@ -1,0 +1,31 @@
+{
+  "_description": "Security Review Checklist Pack fixture for v52.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "52.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "overallStatusWhenAllPending": "PENDING_REVIEW",
+    "overallStatusWhenBlockerFailed": "NOT_READY",
+    "checkCategories": [
+      "Secret / .env / API key",
+      "IAM / permissions",
+      "Cloud Run / service account",
+      "GitHub Actions / secrets",
+      "customer data / insurance data",
+      "logs / transcripts / uploads",
+      "database / storage",
+      "authentication / authorization",
+      "deploy / rollback",
+      "monitoring / alerting",
+      "backup / restore",
+      "legal / compliance handoff"
+    ]
+  },
+  "_notes": {
+    "noSecretRead": true,
+    "noDeployExecuted": true,
+    "humanFinalYes": true,
+    "externalSEForCriticalItems": true
+  }
+}

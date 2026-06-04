@@ -1,0 +1,17 @@
+{
+  "_description": "External SE Review Packet Pack fixture for v51.0.0",
+  "input": {},
+  "expectedOutput": {
+    "version": "51.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "reviewScopeIncludes": ["security design", "Cloud Run / Secret Manager / IAM", "insurance/customer data boundary", "production readiness"],
+    "outOfScopeIncludes": ["docs-only wording changes", "git commit / push / tag execution (proxy work)", "deploy execution (proxy work)"]
+  },
+  "_notes": {
+    "purpose": "外部SEを監査役として使う。作る人ではない。",
+    "noSecretRead": true,
+    "noDeployExecuted": true,
+    "humanFinalYes": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "_description": "External Review Handoff Complete Pack fixture for v55.0.0",
+  "input": { "blockers": [] },
+  "expectedOutput": {
+    "version": "55.0.0",
+    "orchestraVersion": "55.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "completePackReady": true,
+    "contains": ["externalSEReviewPacket", "securityReviewChecklist", "productionGoNoGoReview", "costSavingInternalBuildReport", "handoffSummary", "externalReviewerInstructions", "humanApprovalPacket", "nextAction"]
+  },
+  "blockedScenario": {
+    "input": { "blockers": ["external SE review not completed"] },
+    "expectedOutput": { "completePackReady": false }
+  },
+  "_notes": {
+    "purposeStatements": "外部SEを監査役にする / じゅんやさんを作業員に戻さない / 80-90%内製 / 10%専門レビュー",
+    "dryRun": true,
+    "humanFinalYes": true,
+    "noDeployExecuted": true,
+    "noSecretRead": true,
+    "discordNotConnected": true
+  }
+}

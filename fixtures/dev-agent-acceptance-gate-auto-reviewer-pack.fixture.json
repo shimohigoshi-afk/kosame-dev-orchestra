@@ -1,0 +1,9 @@
+{
+  "acceptanceGateAutoReviewerId": "fixture-acceptance-gate-auto-reviewer-v88",
+  "inputReport": {
+    "verifyExitCode": 0,
+    "smokePassed": true,
+    "docsExpected": 5,
+    "docsActual": 5
+  }
+}

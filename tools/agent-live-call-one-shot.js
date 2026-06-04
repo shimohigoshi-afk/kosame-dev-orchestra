@@ -1,25 +1,47 @@
 "use strict";
 
 // One-shot live call tool for KOSAME Dev Orchestra.
-// Purpose: Human-approved single call to verify live API connectivity.
-// Default: live=false (dry-run). Requires --live to attempt live call.
-// --live alone is not enough: gate env vars and API key must also be present.
+// Supports:
+//   --provider=<gpt|gemini>
+//   --live
+//   --input-file=/path/to/task.txt
+//   --input="inline text"
 // APIキー値は絶対に出力しない。
-// 1回だけ実行して終了する。外部APIは gate 条件未達なら呼ばない。
 
+const fs = require("fs");
 const gptProvider = require("../providers/gpt-provider");
 const geminiProvider = require("../providers/gemini-provider");
 const { getConfig } = require("../providers/provider-config");
 
 const SUPPORTED_PROVIDERS = ["gpt", "gemini"];
 
+function getArgValue(name) {
+  const prefix = `--${name}=`;
+  const arg = process.argv.find((a) => a.startsWith(prefix));
+  return arg ? arg.slice(prefix.length) : null;
+}
+
 function getProviderName() {
-  const arg = process.argv.find((a) => a.startsWith("--provider="));
-  return arg ? arg.replace("--provider=", "") : null;
+  return getArgValue("provider");
 }
 
 function getLiveFlag() {
   return process.argv.includes("--live");
+}
+
+function readInputText() {
+  const inputFile = getArgValue("input-file");
+  const inlineInput = getArgValue("input");
+
+  if (inputFile) {
+    return fs.readFileSync(inputFile, "utf8");
+  }
+
+  if (inlineInput) {
+    return inlineInput;
+  }
+
+  return "KOSAME Dev Orchestra の役割を1文で説明してください。";
 }
 
 const providerName = getProviderName();
@@ -35,10 +57,12 @@ if (!providerName || !SUPPORTED_PROVIDERS.includes(providerName)) {
 const provider = providerName === "gpt" ? gptProvider : geminiProvider;
 
 const taskPacket = {
-  id: "task-one-shot-001",
-  type: "generate",
-  input: "KOSAME Dev Orchestra の役割を1文で説明してください。",
-  options: { language: "ja" },
+  id: getArgValue("task-id") || "task-one-shot-001",
+  type: getArgValue("type") || "generate",
+  input: readInputText(),
+  options: {
+    language: getArgValue("language") || "ja",
+  },
 };
 
 async function main() {
@@ -51,6 +75,13 @@ async function main() {
     openaiLiveEnabled: config.openaiLiveEnabled,
     geminiLiveEnabled: config.geminiLiveEnabled,
   });
+
+  console.log("task packet:", JSON.stringify({
+    ...taskPacket,
+    input: taskPacket.input.length > 1000
+      ? taskPacket.input.slice(0, 1000) + `\n... [truncated ${taskPacket.input.length} chars]`
+      : taskPacket.input
+  }, null, 2));
 
   if (!liveFlag) {
     console.log("INFO: --live not specified — dry-run only. No external API will be called.");

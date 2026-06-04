@@ -1,5 +1,6 @@
 "use strict";
 
+const fs = require("fs");
 const mockProvider = require("../providers/mock-provider");
 const gptProvider = require("../providers/gpt-provider");
 const geminiProvider = require("../providers/gemini-provider");
@@ -11,18 +12,50 @@ const providers = {
   gemini: geminiProvider,
 };
 
+function getArgValue(name) {
+  const prefix = `--${name}=`;
+  const arg = process.argv.find((a) => a.startsWith(prefix));
+  return arg ? arg.slice(prefix.length) : null;
+}
+
 function getProviderName() {
-  const arg = process.argv.find((a) => a.startsWith("--provider="));
-  return arg ? arg.replace("--provider=", "") : "mock";
+  return getArgValue("provider") || "mock";
 }
 
 function getLiveFlag() {
   return process.argv.includes("--live");
 }
 
+function readInputText() {
+  const inputFile = getArgValue("input-file");
+  const inlineInput = getArgValue("input");
+
+  if (inputFile) {
+    return fs.readFileSync(inputFile, "utf8");
+  }
+
+  if (inlineInput) {
+    return inlineInput;
+  }
+
+  return "KOSAME Dev Orchestra の役割を1文で説明してください。";
+}
+
+function buildTaskPacket() {
+  return {
+    id: getArgValue("task-id") || "task-local-001",
+    type: getArgValue("type") || "generate",
+    input: readInputText(),
+    options: {
+      language: getArgValue("language") || "ja",
+    },
+  };
+}
+
 const providerName = getProviderName();
 const provider = providers[providerName];
 const liveFlag = getLiveFlag();
+const taskPacket = buildTaskPacket();
 
 if (!provider) {
   console.error(
@@ -31,16 +64,14 @@ if (!provider) {
   process.exit(1);
 }
 
-const taskPacket = {
-  id: "task-local-001",
-  type: "generate",
-  input: "KOSAME Dev Orchestra の役割を1文で説明してください。",
-  options: { language: "ja" },
-};
-
 async function main() {
   console.log(`===== agent-runner-local [provider=${providerName}] =====`);
-  console.log("task packet:", JSON.stringify(taskPacket, null, 2));
+  console.log("task packet:", JSON.stringify({
+    ...taskPacket,
+    input: taskPacket.input.length > 1000
+      ? taskPacket.input.slice(0, 1000) + `\n... [truncated ${taskPacket.input.length} chars]`
+      : taskPacket.input
+  }, null, 2));
   console.log("");
 
   if (providerName === "gpt" || providerName === "gemini") {

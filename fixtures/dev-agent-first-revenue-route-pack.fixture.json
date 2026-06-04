@@ -1,0 +1,1 @@
+{ "_description": "First Revenue Route Pack fixture v71.0.0", "input": { "productIdea": "AI議事録自動化ツール", "targetCustomer": "中小企業の営業チーム" }, "expectedOutput": { "version": "71.0.0", "dryRun": true, "humanApprovalRequired": true, "realRevenueActions": false }, "_notes": { "guardianClassRequiredBeforeRevenue": true, "noRealPayment": true, "noRealContract": true } }

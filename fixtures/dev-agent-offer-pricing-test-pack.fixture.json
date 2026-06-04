@@ -1,0 +1,1 @@
+{ "_description": "Offer / Pricing Test Pack fixture v72.0.0", "input": { "productIdea": "AI議事録自動化ツール" }, "expectedOutput": { "version": "72.0.0", "dryRun": true, "humanApprovalRequired": true, "pricingMatrixHardGuarantee": false, "realBillingExecuted": false }, "_notes": { "priceIsGuidance": true, "noRealBilling": true } }

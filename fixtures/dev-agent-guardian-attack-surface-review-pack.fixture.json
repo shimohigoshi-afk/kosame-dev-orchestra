@@ -1,0 +1,1 @@
+{ "_description": "Guardian Attack Surface Review Pack fixture v66.0.0", "input": {}, "expectedOutput": { "version": "66.0.0", "dryRun": true, "humanApprovalRequired": true, "surfaceCount": 7, "overallRiskLevelOptions": ["CRITICAL","HIGH","MEDIUM","LOW"] }, "_notes": { "noRealExploit": true, "noDeployExecuted": true, "noSecretRead": true } }

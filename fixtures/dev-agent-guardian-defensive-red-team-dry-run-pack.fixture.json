@@ -1,0 +1,1 @@
+{ "_description": "Guardian Defensive Red Team Dry-Run Pack fixture v69.0.0", "input": {}, "expectedOutput": { "version": "69.0.0", "dryRun": true, "humanApprovalRequired": true, "scenarioCount": 6, "realAttackExecuted": false }, "_notes": { "noRealExploit": true, "noRealPenetrationTest": true, "allScenariosAreDryRun": true } }

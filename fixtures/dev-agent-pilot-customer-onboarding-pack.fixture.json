@@ -1,0 +1,1 @@
+{ "_description": "Pilot Customer Onboarding Pack fixture v74.0.0", "input": { "productIdea": "AI議事録自動化ツール" }, "expectedOutput": { "version": "74.0.0", "dryRun": true, "humanApprovalRequired": true, "guardianClassRequired": true, "realOnboardingExecuted": false }, "_notes": { "noRealCustomerDataImport": true, "guardianClassPrerequisite": true } }

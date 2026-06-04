@@ -1,0 +1,1 @@
+{ "_description": "Sales Message / Outreach Pack fixture v73.0.0", "input": { "productIdea": "AI議事録自動化ツール" }, "expectedOutput": { "version": "73.0.0", "dryRun": true, "humanApprovalRequired": true, "realOutreachExecuted": false, "allMessagesAreDryRunOnly": true }, "_notes": { "noRealEmailSend": true, "noRealSNSPost": true, "humanFinalYes": true } }

@@ -1,0 +1,23 @@
+{
+  "tool": "dev-agent-quality-control-complete-gate-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "gateDecisions": {
+    "QUALITY_READY":              "Default healthy route — proceed automatically",
+    "USE_DEFAULT_ROUTE":          "Operational — proceed with default provider",
+    "USE_FALLBACK_ROUTE":         "Primary route degraded — use fallback",
+    "ESCALATION_NEEDS_APPROVAL":  "Tier escalation needs human YES",
+    "BLOCKED_REDACTION_FAILED":   "Sensitive data detected — blocked",
+    "BLOCKED_PROVIDER_UNHEALTHY": "Provider unavailable or on HOLD",
+    "HUMAN_BURDEN_TOO_HIGH":      "Too many asks — auto-compress or reset",
+    "HUMAN_GATE_REQUIRED":        "Danger gate active — one YES/NO needed"
+  },
+  "examples": [
+    { "provider": "claude_code", "taskType": "implementation", "expected": "QUALITY_READY" },
+    { "provider": "gpt",         "taskType": "pm_decision",     "expected": "USE_FALLBACK_ROUTE" },
+    { "provider": "deepseek",    "taskType": "implementation",   "expected": "BLOCKED_PROVIDER_UNHEALTHY" },
+    { "dangerGateActive": true,  "expected": "HUMAN_GATE_REQUIRED" }
+  ]
+}

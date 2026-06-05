@@ -1,0 +1,25 @@
+{
+  "tool": "dev-agent-redaction-test-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "examples": [
+    {
+      "description": "API key in content — fails",
+      "targetProvider": "deepseek",
+      "content": "api_key=sk-abc123",
+      "sanitized": false,
+      "expected": { "redactionPassed": false, "finalDecisionAllowed": false }
+    },
+    {
+      "description": "Clean architecture question — passes",
+      "targetProvider": "deepseek",
+      "contentTypes": ["generic_architecture_question"],
+      "sanitized": true,
+      "expected": { "redactionPassed": true, "finalDecisionAllowed": false }
+    }
+  ],
+  "externalRiskProviders": ["deepseek", "kimi"],
+  "finalDecisionAllowed": false
+}

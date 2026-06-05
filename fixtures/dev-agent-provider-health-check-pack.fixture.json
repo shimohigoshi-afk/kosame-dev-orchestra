@@ -1,0 +1,16 @@
+{
+  "tool": "dev-agent-provider-health-check-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "providers": {
+    "claude_code": { "status": "HEALTHY", "role": "implementation" },
+    "gemini":      { "status": "HEALTHY", "role": "long_preprocessing" },
+    "gpt":         { "status": "DEGRADED", "role": "execution_assistant" },
+    "grok":        { "status": "HEALTHY", "role": "breakthrough_alternative" },
+    "deepseek":    { "status": "HOLD",    "role": "last_resort_advisory" },
+    "kimi":        { "status": "HOLD",    "role": "last_resort_advisory" },
+    "human":       { "status": "HUMAN_GATE_ONLY", "role": "approval_owner" }
+  }
+}

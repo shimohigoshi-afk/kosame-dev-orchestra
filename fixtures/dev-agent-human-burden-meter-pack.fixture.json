@@ -1,0 +1,25 @@
+{
+  "tool": "dev-agent-human-burden-meter-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "burdenBands": ["LOW", "WATCH", "HIGH", "TOO_MUCH"],
+  "examples": [
+    {
+      "description": "No burden — auto-proceed",
+      "humanApprovalsRequested": 0, "chatConsultations": 0, "dangerGateActive": false,
+      "expected": { "burdenBand": "LOW", "shouldAskUser": false, "shouldProceedAutomatically": true }
+    },
+    {
+      "description": "High burden — reduce",
+      "preferenceQuestions": 4, "repeatedConfirmations": 3, "chatConsultations": 3,
+      "expected": { "burdenBand": "HIGH" }
+    },
+    {
+      "description": "Danger gate active — ask YES/NO",
+      "dangerGateActive": true,
+      "expected": { "shouldAskUser": true, "humanApprovalRequired": true }
+    }
+  ]
+}

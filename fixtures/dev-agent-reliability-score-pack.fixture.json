@@ -1,0 +1,17 @@
+{
+  "tool": "dev-agent-reliability-score-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "scoreBands": ["STRONG", "OK", "LIMITED", "AVOID", "HUMAN_GATE"],
+  "examples": [
+    { "provider": "claude_code", "taskType": "implementation",    "expectedBand": "STRONG" },
+    { "provider": "gemini",      "taskType": "long_preprocessing", "expectedBand": "STRONG" },
+    { "provider": "gpt",         "taskType": "pm_decision",        "expectedBand": "AVOID" },
+    { "provider": "gpt",         "taskType": "log_summarization",  "expectedBand": "STRONG" },
+    { "provider": "grok",        "taskType": "breakthrough",       "expectedBand": "STRONG" },
+    { "provider": "deepseek",    "taskType": "implementation",     "expectedBand": "AVOID" },
+    { "provider": "human",       "taskType": "irreversible_approval", "expectedBand": "HUMAN_GATE" }
+  ]
+}

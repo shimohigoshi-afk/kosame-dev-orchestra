@@ -1,0 +1,14 @@
+{
+  "tool": "dev-agent-model-escalation-ladder-pack",
+  "version": "110.3.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "tiers": ["cheap_default", "standard", "higher_tier", "premium_last_resort"],
+  "examples": [
+    { "issueType": "none",               "escalationAllowed": false, "humanApprovalRequired": false },
+    { "issueType": "context_too_large",  "escalationAllowed": false, "cheaperAlternatives": ["use_failure_snapshot", "split_input", "gemini_preprocessing"] },
+    { "issueType": "provider_timeout",   "escalationAllowed": false, "cheaperAlternatives": ["try_fallback_provider_first"] },
+    { "issueType": "repeated_code_repair", "repeatFailCount": 2, "escalationAllowed": true, "humanApprovalRequired": true }
+  ]
+}

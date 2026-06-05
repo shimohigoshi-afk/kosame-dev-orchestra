@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.4.0",
+  "version": "110.5.0",
   "private": true,
   "scripts": {
     "smoke:gemini-return-routing-pack": "node smoke/dev-agent-gemini-return-routing-pack-smoke.js",
@@ -634,6 +634,9 @@
     "smoke:anesty-board-productization-plan": "node smoke/dev-agent-anesty-board-productization-plan-pack-smoke.js",
     "pm-agent:anesty-board-productization-plan": "node tools/dev-agent-anesty-board-productization-plan-pack.js",
     "smoke:first-real-product-launch-gate": "node smoke/dev-agent-first-real-product-launch-gate-pack-smoke.js",
-    "pm-agent:first-real-product-launch-gate": "node tools/dev-agent-first-real-product-launch-gate-pack.js"
+    "pm-agent:first-real-product-launch-gate": "node tools/dev-agent-first-real-product-launch-gate-pack.js",
+    "opboard": "node tools/kosame-operation-board-cli.js",
+    "kosame:board": "node tools/kosame-operation-board-cli.js",
+    "smoke:v110-5-opboard-cli": "node smoke/v110-5-operation-board-cli-smoke.js"
   }
 }

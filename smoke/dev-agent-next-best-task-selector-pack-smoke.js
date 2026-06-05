@@ -12,7 +12,7 @@ function pass(message) { console.log(`  PASS: ${message}`); }
 
 console.log('=== dev-agent-next-best-task-selector-pack smoke ===');
 
-assert.ok(pkg.version >= '86.0.0'); pass('package version 86.0.0 or later');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 86); pass('package version 86.0.0 or later');
 assert.ok(fs.existsSync(__filename)); pass('smoke script exists');
 assert.ok(pkg.scripts['pm-agent:next-best-task-selector']); pass('pm-agent:next-best-task-selector exists');
 assert.ok(fs.existsSync(path.join(__dirname, '../fixtures/dev-agent-next-best-task-selector-pack.fixture.json'))); pass('fixture exists');

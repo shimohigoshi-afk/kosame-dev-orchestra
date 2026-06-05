@@ -12,7 +12,7 @@ function pass(message) { console.log(`  PASS: ${message}`); }
 
 console.log('=== dev-agent-gpt-task-prompt-builder-pack smoke ===');
 
-assert.ok(pkg.version >= '87.0.0'); pass('package version 87.0.0 or later');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 87); pass('package version 87.0.0 or later');
 assert.ok(fs.existsSync(__filename)); pass('smoke script exists');
 assert.ok(pkg.scripts['pm-agent:gpt-task-prompt-builder']); pass('pm-agent:gpt-task-prompt-builder exists');
 assert.ok(fs.existsSync(path.join(__dirname, '../fixtures/dev-agent-gpt-task-prompt-builder-pack.fixture.json'))); pass('fixture exists');

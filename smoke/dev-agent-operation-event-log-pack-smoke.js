@@ -14,7 +14,7 @@ function pass(message) {
 
 console.log('=== dev-agent-operation-event-log-pack smoke ===');
 
-assert.ok(pkg.version >= '81.0.0');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 81);
 pass('package version 81.0.0 or later');
 
 assert.ok(fs.existsSync(__filename));

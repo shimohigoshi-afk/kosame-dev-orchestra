@@ -1,0 +1,20 @@
+{
+  "_description": "Pilot Scope Lock Pack fixture v96.0.0",
+  "scenarios": {
+    "guardianNotReady": { "input": { "guardianReady": false }, "expectedDecision": "HOLD" },
+    "blockers": { "input": { "blockers": ["missing approval"] }, "expectedDecision": "BLOCKED" },
+    "default": { "input": {}, "expectedDecision": "ANESTY_BOARD_PILOT" }
+  },
+  "expectedOutput": {
+    "version": "96.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false,
+    "pilotProduct": "anesty_board"
+  },
+  "_notes": {
+    "junyaFinalYes": true,
+    "noRealCustomerData": true,
+    "salesDxHold": true
+  }
+}

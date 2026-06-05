@@ -1,0 +1,22 @@
+{
+  "_description": "Revision Sprint Planner Pack fixture v104.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedSprints": 1 },
+    "criticalFeedback": {
+      "input": {
+        "feedbackItems": [{ "product": "anesty_board", "category": "security_concern", "severity": "critical", "description": "critical bug", "revisionSuggestion": "patch immediately" }]
+      },
+      "expectedOwner": "Human"
+    }
+  },
+  "expectedOutput": {
+    "version": "104.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": false,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "criticalSprintsRequireHumanYes": true,
+    "rollbackNotesRequired": true
+  }
+}

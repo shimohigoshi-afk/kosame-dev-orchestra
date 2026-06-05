@@ -1,0 +1,21 @@
+{
+  "_description": "v1.0 Readiness Audit Pack fixture v106.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedAuditDecision": "ALL_COMPONENTS_CONFIRMED" },
+    "missingComponent": {
+      "input": { "componentStatus": { "guardian_class": "NOT_CONFIRMED" } },
+      "expectedAuditDecision": "PARTIAL_CONFIRMED"
+    },
+    "blockers": { "input": { "blockers": ["audit incomplete"] }, "expectedAuditDecision": "BLOCKED" }
+  },
+  "expectedOutput": {
+    "version": "106.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "11CoreComponents": true,
+    "allSinceVersionsRequired": true
+  }
+}

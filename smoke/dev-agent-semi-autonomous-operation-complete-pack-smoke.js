@@ -12,7 +12,7 @@ function pass(message) { console.log(`  PASS: ${message}`); }
 
 console.log('=== dev-agent-semi-autonomous-operation-complete-pack smoke ===');
 
-assert.ok(pkg.version >= '90.0.0'); pass('package version 90.0.0 or later');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 90); pass('package version 90.0.0 or later');
 assert.ok(fs.existsSync(__filename)); pass('smoke script exists');
 assert.ok(pkg.scripts['pm-agent:semi-autonomous-operation-complete']); pass('pm-agent:semi-autonomous-operation-complete exists');
 assert.ok(fs.existsSync(path.join(__dirname, '../fixtures/dev-agent-semi-autonomous-operation-complete-pack.fixture.json'))); pass('fixture exists');

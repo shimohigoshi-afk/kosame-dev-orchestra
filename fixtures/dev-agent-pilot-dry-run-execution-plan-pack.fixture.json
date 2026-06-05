@@ -1,0 +1,20 @@
+{
+  "_description": "Pilot Dry Run Execution Plan Pack fixture v98.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedDecision": "DRY_RUN_READY" },
+    "guardianNotReady": { "input": { "guardianReady": false }, "expectedDecision": "HOLD" },
+    "blockers": { "input": { "blockers": ["missing approval"] }, "expectedDecision": "BLOCKED" }
+  },
+  "expectedOutput": {
+    "version": "98.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "noRealSend": true,
+    "noRealDeploy": true,
+    "noCustomerData": true,
+    "anestyBoardAndEmailBotSafe": true
+  }
+}

@@ -14,7 +14,7 @@ function pass(message) {
 
 console.log('=== dev-agent-decision-memory-pack smoke ===');
 
-assert.ok(pkg.version >= '82.0.0');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 82);
 pass('package version 82.0.0 or later');
 
 assert.ok(fs.existsSync(__filename));

@@ -1,0 +1,21 @@
+{
+  "_description": "KOSAME Dev Orchestra v1.0 Complete Gate Pack fixture v110.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedDecision": "V1_READY_WITH_REVIEW" },
+    "guardianNotReady": { "input": { "guardianReady": false }, "expectedDecision": "BLOCKED" },
+    "blockers": { "input": { "blockers": ["critical issue"] }, "expectedDecision": "BLOCKED" }
+  },
+  "expectedOutput": {
+    "version": "110.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false,
+    "checkpointVersion": "v110.0.0"
+  },
+  "_notes": {
+    "integratesV96toV109": true,
+    "junyaFinalYes": true,
+    "noDeployNoRealActions": true,
+    "backupRequired": true
+  }
+}

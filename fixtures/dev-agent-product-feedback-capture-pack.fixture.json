@@ -1,0 +1,25 @@
+{
+  "_description": "Product Feedback Capture Pack fixture v103.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedFeedbackItems": 1 },
+    "multiFeedback": {
+      "input": {
+        "feedbackItems": [
+          { "product": "anesty_board", "category": "usability", "severity": "medium", "description": "test", "revisionSuggestion": "fix it" },
+          { "product": "email_reply_bot", "category": "reliability", "severity": "high", "description": "test2", "revisionSuggestion": "fix it2" }
+        ]
+      },
+      "expectedFeedbackItems": 2
+    }
+  },
+  "expectedOutput": {
+    "version": "103.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "noRealCustomerData": true,
+    "allItemsSanitized": true
+  }
+}

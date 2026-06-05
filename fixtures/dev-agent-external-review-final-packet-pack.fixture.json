@@ -1,0 +1,17 @@
+{
+  "_description": "External Review Final Packet Pack fixture v107.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedReviewAreas": 8 }
+  },
+  "expectedOutput": {
+    "version": "107.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "noSecretsInPacket": true,
+    "noCustomerData": true,
+    "redactedItemsListed": true
+  }
+}

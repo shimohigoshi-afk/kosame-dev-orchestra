@@ -1,0 +1,19 @@
+{
+  "_description": "Pilot Acceptance Review Pack fixture v99.0.0",
+  "scenarios": {
+    "default": { "input": {}, "expectedDecision": "PILOT_READY" },
+    "guardianNotReady": { "input": { "guardianReady": false }, "expectedDecision": "BLOCKED" },
+    "dryRunFailed": { "input": { "dryRunPassed": false }, "expectedDecision": "REVISE" },
+    "dataBoundaryNotReady": { "input": { "dataBoundaryReady": false }, "expectedDecision": "HOLD" }
+  },
+  "expectedOutput": {
+    "version": "99.0.0",
+    "dryRun": true,
+    "humanApprovalRequired": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "classifiesPilotReady": true,
+    "guardianAndDataBoundaryRequired": true
+  }
+}

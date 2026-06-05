@@ -12,7 +12,7 @@ function pass(message) { console.log(`  PASS: ${message}`); }
 
 console.log('=== dev-agent-release-candidate-builder-pack smoke ===');
 
-assert.ok(pkg.version >= '89.0.0'); pass('package version 89.0.0 or later');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 89); pass('package version 89.0.0 or later');
 assert.ok(fs.existsSync(__filename)); pass('smoke script exists');
 assert.ok(pkg.scripts['pm-agent:release-candidate-builder']); pass('pm-agent:release-candidate-builder exists');
 assert.ok(fs.existsSync(path.join(__dirname, '../fixtures/dev-agent-release-candidate-builder-pack.fixture.json'))); pass('fixture exists');

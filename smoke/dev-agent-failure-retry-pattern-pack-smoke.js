@@ -14,7 +14,7 @@ function pass(message) {
 
 console.log('=== dev-agent-failure-retry-pattern-pack smoke ===');
 
-assert.ok(pkg.version >= '83.0.0');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 83);
 pass('package version 83.0.0 or later');
 
 assert.ok(fs.existsSync(__filename));

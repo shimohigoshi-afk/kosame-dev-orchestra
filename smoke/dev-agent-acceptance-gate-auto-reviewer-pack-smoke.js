@@ -12,7 +12,7 @@ function pass(message) { console.log(`  PASS: ${message}`); }
 
 console.log('=== dev-agent-acceptance-gate-auto-reviewer-pack smoke ===');
 
-assert.ok(pkg.version >= '88.0.0'); pass('package version 88.0.0 or later');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 88); pass('package version 88.0.0 or later');
 assert.ok(fs.existsSync(__filename)); pass('smoke script exists');
 assert.ok(pkg.scripts['pm-agent:acceptance-gate-auto-reviewer']); pass('pm-agent:acceptance-gate-auto-reviewer exists');
 assert.ok(fs.existsSync(path.join(__dirname, '../fixtures/dev-agent-acceptance-gate-auto-reviewer-pack.fixture.json'))); pass('fixture exists');

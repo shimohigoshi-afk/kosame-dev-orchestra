@@ -14,7 +14,7 @@ function pass(message) {
 
 console.log('=== dev-agent-handoff-auto-summary-pack smoke ===');
 
-assert.ok(pkg.version >= '84.0.0');
+assert.ok(parseInt(pkg.version.split('.')[0], 10) >= 84);
 pass('package version 84.0.0 or later');
 
 assert.ok(fs.existsSync(__filename));

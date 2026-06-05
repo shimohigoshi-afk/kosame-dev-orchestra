@@ -1,0 +1,26 @@
+{
+  "_description": "Human Approval Compression Pack fixture v102.0.0",
+  "scenarios": {
+    "mixedActions": {
+      "input": { "pendingActions": ["run smoke test", "deploy to cloud run", "edit docs"] },
+      "expectedHumanGates": 1
+    },
+    "safeOnly": {
+      "input": { "pendingActions": ["run smoke test", "edit docs"] },
+      "expectedHumanGates": 0
+    },
+    "allDangerous": {
+      "input": { "pendingActions": ["deploy", "git push", "billing"] },
+      "expectedHumanGates": 3
+    }
+  },
+  "expectedOutput": {
+    "version": "102.0.0",
+    "dryRun": true,
+    "realProductActionsExecuted": false
+  },
+  "_notes": {
+    "principle": "Guard only irreversible danger zones; move fast everywhere else.",
+    "compressionSeparates": true
+  }
+}

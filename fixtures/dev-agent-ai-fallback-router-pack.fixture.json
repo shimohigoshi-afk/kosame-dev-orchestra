@@ -1,0 +1,30 @@
+{
+  "tool": "dev-agent-ai-fallback-router-pack",
+  "version": "110.1.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "primaryRoute": {
+    "design": "gpt-kosame",
+    "bulkWork": "gemini",
+    "refinement": "claude",
+    "review": "gpt-kosame",
+    "finalApproval": "human"
+  },
+  "fallbackRoutes": ["grok", "gpt"],
+  "providerFailureReasons": {
+    "gemini": "timeout — no response within 30s"
+  },
+  "allowedFallbackProviders": ["gpt", "gpt-kosame", "gemini", "claude", "grok"],
+  "blockedFallbackProviders": ["deepseek", "kimi"],
+  "finalDecisionPolicy": {
+    "deepseekAllowedFinalDecision": false,
+    "kimiAllowedFinalDecision": false,
+    "humanMustApproveIrreversible": true,
+    "blockedOperations": [
+      "secret", "customer_data", "deploy", "push", "tag",
+      "billing", "production", "commit", "insurance_data", "health_data"
+    ]
+  }
+}

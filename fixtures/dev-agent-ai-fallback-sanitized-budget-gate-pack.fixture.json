@@ -1,0 +1,24 @@
+{
+  "tool": "dev-agent-ai-fallback-sanitized-budget-gate-pack",
+  "version": "110.1.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "status": "NEEDS_HUMAN_APPROVAL",
+  "inputSummary": {
+    "failedProvider": "gemini",
+    "requestedFallback": "grok",
+    "targetProvider": null,
+    "operation": "bulk-code-review",
+    "requestedModel": "gemini-flash",
+    "sanitized": true
+  },
+  "gateStatuses": [
+    "READY",
+    "NEEDS_HUMAN_APPROVAL",
+    "BLOCKED_UNSANITIZED_HANDOFF",
+    "BLOCKED_BUDGET",
+    "BLOCKED_DANGEROUS_ACTION"
+  ]
+}

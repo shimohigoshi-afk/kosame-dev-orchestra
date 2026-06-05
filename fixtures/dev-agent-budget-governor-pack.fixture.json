@@ -1,0 +1,26 @@
+{
+  "tool": "dev-agent-budget-governor-pack",
+  "version": "110.1.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "budgetStatus": "OK",
+  "spentJpy": 0,
+  "hardCapJpy": 2000,
+  "usedPercent": 0,
+  "recommendedModelTier": "cheap",
+  "escalationAllowed": true,
+  "humanApprovalRequired": false,
+  "approvalMessage": "Low-cost models recommended and allowed.",
+  "blockedModels": [],
+  "fallbackToCheapModels": false,
+  "requestedModel": "gemini-flash",
+  "operationLabel": "bulk-code-review",
+  "thresholds": {
+    "projectBudgetTargetJpy": 1500,
+    "projectBudgetHardCapJpy": 2000,
+    "warningAtPercent": 80,
+    "lockExpensiveModelsAtPercent": 90,
+    "requireHumanApprovalAtPercent": 100
+  }
+}

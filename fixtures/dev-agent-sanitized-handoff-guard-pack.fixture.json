@@ -1,0 +1,35 @@
+{
+  "tool": "dev-agent-sanitized-handoff-guard-pack",
+  "version": "110.1.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "targetProvider": "deepseek",
+  "sanitized": false,
+  "blocked": true,
+  "blockedReasons": [
+    "sanitized:false — handoff to external/China-associated provider is blocked"
+  ],
+  "redactedFields": [
+    "apiKeys", "secrets", "envContent", "customerData", "insuranceData",
+    "healthData", "personalNames", "emailAddresses", "phoneNumbers",
+    "addresses", "contractContent", "billingDetails", "revenueDetails",
+    "companyStrategy", "rawLogs", "githubTokens", "deployCredentials"
+  ],
+  "allowedContentTypes": [
+    "abstractedErrorSummary",
+    "generalizedArchitectureQuestion",
+    "anonymizedCodeSnippet",
+    "nonSensitivePseudoCode",
+    "genericRefactorQuestion",
+    "publicLibraryBehaviorQuestion"
+  ],
+  "deniedContentTypes": [
+    "apiKey", "secret", "envFile", "customerData", "insuranceData",
+    "healthData", "personalName", "emailAddress", "phoneNumber",
+    "address", "contractContent", "billingDetail", "exactRevenueFigure",
+    "unpublishedStrategy", "rawLog", "deployCredential"
+  ],
+  "finalDecisionAllowed": false,
+  "humanApprovalRequired": true
+}

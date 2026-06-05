@@ -1,0 +1,43 @@
+{
+  "tool": "dev-agent-cli-operation-board",
+  "version": "110.4.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": false,
+  "target": "KOSAME Dev Orchestra v110.4.0 — CLI Operation Board",
+  "stage": "implementing",
+  "agents": {
+    "claude_code": "healthy",
+    "gemini":      "healthy",
+    "gpt":         "execution_assistant_only",
+    "grok":        "breakthrough_standby",
+    "deepseek":    "HOLD sanitized_only",
+    "kimi":        "HOLD sanitized_only",
+    "human":       "approval_owner"
+  },
+  "gate": "none",
+  "budget": {
+    "used": 0.12,
+    "limit": 10,
+    "display": "$0.12 / $10"
+  },
+  "next": "run smoke tests → npm run verify",
+  "burden": "LOW",
+  "_displayTarget": [
+    "===== KOSAME Operation Board =====",
+    "TARGET: [current product / task]",
+    "STAGE : [implementing / verify / gate_wait / done]",
+    "AGENTS :",
+    "  Claude Code : [status]",
+    "  Gemini      : [status]",
+    "  GPT         : [execution_assistant_only]",
+    "  Grok        : [breakthrough_standby]",
+    "  DeepSeek    : [HOLD sanitized_only]",
+    "GATE  : [none / commit_wait / push_wait / blocked]",
+    "BUDGET: [$used / $limit]",
+    "NEXT  : [next action]",
+    "BURDEN: [LOW / WATCH / HIGH / TOO_MUCH]",
+    "=================================="
+  ]
+}

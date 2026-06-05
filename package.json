@@ -1,8 +1,10 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.5.0",
+  "version": "110.6.0",
   "private": true,
   "scripts": {
+    "promote": "node tools/kosame-promotion-runner.js",
+    "smoke:promotion-runner": "node smoke/v110-6-promotion-runner-smoke.js",
     "smoke:gemini-return-routing-pack": "node smoke/dev-agent-gemini-return-routing-pack-smoke.js",
     "pm-agent:gemini-return-routing": "node tools/gemini-return-routing-pack.js",
     "smoke:permission-policy": "node smoke/dev-agent-permission-policy-smoke.js",

@@ -1,0 +1,39 @@
+{
+  "tool": "dev-agent-failure-snapshot-pack",
+  "snapshotVersion": "110.2.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "currentRepo": "kosame-dev-orchestra",
+  "currentVersion": "110.2.0",
+  "currentTask": "implement_v110.2.0_failure_snapshot_pack",
+  "taskObjective": "Create compact handoff snapshot for next agent when provider fails",
+  "lastSuccessfulStep": "tools/dev-agent-failure-snapshot-pack.js created and node --check passed",
+  "failedStep": "gemini_bulk_preprocessing",
+  "failureType": "provider_timeout",
+  "failureSummary": "Gemini timed out after 30s during bulk code preprocessing",
+  "touchedFiles": [
+    "tools/dev-agent-failure-snapshot-pack.js",
+    "smoke/dev-agent-failure-snapshot-pack-smoke.js",
+    "fixtures/dev-agent-failure-snapshot-pack.fixture.json"
+  ],
+  "changedFiles": [
+    "tools/dev-agent-failure-snapshot-pack.js"
+  ],
+  "verificationStatus": "partial — smoke not yet run",
+  "commandsRun": [
+    "node --check tools/dev-agent-failure-snapshot-pack.js"
+  ],
+  "nextRecommendedAction": "Retry gemini with narrower scope or switch to Grok for preprocessing",
+  "blockedActions": [
+    "git_commit", "git_push", "git_tag", "deploy"
+  ],
+  "humanApprovalRequired": true,
+  "dangerousActionsDenied": [
+    "secret", "env", "api_key", "customer_data", "insurance_data", "health_data",
+    "deploy", "git_push", "git_tag", "git_commit", "destructive", "live_external_send"
+  ],
+  "handoffTargetSuggestion": "retry_same_provider_with_narrow_scope_or_switch_to_fallback",
+  "shouldReadFullLog": false,
+  "maxContextPolicy": "use_failure_snapshot_only"
+}

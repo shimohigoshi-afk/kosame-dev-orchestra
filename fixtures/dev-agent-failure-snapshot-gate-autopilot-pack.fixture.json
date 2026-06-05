@@ -1,0 +1,42 @@
+{
+  "tool": "dev-agent-failure-snapshot-gate-autopilot-pack",
+  "version": "110.2.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "gateDecisions": {
+    "AUTO_PROCEED": "Routine local action — no human needed",
+    "NEEDS_HUMAN_APPROVAL": "Approval gate detected — wait for Junya",
+    "SNAPSHOT_REQUIRED": "Provider failed — compact snapshot generated for next agent",
+    "BLOCKED_DANGEROUS_ACTION": "Sensitive data or destructive operation — blocked",
+    "BLOCKED_CONTEXT_OVERLOAD": "Context too large — use snapshot only, shouldReadFullLog:false",
+    "BLOCKED_UNSANITIZED_EXTERNAL_HANDOFF": "DeepSeek/Kimi handoff without sanitized content — blocked"
+  },
+  "examples": [
+    {
+      "action": "create_local_tool_files",
+      "expected": "AUTO_PROCEED"
+    },
+    {
+      "action": "git_commit",
+      "expected": "NEEDS_HUMAN_APPROVAL"
+    },
+    {
+      "failureType": "provider_timeout",
+      "expected": "SNAPSHOT_REQUIRED"
+    },
+    {
+      "failureType": "context_too_large",
+      "expected": "BLOCKED_CONTEXT_OVERLOAD"
+    },
+    {
+      "action": "access_customer_data",
+      "expected": "BLOCKED_DANGEROUS_ACTION"
+    },
+    {
+      "targetProvider": "deepseek",
+      "sanitized": false,
+      "expected": "BLOCKED_UNSANITIZED_EXTERNAL_HANDOFF"
+    }
+  ]
+}

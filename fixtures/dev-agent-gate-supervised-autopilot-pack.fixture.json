@@ -1,0 +1,66 @@
+{
+  "tool": "dev-agent-gate-supervised-autopilot-pack",
+  "version": "110.2.0",
+  "autopilotMode": "GATE_SUPERVISED",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "normalActions": [
+    "create_local_tool_files",
+    "create_smoke_tests",
+    "create_fixtures",
+    "create_docs",
+    "update_package_scripts",
+    "update_verify_script",
+    "run_node_check",
+    "run_smoke_tests",
+    "run_npm_run_verify",
+    "inspect_git_status",
+    "prepare_commit_candidate_report",
+    "generate_next_command_suggestions"
+  ],
+  "approvalGateActions": [
+    "git_add", "git_commit", "git_tag", "git_push", "deploy",
+    "docker_build", "gcloud_commands", "npm_publish",
+    "read_secrets", "edit_env",
+    "access_customer_data", "access_insurance_data", "access_health_data",
+    "send_email", "send_discord", "send_sns", "live_external_message",
+    "billing_action", "contract_action", "payment_action",
+    "expensive_model_escalation", "destructive_operations"
+  ],
+  "forbiddenAutonomousActions": [
+    "git_commit_without_approval", "git_tag_without_approval",
+    "git_push_without_approval", "deploy_without_approval",
+    "read_env_or_secrets", "touch_customer_data",
+    "touch_insurance_data", "touch_health_data",
+    "live_external_send", "billing_payment_contract_without_approval",
+    "destructive_delete_without_approval"
+  ],
+  "humanApprovalRequired": true,
+  "gptConstraintPolicy": {
+    "allowedRoles": [
+      "summarize_logs", "format_commands", "clean_claude_prompts",
+      "explain_errors", "classify_small_text", "prepare_handoff_snippets"
+    ],
+    "forbiddenRoles": [
+      "decide_task_order", "change_agreed_sequence",
+      "move_from_v110_2_to_other_task", "suggest_anesty_board_work",
+      "say_too_early_or_lets_reconsider_without_dangerous_gate",
+      "act_as_pm_or_court_or_judge"
+    ],
+    "gptRole": "execution_assistant_only"
+  },
+  "claudeLoadPolicy": {
+    "receiveFullLogs": false,
+    "receiveFailureSnapshot": true,
+    "receiveSummarizedContext": true,
+    "recommendedPreprocessor": "gemini",
+    "alternativeProvider": "grok",
+    "lastResortAdvisory": "deepseek_kimi_sanitized_only"
+  },
+  "geminiPreprocessPolicy": {
+    "useForLongInputs": true,
+    "preprocessBeforeClaudeReceives": true,
+    "purpose": "reduce_claude_context_load"
+  }
+}

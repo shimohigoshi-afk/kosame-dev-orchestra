@@ -102,7 +102,21 @@ checkKeyword("live-gate-doc", FILES.liveGateDoc, "Secret Manager");
 checkKeyword("live-gate-doc", FILES.liveGateDoc, ".env");
 checkKeyword("live-gate-doc", FILES.liveGateDoc, "APIキー値は絶対に出力しない");
 
+
+const __savedLiveEnv = {
+  KOSAME_AGENT_LIVE_CALLS_ENABLED: process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED,
+  KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL: process.env.KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+};
+
+delete process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED;
+delete process.env.KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL;
+delete process.env.OPENAI_API_KEY;
+delete process.env.GEMINI_API_KEY;
+
 console.log("--- runtime: liveCallsActuallyEnabled === false ---");
+
 try {
   const { getConfig } = require(path.join(root, "providers/provider-config"));
   const config = getConfig();

@@ -1,0 +1,12 @@
+{
+  "examples": [
+    {
+      "input": "ANESTY Board v87.0.15を進めて",
+      "expectedRepo": "anesty-board"
+    },
+    {
+      "input": "Claude unavailable。GeminiとGrokで進めて",
+      "expectedNoClaude": true
+    }
+  ]
+}

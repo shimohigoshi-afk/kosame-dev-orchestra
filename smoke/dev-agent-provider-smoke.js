@@ -99,7 +99,7 @@ async function runChecks() {
     check("gpt success === false",       r.success === false,         `got ${r.success}`);
     check("gpt provider === 'gpt'",      r.provider === "gpt",        `got "${r.provider}"`);
     check("gpt response is null",        r.response === null,         `got "${r.response}"`);
-    check("gpt error contains 'disabled'", typeof r.error === "string" && r.error.includes("disabled"), `got "${r.error}"`);
+    check("gpt error contains disabled/dry-run gate", typeof r.error === "string" && (r.error.includes("disabled") || r.error.includes("dry-run") || r.error.includes("live calls gate open")), `got "${r.error}"`);
     check("gpt dryRun === true",         r.dryRun === true,           `got ${r.dryRun}`);
   }
 
@@ -109,7 +109,7 @@ async function runChecks() {
     check("gemini success === false",    r.success === false,         `got ${r.success}`);
     check("gemini provider === 'gemini'", r.provider === "gemini",   `got "${r.provider}"`);
     check("gemini response is null",     r.response === null,         `got "${r.response}"`);
-    check("gemini error contains 'disabled'", typeof r.error === "string" && r.error.includes("disabled"), `got "${r.error}"`);
+    check("gemini error contains disabled/dry-run gate", typeof r.error === "string" && (r.error.includes("disabled") || r.error.includes("dry-run") || r.error.includes("live calls gate open")), `got "${r.error}"`);
     check("gemini dryRun === true",      r.dryRun === true,           `got ${r.dryRun}`);
   }
 

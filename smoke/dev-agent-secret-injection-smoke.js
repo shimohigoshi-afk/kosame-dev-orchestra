@@ -109,7 +109,21 @@ checkKeyword("preflight", FILES.preflight, "readyForOneShot");
 checkKeyword("preflight", FILES.preflight, "providerKeyPresent");
 checkKeyword("preflight", FILES.preflight, "did not call any external API");
 
+
+const __savedSecretEnv = {
+  KOSAME_AGENT_LIVE_CALLS_ENABLED: process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED,
+  KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL: process.env.KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+};
+
+delete process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED;
+delete process.env.KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL;
+delete process.env.OPENAI_API_KEY;
+delete process.env.GEMINI_API_KEY;
+
 console.log("--- runtime: preflight returns expected shape ---");
+
 (async () => {
   try {
     const { preflight } = require(path.join(root, "tools/agent-one-shot-preflight"));

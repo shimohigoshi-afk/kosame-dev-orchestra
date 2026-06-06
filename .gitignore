@@ -1,0 +1,6 @@
+# Runtime outputs (auto-generated, never commit)
+dispatch-result-*.json
+
+# Executor dummy artifacts
+*executor-dummy*
+*.bak

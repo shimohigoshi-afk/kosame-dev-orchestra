@@ -12,7 +12,7 @@ function pass(message) {
 
 console.log('=== v110.14 command inbox smoke ===');
 
-assert.ok(pkg.version === '110.14.0' || pkg.version === '110.15.0' || pkg.version === '110.16.0' || pkg.version === '110.17.0');
+assert.ok(pkg.version === '110.14.0' || pkg.version === '110.15.0' || pkg.version === '110.16.0' || pkg.version === '110.17.0' || pkg.version === '110.18.0');
 pass('package version is valid');
 
 assert.ok(pkg.scripts.inbox);
@@ -21,7 +21,7 @@ pass('script inbox exists');
 assert.ok(pkg.scripts['smoke:v110-14-command-inbox']);
 pass('script smoke:v110-14-command-inbox exists');
 
-assert.ok(inbox.TOOL_META.version === '110.14.0' || inbox.TOOL_META.version === '110.15.0' || inbox.TOOL_META.version === '110.16.0' || inbox.TOOL_META.version === '110.17.0');
+assert.ok(inbox.TOOL_META.version === '110.14.0' || inbox.TOOL_META.version === '110.15.0' || inbox.TOOL_META.version === '110.16.0' || inbox.TOOL_META.version === '110.17.0' || inbox.TOOL_META.version === '110.18.0');
 pass('tool meta version is valid');
 
 const anesty = inbox.buildInboxPlan({

@@ -152,6 +152,8 @@ async function arbitrate(task, options = {}) {
 
   const config = getConfig();
   const shouldLive = options.live === true && config.openaiLiveEnabled;
+  const lower = task.toLowerCase();
+  const isClaudeExcluded = CLAUDE_EXCLUDE_SIGNALS.some(k => lower.includes(k));
 
   if (!shouldLive) {
     const heuristic = heuristicRoute(task);
@@ -163,6 +165,14 @@ async function arbitrate(task, options = {}) {
   }
 
   const result = await liveArbit(task, config);
+
+  // Programmatic enforcement of Claude exclusion
+  if (isClaudeExcluded && result.claudeCode.length > 0) {
+    result.reasoning = `[ENFORCED_NO_CLAUDE] ${result.reasoning}`;
+    result.gemini = [...result.gemini, ...result.claudeCode];
+    result.claudeCode = [];
+  }
+
   return { ...result, dryRun: false };
 }
 

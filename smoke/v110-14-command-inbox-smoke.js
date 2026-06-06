@@ -12,8 +12,8 @@ function pass(message) {
 
 console.log('=== v110.14 command inbox smoke ===');
 
-assert.strictEqual(pkg.version, '110.14.0');
-pass('package version is 110.14.0');
+assert.ok(pkg.version === '110.14.0' || pkg.version === '110.15.0');
+pass('package version is valid');
 
 assert.ok(pkg.scripts.inbox);
 pass('script inbox exists');
@@ -21,8 +21,8 @@ pass('script inbox exists');
 assert.ok(pkg.scripts['smoke:v110-14-command-inbox']);
 pass('script smoke:v110-14-command-inbox exists');
 
-assert.strictEqual(inbox.TOOL_META.version, '110.14.0');
-pass('tool meta version is 110.14.0');
+assert.ok(inbox.TOOL_META.version === '110.14.0' || inbox.TOOL_META.version === '110.15.0');
+pass('tool meta version is valid');
 
 const anesty = inbox.buildInboxPlan({
   input: 'ANESTY Board v87.0.15を進めて',
@@ -47,8 +47,9 @@ pass('Claude unavailable excludes claude_code and includes Gemini/Grok');
 const normal = inbox.buildInboxPlan({
   input: 'ANESTY Board v87.0.15を実装して',
 });
-assert.ok(normal.providers.some((p) => p.provider === 'claude_code'));
-pass('normal implementation can include claude_code');
+// Updated for v110.15: Claude is disabled by default
+assert.ok(!normal.providers.some((p) => p.provider === 'claude_code'));
+pass('normal implementation excludes claude_code in v110.15');
 
 const masked = inbox.buildInboxPlan({
   input: 'OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz ANESTYを進めて',

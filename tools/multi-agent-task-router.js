@@ -24,13 +24,13 @@ function enrichContext(subtask, originalInput) {
     originalInput,
     projectContext: {
       productName: 'ANESTY Board',
-      targetVersion: 'v110.13.0',
+      targetVersion: 'v110.16.0',
       environment: 'kosame-dev-orchestra',
       realProductActionsExecuted: false,
       dangerousActionsDenied: true,
     },
     task: subtask,
-    expectedOutput: 'Detailed implementation, diffs, JSON specs, or Claude recovery prompts.',
+    expectedOutput: 'KOSAME Patch Format: [FILE] <path> followed by ```lang ... ``` code block. NO CHITCHAT. Just the patch.',
     forbiddenActions: [
       'credential exposure',
       'unauthorized file deletion',
@@ -62,10 +62,11 @@ function parseArgs(argv) {
 
   const inputInline = get('--input=');
   const taskFile = get('--task-file=');
+  const output = get('--output=');
   const live = args.includes('--live');
   const yes = args.includes('--yes');
 
-  return { inputInline, taskFile, live, yes };
+  return { inputInline, taskFile, output, live, yes };
 }
 
 function resolveTask({ inputInline, taskFile }) {
@@ -158,7 +159,7 @@ function printPlan({ task, routing, dryRun, live }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function run(argv) {
-  const { inputInline, taskFile, live, yes } = parseArgs(argv);
+  const { inputInline, taskFile, output, live, yes } = parseArgs(argv);
   const dryRun = !yes;
 
   const task = resolveTask({ inputInline, taskFile });
@@ -207,11 +208,17 @@ async function run(argv) {
 
   const summary = {
     dryRun: false,
+    task,
     routing,
     gemini: geminiResults,
     claudeCode: claudeResults,
     dispatchedAt: new Date().toISOString(),
   };
+
+  if (output) {
+    fs.writeFileSync(output, JSON.stringify(summary, null, 2));
+    console.log(`\n💾 Results saved to ${output}`);
+  }
 
   console.log('\n✅ dispatch complete');
   return summary;

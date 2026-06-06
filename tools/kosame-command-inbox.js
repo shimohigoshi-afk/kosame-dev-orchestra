@@ -2,9 +2,9 @@
 'use strict';
 
 const TOOL_META = {
-  version: '110.15.0',
+  version: '110.16.0',
   slug: 'kosame-command-inbox',
-  feature: 'v110-15-command-inbox-auto-runner',
+  feature: 'v110-16-agent-patch-executor',
 };
 
 const REPOS = {
@@ -85,7 +85,7 @@ function wantsGemini(input) {
 }
 
 function buildProviderPlan(input) {
-  const unavailable = true; // FORCE CLAUDE UNAVAILABLE for v110.15 Auto Runner
+  const unavailable = true; // FORCE CLAUDE UNAVAILABLE for v110.15+ Auto Runner
   const providers = [];
 
   providers.push({
@@ -122,7 +122,8 @@ function buildNextCommand({ repo, workType, input }) {
     return `cd ${repo.path} && npm run verify`;
   }
 
-  return `cd ~/kosame-dev-orchestra && npm run route -- --input="${routeInput}" --yes --live`;
+  const resultFile = `dispatch-result-${Date.now()}.json`;
+  return `cd ~/kosame-dev-orchestra && npm run route -- --input="${routeInput}" --yes --live --output=${resultFile} && node tools/kosame-patch-executor.js --result=${resultFile} --yes --verify`;
 }
 
 function buildInboxPlan(options = {}) {

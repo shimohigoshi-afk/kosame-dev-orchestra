@@ -60,7 +60,7 @@ async function run(taskPacket, options = {}) {
     return {
       success: true,
       provider: "gemini",
-      response: text.slice(0, 500),
+      response: text,
       error: null,
       dryRun: false,
     };

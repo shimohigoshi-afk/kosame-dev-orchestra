@@ -224,7 +224,7 @@ async function run(argv) {
   return summary;
 }
 
-module.exports = { run, parseArgs, resolveTask, detectInsufficientContext };
+module.exports = { run, parseArgs, resolveTask, detectInsufficientContext, enrichContext };
 
 if (require.main === module) {
   run(process.argv).catch(err => {

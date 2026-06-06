@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.12.0",
+  "version": "110.13.0",
   "private": true,
   "scripts": {
     "promote": "node tools/kosame-promotion-runner.js",
@@ -662,6 +662,7 @@
     "pm-agent:cost-tracker": "node tools/cost-tracker.js",
     "smoke:multi-agent-work-log": "node smoke/v110-12-multi-agent-work-log-smoke.js",
     "smoke:v110-12": "node smoke/v110-12-multi-agent-work-log-smoke.js",
-    "pm-agent:multi-agent-work-log": "node tools/multi-agent-work-log.js"
+    "pm-agent:multi-agent-work-log": "node tools/multi-agent-work-log.js",
+    "smoke:v110-13-multi-agent-task-router": "node smoke/v110-13-multi-agent-task-router-smoke.js"
   }
 }

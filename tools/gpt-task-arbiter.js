@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * GPT Task Arbiter v110.7.0
+ * GPT Task Arbiter v110.13.0
  *
- * GPT を裁定者として使い、タスクを Gemini タスクと Claude Code タスクに分割する。
+ * GPT を裁定者として使い、タスクを Gemini, Claude Code, Grok タスクに分割する。
  * --live なしはヒューリスティック裁定（API コールなし、dryRun: true）。
  */
 
@@ -13,50 +13,73 @@ const { getConfig } = require('../providers/provider-config');
 
 const GEMINI_SIGNALS = [
   'generate', 'summarize', 'summary', 'draft', 'write', 'bulk', 'document',
-  'survey', 'list', 'report', 'translate', 'outline', 'content',
-  '生成', '要約', '文章', '一覧', 'ドラフト', 'リスト',
+  'survey', 'list', 'report', 'translate', 'outline', 'content', 'diff', 'json',
+  '生成', '要約', '文章', '一覧', 'ドラフト', 'リスト', '案', '仕様', 'プロンプト',
 ];
 const CLAUDE_SIGNALS = [
   'implement', 'code', 'fix', 'verify', 'edit', 'refactor', 'debug',
   'test', 'smoke', 'build', 'function', 'class', 'script', 'module',
   '実装', '修正', 'コード', '検証', 'スモーク', 'ビルド',
 ];
+const GROK_SIGNALS = [
+  'review', 'check', 'missing', 'audit', 'validation',
+  'レビュー', '抜け漏れ', 'チェック', '監査', '妥当性',
+];
+const CLAUDE_EXCLUDE_SIGNALS = [
+  'claude unavailable', 'claude stopped', 'claude limit', 'claudeには振らない',
+  'claudeなし', 'claude不可',
+];
 
 function heuristicRoute(task) {
   const lower = task.toLowerCase();
-  const gScore = GEMINI_SIGNALS.filter(k => lower.includes(k)).length;
-  const cScore = CLAUDE_SIGNALS.filter(k => lower.includes(k)).length;
 
-  if (gScore > 0 && cScore > 0) {
-    return {
-      gemini: [`[Gemini] bulk/generation subtask: ${task}`],
-      claudeCode: [`[Claude Code] implementation subtask: ${task}`],
-      method: 'heuristic_split',
-    };
+  const isClaudeExcluded = CLAUDE_EXCLUDE_SIGNALS.some(k => lower.includes(k));
+  const isGrokRequested = GROK_SIGNALS.some(k => lower.includes(k));
+
+  const gScore = GEMINI_SIGNALS.filter(k => lower.includes(k)).length;
+  const cScore = isClaudeExcluded ? -1 : CLAUDE_SIGNALS.filter(k => lower.includes(k)).length;
+  const rScore = isGrokRequested ? 1 : GROK_SIGNALS.filter(k => lower.includes(k)).length;
+
+  const res = {
+    gemini: [],
+    claudeCode: [],
+    grok: [],
+    method: 'heuristic',
+  };
+
+  if (gScore > 0) res.gemini.push(task);
+  if (cScore > 0) res.claudeCode.push(task);
+  if (rScore > 0) res.grok.push(task);
+
+  // Tie-break / Default if nothing matched
+  if (res.gemini.length === 0 && res.claudeCode.length === 0 && res.grok.length === 0) {
+    if (isClaudeExcluded) {
+      res.gemini.push(task);
+      res.method = 'heuristic_fallback_gemini';
+    } else {
+      res.claudeCode.push(task);
+      res.method = 'heuristic_fallback_claude';
+    }
   }
-  if (gScore > cScore) {
-    return { gemini: [task], claudeCode: [], method: 'heuristic_gemini_only' };
-  }
-  if (cScore > gScore) {
-    return { gemini: [], claudeCode: [task], method: 'heuristic_claude_only' };
-  }
-  // Tie → both
-  return { gemini: [task], claudeCode: [task], method: 'heuristic_both' };
+
+  return res;
 }
 
 // ── GPT live arbiter ──────────────────────────────────────────────────────────
 
 const ARBITER_SYSTEM_PROMPT = `You are a task routing arbiter for KOSAME Dev Orchestra.
-Classify the task into two buckets:
-  - "gemini": bulk text generation, summarization, document writing, content drafts
+Classify the task into three buckets:
+  - "gemini": bulk text generation, summarization, document writing, content drafts, implementation diffs, JSON specs
   - "claudeCode": code implementation, file edits, verification, smoke tests
+  - "grok": technical review, missing parts check, security audit, validation
 
 Rules:
-1. A task may go to one or both agents.
+1. A task may go to one, two, or all three agents.
 2. If mixed, split into specific subtasks per agent.
 3. Preserve the original language (Japanese/English).
+4. If "Claude unavailable" or similar is mentioned, DO NOT use "claudeCode".
 
-Reply ONLY with valid JSON: { "gemini": [strings], "claudeCode": [strings], "reasoning": "string" }`;
+Reply ONLY with valid JSON: { "gemini": [strings], "claudeCode": [strings], "grok": [strings], "reasoning": "string" }`;
 
 async function liveArbit(task, config) {
   const controller = new AbortController();
@@ -94,6 +117,7 @@ async function liveArbit(task, config) {
     return {
       gemini: Array.isArray(parsed.gemini) ? parsed.gemini : [],
       claudeCode: Array.isArray(parsed.claudeCode) ? parsed.claudeCode : [],
+      grok: Array.isArray(parsed.grok) ? parsed.grok : [],
       method: 'gpt_live',
       reasoning: parsed.reasoning ?? '',
       model: config.openaiModel,
@@ -107,13 +131,14 @@ async function liveArbit(task, config) {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
- * Arbitrate a task description into Gemini / Claude Code subtasks.
+ * Arbitrate a task description into Gemini / Claude Code / Grok subtasks.
  *
  * @param {string} task - Task description
  * @param {{ live?: boolean }} options
  * @returns {Promise<{
  *   gemini: string[],
  *   claudeCode: string[],
+ *   grok: string[],
  *   reasoning: string,
  *   method: string,
  *   dryRun: boolean,
@@ -141,7 +166,14 @@ async function arbitrate(task, options = {}) {
   return { ...result, dryRun: false };
 }
 
-module.exports = { arbitrate, heuristicRoute, GEMINI_SIGNALS, CLAUDE_SIGNALS };
+module.exports = {
+  arbitrate,
+  heuristicRoute,
+  GEMINI_SIGNALS,
+  CLAUDE_SIGNALS,
+  GROK_SIGNALS,
+  CLAUDE_EXCLUDE_SIGNALS
+};
 
 if (require.main === module) {
   const input = process.argv.slice(2).find(a => a.startsWith('--input='))?.slice(8)

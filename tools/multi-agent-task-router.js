@@ -2,17 +2,12 @@
 'use strict';
 
 /**
- * Multi-Agent Task Router v110.7.0
+ * Multi-Agent Task Router v110.13.0
  *
- * GPT が裁定し、Gemini と Claude Code にタスクを自動ディスパッチする。
+ * GPT が裁定し、Gemini / Claude Code / Grok にタスクを自動ディスパッチする。
  *
  * Usage:
  *   node tools/multi-agent-task-router.js --input="<task>" [--live] [--yes]
- *   node tools/multi-agent-task-router.js --task-file=<path> [--live] [--yes]
- *
- * --yes なし : dry-run（プランを表示するのみ、実行なし）
- * --yes      : 承認ゲート通過 → Gemini / Claude Code にディスパッチ
- * --live     : 実際のAPI呼び出しを有効化（GPT裁定 + Gemini実行）
  */
 
 const fs = require('node:fs');
@@ -21,6 +16,43 @@ const { execFileSync } = require('node:child_process');
 
 const { arbitrate } = require('./gpt-task-arbiter');
 const geminiProvider = require('../providers/gemini-provider');
+
+// ── Context Enrichment ────────────────────────────────────────────────────────
+
+function enrichContext(subtask, originalInput) {
+  const context = {
+    originalInput,
+    projectContext: {
+      productName: 'ANESTY Board',
+      targetVersion: 'v110.13.0',
+      environment: 'kosame-dev-orchestra',
+      realProductActionsExecuted: false,
+      dangerousActionsDenied: true,
+    },
+    task: subtask,
+    expectedOutput: 'Detailed implementation, diffs, JSON specs, or Claude recovery prompts.',
+    forbiddenActions: [
+      'credential exposure',
+      'unauthorized file deletion',
+      'production deployment',
+      'automatic git commit',
+    ],
+  };
+  return JSON.stringify(context, null, 2);
+}
+
+function detectInsufficientContext(response) {
+  if (!response) return false;
+  const signals = [
+    'もう少し情報が必要',
+    'どの機能ですか',
+    '具体的に教えてください',
+    'need more info',
+    'which feature',
+    'INSUFFICIENT_CONTEXT',
+  ];
+  return signals.some(s => response.includes(s));
+}
 
 // ── Arg parsing ───────────────────────────────────────────────────────────────
 
@@ -54,34 +86,38 @@ function resolveTask({ inputInline, taskFile }) {
 
 // ── Dispatch: Gemini ──────────────────────────────────────────────────────────
 
-async function dispatchToGemini(tasks, live) {
+async function dispatchToGemini(tasks, live, originalInput) {
   const results = [];
   for (const task of tasks) {
-    const packet = { id: `gemini-${Date.now()}`, type: 'generate', input: task };
+    const enrichedInput = enrichContext(task, originalInput);
+    const packet = { id: `gemini-${Date.now()}`, type: 'generate', input: enrichedInput };
     const result = await geminiProvider.run(packet, { live });
-    results.push({ task, result });
+    const insufficient = detectInsufficientContext(result.response);
+    results.push({ task, result, insufficient });
   }
   return results;
 }
 
 // ── Dispatch: Claude Code ─────────────────────────────────────────────────────
 
-function dispatchToClaudeCode(tasks, dryRun) {
+function dispatchToClaudeCode(tasks, dryRun, originalInput) {
   const results = [];
   for (const task of tasks) {
+    const enrichedInput = enrichContext(task, originalInput);
     if (dryRun) {
       results.push({
         task,
-        result: { dryRun: true, provider: 'claude-code', planned: `claude -p "${task}"` },
+        result: { dryRun: true, provider: 'claude-code', planned: `claude -p "${enrichedInput.slice(0, 100)}..."` },
       });
       continue;
     }
     try {
-      const out = execFileSync('claude', ['-p', task], {
+      const out = execFileSync('claude', ['-p', enrichedInput], {
         encoding: 'utf8',
         timeout: 60000,
       });
-      results.push({ task, result: { success: true, provider: 'claude-code', response: out.trim() } });
+      const insufficient = detectInsufficientContext(out);
+      results.push({ task, result: { success: true, provider: 'claude-code', response: out.trim() }, insufficient });
     } catch (err) {
       results.push({
         task,
@@ -95,12 +131,12 @@ function dispatchToClaudeCode(tasks, dryRun) {
 // ── Plan display ──────────────────────────────────────────────────────────────
 
 function printPlan({ task, routing, dryRun, live }) {
-  console.log('\n===== Multi-Agent Task Router =====');
+  console.log('\n===== Multi-Agent Task Router v110.13 =====');
   console.log(`INPUT   : ${task.length > 100 ? task.slice(0, 100) + '…' : task}`);
   console.log(`ARBITER : GPT (method=${routing.method})`);
   console.log(`DRY RUN : ${dryRun}`);
   console.log(`LIVE    : ${live}`);
-  console.log('===================================\n');
+  console.log('===========================================\n');
 
   console.log('[Routing Decision]');
   if (routing.reasoning) console.log(`  reasoning: ${routing.reasoning}`);
@@ -110,6 +146,9 @@ function printPlan({ task, routing, dryRun, live }) {
 
   console.log(`\n  → Claude Code (${routing.claudeCode.length} task${routing.claudeCode.length !== 1 ? 's' : ''})`);
   routing.claudeCode.forEach((t, i) => console.log(`    [${i + 1}] ${t}`));
+
+  console.log(`\n  → Grok (${routing.grok.length} task${routing.grok.length !== 1 ? 's' : ''})`);
+  routing.grok.forEach((t, i) => console.log(`    [${i + 1}] ${t}`));
 
   if (dryRun) {
     console.log('\n  ── dry-run: pass --yes to dispatch ──');
@@ -125,7 +164,7 @@ async function run(argv) {
   const task = resolveTask({ inputInline, taskFile });
 
   // 1. GPT arbitration
-  console.log('[1/3] GPT arbitration…');
+  console.log('[1/4] GPT arbitration…');
   const routing = await arbitrate(task, { live });
 
   // 2. Show plan
@@ -136,30 +175,35 @@ async function run(argv) {
   }
 
   // 3. Dispatch (--yes)
-  console.log('\n[2/3] Gemini dispatch');
+  console.log('\n[2/4] Gemini dispatch');
   const geminiResults = routing.gemini.length > 0
-    ? await dispatchToGemini(routing.gemini, live)
+    ? await dispatchToGemini(routing.gemini, live, task)
     : [];
 
-  geminiResults.forEach(({ task: t, result }) => {
-    const status = result.dryRun ? '[DRY]' : result.success ? '[OK]' : '[FAIL]';
+  geminiResults.forEach(({ task: t, result, insufficient }) => {
+    const status = result.dryRun ? '[DRY]' : result.success ? (insufficient ? '[WARN]' : '[OK]') : '[FAIL]';
     console.log(`  ${status} ${t.slice(0, 60)}`);
+    if (insufficient) console.log('       ⚠️ INSUFFICIENT CONTEXT DETECTED');
     if (result.response) console.log(`       → ${result.response.slice(0, 120)}`);
     if (result.error) console.log(`       ERROR: ${result.error}`);
   });
 
-  console.log('\n[3/3] Claude Code dispatch');
+  console.log('\n[3/4] Claude Code dispatch');
   const claudeResults = routing.claudeCode.length > 0
-    ? dispatchToClaudeCode(routing.claudeCode, dryRun)
+    ? dispatchToClaudeCode(routing.claudeCode, dryRun, task)
     : [];
 
-  claudeResults.forEach(({ task: t, result }) => {
-    const status = result.dryRun ? '[DRY]' : result.success ? '[OK]' : '[FAIL]';
+  claudeResults.forEach(({ task: t, result, insufficient }) => {
+    const status = result.dryRun ? '[DRY]' : result.success ? (insufficient ? '[WARN]' : '[OK]') : '[FAIL]';
     console.log(`  ${status} ${t.slice(0, 60)}`);
+    if (insufficient) console.log('       ⚠️ INSUFFICIENT CONTEXT DETECTED');
     if (result.planned) console.log(`       → ${result.planned}`);
     if (result.response) console.log(`       → ${result.response.slice(0, 120)}`);
     if (result.error) console.log(`       ERROR: ${result.error}`);
   });
+
+  console.log('\n[4/4] Grok bucket (audit only)');
+  routing.grok.forEach(t => console.log(`  [AUDIT] ${t.slice(0, 60)}`));
 
   const summary = {
     dryRun: false,
@@ -173,7 +217,7 @@ async function run(argv) {
   return summary;
 }
 
-module.exports = { run, parseArgs, resolveTask };
+module.exports = { run, parseArgs, resolveTask, detectInsufficientContext };
 
 if (require.main === module) {
   run(process.argv).catch(err => {

@@ -1,0 +1,21 @@
+{
+  "tool": "colored-section-logger",
+  "version": "110.9.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "examples": [
+    {
+      "description": "section open/close markers contain ===ここから=== and ===ここまで===",
+      "sectionName": "Secret Manager 読み込み",
+      "expected": {
+        "openContains":  "===ここから===",
+        "closeContains": "===ここまで==="
+      }
+    },
+    {
+      "description": "log levels produce prefixed output",
+      "levels": ["info", "success", "warn", "error", "debug"]
+    }
+  ]
+}

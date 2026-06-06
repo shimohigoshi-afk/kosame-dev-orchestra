@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.8.0",
+  "version": "110.9.0",
   "private": true,
   "scripts": {
     "promote": "node tools/kosame-promotion-runner.js",
@@ -648,6 +648,11 @@
     "smoke:v110-8": "node smoke/v110-8-claude-timeout-fallback-sanitized-handoff-smoke.js",
     "pm-agent:claude-timeout-fallback-router": "node tools/claude-timeout-fallback-router.js",
     "pm-agent:sensitive-data-auto-masker": "node tools/sensitive-data-auto-masker.js",
-    "pm-agent:deepseek-kimi-sanitized-handoff": "node tools/deepseek-kimi-sanitized-handoff.js"
+    "pm-agent:deepseek-kimi-sanitized-handoff": "node tools/deepseek-kimi-sanitized-handoff.js",
+    "smoke:colored-section-logger": "node smoke/v110-9-secret-key-loader-smoke.js",
+    "smoke:secret-key-loader": "node smoke/v110-9-secret-key-loader-smoke.js",
+    "smoke:v110-9": "node smoke/v110-9-secret-key-loader-smoke.js",
+    "pm-agent:colored-section-logger": "node tools/colored-section-logger.js",
+    "pm-agent:secret-key-loader": "node tools/secret-key-loader.js"
   }
 }

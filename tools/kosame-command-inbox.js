@@ -2,9 +2,9 @@
 'use strict';
 
 const TOOL_META = {
-  version: '110.14.0',
+  version: '110.15.0',
   slug: 'kosame-command-inbox',
-  feature: 'one-line-command-entrypoint',
+  feature: 'v110-15-command-inbox-auto-runner',
 };
 
 const REPOS = {
@@ -21,7 +21,7 @@ const REPOS = {
 };
 
 function parseArgs(argv) {
-  const out = { input: '', yes: false, dryRun: true };
+  const out = { input: '', yes: false, dryRun: true, run: false };
   for (const raw of argv) {
     if (raw === '--yes') {
       out.yes = true;
@@ -37,6 +37,10 @@ function parseArgs(argv) {
     }
     if (raw === '--live') {
       out.live = true;
+      continue;
+    }
+    if (raw === '--run') {
+      out.run = true;
       continue;
     }
   }
@@ -81,7 +85,7 @@ function wantsGemini(input) {
 }
 
 function buildProviderPlan(input) {
-  const unavailable = claudeUnavailable(input);
+  const unavailable = true; // FORCE CLAUDE UNAVAILABLE for v110.15 Auto Runner
   const providers = [];
 
   providers.push({
@@ -106,29 +110,19 @@ function buildProviderPlan(input) {
     });
   }
 
-  if (!unavailable) {
-    providers.push({
-      provider: 'claude_code',
-      role: 'implementation',
-      action: '実装担当。ただし承認ゲートあり',
-    });
-  }
-
+  // Claude is removed for this version
   return providers;
 }
 
 function buildNextCommand({ repo, workType, input }) {
   const safeInput = maskSensitive(input);
+  const routeInput = `${safeInput} (Claude unavailable)`;
 
   if (workType === 'promote_candidate') {
     return `cd ${repo.path} && npm run verify`;
   }
 
-  if (repo.id === 'anesty-board') {
-    return `cd ~/kosame-dev-orchestra && npm run route -- --input="${safeInput}" --yes --live`;
-  }
-
-  return `cd ~/kosame-dev-orchestra && npm run route -- --input="${safeInput}" --yes --live`;
+  return `cd ~/kosame-dev-orchestra && npm run route -- --input="${routeInput}" --yes --live`;
 }
 
 function buildInboxPlan(options = {}) {
@@ -177,6 +171,27 @@ function renderPlan(plan) {
   return lines.join('\n');
 }
 
+const { execSync } = require('child_process');
+
+function runNextCommand(plan, args) {
+  if (!args.run) return { executed: false, reason: 'run flag not set' };
+  if (!args.yes) return { executed: false, reason: '--yes required for --run' };
+  if (!plan.nextCommand || typeof plan.nextCommand !== 'string') {
+    return { executed: false, reason: 'nextCommand missing' };
+  }
+
+  console.log('===== KOSAME Command Inbox Auto Runner =====');
+  console.log(`RUNNING : ${plan.nextCommand}`);
+  console.log('===========================================');
+
+  execSync(plan.nextCommand, {
+    stdio: 'inherit',
+    shell: '/bin/bash',
+  });
+
+  return { executed: true, reason: 'completed' };
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.input) {
@@ -185,6 +200,12 @@ function main() {
   }
   const plan = buildInboxPlan(args);
   console.log(renderPlan(plan));
+
+  const result = runNextCommand(plan, args);
+  if (args.run) {
+    console.log(`AUTO_RUN_EXECUTED: ${result.executed}`);
+    console.log(`AUTO_RUN_REASON  : ${result.reason}`);
+  }
 }
 
 if (require.main === module) {
@@ -201,6 +222,8 @@ module.exports = {
   wantsGrok,
   wantsGemini,
   buildProviderPlan,
+  buildNextCommand,
   buildInboxPlan,
   renderPlan,
+  runNextCommand,
 };

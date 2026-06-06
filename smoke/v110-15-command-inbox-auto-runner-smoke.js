@@ -12,7 +12,7 @@ function pass(msg) {
 
 console.log('=== v110.15 command inbox auto runner smoke ===');
 
-assert.ok(pkg.version === '110.15.0' || pkg.version === '110.16.0' || pkg.version === '110.17.0' || pkg.version === '110.18.0');
+assert.ok(pkg.version >= '110.15.0');
 pass('package version is valid');
 
 assert.ok(pkg.scripts.inbox);
@@ -21,7 +21,7 @@ pass('inbox script exists');
 assert.ok(pkg.scripts['smoke:v110-15-command-inbox-auto-runner']);
 pass('v110.15 smoke script exists');
 
-assert.ok(inbox.TOOL_META.version === '110.15.0' || inbox.TOOL_META.version === '110.16.0' || inbox.TOOL_META.version === '110.17.0' || inbox.TOOL_META.version === '110.18.0');
+assert.ok(inbox.TOOL_META.version >= '110.15.0');
 pass('tool meta version is valid');
 
 const args = inbox.parseArgs(['--input=ANESTY Board v87.0.15を進めて', '--yes', '--run']);
@@ -32,8 +32,8 @@ pass('parseArgs supports --run');
 
 const plan = inbox.buildInboxPlan({ input: args.input });
 assert.strictEqual(plan.repo.id, 'anesty-board');
-assert.ok(plan.nextCommand.includes('npm run route'));
-pass('plan generates route nextCommand');
+assert.ok(plan.nextCommand.includes('inbox-patch-pipeline'));
+pass('plan generates autopilot nextCommand (inbox-patch-pipeline)');
 
 const noRun = inbox.runNextCommand(plan, { run: false, yes: true });
 assert.strictEqual(noRun.executed, false);

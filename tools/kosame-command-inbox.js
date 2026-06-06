@@ -2,9 +2,9 @@
 'use strict';
 
 const TOOL_META = {
-  version: '110.16.0',
+  version: '110.19.0',
   slug: 'kosame-command-inbox',
-  feature: 'v110-16-agent-patch-executor',
+  feature: 'v110-19-autopilot',
 };
 
 const REPOS = {
@@ -116,14 +116,13 @@ function buildProviderPlan(input) {
 
 function buildNextCommand({ repo, workType, input }) {
   const safeInput = maskSensitive(input);
-  const routeInput = `${safeInput} (Claude unavailable)`;
 
   if (workType === 'promote_candidate') {
     return `cd ${repo.path} && npm run verify`;
   }
 
-  const resultFile = `dispatch-result-${Date.now()}.json`;
-  return `cd ~/kosame-dev-orchestra && npm run route -- --input="${routeInput}" --yes --live --output=${resultFile} && node tools/kosame-patch-executor.js --result=${resultFile} --yes --verify`;
+  // v110.19: full autopilot via inbox-pipeline (no human relay)
+  return `node tools/kosame-inbox-patch-pipeline.js --input="${safeInput}" --yes --live`;
 }
 
 function buildInboxPlan(options = {}) {
@@ -174,6 +173,7 @@ function renderPlan(plan) {
 
 const { execSync } = require('child_process');
 
+// Kept for backward compatibility (used by v110.15 tests and legacy callers).
 function runNextCommand(plan, args) {
   if (!args.run) return { executed: false, reason: 'run flag not set' };
   if (!args.yes) return { executed: false, reason: '--yes required for --run' };
@@ -193,24 +193,63 @@ function runNextCommand(plan, args) {
   return { executed: true, reason: 'completed' };
 }
 
-function main() {
+// v110.19: full autopilot — Inbox → Route → Patch → Verify → Commit Candidate
+// Human gate: commit approval only.
+async function runFullPipeline(args) {
+  if (!args.run) return { executed: false, reason: 'run flag not set' };
+  if (!args.yes) return { executed: false, reason: '--yes required for --run' };
+  if (!args.input) return { executed: false, reason: '--input is required' };
+
+  const pipeline = require('./kosame-inbox-patch-pipeline');
+
+  console.log('\n===== KOSAME Autopilot v110.19 =====');
+  console.log('Inbox → Route → Patch → Verify → Commit Candidate');
+  console.log('Human gate: commit approval only');
+  console.log('=====================================\n');
+
+  const pipelineArgv = [
+    'node', 'kosame-inbox-patch-pipeline.js',
+    `--input=${args.input}`,
+    '--yes',
+    ...(args.live ? ['--live'] : []),
+  ];
+
+  const result = await pipeline.run(pipelineArgv);
+
+  if (result.commitCandidate) {
+    console.log('\n===== HUMAN GATE: Commit Approval =====');
+    console.log(`Suggested message : ${result.commitCandidate.suggestedMessage}`);
+    console.log(`Files             : ${result.commitCandidate.files.join(', ')}`);
+    console.log(`Git command       : ${result.commitCandidate.gitCommand}`);
+    console.log('Run the git command above to commit (human approval required).');
+    console.log('========================================');
+  }
+
+  return { executed: true, reason: 'pipeline complete', pipelineResult: result };
+}
+
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.input) {
     console.error('ERROR: --input is required');
     process.exit(1);
   }
+
   const plan = buildInboxPlan(args);
   console.log(renderPlan(plan));
 
-  const result = runNextCommand(plan, args);
   if (args.run) {
-    console.log(`AUTO_RUN_EXECUTED: ${result.executed}`);
-    console.log(`AUTO_RUN_REASON  : ${result.reason}`);
+    const result = await runFullPipeline(args);
+    console.log(`AUTOPILOT_EXECUTED: ${result.executed}`);
+    console.log(`AUTOPILOT_REASON  : ${result.reason}`);
   }
 }
 
 if (require.main === module) {
-  main();
+  main().catch(err => {
+    console.error('ERROR:', err.message);
+    process.exit(1);
+  });
 }
 
 module.exports = {
@@ -227,4 +266,5 @@ module.exports = {
   buildInboxPlan,
   renderPlan,
   runNextCommand,
+  runFullPipeline,
 };

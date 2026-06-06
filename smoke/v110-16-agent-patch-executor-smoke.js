@@ -12,10 +12,10 @@ function pass(msg) {
 
 console.log('=== v110.16 agent patch executor smoke ===');
 
-assert.ok(pkg.version === '110.16.0' || pkg.version === '110.17.0' || pkg.version === '110.18.0');
+assert.ok(pkg.version >= '110.16.0');
 pass('package version is valid');
 
-assert.ok(executor.TOOL_META.version === '110.16.0' || executor.TOOL_META.version === '110.17.0' || executor.TOOL_META.version === '110.18.0');
+assert.ok(executor.TOOL_META.version >= '110.16.0');
 pass('tool meta version is valid');
 
 // extractPatches test

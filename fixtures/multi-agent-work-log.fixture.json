@@ -1,0 +1,30 @@
+{
+  "tool": "multi-agent-work-log",
+  "version": "110.12.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "agentRoles": {
+    "gemini": "実装担当",
+    "claude": "補修・レビュー担当",
+    "gpt":    "裁定・ルーティング担当",
+    "human":  "承認・監視担当"
+  },
+  "actionTypes": ["implement", "repair", "arbitrate", "review", "approve", "reject", "handoff", "start", "complete"],
+  "examples": [
+    {
+      "description": "典型的なマルチエージェントフロー",
+      "flow": [
+        { "agent": "gpt-4o",            "action": "arbitrate",  "task": "t1" },
+        { "agent": "gemini-1.5-pro",    "action": "implement",  "task": "t1" },
+        { "agent": "claude-sonnet-4-6", "action": "repair",     "task": "t1" },
+        { "agent": "human",             "action": "approve",    "task": "t1" }
+      ]
+    }
+  ],
+  "safetyPrinciples": [
+    "dryRun=true ではファイル書き込みなし",
+    "全ての出力は構造化JSON"
+  ]
+}

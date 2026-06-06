@@ -10,7 +10,16 @@ const pkg  = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'),
 console.log('=== dev-agent-ai-fallback-sanitized-budget-gate-pack smoke ===');
 
 // version
-assert.ok(pkg.version >= '110.1.0', 'package version must be 110.1.0 or later');
+function semverGte(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return true;
+}
+assert.ok(semverGte(pkg.version, '110.1.0'), 'package version must be 110.1.0 or later');
 console.log('  PASS: package version');
 
 // script exists

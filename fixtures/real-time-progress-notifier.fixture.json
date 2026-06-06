@@ -1,0 +1,29 @@
+{
+  "tool": "real-time-progress-notifier",
+  "version": "110.10.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "channels": ["line", "slack", "discord"],
+  "events": ["start", "done", "error"],
+  "examples": [
+    {
+      "description": "dryRun=true with LINE token — no real HTTP call",
+      "event": "start",
+      "channels": { "line": { "token": "***" } },
+      "expected": { "sentCount": 0, "channelCount": 1 }
+    },
+    {
+      "description": "dryRun=true all channels — no real HTTP calls",
+      "event": "done",
+      "channels": { "line": {}, "slack": {}, "discord": {} },
+      "expected": { "sentCount": 0, "channelCount": 3 }
+    }
+  ],
+  "safetyPrinciples": [
+    "dryRun=true ではネットワーク送信禁止",
+    "実送信は humanApprovalRequired gate を通過した場合のみ",
+    "トークン・URLはログにマスクして出力"
+  ]
+}

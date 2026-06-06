@@ -1,0 +1,33 @@
+{
+  "tool": "cost-tracker",
+  "version": "110.11.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "supportedProviders": ["openai", "gemini", "grok", "deepseek", "kimi", "claude"],
+  "claudeAgentTeam": ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"],
+  "priceUnit": "USD per 1M tokens",
+  "examples": [
+    {
+      "description": "gpt-4o 1M/1M tokens cost",
+      "model": "gpt-4o",
+      "inputTokens": 1000000,
+      "outputTokens": 1000000,
+      "expected": { "inputUsd": 2.50, "outputUsd": 10.00, "totalUsd": 12.50 }
+    },
+    {
+      "description": "session with gemini+deepseek vs claude team comparison",
+      "session": [
+        { "model": "gemini-1.5-flash", "inputTokens": 100000, "outputTokens": 20000 },
+        { "model": "deepseek-chat",    "inputTokens": 200000, "outputTokens": 50000 }
+      ],
+      "expected": { "sessionCheaperThanClaude": true }
+    }
+  ],
+  "safetyPrinciples": [
+    "dryRun=true では実際の課金は発生しない",
+    "価格テーブルはローカル定数のみ使用",
+    "比較はあくまで参考値"
+  ]
+}

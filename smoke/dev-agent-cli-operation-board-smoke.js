@@ -9,8 +9,17 @@ const pkg  = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'),
 
 console.log('=== dev-agent-cli-operation-board smoke ===');
 
-// 1. package version
-assert.ok(pkg.version >= '110.4.0', 'package version must be 110.4.0 or later');
+// 1. package version (numeric semver compare: major.minor.patch)
+function semverGte(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return true;
+}
+assert.ok(semverGte(pkg.version, '110.4.0'), 'package version must be 110.4.0 or later');
 console.log('  PASS: package version >= 110.4.0');
 
 // 2. script exists

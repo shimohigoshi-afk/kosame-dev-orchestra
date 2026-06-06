@@ -1,0 +1,46 @@
+{
+  "tool": "claude-timeout-fallback-router",
+  "version": "110.8.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "humanApprovalRequired": true,
+  "examples": [
+    {
+      "description": "Claude times out after 35s → next fallback is grok",
+      "timedOutProvider": "claude",
+      "operation": "code-review",
+      "attemptedFallbacks": [],
+      "expected": {
+        "nextFallback": "grok",
+        "exhausted": false
+      }
+    },
+    {
+      "description": "Claude + grok both failed → next fallback is gpt",
+      "timedOutProvider": "claude",
+      "operation": "code-review",
+      "attemptedFallbacks": ["grok"],
+      "expected": {
+        "nextFallback": "gpt",
+        "exhausted": false
+      }
+    },
+    {
+      "description": "All fallbacks exhausted → escalate to human",
+      "timedOutProvider": "claude",
+      "operation": "code-review",
+      "attemptedFallbacks": ["grok", "gpt"],
+      "expected": {
+        "nextFallback": null,
+        "exhausted": true
+      }
+    }
+  ],
+  "fallbackChain": ["grok", "gpt"],
+  "advisoryOnlyProviders": ["deepseek", "kimi"],
+  "escalationPolicy": {
+    "onExhaustion": "escalate_to_human",
+    "allowAdvisoryFromDeepseekKimi": false
+  }
+}

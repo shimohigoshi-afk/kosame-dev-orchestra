@@ -1,0 +1,35 @@
+{
+  "tool": "sensitive-data-auto-masker",
+  "version": "110.8.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "examples": [
+    {
+      "description": "API key in text — masked",
+      "content": "api_key=sk-abc123secret",
+      "expected": { "sensitiveDataFound": true, "detectedTypes": ["api_key"] }
+    },
+    {
+      "description": "Customer info and email — masked",
+      "content": "customer_id=cust-987 email user@example.com phone 090-1234-5678",
+      "expected": { "sensitiveDataFound": true }
+    },
+    {
+      "description": "Insurance data — masked",
+      "content": "policy_number=INS-2024-001 claim_id=CLM-555",
+      "expected": { "sensitiveDataFound": true, "detectedTypes": ["insurance_data"] }
+    },
+    {
+      "description": "Clean code snippet — not masked",
+      "content": "function add(a, b) { return a + b; }",
+      "expected": { "sensitiveDataFound": false, "maskCount": 0 }
+    }
+  ],
+  "supportedMaskTypes": [
+    "api_key", "secret", "token", "github_credential",
+    "email_address", "phone_number", "customer_data",
+    "insurance_data", "health_data", "billing_data",
+    "contract_data", "ip_address", "private_key", "jwt_token"
+  ]
+}

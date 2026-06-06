@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.7.0",
+  "version": "110.8.0",
   "private": true,
   "scripts": {
     "promote": "node tools/kosame-promotion-runner.js",
@@ -641,6 +641,13 @@
     "pm-agent:first-real-product-launch-gate": "node tools/dev-agent-first-real-product-launch-gate-pack.js",
     "opboard": "node tools/kosame-operation-board-cli.js",
     "kosame:board": "node tools/kosame-operation-board-cli.js",
-    "smoke:v110-5-opboard-cli": "node smoke/v110-5-operation-board-cli-smoke.js"
+    "smoke:v110-5-opboard-cli": "node smoke/v110-5-operation-board-cli-smoke.js",
+    "smoke:claude-timeout-fallback-router": "node smoke/v110-8-claude-timeout-fallback-sanitized-handoff-smoke.js",
+    "smoke:sensitive-data-auto-masker": "node smoke/v110-8-claude-timeout-fallback-sanitized-handoff-smoke.js",
+    "smoke:deepseek-kimi-sanitized-handoff": "node smoke/v110-8-claude-timeout-fallback-sanitized-handoff-smoke.js",
+    "smoke:v110-8": "node smoke/v110-8-claude-timeout-fallback-sanitized-handoff-smoke.js",
+    "pm-agent:claude-timeout-fallback-router": "node tools/claude-timeout-fallback-router.js",
+    "pm-agent:sensitive-data-auto-masker": "node tools/sensitive-data-auto-masker.js",
+    "pm-agent:deepseek-kimi-sanitized-handoff": "node tools/deepseek-kimi-sanitized-handoff.js"
   }
 }

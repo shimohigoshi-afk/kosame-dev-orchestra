@@ -1,0 +1,35 @@
+{
+  "tool": "deepseek-kimi-sanitized-handoff",
+  "version": "110.8.0",
+  "dryRun": true,
+  "realProductActionsExecuted": false,
+  "dangerousActionsDenied": true,
+  "finalDecisionAllowed": false,
+  "advisoryOnly": true,
+  "examples": [
+    {
+      "description": "Deepseek with API key in content — auto-masked, handoff approved (advisory)",
+      "targetProvider": "deepseek",
+      "content": "api_key=sk-abc, customer_id=cust-1",
+      "contentTypes": ["anonymized_code_snippet"],
+      "expected": { "allowed": true, "sanitized": true, "maskCount": 2 }
+    },
+    {
+      "description": "Kimi with blocked content type — handoff denied",
+      "targetProvider": "kimi",
+      "contentTypes": ["deploy_credential"],
+      "expected": { "allowed": false }
+    },
+    {
+      "description": "Unsupported provider — handoff denied",
+      "targetProvider": "claude",
+      "contentTypes": [],
+      "expected": { "allowed": false }
+    }
+  ],
+  "supportedProviders": ["deepseek", "kimi"],
+  "alwaysBlockedContentTypes": [
+    "deploy_credential", "raw_production_log", "unpublished_strategy",
+    "billing_detail", "exact_revenue_figure"
+  ]
+}

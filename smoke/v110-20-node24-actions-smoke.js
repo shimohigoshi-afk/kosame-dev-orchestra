@@ -28,8 +28,8 @@ function pass(msg) {
 console.log('=== v110.20 node24-actions smoke ===');
 
 // Version
-assert.strictEqual(pkg.version, '110.20.0');
-pass('package version is 110.20.0');
+assert.ok(pkg.version >= '110.20.0');
+pass('package version is 110.20.0 or later');
 
 // Smoke script exists
 assert.ok(pkg.scripts['smoke:v110-20-node24-actions'], 'smoke:v110-20-node24-actions script must exist');

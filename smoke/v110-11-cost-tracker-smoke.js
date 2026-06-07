@@ -21,7 +21,7 @@ console.log('=== v110.11 cost-tracker smoke ===');
 
 // ── version ───────────────────────────────────────────────────────────────────
 
-assert.ok(/^110\.(1[0-9]|[2-9][0-9])\.0$/.test(pkg.version), `package version compatible: ${pkg.version}`);
+assert.ok(/^110\.(1[0-9]|[2-9][0-9])\.\d+$/.test(pkg.version), `package version compatible: ${pkg.version}`);
 pass('package.json version is 110.12.0');
 
 // ── scripts ───────────────────────────────────────────────────────────────────

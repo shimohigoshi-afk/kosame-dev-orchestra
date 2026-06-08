@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies (run by human after approval, not by CI in this version)
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy application source (excluding items in .dockerignore)
 COPY . .

@@ -2,9 +2,14 @@
 'use strict';
 
 /**
- * KOSAME Dev Orchestra — Real-time Dashboard v110.21.0
+ * KOSAME Dev Orchestra — Real-time Dashboard v110.22.0
  *
- * Serves an HTML dashboard showing:
+ * Multi-project dashboard showing per-project:
+ *   - git log (last 5 commits)
+ *   - CI state (via gh run list)
+ *   - Cost summary
+ *
+ * Plus global:
  *   - Active AI agents (Gemini / GPT / Claude / Grok)
  *   - Cumulative cost by provider
  *   - Recent work log
@@ -13,8 +18,8 @@
  *   npm run dashboard           # port 8080 (Cloud Shell preview)
  *   npm run dashboard -- --port=3000
  *
+ * Adding a new project: add one entry to PROJECTS below.
  * State is read from state/dashboard-state.json when present.
- * Falls back to demo data built from git log + cost-tracker.
  * dryRun=true by default — no writes without explicit --write flag.
  */
 
@@ -28,14 +33,34 @@ const { createWorkLog, AGENT_ROLE, ACTION_TYPE } = require('./multi-agent-work-l
 const { getConfig } = require('../providers/provider-config');
 
 const TOOL_META = {
-  version: '110.21.0',
-  feature: 'v110-21-dashboard',
+  version: '110.22.0',
+  feature: 'v110-22-multi-project-dashboard',
   title:   'KOSAME Dev Orchestra Dashboard',
   slug:    'kosame-dashboard',
 };
 
 const ROOT       = path.resolve(__dirname, '..');
 const STATE_FILE = path.join(ROOT, 'state', 'dashboard-state.json');
+
+// ── Project registry ──────────────────────────────────────────────────────────
+// Add new projects here — one object per project.
+
+const PROJECTS = [
+  {
+    key:        'kosame-dev-orchestra',
+    label:      'kosame-dev-orchestra',
+    path:       path.resolve(__dirname, '..'),
+    color:      '#58a6ff',
+    githubRepo: 'shimohigoshi-afk/kosame-dev-orchestra',
+  },
+  {
+    key:        'anesty-board',
+    label:      'anesty-board',
+    path:       path.resolve('/home/shimohigoshi/anesty-board'),
+    color:      '#d97706',
+    githubRepo: 'shimohigoshi-afk/anesty-board-cloudshell',
+  },
+];
 
 // ── Agent display config ──────────────────────────────────────────────────────
 
@@ -46,22 +71,13 @@ const AGENT_CONFIG = {
   grok:   { label: 'Grok',   color: '#8b5cf6', icon: 'X' },
 };
 
-// ── State builder ─────────────────────────────────────────────────────────────
+// ── Per-project state builder ─────────────────────────────────────────────────
 
-function readStateFile() {
-  try {
-    if (fs.existsSync(STATE_FILE)) {
-      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    }
-  } catch (_) { /* ignore */ }
-  return null;
-}
-
-function recentGitLog(n = 10) {
+function recentGitLog(projPath, n = 5) {
   try {
     const out = execSync(
       `git log --oneline --pretty=format:"%H|%ai|%s" -${n}`,
-      { cwd: ROOT, encoding: 'utf8', timeout: 5000 }
+      { cwd: projPath, encoding: 'utf8', timeout: 5000 }
     );
     return out.trim().split('\n').filter(Boolean).map(line => {
       const [hash, ts, ...rest] = line.split('|');
@@ -70,6 +86,82 @@ function recentGitLog(n = 10) {
   } catch (_) {
     return [];
   }
+}
+
+function readCiState(githubRepo) {
+  try {
+    const out = execSync(
+      `gh run list --repo ${githubRepo} --limit 1 --json status,conclusion,name,headBranch`,
+      { encoding: 'utf8', timeout: 8000 }
+    );
+    const runs = JSON.parse(out.trim());
+    if (!runs || runs.length === 0) return { status: 'unknown', name: '', branch: '' };
+    const r = runs[0];
+    let status = 'unknown';
+    if (r.status === 'completed') {
+      status = r.conclusion === 'success' ? 'success'
+             : r.conclusion === 'failure' ? 'failure'
+             : r.conclusion || 'unknown';
+    } else if (r.status === 'in_progress' || r.status === 'queued') {
+      status = 'pending';
+    }
+    return { status, name: r.name || '', branch: r.headBranch || '' };
+  } catch (_) {
+    return { status: 'unknown', name: '', branch: '' };
+  }
+}
+
+function buildDemoCostForProject(key) {
+  const session = createSession({ sessionId: `demo-${key}`, dryRun: true });
+  if (key === 'kosame-dev-orchestra') {
+    session.record('task-1', 'gemini-2.0-flash',  8000, 2000);
+    session.record('task-1', 'gpt-4o-mini',        3000,  600);
+    session.record('task-2', 'gemini-2.0-flash',  6000, 1500);
+    session.record('task-3', 'claude-sonnet-4-6',  4000,  800);
+  } else {
+    session.record('task-1', 'gemini-2.0-flash',  4000, 1000);
+    session.record('task-2', 'gpt-4o-mini',        2000,  400);
+  }
+  const rep = session.comparisonReport({ silent: true });
+  return {
+    totalUsd:          rep.sessionTotalUsd,
+    byProvider:        rep.byProvider,
+    claudeEstimateUsd: rep.claudeTeamEstimateUsd,
+    savingPct:         rep.estimatedSavingPct,
+  };
+}
+
+function buildProjectState(proj) {
+  const gitLog = recentGitLog(proj.path, 5);
+  const ci     = readCiState(proj.githubRepo);
+  const cost   = buildDemoCostForProject(proj.key);
+
+  let version = '';
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(proj.path, 'package.json'), 'utf8'));
+    version = pkg.version || '';
+  } catch (_) {}
+
+  return {
+    key:     proj.key,
+    label:   proj.label,
+    color:   proj.color,
+    version,
+    gitLog,
+    ci,
+    cost,
+  };
+}
+
+// ── Global state builder ──────────────────────────────────────────────────────
+
+function readStateFile() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    }
+  } catch (_) { /* ignore */ }
+  return null;
 }
 
 function inferAgentFromSubject(subject) {
@@ -83,17 +175,17 @@ function inferAgentFromSubject(subject) {
 
 function buildDemoWorkLog() {
   const wl = createWorkLog({ sessionId: 'demo', productId: 'kosame-dev-orchestra', dryRun: true });
-  const commits = recentGitLog(12);
+  const commits = recentGitLog(ROOT, 12);
 
   if (commits.length > 0) {
     for (const c of commits) {
-      const agent = inferAgentFromSubject(c.subject);
+      const agent  = inferAgentFromSubject(c.subject);
       const action = c.subject.toLowerCase().includes('fix') || c.subject.toLowerCase().includes('hotfix')
         ? ACTION_TYPE.REPAIR : ACTION_TYPE.IMPLEMENT;
       wl.append(agent, action, {
-        taskId: c.hash,
+        taskId:      c.hash,
         description: c.subject.slice(0, 60),
-        meta: { ts: c.ts },
+        meta:        { ts: c.ts },
       });
     }
   } else {
@@ -113,26 +205,21 @@ function buildDemoCost() {
   session.record('task-3', 'claude-sonnet-4-6',  4000,  800);
   const rep = session.comparisonReport({ silent: true });
   return {
-    totalUsd:    rep.sessionTotalUsd,
-    byProvider:  rep.byProvider,
+    totalUsd:          rep.sessionTotalUsd,
+    byProvider:        rep.byProvider,
     claudeEstimateUsd: rep.claudeTeamEstimateUsd,
-    savingPct:   rep.estimatedSavingPct,
+    savingPct:         rep.estimatedSavingPct,
   };
 }
 
-/**
- * Build full dashboard state.
- * Merges persisted state file with fresh git + provider data.
- */
 function buildDashboardState(opts = {}) {
   const dryRun = opts.dryRun !== false;
   const persisted = readStateFile();
   const providerCfg = getConfig();
 
   const workLogEntries = persisted?.workLog ?? buildDemoWorkLog();
-  const cost = persisted?.cost ?? buildDemoCost();
+  const cost           = persisted?.cost     ?? buildDemoCost();
 
-  // Active status: if entry in last 60 s → active, else idle
   const nowMs = Date.now();
   function isActive(agentKey) {
     return workLogEntries.some(e => {
@@ -150,25 +237,29 @@ function buildDashboardState(opts = {}) {
                      : key === 'claude' ? true
                      : false;
     agents[key] = {
-      label:      cfg.label,
-      color:      cfg.color,
-      icon:       cfg.icon,
-      status:     isActive(key) ? 'active' : recentAgents.has(key) ? 'recent' : 'idle',
+      label:     cfg.label,
+      color:     cfg.color,
+      icon:      cfg.icon,
+      status:    isActive(key) ? 'active' : recentAgents.has(key) ? 'recent' : 'idle',
       keyPresent,
-      model:      persisted?.agents?.[key]?.model ?? defaultModel(key),
-      lastTs:     workLogEntries.find(e => e.role === key)?.ts ?? null,
+      model:     persisted?.agents?.[key]?.model ?? defaultModel(key),
+      lastTs:    workLogEntries.find(e => e.role === key)?.ts ?? null,
     };
   }
 
+  // Build per-project state
+  const projects = PROJECTS.map(buildProjectState);
+
   return {
-    version:   TOOL_META.version,
-    feature:   TOOL_META.feature,
-    ts:        new Date().toISOString(),
+    version:  TOOL_META.version,
+    feature:  TOOL_META.feature,
+    ts:       new Date().toISOString(),
     dryRun,
-    demo:      !persisted,
+    demo:     !persisted,
     agents,
     cost,
-    workLog:   workLogEntries.slice(0, 30),
+    workLog:  workLogEntries.slice(0, 30),
+    projects,
   };
 }
 
@@ -194,8 +285,32 @@ function renderHtml() {
   .badge-dry{background:#1f3a5f;color:#58a6ff}
   .badge-live{background:#1a3a2a;color:#3fb950}
 
+  /* ── Project grid ── */
+  .projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px}
+  .project-card{background:#161b22;border:1px solid #30363d;border-radius:6px;overflow:hidden}
+  .project-header{padding:10px 14px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px}
+  .project-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .project-title{font-size:13px;font-weight:bold;color:#e6edf3;flex:1}
+  .project-ver{font-size:10px;color:#8b949e}
+  .ci-badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:bold;flex-shrink:0}
+  .ci-success{background:#1a3a2a;color:#3fb950}
+  .ci-failure{background:#2d1a1a;color:#f85149}
+  .ci-pending{background:#2d2a1a;color:#d29922}
+  .ci-unknown{background:#1c2128;color:#8b949e}
+  .project-body{padding:12px 14px}
+  .project-cost{font-size:11px;color:#8b949e;margin-bottom:10px}
+  .project-cost strong{color:#e6edf3}
+
+  /* Git log table */
+  .git-log{width:100%;border-collapse:collapse}
+  .git-log td{padding:3px 0;font-size:11px;vertical-align:top}
+  .git-hash{color:#58a6ff;width:54px;flex-shrink:0;font-size:10px;padding-right:8px}
+  .git-ts{color:#8b949e;width:80px;flex-shrink:0;font-size:10px;padding-right:8px;white-space:nowrap}
+  .git-subject{color:#c9d1d9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;width:100%}
+  .git-log tr:not(:last-child) td{border-bottom:1px solid #161b22}
+
   /* Agent cards */
-  .agents{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  .agents{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
   .agent-card{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:14px 12px;position:relative;overflow:hidden}
   .agent-card.active{border-color:var(--c)}
   .agent-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)}
@@ -235,18 +350,25 @@ function renderHtml() {
   .log-desc{color:#c9d1d9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .log-task{color:#58a6ff;font-size:10px;flex-shrink:0}
 
-  /* Footer */
   .footer{text-align:center;color:#484f58;font-size:10px;margin-top:16px}
   .updated{font-size:10px;color:#484f58;margin-top:2px}
 
-  @media(max-width:700px){.agents{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:700px){
+    .agents{grid-template-columns:repeat(2,1fr)}
+    .projects{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
 <h1>⬡ KOSAME Dev Orchestra</h1>
-<div class="subtitle">Real-time AI Agent Dashboard &nbsp;·&nbsp; <span id="mode-badge"></span></div>
+<div class="subtitle">Multi-Project Dashboard &nbsp;·&nbsp; <span id="mode-badge"></span></div>
 
-<div class="agents" id="agents"></div>
+<div class="projects" id="projects"></div>
+
+<div class="section">
+  <div class="section-title">AI Agents</div>
+  <div class="agents" id="agents"></div>
+</div>
 
 <div class="section">
   <div class="section-title">Cost Accumulator</div>
@@ -278,7 +400,45 @@ function fmtTs(iso) {
   const d = new Date(iso);
   return d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
+function fmtDate(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ja-JP', {month:'2-digit',day:'2-digit'})
+    + ' ' + d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+}
 function fmtUsd(n) { return '$' + (n||0).toFixed(6); }
+
+function renderProjects(projects) {
+  if (!projects || !projects.length) return;
+  const wrap = document.getElementById('projects');
+  wrap.innerHTML = projects.map(p => {
+    const ciClass = {success:'ci-success',failure:'ci-failure',pending:'ci-pending'}[p.ci.status] || 'ci-unknown';
+    const ciLabel = {success:'CI ✓',failure:'CI ✗',pending:'CI …',unknown:'CI ?'}[p.ci.status] || 'CI ?';
+    const gitRows = (p.gitLog || []).map(c =>
+      \`<tr>
+        <td class="git-hash">\${c.hash}</td>
+        <td class="git-ts">\${fmtDate(c.ts)}</td>
+        <td class="git-subject">\${escHtml(c.subject)}</td>
+      </tr>\`
+    ).join('');
+    return \`<div class="project-card">
+  <div class="project-header">
+    <div class="project-dot" style="background:\${p.color}"></div>
+    <div class="project-title">\${escHtml(p.label)}</div>
+    \${p.version ? '<span class="project-ver">v'+escHtml(p.version)+'</span>' : ''}
+    <span class="ci-badge \${ciClass}">\${ciLabel}</span>
+  </div>
+  <div class="project-body">
+    <div class="project-cost">Cost: <strong>\${fmtUsd(p.cost && p.cost.totalUsd)}</strong>\${p.ci.name ? ' &nbsp;·&nbsp; '+escHtml(p.ci.name) : ''}</div>
+    <table class="git-log">\${gitRows || '<tr><td style="color:#484f58">no commits</td></tr>'}</table>
+  </div>
+</div>\`;
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 function renderAgents(agents) {
   const wrap = document.getElementById('agents');
@@ -335,7 +495,7 @@ function renderWorkLog(entries) {
   <span class="log-ts">\${fmtTs(e.ts || (e.meta&&e.meta.ts))}</span>
   <span class="log-icon" style="background:\${c}">\${icon}</span>
   <span class="log-action">\${(e.action||'').slice(0,10)}</span>
-  <span class="log-desc">\${desc}</span>
+  <span class="log-desc">\${escHtml(desc)}</span>
   <span class="log-task">\${task}</span>
 </div>\`;
   }).join('');
@@ -350,6 +510,7 @@ function applyState(state) {
       : '<span class="badge badge-live">LIVE</span>';
   document.getElementById('updated').textContent =
     'Updated: ' + new Date(state.ts).toLocaleTimeString('ja-JP');
+  renderProjects(state.projects || []);
   renderAgents(state.agents || {});
   renderCost(state.cost || {});
   renderWorkLog(state.workLog || []);
@@ -359,11 +520,9 @@ function applyState(state) {
 const es = new EventSource('/api/events');
 es.addEventListener('state', e => { try { applyState(JSON.parse(e.data)); } catch(_){} });
 es.onerror = () => {
-  // Fallback: poll every 5 s if SSE drops
   setTimeout(() => fetch('/api/state').then(r=>r.json()).then(applyState).catch(()=>{}), 5000);
 };
 
-// Initial load
 fetch('/api/state').then(r=>r.json()).then(applyState).catch(()=>{});
 </script>
 </body>
@@ -449,16 +608,17 @@ function startServer(port, opts = {}) {
     res.end('Not found');
   });
 
-  // Push fresh state to all SSE clients every 3 s
+  // Push fresh state every 10 s (CI fetch is slow, avoid hammering gh API)
   const ticker = setInterval(() => {
     if (SSE_CLIENTS.size > 0) {
       broadcast(buildDashboardState({ dryRun }));
     }
-  }, 3000);
+  }, 10_000);
   ticker.unref();
 
   server.listen(port, () => {
-    console.log(`\n  ⬡  KOSAME Dashboard  →  http://localhost:${port}`);
+    console.log(`\n  ⬡  KOSAME Multi-Project Dashboard  →  http://localhost:${port}`);
+    console.log(`     Projects: ${PROJECTS.map(p => p.key).join(', ')}`);
     console.log(`     dryRun: ${dryRun}  |  state file: ${fs.existsSync(STATE_FILE) ? 'found' : 'demo mode'}`);
     console.log(`     Cloud Shell preview: https://shell.cloud.google.com  (port ${port})\n`);
   });
@@ -478,12 +638,12 @@ function startServer(port, opts = {}) {
 
 function parseArgs(argv) {
   const args = argv.slice(2);
-  let port  = 8080;
+  let port   = 8080;
   let dryRun = true;
   for (const a of args) {
-    if (a.startsWith('--port='))  port   = parseInt(a.slice(7), 10);
-    if (a === '--live')           dryRun = false;
-    if (a === '--write')          dryRun = false;
+    if (a.startsWith('--port=')) port   = parseInt(a.slice(7), 10);
+    if (a === '--live')          dryRun = false;
+    if (a === '--write')         dryRun = false;
   }
   return { port, dryRun };
 }
@@ -495,6 +655,8 @@ if (require.main === module) {
 
 module.exports = {
   TOOL_META,
+  PROJECTS,
+  buildProjectState,
   buildDashboardState,
   renderHtml,
   startServer,

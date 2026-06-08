@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.21.0",
+  "version": "110.22.0",
   "private": true,
   "scripts": {
     "dashboard": "node tools/kosame-dashboard-server.js",

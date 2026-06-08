@@ -245,6 +245,8 @@ async function main() {
   }
 }
 
+module.exports.buildInboxPlan = buildInboxPlan;
+
 if (require.main === module) {
   main().catch(err => {
     console.error('ERROR:', err.message);

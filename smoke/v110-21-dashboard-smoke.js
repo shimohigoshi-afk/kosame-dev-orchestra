@@ -32,11 +32,11 @@ assert.ok(pkg.version >= '110.21.0');
 pass('package version >= 110.21.0');
 
 // TOOL_META
-assert.strictEqual(dash.TOOL_META.version, '110.21.0');
-pass('TOOL_META.version is 110.21.0');
+assert.strictEqual(dash.TOOL_META.version, '110.22.0');
+pass('TOOL_META.version is 110.22.0');
 
-assert.strictEqual(dash.TOOL_META.feature, 'v110-21-dashboard');
-pass('TOOL_META.feature is v110-21-dashboard');
+assert.strictEqual(dash.TOOL_META.feature, 'v110-22-multi-project-dashboard');
+pass('TOOL_META.feature is v110-22-multi-project-dashboard');
 
 // npm scripts
 assert.ok(pkg.scripts['dashboard'], 'npm run dashboard must exist');

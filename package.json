@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.25.0",
+  "version": "110.27.0",
   "private": true,
   "scripts": {
     "setup:keys": "node tools/kosame-key-setup.js",

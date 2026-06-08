@@ -4,3 +4,8 @@ dispatch-result-*.json
 # Executor dummy artifacts
 *executor-dummy*
 *.bak
+
+# Node dependencies
+node_modules/
+node/
+package-lock.json

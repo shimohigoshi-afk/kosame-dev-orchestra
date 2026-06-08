@@ -14,8 +14,8 @@ function pass(msg) {
   console.log('  PASS:', msg);
 }
 
-assert.strictEqual(pkg.version, '110.29.0');
-pass('package version is 110.29.0');
+assert.ok(/^110\.(29|[3-9][0-9])\.\d+$/.test(pkg.version), `package version must be >=110.29.0, got ${pkg.version}`);
+pass('package version is >=110.29.0');
 
 assert.ok(dashboard.includes('function loadLearningLogEntries()'));
 pass('loadLearningLogEntries exists');

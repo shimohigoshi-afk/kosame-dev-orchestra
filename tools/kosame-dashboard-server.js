@@ -212,6 +212,42 @@ function buildDemoCost() {
   };
 }
 
+
+function loadLearningLogEntries() {
+  const logFile = path.join(os.homedir(), ".kosame", "learning-log.jsonl");
+  try {
+    if (!fs.existsSync(logFile)) return [];
+    return fs.readFileSync(logFile, "utf8")
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        try { return JSON.parse(line); } catch { return null; }
+      })
+      .filter(Boolean)
+      .slice(-5)
+      .reverse();
+  } catch {
+    return [];
+  }
+}
+
+function buildAutoRecordingState() {
+  const recent = loadLearningLogEntries();
+  const latest = recent[0] || null;
+  return {
+    status: recent.length ? "available" : "empty",
+    recentCount: recent.length,
+    latestTask: latest ? (latest.taskInput || latest.taskType || "") : "",
+    difficulty: latest ? (latest.difficulty || "") : "",
+    provider: latest ? (latest.provider || "") : "",
+    model: latest ? (latest.model || "") : "",
+    success: latest ? Boolean(latest.success) : false,
+    dryRun: latest ? Boolean(latest.dryRun) : true,
+    timestamp: latest ? (latest.ts || latest.timestamp || "") : "",
+    recent
+  };
+}
+
 function buildDashboardState(opts = {}) {
   const dryRun = opts.dryRun !== false;
   const persisted = readStateFile();
@@ -251,6 +287,7 @@ function buildDashboardState(opts = {}) {
   const projects = PROJECTS.map(buildProjectState);
 
   return {
+    autoRecording: buildAutoRecordingState(),
     version:  TOOL_META.version,
     feature:  TOOL_META.feature,
     ts:       new Date().toISOString(),
@@ -363,6 +400,16 @@ function renderHtml() {
 <h1>⬡ KOSAME Dev Orchestra</h1>
 <div class="subtitle">Multi-Project Dashboard &nbsp;·&nbsp; <span id="mode-badge"></span></div>
 
+<div class="project-card" id="auto-recording-card" style="margin-bottom:20px">
+  <div class="project-header">
+    <span class="project-dot" style="background:#58a6ff"></span>
+    <strong>Auto Recording</strong>
+  </div>
+  <div class="project-body" id="auto-recording">
+    <div class="muted">loading...</div>
+  </div>
+</div>
+
 <div class="projects" id="projects"></div>
 
 <div class="section">
@@ -407,6 +454,31 @@ function fmtDate(iso) {
     + ' ' + d.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
 }
 function fmtUsd(n) { return '$' + (n||0).toFixed(6); }
+
+
+function renderAutoRecording(autoRecording) {
+  const wrap = document.getElementById('auto-recording');
+  if (!wrap) return;
+  const a = autoRecording || {};
+  const recent = Array.isArray(a.recent) ? a.recent : [];
+  const status = a.status || 'empty';
+  const latest = a.latestTask || '(no task yet)';
+  const provider = [a.provider, a.model].filter(Boolean).join(' / ') || '-';
+  const success = a.success ? 'success' : (recent.length ? 'failed/unknown' : '-');
+  const mode = a.dryRun === false ? 'live' : 'dryRun';
+  const ts = a.timestamp || '-';
+
+  wrap.innerHTML =
+    '<div style="padding:12px 14px">' +
+      '<div><span class="muted">status:</span> <strong>' + escHtml(status) + '</strong></div>' +
+      '<div><span class="muted">latest:</span> ' + escHtml(latest) + '</div>' +
+      '<div><span class="muted">difficulty:</span> ' + escHtml(a.difficulty || '-') + '</div>' +
+      '<div><span class="muted">provider/model:</span> ' + escHtml(provider) + '</div>' +
+      '<div><span class="muted">result:</span> ' + escHtml(success) + ' / ' + escHtml(mode) + '</div>' +
+      '<div><span class="muted">timestamp:</span> ' + escHtml(ts) + '</div>' +
+      '<div><span class="muted">recent log count:</span> ' + Number(a.recentCount || 0) + '</div>' +
+    '</div>';
+}
 
 function renderProjects(projects) {
   if (!projects || !projects.length) return;
@@ -510,6 +582,7 @@ function applyState(state) {
       : '<span class="badge badge-live">LIVE</span>';
   document.getElementById('updated').textContent =
     'Updated: ' + new Date(state.ts).toLocaleTimeString('ja-JP');
+  renderAutoRecording(state.autoRecording || {});
   renderProjects(state.projects || []);
   renderAgents(state.agents || {});
   renderCost(state.cost || {});

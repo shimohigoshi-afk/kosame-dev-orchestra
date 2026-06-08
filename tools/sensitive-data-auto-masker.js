@@ -1,7 +1,7 @@
 'use strict';
 
 const TOOL_META = {
-  version: '110.8.0',
+  version: '110.23.0',
   title: 'Sensitive Data Auto Masker',
   slug: 'sensitive-data-auto-masker'
 };
@@ -21,7 +21,10 @@ const MASK_TOKENS = {
   contract_data:     '[MASKED:CONTRACT_DATA]',
   ip_address:        '[MASKED:IP_ADDRESS]',
   private_key:       '[MASKED:PRIVATE_KEY]',
-  jwt_token:         '[MASKED:JWT]'
+  jwt_token:         '[MASKED:JWT]',
+  // Sanitized-advisory providers: masked before cross-provider relay
+  deepseek_key:      '[MASKED:DEEPSEEK_KEY]',
+  kimi_key:          '[MASKED:KIMI_KEY]',
 };
 
 // Ordered: longer / more specific patterns first to avoid partial matches
@@ -37,6 +40,15 @@ const SENSITIVE_PATTERNS = [
   {
     type: 'jwt_token',
     pattern: /eyJ[A-Za-z0-9\-_]+\.eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+/g
+  },
+  // Sanitized-advisory: DeepSeek and Kimi keys matched before generic api_key pattern
+  {
+    type: 'deepseek_key',
+    pattern: /DEEPSEEK_API_KEY\s*[:=]\s*["']?([A-Za-z0-9\-_./+]{8,})["']?/gi
+  },
+  {
+    type: 'kimi_key',
+    pattern: /KIMI_API_KEY\s*[:=]\s*["']?([A-Za-z0-9\-_./+]{8,})["']?/gi
   },
   {
     type: 'api_key',
@@ -160,6 +172,9 @@ function autoMask(input) {
     : maskObject(content);
 
   const hasSensitiveData = result.detectedTypes.length > 0;
+  const sanitizedAdvisoryDetected =
+    result.detectedTypes.includes('deepseek_key') ||
+    result.detectedTypes.includes('kimi_key');
 
   return {
     tool: TOOL_META.slug,
@@ -175,6 +190,7 @@ function autoMask(input) {
     maskCount: result.maskCount,
     maskPassed: true,
     sensitiveDataFound: hasSensitiveData,
+    sanitizedAdvisoryDetected,
     maskTokens: MASK_TOKENS
   };
 }

@@ -1,8 +1,11 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.22.0",
+  "version": "110.23.0",
   "private": true,
   "scripts": {
+    "setup:keys": "node tools/kosame-key-setup.js",
+    "setup:keys:check": "node tools/kosame-key-setup.js --check",
+    "route:task": "node tools/kosame-difficulty-model-router.js",
     "dashboard": "node tools/kosame-dashboard-server.js",
     "smoke:v110-21-dashboard": "node smoke/v110-21-dashboard-smoke.js",
     "promote": "node tools/kosame-promotion-runner.js",

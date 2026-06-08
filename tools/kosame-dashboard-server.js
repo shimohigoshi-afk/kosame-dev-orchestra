@@ -31,6 +31,7 @@ const { execSync } = require('node:child_process');
 const { PRICE_TABLE, createSession } = require('./cost-tracker');
 const { createWorkLog, AGENT_ROLE, ACTION_TYPE } = require('./multi-agent-work-log');
 const { getConfig } = require('../providers/provider-config');
+const os = require('os');
 
 const TOOL_META = {
   version: '110.22.0',

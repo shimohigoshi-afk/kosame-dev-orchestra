@@ -2,9 +2,9 @@
 'use strict';
 
 const TOOL_META = {
-  version: '110.19.0',
+  version: '110.31.0',
   slug: 'kosame-command-inbox',
-  feature: 'v110-19-autopilot',
+  feature: 'v110-31-deepseek-router-executor',
 };
 
 const REPOS = {
@@ -84,6 +84,10 @@ function wantsGemini(input) {
   return /Gemini|ジェミニ|大量|実装案|差分案|下読み/i.test(input || '');
 }
 
+function wantsDeepSeek(input) {
+  return /DeepSeek|deepseek|ローカルパッチ|local.?patch|patch.?executor|パッチ実行|KOSAME.?Patch/i.test(input || '');
+}
+
 function buildProviderPlan(input) {
   const unavailable = true; // FORCE CLAUDE UNAVAILABLE for v110.15+ Auto Runner
   const providers = [];
@@ -110,6 +114,15 @@ function buildProviderPlan(input) {
     });
   }
 
+  // v110.31: DeepSeek → executor pipeline
+  if (wantsDeepSeek(input)) {
+    providers.push({
+      provider: 'deepseek',
+      role: 'patch-generator',
+      action: 'KOSAME Patch Format 生成 → deepseek-local-patch-executor へ自動パイプ',
+    });
+  }
+
   // Claude is removed for this version
   return providers;
 }
@@ -119,6 +132,11 @@ function buildNextCommand({ repo, workType, input }) {
 
   if (workType === 'promote_candidate') {
     return `cd ${repo.path} && npm run verify`;
+  }
+
+  // v110.31: DeepSeek patch routing → executor pipeline
+  if (wantsDeepSeek(input)) {
+    return `node tools/multi-agent-task-router.js --input="${safeInput}" --yes --live`;
   }
 
   // v110.19: full autopilot via inbox-pipeline (no human relay)
@@ -263,6 +281,7 @@ module.exports = {
   claudeUnavailable,
   wantsGrok,
   wantsGemini,
+  wantsDeepSeek,
   buildProviderPlan,
   buildNextCommand,
   buildInboxPlan,

@@ -1,9 +1,9 @@
-# KOSAME Cloud Run PM Agent — Dockerfile (v0.2.3)
-# Build target: Cloud Run (Node.js HTTP server)
+# KOSAME Cloud Run Dashboard — Dockerfile (v110.25)
+# Build target: Cloud Run (kosame-dashboard, port 8080)
 # DO NOT copy dotenv files or secrets. DO NOT run gcloud. DO NOT call external APIs.
-# docker build is NOT executed in this version — v0.3.0 Human Approval required first.
+# docker build is NOT executed automatically — Human Approval required before deploy.
 
-FROM node:20-slim
+FROM node:24-slim
 
 WORKDIR /app
 
@@ -21,4 +21,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["npm", "run", "pm-agent:http-dry-run"]
+CMD ["npm", "run", "dashboard"]

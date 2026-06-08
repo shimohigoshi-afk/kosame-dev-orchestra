@@ -2,6 +2,7 @@
 node_modules
 .env
 .env.*
+.kosame
 npm-debug.log
 coverage
 tmp

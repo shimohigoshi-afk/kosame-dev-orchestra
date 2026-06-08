@@ -1,0 +1,73 @@
+# KOSAME Dashboard — Cloud Run Service (v110.25)
+# GCP project: anesty-bot | region: asia-northeast1 | service: kosame-dashboard
+# DO NOT hardcode secret values here. All API keys come from Secret Manager.
+# Human Approval required before: docker build, docker push, gcloud run deploy
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: kosame-dashboard
+  namespace: anesty-bot
+  labels:
+    managed-by: kosame-dev-orchestra
+    version: v110.25
+    component: dashboard
+  annotations:
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: "1"
+        autoscaling.knative.dev/minScale: "0"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: asia-northeast1-docker.pkg.dev/anesty-bot/kosame/kosame-dashboard:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "8080"
+            # API keys from Secret Manager — injected at runtime, never baked into image
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-gemini-api-key
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-openai-api-key
+            - name: GROK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-grok-api-key
+            - name: DISCORD_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-discord-bot-token
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-deepseek-api-key
+            - name: KIMI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: kosame-kimi-api-key
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+  traffic:
+    - percent: 100
+      latestRevision: true

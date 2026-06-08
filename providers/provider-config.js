@@ -22,6 +22,10 @@ const geminiKeyPresent =
   typeof process.env.GEMINI_API_KEY === "string" &&
   process.env.GEMINI_API_KEY.length > 0;
 
+const deepseekKeyPresent =
+  typeof process.env.DEEPSEEK_API_KEY === "string" &&
+  process.env.DEEPSEEK_API_KEY.length > 0;
+
 const MAX_TOKENS_CAP = 1000;
 const TIMEOUT_MS_CAP = 30000;
 
@@ -94,6 +98,7 @@ const liveCallsActuallyEnabled = liveCallsRequested && oneShotAllowed;
 // Provider-level gate: base gate AND the relevant API key present.
 const openaiLiveEnabled = liveCallsActuallyEnabled && openaiKeyPresent;
 const geminiLiveEnabled = liveCallsActuallyEnabled && geminiKeyPresent;
+const deepseekLiveEnabled = liveCallsActuallyEnabled && deepseekKeyPresent;
 
 function getConfig() {
   return {
@@ -101,6 +106,7 @@ function getConfig() {
     oneShotAllowed,
     openaiKeyPresent,
     geminiKeyPresent,
+    deepseekKeyPresent,
     openaiModel,
     geminiModel,
     maxTokens,
@@ -108,6 +114,7 @@ function getConfig() {
     liveCallsActuallyEnabled,
     openaiLiveEnabled,
     geminiLiveEnabled,
+    deepseekLiveEnabled,
     lightweightRoutingPolicy,
     reason: liveCallsActuallyEnabled
       ? "live calls gate open (key presence required per provider)"

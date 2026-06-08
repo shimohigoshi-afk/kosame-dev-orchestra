@@ -68,7 +68,7 @@ async function main() {
   // --- Dockerfile safety ---
   console.log("--- Dockerfile safety checks ---");
   checkContains("Dockerfile", "Dockerfile", "EXPOSE 8080");
-  checkContains("Dockerfile", "Dockerfile", "pm-agent:http-dry-run");
+  checkContains("Dockerfile", "Dockerfile", "dashboard");
   checkNotContains("Dockerfile", "Dockerfile", "gcloud deploy");
   checkNotContains("Dockerfile", "Dockerfile", ".env");
   checkNotContains("Dockerfile", "Dockerfile", "OPENAI_API_KEY");

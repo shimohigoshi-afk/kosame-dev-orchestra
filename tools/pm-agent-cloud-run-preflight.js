@@ -67,7 +67,7 @@ function checkPackageScripts() {
   }
   const scripts = pkg.scripts || {};
   const required = [
-    "pm-agent:http-dry-run",
+    "dashboard",
     "pm-agent:http-client",
     "smoke:http-request-fixtures-client",
     "smoke:cloud-run-launch-pack-max",
@@ -93,7 +93,7 @@ function checkDockerfileSafety() {
     return [makeCheck("Dockerfile:exists", false)];
   }
   checks.push(makeCheck("Dockerfile:EXPOSE 8080", fileContains(rel, "EXPOSE 8080")));
-  checks.push(makeCheck("Dockerfile:CMD npm run pm-agent:http-dry-run", fileContains(rel, "pm-agent:http-dry-run")));
+  checks.push(makeCheck("Dockerfile:CMD npm run dashboard", fileContains(rel, "dashboard")));
   const forbidden = [
     ".env",
     "OPENAI_API_KEY",

@@ -16,6 +16,7 @@ const { execFileSync } = require('node:child_process');
 
 const { arbitrate } = require('./gpt-task-arbiter');
 const geminiProvider = require('../providers/gemini-provider');
+const deepseekProvider = require('../providers/deepseek-provider');
 
 // ── Context Enrichment ────────────────────────────────────────────────────────
 
@@ -99,6 +100,20 @@ async function dispatchToGemini(tasks, live, originalInput) {
   return results;
 }
 
+// ── Dispatch: DeepSeek ───────────────────────────────────────────────────────
+
+async function dispatchToDeepSeek(tasks, live, originalInput) {
+  const results = [];
+  for (const task of tasks) {
+    const enrichedInput = enrichContext(task, originalInput);
+    const packet = { id: `deepseek-${Date.now()}`, type: 'generate', input: enrichedInput };
+    const result = await deepseekProvider.run(packet, { live });
+    const insufficient = detectInsufficientContext(result.response);
+    results.push({ task, result, insufficient });
+  }
+  return results;
+}
+
 // ── Dispatch: Claude Code ─────────────────────────────────────────────────────
 
 function dispatchToClaudeCode(tasks, dryRun, originalInput) {
@@ -132,7 +147,7 @@ function dispatchToClaudeCode(tasks, dryRun, originalInput) {
 // ── Plan display ──────────────────────────────────────────────────────────────
 
 function printPlan({ task, routing, dryRun, live }) {
-  console.log('\n===== Multi-Agent Task Router v110.13 =====');
+  console.log('\n===== Multi-Agent Task Router v110.26 =====');
   console.log(`INPUT   : ${task.length > 100 ? task.slice(0, 100) + '…' : task}`);
   console.log(`ARBITER : GPT (method=${routing.method})`);
   console.log(`DRY RUN : ${dryRun}`);
@@ -151,6 +166,10 @@ function printPlan({ task, routing, dryRun, live }) {
   console.log(`\n  → Grok (${routing.grok.length} task${routing.grok.length !== 1 ? 's' : ''})`);
   routing.grok.forEach((t, i) => console.log(`    [${i + 1}] ${t}`));
 
+  const deepseekTasks = routing.deepseek ?? [];
+  console.log(`\n  → DeepSeek (${deepseekTasks.length} task${deepseekTasks.length !== 1 ? 's' : ''})`);
+  deepseekTasks.forEach((t, i) => console.log(`    [${i + 1}] ${t}`));
+
   if (dryRun) {
     console.log('\n  ── dry-run: pass --yes to dispatch ──');
   }
@@ -165,7 +184,7 @@ async function run(argv) {
   const task = resolveTask({ inputInline, taskFile });
 
   // 1. GPT arbitration
-  console.log('[1/4] GPT arbitration…');
+  console.log('[1/5] GPT arbitration…');
   const routing = await arbitrate(task, { live });
 
   // 2. Show plan
@@ -176,7 +195,7 @@ async function run(argv) {
   }
 
   // 3. Dispatch (--yes)
-  console.log('\n[2/4] Gemini dispatch');
+  console.log('\n[2/5] Gemini dispatch');
   const geminiResults = routing.gemini.length > 0
     ? await dispatchToGemini(routing.gemini, live, task)
     : [];
@@ -189,7 +208,7 @@ async function run(argv) {
     if (result.error) console.log(`       ERROR: ${result.error}`);
   });
 
-  console.log('\n[3/4] Claude Code dispatch');
+  console.log('\n[3/5] Claude Code dispatch');
   const claudeResults = routing.claudeCode.length > 0
     ? dispatchToClaudeCode(routing.claudeCode, dryRun, task)
     : [];
@@ -203,7 +222,21 @@ async function run(argv) {
     if (result.error) console.log(`       ERROR: ${result.error}`);
   });
 
-  console.log('\n[4/4] Grok bucket (audit only)');
+  console.log('\n[4/5] DeepSeek dispatch');
+  const deepseekTasks = routing.deepseek ?? [];
+  const deepseekResults = deepseekTasks.length > 0
+    ? await dispatchToDeepSeek(deepseekTasks, live, task)
+    : [];
+
+  deepseekResults.forEach(({ task: t, result, insufficient }) => {
+    const status = result.dryRun ? '[DRY]' : result.success ? (insufficient ? '[WARN]' : '[OK]') : '[FAIL]';
+    console.log(`  ${status} ${t.slice(0, 60)}`);
+    if (insufficient) console.log('       ⚠️ INSUFFICIENT CONTEXT DETECTED');
+    if (result.response) console.log(`       → ${result.response.slice(0, 120)}`);
+    if (result.error) console.log(`       ERROR: ${result.error}`);
+  });
+
+  console.log('\n[5/5] Grok bucket (audit only)');
   routing.grok.forEach(t => console.log(`  [AUDIT] ${t.slice(0, 60)}`));
 
   const summary = {
@@ -212,6 +245,7 @@ async function run(argv) {
     routing,
     gemini: geminiResults,
     claudeCode: claudeResults,
+    deepseek: deepseekResults,
     dispatchedAt: new Date().toISOString(),
   };
 

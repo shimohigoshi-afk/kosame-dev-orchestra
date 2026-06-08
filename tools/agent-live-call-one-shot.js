@@ -11,9 +11,10 @@
 const fs = require("fs");
 const gptProvider = require("../providers/gpt-provider");
 const geminiProvider = require("../providers/gemini-provider");
+const deepseekProvider = require("../providers/deepseek-provider");
 const { getConfig } = require("../providers/provider-config");
 
-const SUPPORTED_PROVIDERS = ["gpt", "gemini"];
+const SUPPORTED_PROVIDERS = ["gpt", "gemini", "deepseek"];
 
 function getArgValue(name) {
   const prefix = `--${name}=`;
@@ -49,12 +50,13 @@ const liveFlag = getLiveFlag();
 
 if (!providerName || !SUPPORTED_PROVIDERS.includes(providerName)) {
   console.error(
-    `agent-live-call-one-shot: --provider=<gpt|gemini> required. Got: ${providerName ?? "(none)"}`
+    `agent-live-call-one-shot: --provider=<gpt|gemini|deepseek> required. Got: ${providerName ?? "(none)"}`
   );
   process.exit(1);
 }
 
-const provider = providerName === "gpt" ? gptProvider : geminiProvider;
+const providerMap = { gpt: gptProvider, gemini: geminiProvider, deepseek: deepseekProvider };
+const provider = providerMap[providerName];
 
 const taskPacket = {
   id: getArgValue("task-id") || "task-one-shot-001",
@@ -74,6 +76,7 @@ async function main() {
     liveCallsActuallyEnabled: config.liveCallsActuallyEnabled,
     openaiLiveEnabled: config.openaiLiveEnabled,
     geminiLiveEnabled: config.geminiLiveEnabled,
+    deepseekLiveEnabled: config.deepseekLiveEnabled,
   });
 
   console.log("task packet:", JSON.stringify({
@@ -87,8 +90,12 @@ async function main() {
     console.log("INFO: --live not specified — dry-run only. No external API will be called.");
   }
 
-  const providerLiveEnabled =
-    providerName === "gpt" ? config.openaiLiveEnabled : config.geminiLiveEnabled;
+  const providerLiveEnabledMap = {
+    gpt: config.openaiLiveEnabled,
+    gemini: config.geminiLiveEnabled,
+    deepseek: config.deepseekLiveEnabled,
+  };
+  const providerLiveEnabled = providerLiveEnabledMap[providerName];
 
   if (liveFlag && !providerLiveEnabled) {
     console.log(

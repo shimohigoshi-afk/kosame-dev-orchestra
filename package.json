@@ -709,6 +709,7 @@
     "gcs": "node tools/kosame-gcs-client.js",
     "smoke:v110-34-spec-analyzer": "node smoke/v110-34-spec-analyzer-smoke.js",
     "spec:analyze": "node tools/kosame-spec-analyzer.js",
+    "auto:run": "node tools/kosame-auto-runner.js",
     "smoke:v110-35-project-initializer": "node smoke/v110-35-project-initializer-smoke.js",
     "new:project": "node tools/kosame-project-initializer.js",
     "scan:projects": "node tools/kosame-project-initializer.js --scan",

@@ -30,8 +30,8 @@ const os       = require('node:os');
 const readline = require('node:readline');
 
 const TOOL_META = {
-  version:       '110.40.0',
-  feature:       'v110-40-cheap-first-runtime',
+  version:       '110.41.0',
+  feature:       'v110-41-cheap-first-runtime',
   slug:          'kosame-cheap-first-runtime',
   dryRunDefault: true,
 };
@@ -156,12 +156,14 @@ const TIMEOUT_MS               = 30_000;
 // ── Default configs ───────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-  monthlyBudgetUsd:  20.00,
-  workers:           { ...DEFAULT_WORKER_REGISTRY },
-  migrationAliases:  { ...DEFAULT_MIGRATION_ALIASES },
-  chains:            { ...DEFAULT_CHAINS },
-  skipList:          [],
-  successHistory:    {},
+  monthlyBudgetUsd:   20.00,
+  workers:            { ...DEFAULT_WORKER_REGISTRY },
+  migrationAliases:   { ...DEFAULT_MIGRATION_ALIASES },
+  chains:             { ...DEFAULT_CHAINS },
+  skipList:           [],
+  successHistory:     {},
+  project_rules:      {},   // プロジェクト別プロバイダー制限（kosame-deepseek-project-guard のデフォルトと合成）
+  forbidden_keywords: {},   // 追加禁止キーワード（同上）
 };
 
 const DEFAULT_HEALTH_CACHE = {
@@ -884,6 +886,7 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
     skipHumanGate = false,
     taskInput     = prompt.slice(0, 120),
     taskType      = 'other',
+    project       = null,   // プロジェクト識別子 (DeepSeekガード用)
   } = opts;
 
   const out    = silent ? () => {} : console.log;
@@ -947,6 +950,22 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
     const modelId = worker.modelId;
     out(`\n  ${c('cyan', '→')} [${workerName}] ${c('dim', modelId)} を試行...`);
     const startMs = Date.now();
+
+    // DeepSeek プロジェクトガード
+    if (worker.provider === 'deepseek') {
+      let guard = { blocked: false };
+      try {
+        const { checkDeepSeekGuard } = require('./kosame-deepseek-project-guard');
+        guard = checkDeepSeekGuard({ project, provider: 'deepseek', prompt, config });
+      } catch (_) {}
+      if (guard.blocked) {
+        out(`     ${c('red', '⛔ DeepSeek ブロック')} [${guard.reason}]`);
+        out(`     ${c('yellow', '↷')} ${guard.fallback ?? 'next worker'} へ自動切替`);
+        attempts.push({ workerName, modelId, success: false, dryRun, blocked: true, reason: guard.reason, fallback: guard.fallback });
+        sessionSkipList.push(workerName);
+        continue;
+      }
+    }
 
     // DRY-RUN
     if (dryRun) {
@@ -1172,6 +1191,7 @@ function parseArgs(argv) {
     silent:      has('silent'),
     taskInput:   get('task-input') || null,
     taskType:    get('task-type') || 'other',
+    project:     get('project') || null,
   };
 }
 
@@ -1199,9 +1219,11 @@ Flags:
   }
 
   const result = await cheapFirstRun(args.prompt, args.difficulty, {
-    dryRun: args.dryRun, silent: args.silent,
+    dryRun:    args.dryRun,
+    silent:    args.silent,
     taskInput: args.taskInput ?? args.prompt.slice(0, 120),
     taskType:  args.taskType,
+    project:   args.project,
   });
 
   if (args.jsonMode) { console.log(JSON.stringify(result, null, 2)); return; }
@@ -1265,4 +1287,7 @@ module.exports = {
   updateSuccessHistory,
   waitForHumanApproval,
   cheapFirstRun,
+  callModel,
+  callOpenAI,
+  callAnthropic,
 };

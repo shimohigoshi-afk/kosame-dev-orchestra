@@ -613,8 +613,8 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
     };
   }
 
-  // human_gate チェック（high は必須）
-  if (isHigh) {
+  // human_gate チェック（high は必須、skipHumanGate=true の場合は呼び出し元が管理）
+  if (isHigh && !opts.skipHumanGate) {
     const approved = await waitForHumanApproval(chain[0], difficulty, { dryRun, out });
     if (!approved) {
       return {

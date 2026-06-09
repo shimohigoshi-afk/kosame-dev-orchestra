@@ -64,21 +64,18 @@ assert.strictEqual(
 );
 pass('No dispatch-result-*.json or executor-dummy files in git status');
 
-// After gitignore is applied, the two runtime artifacts must still be untracked
-// (they are intentionally not committed and not ignored)
-// Skipped in CI: fresh checkout has no local runtime artifacts
+// After gitignore is applied, known local runtime artifacts must remain untracked
+// when they are present. Fresh checkouts or other worktrees may not have them.
 if (process.env.CI) {
   pass('kosame-dev-orchestra@14.0.0 and node remain as expected untracked entries (skipped in CI)');
 } else {
-  assert.ok(
-    untracked.includes('kosame-dev-orchestra@14.0.0'),
-    'kosame-dev-orchestra@14.0.0 must remain as untracked'
-  );
-  assert.ok(
-    untracked.includes('node'),
-    'node must remain as untracked'
-  );
-  pass('kosame-dev-orchestra@14.0.0 and node remain as expected untracked entries');
+  const optionalLocalArtifacts = ['kosame-dev-orchestra@14.0.0', 'node'];
+  for (const artifact of optionalLocalArtifacts) {
+    const exists = fs.existsSync(path.join(ROOT, artifact));
+    if (!exists) continue;
+    assert.ok(untracked.includes(artifact), `${artifact} must remain as untracked when present`);
+  }
+  pass('optional local runtime artifacts remain untracked when present');
 }
 
 // No OTHER non-project files should be untracked (runtime/temp only)

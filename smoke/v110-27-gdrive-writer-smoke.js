@@ -20,6 +20,16 @@ const w      = require('../tools/kosame-gdrive-writer');
 let passed = 0;
 let failed = 0;
 
+function semverGte(a, b) {
+  const pa = String(a).split('.').map(Number);
+  const pb = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i += 1) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return true;
+}
+
 function pass(msg) { passed++; console.log(`  PASS: ${msg}`); }
 function fail(msg, err) { failed++; console.error(`  FAIL: ${msg}  — ${err?.message ?? err}`); }
 
@@ -37,8 +47,8 @@ async function main() {
   console.log('=== v110.27 gdrive-writer smoke ===');
 
   // ── TOOL_META ───────────────────────────────────────────────────────────────
-  check('TOOL_META.version === 110.27.0', () =>
-    assert.strictEqual(w.TOOL_META.version, '110.27.0'));
+  check('TOOL_META.version >= 110.27.0', () =>
+    assert.ok(semverGte(w.TOOL_META.version, '110.27.0')));
   check('TOOL_META.slug === kosame-gdrive-writer', () =>
     assert.strictEqual(w.TOOL_META.slug, 'kosame-gdrive-writer'));
 

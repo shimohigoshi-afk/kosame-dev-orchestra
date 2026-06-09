@@ -38,7 +38,7 @@ const KOSAME_DIR      = path.join(os.homedir(), '.kosame');
 const LOG_FILE        = path.join(KOSAME_DIR, 'learning-log.jsonl');
 const DEFAULT_CREDS   = path.join(KOSAME_DIR, 'credentials.json');
 
-const SHEET_NAME      = 'KOSAME Learning Log';
+const SHEET_NAME      = 'シート1';
 const SHEET_HEADER    = ['ts', 'taskType', 'difficulty', 'model', 'provider', 'costUsd', 'durationMs', 'success', 'escalated', 'dryRun', 'taskInput'];
 const DOC_NAME        = 'KOSAME 設計書（自動生成）';
 

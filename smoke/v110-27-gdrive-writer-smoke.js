@@ -43,8 +43,8 @@ async function main() {
     assert.strictEqual(w.TOOL_META.slug, 'kosame-gdrive-writer'));
 
   // ── Constants ───────────────────────────────────────────────────────────────
-  check('SHEET_NAME is KOSAME Learning Log', () =>
-    assert.strictEqual(w.SHEET_NAME, 'KOSAME Learning Log'));
+  check('SHEET_NAME is シート1', () =>
+    assert.strictEqual(w.SHEET_NAME, 'シート1'));
   check('DOC_NAME is KOSAME 設計書（自動生成）', () =>
     assert.strictEqual(w.DOC_NAME, 'KOSAME 設計書（自動生成）'));
   check('SHEET_HEADER has 11 columns', () =>
@@ -112,7 +112,7 @@ async function main() {
   });
   await checkAsync('writeSheetsRows dryRun: sheetName correct', async () => {
     const r = await w.writeSheetsRows({ dryRun: true });
-    assert.strictEqual(r.sheetName, 'KOSAME Learning Log');
+    assert.strictEqual(r.sheetName, 'シート1');
   });
   await checkAsync('writeSheetsRows dryRun: rowCount is number', async () => {
     const r = await w.writeSheetsRows({ dryRun: true });

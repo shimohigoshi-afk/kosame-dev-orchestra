@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.34.0",
+  "version": "110.35.0",
   "private": true,
   "scripts": {
     "setup:keys": "node tools/kosame-key-setup.js",
@@ -708,7 +708,11 @@
     "smoke:v110-33-gcs-client": "node smoke/v110-33-gcs-client-smoke.js",
     "gcs": "node tools/kosame-gcs-client.js",
     "smoke:v110-34-spec-analyzer": "node smoke/v110-34-spec-analyzer-smoke.js",
-    "spec:analyze": "node tools/kosame-spec-analyzer.js"
+    "spec:analyze": "node tools/kosame-spec-analyzer.js",
+    "smoke:v110-35-project-initializer": "node smoke/v110-35-project-initializer-smoke.js",
+    "new:project": "node tools/kosame-project-initializer.js",
+    "scan:projects": "node tools/kosame-project-initializer.js --scan",
+    "sync:commit": "node tools/kosame-project-initializer.js --sync-commit"
   },
   "dependencies": {
     "googleapis": "^173.0.0"

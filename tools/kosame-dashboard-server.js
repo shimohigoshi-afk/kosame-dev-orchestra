@@ -40,11 +40,13 @@ const TOOL_META = {
   slug:    'kosame-dashboard',
 };
 
-const ROOT       = path.resolve(__dirname, '..');
-const STATE_FILE = path.join(ROOT, 'state', 'dashboard-state.json');
+const ROOT          = path.resolve(__dirname, '..');
+const STATE_FILE    = path.join(ROOT, 'state', 'dashboard-state.json');
+const REGISTRY_FILE = path.join(ROOT, 'state', 'projects-registry.json');
 
 // ── Project registry ──────────────────────────────────────────────────────────
 // Add new projects here — one object per project.
+// 動的プロジェクトは state/projects-registry.json に追加 (kosame-project-initializer)。
 
 const PROJECTS = [
   {
@@ -62,6 +64,24 @@ const PROJECTS = [
     githubRepo: 'shimohigoshi-afk/anesty-board-cloudshell',
   },
 ];
+
+// ── Dynamic project registry ──────────────────────────────────────────────────
+// state/projects-registry.json から動的プロジェクトを読み込み、
+// 重複（同一 key）を除いて PROJECTS にマージする。
+
+function loadDynamicProjects() {
+  if (!fs.existsSync(REGISTRY_FILE)) return [];
+  try {
+    const reg = JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
+    if (!Array.isArray(reg.projects)) return [];
+    const knownKeys = new Set(PROJECTS.map(p => p.key));
+    return reg.projects.filter(p => p.key && !knownKeys.has(p.key));
+  } catch (_) { return []; }
+}
+
+function getEffectiveProjects() {
+  return [...PROJECTS, ...loadDynamicProjects()];
+}
 
 // ── Agent display config ──────────────────────────────────────────────────────
 
@@ -284,8 +304,8 @@ function buildDashboardState(opts = {}) {
     };
   }
 
-  // Build per-project state
-  const projects = PROJECTS.map(buildProjectState);
+  // Build per-project state (hardcoded + dynamic registry)
+  const projects = getEffectiveProjects().map(buildProjectState);
 
   return {
     autoRecording: buildAutoRecordingState(),
@@ -730,6 +750,9 @@ if (require.main === module) {
 module.exports = {
   TOOL_META,
   PROJECTS,
+  REGISTRY_FILE,
+  loadDynamicProjects,
+  getEffectiveProjects,
   buildProjectState,
   buildDashboardState,
   renderHtml,

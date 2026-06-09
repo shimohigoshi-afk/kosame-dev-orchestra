@@ -52,8 +52,8 @@ for (const p of dash.PROJECTS) {
 // buildDashboardState includes projects
 const state = dash.buildDashboardState({ dryRun: true });
 assert.ok(Array.isArray(state.projects), 'state.projects must be an array');
-assert.strictEqual(state.projects.length, dash.PROJECTS.length);
-pass(`state.projects has ${state.projects.length} entries`);
+assert.ok(state.projects.length >= dash.PROJECTS.length, `state.projects (${state.projects.length}) >= PROJECTS (${dash.PROJECTS.length})`);
+pass(`state.projects has ${state.projects.length} entries (>= ${dash.PROJECTS.length} hardcoded)`);
 
 for (const ps of state.projects) {
   assert.ok(typeof ps.key === 'string', 'project state must have key');

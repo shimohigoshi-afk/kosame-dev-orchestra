@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.37.0",
+  "version": "110.39.0",
   "private": true,
   "scripts": {
     "cheap:run": "node tools/kosame-cheap-first-runtime.js",
@@ -12,6 +12,9 @@
     "cost:config": "node tools/kosame-cost-guard.js --config",
     "cost:show": "node tools/kosame-cost-guard.js --show",
     "learning:log": "node tools/kosame-learning-log.js",
+    "gdrive:setup": "node tools/kosame-gdrive-setup.js",
+    "gdrive:check": "node tools/kosame-gdrive-setup.js --check",
+    "gdrive:test": "node tools/kosame-gdrive-setup.js --test --write",
     "gdrive:write-log": "node tools/kosame-gdrive-writer.js --sheets",
     "gdrive:write-log:live": "node tools/kosame-gdrive-writer.js --sheets --write",
     "gdrive:write-docs": "node tools/kosame-gdrive-writer.js --docs",

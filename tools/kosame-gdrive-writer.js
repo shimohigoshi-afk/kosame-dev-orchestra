@@ -2,12 +2,13 @@
 'use strict';
 
 /**
- * KOSAME Google Drive Auto Writer v110.27.0
+ * KOSAME Google Drive Auto Writer v110.39.0
  *
  * 【スプシ】KOSAME Learning Log シートへ learning-log.jsonl から行を書き込む
  * 【ドキュメント】KOSAME 設計書（自動生成）へバージョン/実装内容/commit/日時を追記
  *
  * 認証: サービスアカウント credentials.json（~/.kosame/credentials.json）
+ * 環境変数: Cloud Shell 再起動後も ~/.kosame/.env から自動復元
  * dryRun デフォルト — 実際の API 呼び出しは --write フラグが必要
  *
  * Usage:
@@ -18,10 +19,13 @@
  *   node tools/kosame-gdrive-writer.js --sheets --docs       # 両方 dry-run
  *   node tools/kosame-gdrive-writer.js --sheets --docs --write
  *
- * 環境変数:
+ * 環境変数 (自動ロード元: ~/.kosame/.env):
  *   KOSAME_SHEETS_ID   — スプレッドシート ID
  *   KOSAME_DOCS_ID     — ドキュメント ID
  *   KOSAME_CREDENTIALS — credentials.json パス（省略時 ~/.kosame/credentials.json）
+ *
+ * 初回セットアップ:
+ *   npm run gdrive:setup
  */
 
 const fs   = require('node:fs');
@@ -29,8 +33,8 @@ const path = require('node:path');
 const os   = require('node:os');
 
 const TOOL_META = {
-  version: '110.27.0',
-  feature: 'v110-27-gdrive-writer',
+  version: '110.39.0',
+  feature: 'v110-39-gdrive-writer',
   slug:    'kosame-gdrive-writer',
 };
 
@@ -42,18 +46,36 @@ const SHEET_NAME      = 'シート1';
 const SHEET_HEADER    = ['ts', 'taskType', 'difficulty', 'model', 'provider', 'costUsd', 'durationMs', 'success', 'escalated', 'dryRun', 'taskInput'];
 const DOC_NAME        = 'KOSAME 設計書（自動生成）';
 
+// ── 環境変数の自動ロード ───────────────────────────────────────────────────────
+// Cloud Shell 再起動後は process.env がリセットされるため、
+// モジュール require 時に ~/.kosame/.env から自動復元する。
+// process.env に既にセットされている変数は上書きしない。
+
+(() => {
+  try {
+    const { loadKosameEnv } = require('./kosame-gdrive-setup');
+    loadKosameEnv();
+  } catch (_) {
+    // setup モジュールが見つからない場合は無視（既存の process.env を使う）
+  }
+})();
+
 // ── 認証 ─────────────────────────────────────────────────────────────────────
 
 function loadCredentials(credsPath) {
   const p = credsPath || process.env.KOSAME_CREDENTIALS || DEFAULT_CREDS;
   if (!fs.existsSync(p)) {
-    throw new Error(`credentials.json not found: ${p}  (set KOSAME_CREDENTIALS or place at ${DEFAULT_CREDS})`);
+    throw new Error(
+      `credentials.json が見つかりません: ${p}\n` +
+      `  → GCP サービスアカウントキーを ${DEFAULT_CREDS} に配置してください。\n` +
+      `  → 初回セットアップ: npm run gdrive:setup`
+    );
   }
   const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
   // サービスアカウント必須フィールドを確認（値は出力しない）
   const required = ['type', 'project_id', 'private_key', 'client_email'];
   const missing = required.filter(k => !raw[k]);
-  if (missing.length > 0) throw new Error(`credentials.json missing fields: ${missing.join(', ')}`);
+  if (missing.length > 0) throw new Error(`credentials.json missing fields: ${missing.join(', ')}  → npm run gdrive:setup`);
   if (raw.type !== 'service_account') throw new Error(`credentials.json type must be "service_account", got: "${raw.type}"`);
   return raw;
 }

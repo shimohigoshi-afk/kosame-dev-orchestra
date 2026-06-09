@@ -59,9 +59,11 @@ const PROJECTS = [
   {
     key:        'anesty-board',
     label:      'anesty-board',
-    path:       path.resolve('/home/shimohigoshi/anesty-board'),
+    path:       path.resolve('/home/lavie/projects/anesty-board'),
     color:      '#d97706',
     githubRepo: 'shimohigoshi-afk/anesty-board-cloudshell',
+    cloudRun:   { service: 'anesty-board', project: 'kosame-prod-2026', region: 'asia-northeast1' },
+    scheduler:  { job: 'anesty-board-morning-report-9am', project: 'kosame-prod-2026', location: 'asia-northeast1' },
   },
 ];
 
@@ -152,16 +154,77 @@ function buildDemoCostForProject(key) {
   };
 }
 
+function readCloudRunStatus(proj) {
+  const cr = proj.cloudRun;
+  if (!cr) return null;
+  try {
+    const out = execSync(
+      `gcloud run services describe ${cr.service} --region=${cr.region} --project=${cr.project} --format=json`,
+      { encoding: 'utf8', timeout: 10000 }
+    );
+    const svc = JSON.parse(out);
+    const ready = svc?.status?.conditions?.find(c => c.type === 'Ready')?.status === 'True';
+    const versionLabel = svc?.metadata?.labels?.version || '';
+    return {
+      url:    svc?.status?.url || '',
+      ready,
+      revision: svc?.status?.latestReadyRevisionName || '',
+      version:  versionLabel.replace(/_/g, '.'),
+    };
+  } catch (_) {
+    return { url: '', ready: false, revision: '', version: '' };
+  }
+}
+
+function readGitTag(projPath) {
+  try {
+    const out = execSync(
+      `git tag --list 'v*' --sort=-v:refname --format='%(refname:short)'`,
+      { cwd: projPath, encoding: 'utf8', timeout: 5000 }
+    );
+    const tags = out.trim().split('\n').filter(Boolean);
+    return tags.length > 0 ? tags[0].replace(/^v/i, '') : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function readSchedulerStatus(proj) {
+  const sc = proj.scheduler;
+  if (!sc) return null;
+  try {
+    const out = execSync(
+      `gcloud scheduler jobs describe ${sc.job} --location=${sc.location} --project=${sc.project} --format=json`,
+      { encoding: 'utf8', timeout: 10000 }
+    );
+    const job = JSON.parse(out);
+    return {
+      schedule:   job.schedule || '',
+      timeZone:   job.timeZone || '',
+      state:      job.state || '',
+      lastRun:    job.lastAttemptTime || '',
+      nextRun:    job.scheduleTime || '',
+    };
+  } catch (_) {
+    return { schedule: '', timeZone: '', state: '', lastRun: '', nextRun: '' };
+  }
+}
+
 function buildProjectState(proj) {
   const gitLog = recentGitLog(proj.path, 5);
   const ci     = readCiState(proj.githubRepo);
   const cost   = buildDemoCostForProject(proj.key);
 
-  let version = '';
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(proj.path, 'package.json'), 'utf8'));
-    version = pkg.version || '';
-  } catch (_) {}
+  const cloudRun  = readCloudRunStatus(proj);
+  const scheduler = readSchedulerStatus(proj);
+
+  let version = cloudRun?.version || readGitTag(proj.path) || '';
+  if (!version) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(proj.path, 'package.json'), 'utf8'));
+      version = pkg.version || '';
+    } catch (_) {}
+  }
 
   return {
     key:     proj.key,
@@ -171,6 +234,8 @@ function buildProjectState(proj) {
     gitLog,
     ci,
     cost,
+    cloudRun,
+    scheduler,
   };
 }
 
@@ -514,6 +579,14 @@ function renderProjects(projects) {
         <td class="git-subject">\${escHtml(c.subject)}</td>
       </tr>\`
     ).join('');
+    const cloudRunHtml = p.cloudRun ? '<div class="project-cost"><span class="muted">Cloud Run:</span> ' +
+      (p.cloudRun.ready ? '<span style="color:#3fb950">● RUNNING</span>' : '<span style="color:#f85149">● STOPPED</span>') +
+      (p.cloudRun.revision ? ' <span style="color:#8b949e">' + escHtml(p.cloudRun.revision) + '</span>' : '') +
+      '</div>' : '';
+    const schedHtml = p.scheduler ? '<div class="project-cost"><span class="muted">Scheduler:</span> ' +
+      (p.scheduler.state === 'ENABLED' ? '<span style="color:#3fb950">● ENABLED</span>' : '<span style="color:#d29922">● ' + escHtml(p.scheduler.state) + '</span>') +
+      (p.scheduler.schedule ? ' <span style="color:#8b949e">' + escHtml(p.scheduler.schedule) + ' ' + escHtml(p.scheduler.timeZone) + '</span>' : '') +
+      '</div>' : '';
     return \`<div class="project-card">
   <div class="project-header">
     <div class="project-dot" style="background:\${p.color}"></div>
@@ -522,6 +595,8 @@ function renderProjects(projects) {
     <span class="ci-badge \${ciClass}">\${ciLabel}</span>
   </div>
   <div class="project-body">
+    \${cloudRunHtml}
+    \${schedHtml}
     <div class="project-cost">Cost: <strong>\${fmtUsd(p.cost && p.cost.totalUsd)}</strong>\${p.ci.name ? ' &nbsp;·&nbsp; '+escHtml(p.ci.name) : ''}</div>
     <table class="git-log">\${gitRows || '<tr><td style="color:#484f58">no commits</td></tr>'}</table>
   </div>

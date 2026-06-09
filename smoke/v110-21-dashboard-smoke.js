@@ -70,6 +70,19 @@ for (const key of ['gemini', 'gpt', 'claude', 'grok']) {
   pass(`agents.${key} has correct shape`);
 }
 
+// projects
+assert.ok(Array.isArray(state.projects), 'state.projects must be an array');
+const anesty = state.projects.find(p => p.key === 'anesty-board');
+assert.ok(anesty, 'projects must include anesty-board');
+assert.ok(anesty.cloudRun, 'anesty-board must have cloudRun field');
+assert.ok(anesty.scheduler, 'anesty-board must have scheduler field');
+assert.ok(typeof anesty.cloudRun.ready === 'boolean', 'cloudRun.ready must be boolean');
+assert.ok(typeof anesty.scheduler.state === 'string', 'scheduler.state must be string');
+// version priority: Cloud Run label > git tag > package.json
+assert.ok(anesty.version && anesty.version.includes('87.0.27'), 'anesty-board version should be 87.0.27 (from Cloud Run label)');
+assert.ok(anesty.cloudRun.version && anesty.cloudRun.version.includes('87.0.27'), 'cloudRun.version should come from label');
+pass('anesty-board has cloudRun, scheduler, and correct version');
+
 // cost
 const cost = state.cost;
 assert.ok(cost, 'state.cost must exist');

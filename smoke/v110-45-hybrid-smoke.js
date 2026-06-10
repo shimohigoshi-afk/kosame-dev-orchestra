@@ -95,6 +95,7 @@ ok('PS1: UNC WSL path detection', ps1Src.includes('TrimStart'));
 ok('PS1: wslpath uses -d Ubuntu', ps1Src.includes('-d Ubuntu -- wslpath'));
 ok('PS1: auto-dev uses base64 exec', ps1Src.includes('adB64'));
 ok('PS1: auto-dev no direct bash-lc cmd', !ps1Src.includes('$autoDevCmd'));
+ok('PS1: auto-dev no 2>&1 Write-Host pipe', !ps1Src.includes('bash -s" 2>&1 | Write-Host'));
 
 // ── 3. Secret redaction (reuse activity-events redact) ──────────────────────
 

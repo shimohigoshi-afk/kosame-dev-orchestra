@@ -283,7 +283,7 @@ Write-Host "  Executing on WSL (nvm)..." -ForegroundColor $CYAN
 
 $exitCode = 0
 try {
-  & wsl.exe -d Ubuntu -u lavie -- bash -lc "echo '$adB64' | base64 -d | bash -s" 2>&1 | Write-Host
+  & wsl.exe -d Ubuntu -u lavie -- bash -lc "echo '$adB64' | base64 -d | bash -s"
   $exitCode = $LASTEXITCODE
 } catch {
   Write-Host "ERROR: Auto-dev failed: $_" -ForegroundColor $RED

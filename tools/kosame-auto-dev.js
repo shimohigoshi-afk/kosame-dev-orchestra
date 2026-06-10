@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+const activity = require('./kosame-activity-events');
+
 /**
  * KOSAME Auto Dev v110.42.0
  *
@@ -677,6 +679,7 @@ async function runTask(task, opts = {}) {
 
   // 1. Human gate (before execution)
   if (requiresHumanGate(task)) {
+try { activity.emit('human_gate', { taskId: task.id, project: project || '', dryRun, stage: 'human_gate', progressPercent: 50, message: (task.title || '').slice(0, 60) }); } catch (_) {}
     const approved = await waitForHumanGate(task, { dryRun, out });
     if (!approved) {
       return { taskId: task.id, title: task.title, difficulty: task.difficulty, success: false, skipped: true, reason: '却下', durationMs: Date.now() - startMs, verifyPass: false };
@@ -685,6 +688,7 @@ async function runTask(task, opts = {}) {
 
   // 2. Claude Code 実装
   out(`     ${c('dim', 'Claude Code へ投げ中...')}`);
+try { activity.emit('agent_started', { taskId: task.id, project: project || '', dryRun, agent: 'Claude Code', provider: 'anthropic', model: 'claude-sonnet-4-6', stage: 'implementing', progressPercent: 10, mission: (task.title || '').slice(0, 60) }); } catch (_) {}
   const claudeResult = await executeClaude(task, { dryRun, project, out, repoRoot });
 
   // Claude Code 失敗 → fallback (max 1回)
@@ -706,6 +710,7 @@ async function runTask(task, opts = {}) {
     // Fallback only once
     if (failure?.fallback === 'cheapFirstRun' && !usedFallback) {
       out(`     ${c('yellow', '↷')} Claude Code ${failure?.type ?? 'error'} → cheapFirstRun で代替実行`);
+try { activity.emit('fallback_started', { taskId: task.id, project: project || '', dryRun, agent: implModel || '', stage: 'fallback', progressPercent: 30 }); } catch (_) {}
       const { cheapFirstRun, readConfig } = require('./kosame-cheap-first-runtime');
       const cfg = config || readConfig();
       const cf = await cheapFirstRun(buildTaskPrompt(task, project), task.difficulty, {
@@ -746,6 +751,7 @@ async function runTask(task, opts = {}) {
   // 4. Auto verify
   const verify1 = autoVerify(task, implOutput, {});
   out(`     verify: ${verify1.pass ? c('green', `✓ PASS (${verify1.score})`) : c('red', `✗ FAIL (${verify1.score}) [${verify1.reason}]`)}`);
+try { activity.emit(verify1.pass ? 'verify_passed' : 'verify_failed', { taskId: task.id, project: project || '', dryRun, stage: 'verifying', status: verify1.pass ? 'PASS' : 'FAIL', progressPercent: verify1.pass ? 70 : 60, message: verify1.reason || '' }); } catch (_) {}
 
   let verifyPass   = verify1.pass;
   let finalOutput  = implOutput;
@@ -850,6 +856,7 @@ async function runTask(task, opts = {}) {
   if (verifyPass) {
     recordTaskResult(task, taskResult, { dryRun });
     out(`     ${c('dim', '記録済 → learning-log / GDrive')}`);
+try { activity.emit(taskResult.verifyPass ? 'task_completed' : 'task_failed', { taskId: task.id, project: project || '', dryRun, stage: 'done', status: taskResult.verifyPass ? 'PASS' : 'FAIL', agent: taskResult.model || '', currentFile: (taskResult.writtenFiles || []).join(','), message: taskResult.verifyPass ? '完了' : (taskResult.reason || 'FAIL'), progressPercent: taskResult.verifyPass ? 100 : 0, elapsedMs: taskResult.durationMs }); } catch (_) {}
   }
 
   return taskResult;

@@ -27,18 +27,22 @@ const CHANNEL = {
 };
 
 const EVENT = {
-  START: 'start',
-  DONE:  'done',
-  ERROR: 'error'
+  START:      'start',
+  DONE:       'done',
+  ERROR:      'error',
+  WARNING:    'warning',
+  HUMAN_GATE: 'human_gate',
 };
 
 // ── Message builder ────────────────────────────────────────────────────────────
 
 function buildMessage(event, payload) {
   const ts   = new Date().toISOString();
-  const tag  = event === EVENT.START  ? '[開始]'
-             : event === EVENT.DONE   ? '[完了]'
-             : event === EVENT.ERROR  ? '[エラー]'
+  const tag  = event === EVENT.START      ? '[開始]'
+             : event === EVENT.DONE       ? '[完了]'
+             : event === EVENT.ERROR      ? '[エラー]'
+             : event === EVENT.WARNING    ? '[警告]'
+             : event === EVENT.HUMAN_GATE ? '[要承認]'
              : '[通知]';
   const body = payload.message || payload.task || '(no message)';
   const detail = payload.detail ? ` — ${payload.detail}` : '';
@@ -182,6 +186,14 @@ async function notifyError(payload, channels, opts) {
   return notify(EVENT.ERROR, payload, channels, opts);
 }
 
+async function notifyWarning(payload, channels, opts) {
+  return notify(EVENT.WARNING, payload, channels, opts);
+}
+
+async function notifyHumanGate(payload, channels, opts) {
+  return notify(EVENT.HUMAN_GATE, payload, channels, opts);
+}
+
 // ── Low-level HTTPS helper ────────────────────────────────────────────────────
 
 function _requireHttps() {
@@ -241,5 +253,7 @@ module.exports = {
   notify,
   notifyStart,
   notifyDone,
-  notifyError
+  notifyError,
+  notifyWarning,
+  notifyHumanGate,
 };

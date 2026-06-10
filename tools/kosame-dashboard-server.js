@@ -466,6 +466,26 @@ function renderHtml() {
   .cost-val{width:80px;text-align:right;font-size:11px;color:#8b949e}
   .saving-box{margin-top:10px;padding:8px 10px;background:#0d2818;border:1px solid #1a4731;border-radius:4px;font-size:11px;color:#3fb950}
 
+  /* Activity / Live Progress */
+  .activity-card{background:#161b22;border:1px solid #30363d;border-radius:6px;margin-bottom:14px;overflow:hidden}
+  .activity-header{background:#1c2333;padding:8px 14px;font-size:11px;color:#8b949e;border-bottom:1px solid #21262d;letter-spacing:1px}
+  .activity-body{padding:12px 14px}
+  .activity-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px;border-bottom:1px solid #161b22}
+  .activity-row:last-child{border-bottom:none}
+  .activity-ev{margin:0;padding:0}
+  .activity-ev a{color:#58a6ff;text-decoration:none}
+  .status-work{color:#58a6ff}
+  .status-done{color:#3fb950}
+  .status-fail{color:#f85149}
+  .status-gate{color:#d29922}
+  .status-idle{color:#484f58}
+  .mission-box{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .mission-item{font-size:11px}
+  .mission-item strong{color:#e6edf3;font-size:12px}
+  .mission-label{color:#8b949e;font-size:10px}
+  .progress-wrap{width:120px;height:4px;background:#21262d;border-radius:2px;overflow:hidden}
+  .progress-bar{height:100%;border-radius:2px;transition:width .5s}
+
   /* Work log */
   .log-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #161b22;font-size:11px}
   .log-row:last-child{border-bottom:none}
@@ -488,13 +508,27 @@ function renderHtml() {
 <h1>⬡ KOSAME Dev Orchestra</h1>
 <div class="subtitle">Multi-Project Dashboard &nbsp;·&nbsp; <span id="mode-badge"></span></div>
 
-<div class="project-card" id="auto-recording-card" style="margin-bottom:20px">
+<div class="activity-card" id="auto-recording-card" style="margin-bottom:14px">
   <div class="project-header">
     <span class="project-dot" style="background:#58a6ff"></span>
     <strong>Auto Recording</strong>
   </div>
   <div class="project-body" id="auto-recording">
     <div class="muted">loading...</div>
+  </div>
+</div>
+
+<div class="activity-card" id="live-mission-card" style="margin-bottom:14px">
+  <div class="activity-header">⬡ CURRENT MISSION</div>
+  <div class="activity-body" id="live-mission">
+    <div class="muted">no active mission</div>
+  </div>
+</div>
+
+<div class="activity-card" id="activity-log-card" style="margin-bottom:14px">
+  <div class="activity-header">⬡ ACTIVITY LOG</div>
+  <div class="activity-body" id="activity-log">
+    <div class="muted">no activity yet</div>
   </div>
 </div>
 
@@ -671,6 +705,76 @@ function renderWorkLog(entries) {
   }).join('');
 }
 
+// ── Activity event rendering ──────────────────────────────────────────────────
+
+const EVENT_COLORS = {
+  task_started:'#58a6ff', agent_assigned:'#58a6ff', agent_started:'#58a6ff',
+  file_read:'#8b949e', file_changed:'#58a6ff',
+  verify_started:'#d29922', verify_passed:'#3fb950', verify_failed:'#f85149',
+  repair_started:'#d29922',
+  review_started:'#d29922', review_passed:'#3fb950', review_failed:'#f85149',
+  fallback_started:'#d29922',
+  human_gate:'#d29922',
+  task_completed:'#3fb950', task_failed:'#f85149',
+};
+
+function renderMission(events) {
+  const wrap = document.getElementById('live-mission');
+  if (!wrap) return;
+  // Find the latest event for the most recent unique taskId
+  const taskIds = [...new Set(events.filter(e => e.taskId).map(e => e.taskId))];
+  const latestTaskId = taskIds[0]; // most recent unique task
+  const active = latestTaskId ? events.find(e => e.taskId === latestTaskId) : events[events.length - 1];
+  if (!active || !active.taskId) {
+    wrap.innerHTML = '<div class="muted">no active mission</div>';
+    return;
+  }
+  const pct = active.progressPercent != null ? active.progressPercent : 0;
+  const elapsed = active.elapsedMs ? (active.elapsedMs / 1000).toFixed(0) + 's' : '-';
+  const mode = active.dryRun ? 'dryRun' : 'live';
+  const evClass = {task_failed:'status-fail',task_completed:'status-done',human_gate:'status-gate'}[active.eventType] || 'status-work';
+  wrap.innerHTML =
+    '<div class="mission-box">' +
+      '<div class="mission-item"><span class="mission-label">project</span><br><strong>' + escHtml(active.project||'-') + '</strong></div>' +
+      '<div class="mission-item"><span class="mission-label">agent</span><br><strong>' + escHtml(active.agent||active.model||'-') + '</strong></div>' +
+      '<div class="mission-item"><span class="mission-label">stage</span><br><strong>' + escHtml(active.stage||active.eventType||'-') + '</strong></div>' +
+      '<div class="mission-item"><span class="mission-label">file</span><br><strong>' + escHtml(active.currentFile||'-') + '</strong></div>' +
+      '<div class="mission-item"><span class="mission-label">progress</span><br><div class="progress-wrap"><div class="progress-bar" style="width:'+pct+'%;background:#58a6ff"></div></div></div>' +
+      '<div class="mission-item"><span class="mission-label">' + pct + '% / ' + elapsed + '</span></div>' +
+      '<div class="mission-item"><span class="mission-label">mode</span><br><span class="' + evClass + '">' + mode + '</span></div>' +
+    '</div>' +
+    '<div style="margin-top:6px;font-size:10px;color:#8b949e">' + escHtml(active.message||'') + '</div>' +
+    '<div style="margin-top:2px;font-size:10px;color:#484f58">last: ' + fmtTs(active.timestamp) + '</div>';
+}
+
+function renderActivityLog(events) {
+  const wrap = document.getElementById('activity-log');
+  if (!wrap) return;
+  if (!events || events.length === 0) {
+    wrap.innerHTML = '<div class="muted">no activity yet</div>';
+    return;
+  }
+  wrap.innerHTML = events.slice(0, 50).map(e => {
+    const c = EVENT_COLORS[e.eventType] || '#8b949e';
+    const evClass = e.eventType === 'task_failed' ? 'status-fail'
+      : e.eventType === 'task_completed' || e.eventType === 'review_passed' || e.eventType === 'verify_passed' ? 'status-done'
+      : e.eventType === 'human_gate' ? 'status-gate'
+      : e.eventType === 'verify_failed' || e.eventType === 'review_failed' ? 'status-fail'
+      : 'status-work';
+    const icon = {task_started:'▶',task_decomposed:'◇',agent_assigned:'@',agent_started:'→',file_read:'📄',file_changed:'✏',
+      verify_started:'🔍',verify_passed:'✓',verify_failed:'✗',repair_started:'🔧',review_started:'👁',review_passed:'★',review_failed:'✗',
+      fallback_started:'↷',human_gate:'⛔',task_completed:'✅',task_failed:'❌'}[e.eventType] || '·';
+    const msg = (e.message || '').slice(0, 60);
+    const ts = fmtTs(e.timestamp);
+    return '<div class="activity-row">' +
+      '<span style="color:' + c + ';width:16px;flex-shrink:0">' + icon + '</span>' +
+      '<span class="activity-ev" style="color:' + c + '">' + escHtml(e.eventType) + '</span>' +
+      '<span style="color:#8b949e;width:60px;flex-shrink:0">' + ts + '</span>' +
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(msg) + '</span>' +
+    '</div>';
+  }).join('');
+}
+
 function applyState(state) {
   document.getElementById('dash-ver').textContent = state.version || '-';
   document.getElementById('mode-badge').innerHTML = state.demo
@@ -687,7 +791,7 @@ function applyState(state) {
   renderWorkLog(state.workLog || []);
 }
 
-// ── SSE connection ────────────────────────────────────────────────────────────
+// ── SSE connections ───────────────────────────────────────────────────────────
 const es = new EventSource('/api/events');
 es.addEventListener('state', e => { try { applyState(JSON.parse(e.data)); } catch(_){} });
 es.onerror = () => {
@@ -695,6 +799,36 @@ es.onerror = () => {
 };
 
 fetch('/api/state').then(r=>r.json()).then(applyState).catch(()=>{});
+
+// ── Activity SSE ──────────────────────────────────────────────────────────────
+const activityLog = [];
+const aes = new EventSource('/api/activity/stream');
+aes.addEventListener('activity', e => {
+  try {
+    const ev = JSON.parse(e.data);
+    activityLog.unshift(ev);
+    if (activityLog.length > 100) activityLog.length = 100;
+    renderMission(activityLog);
+    renderActivityLog(activityLog);
+  } catch(_) {}
+});
+aes.onerror = () => {
+  setTimeout(() => {
+    fetch('/api/activity').then(r=>r.json()).then(entries => {
+      activityLog.length = 0;
+      entries.forEach(e => activityLog.push(e));
+      renderMission(activityLog);
+      renderActivityLog(activityLog);
+    }).catch(()=>{});
+  }, 5000);
+};
+
+// Initial activity fetch
+fetch('/api/activity').then(r=>r.json()).then(entries => {
+  entries.forEach(e => activityLog.push(e));
+  renderMission(activityLog);
+  renderActivityLog(activityLog);
+}).catch(()=>{});
 </script>
 </body>
 </html>`;
@@ -750,6 +884,48 @@ function startServer(port, opts = {}) {
       const state = buildDashboardState({ dryRun });
       sendSseState(res, state);
       req.on('close', () => SSE_CLIENTS.delete(res));
+      return;
+    }
+
+    if (url === '/api/activity') {
+      const { getLatest } = require('./kosame-activity-events');
+      getLatest(50).then(entries => {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify(entries));
+      }).catch(() => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('[]');
+      });
+      return;
+    }
+
+    if (url === '/api/activity/stream') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+      const { addSseClient, getLatest } = require('./kosame-activity-events');
+      addSseClient(res);
+
+      // Send recent history on connect
+      getLatest(20).then(entries => {
+        for (const entry of entries.reverse()) {
+          try { res.write(`event: activity\ndata: ${JSON.stringify(entry)}\n\n`); } catch (_) {}
+        }
+      });
+
+      // Keepalive
+      const keepalive = setInterval(() => {
+        try { res.write(': keepalive\n\n'); } catch (_) { clearInterval(keepalive); }
+      }, 15000);
+
+      req.on('close', () => {
+        clearInterval(keepalive);
+        const { removeSseClient } = require('./kosame-activity-events');
+        removeSseClient(res);
+      });
       return;
     }
 

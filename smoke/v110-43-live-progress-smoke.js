@@ -21,7 +21,7 @@ const events = require(EVENTS_PATH);
 pass('activity-events module exists');
 
 // 2. TOOL_META
-assert.strictEqual(events.TOOL_META.version, '110.43.0');
+assert.strictEqual(events.TOOL_META.version, '110.45.0');
 pass('TOOL_META.version');
 
 // 3. Event types defined

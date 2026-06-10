@@ -53,9 +53,7 @@ const LOG_FILE = path.join(os.homedir(), '.kosame', 'activity-events.jsonl');
 
 function checkAuth(req) {
   const apiKey = process.env.KOSAME_API_KEY;
-  if (!apiKey) return true;                            // 開発環境: キー未設定はオープン
-  const auth = req.headers['authorization'] || '';
-  if (auth.startsWith('Bearer ')) return auth.slice(7) === apiKey;
+  if (!apiKey) return true;
   return (req.headers['x-api-key'] || '') === apiKey;
 }
 
@@ -356,6 +354,14 @@ if (require.main === module) {
   startServer(port, { dryRun });
 }
 
+function getDevRunState() {
+  return {
+    running:   !!_run,
+    runId:     _run?.runId    ?? null,
+    elapsedMs: _run ? Date.now() - _run.startMs : null,
+  };
+}
+
 module.exports = {
   TOOL_META,
   startServer,
@@ -363,4 +369,7 @@ module.exports = {
   checkAuth,
   currentLogSize,
   startTail,
+  handleDevRun,
+  getDevRunState,
+  notifyDiscordAsync,
 };

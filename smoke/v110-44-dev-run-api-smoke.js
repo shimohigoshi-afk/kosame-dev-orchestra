@@ -52,22 +52,22 @@ ok('parseArgs: --write sets dryRun=false', write.dryRun === false);
 const customPort = api.parseArgs(['node', 'script', '--port=9999']);
 ok('parseArgs: --port=9999', customPort.port === 9999);
 
-// checkAuth — no key configured → always pass
+// checkAuth — uses X-API-Key only (not Bearer, to avoid Cloud Run IAM conflict)
 delete process.env.KOSAME_API_KEY;
 ok('checkAuth: no key = always pass', api.checkAuth({ headers: {} }));
-ok('checkAuth: no key = pass even with wrong header',
-  api.checkAuth({ headers: { authorization: 'Bearer wrong' } }));
+ok('checkAuth: no key = pass even with Bearer',
+  api.checkAuth({ headers: { authorization: 'Bearer ignored' } }));
 
 // checkAuth — key configured
 process.env.KOSAME_API_KEY = 'test-secret-key';
-ok('checkAuth: correct Bearer token',
-  api.checkAuth({ headers: { authorization: 'Bearer test-secret-key' } }));
 ok('checkAuth: correct X-API-Key header',
   api.checkAuth({ headers: { 'x-api-key': 'test-secret-key' } }));
-ok('checkAuth: wrong Bearer token',
-  !api.checkAuth({ headers: { authorization: 'Bearer wrong' } }));
-ok('checkAuth: empty headers → fail',
+ok('checkAuth: missing X-API-Key → fail',
   !api.checkAuth({ headers: {} }));
+ok('checkAuth: wrong X-API-Key → fail',
+  !api.checkAuth({ headers: { 'x-api-key': 'wrong' } }));
+ok('checkAuth: Bearer token alone → fail (X-API-Key required)',
+  !api.checkAuth({ headers: { authorization: 'Bearer test-secret-key' } }));
 delete process.env.KOSAME_API_KEY;
 
 // currentLogSize
@@ -149,13 +149,13 @@ try {
       ok('watchLog: does NOT re-forward locally-emitted events (dedup)', !forwarded);
 
       // ── Dashboard server: watchLog wired in startServer ──────────────────────
+      // Set KOSAME_API_KEY before starting to test auth enforcement
+      process.env.KOSAME_API_KEY = 'smoke-server-key';
       const { startServer } = require('../tools/kosame-dashboard-server');
       const srv = startServer(0, { dryRun: true });
       srv.on('listening', () => {
-        // Just verify it started without error and has the activity watcher
         ok('dashboard: startServer with JSONL watcher runs without error', true);
-        srv.close();
-        ok('dashboard: server closes cleanly', true);
+        const dport = srv.address().port;
 
         // ── SSE event format ─────────────────────────────────────────────────
         const sseLines = [];
@@ -169,21 +169,81 @@ try {
         const hasSseLine = sseLines.some(l => l.includes('event: activity') && l.includes('smoke-sse'));
         ok('activity SSE: emit() broadcasts to registered SSE client', hasSseLine);
 
-        // ── Discord notify: no URL = no throw ────────────────────────────────
-        delete process.env.DISCORD_WEBHOOK_URL;
-        try {
-          const { notifyDone } = require('../tools/real-time-progress-notifier');
-          notifyDone({ message: 'smoke done' }, {}, { dryRun: true, silent: true }).then(() => {
-            ok('Discord: notifyDone with no channels = no throw', true);
-            summary();
-          }).catch(() => {
-            ok('Discord: notifyDone with no channels = no throw', false);
-            summary();
+        // ── Dev Run API新增 exports ──────────────────────────────────────────
+        ok('api: handleDevRun exported', typeof api.handleDevRun === 'function');
+        ok('api: getDevRunState exported', typeof api.getDevRunState === 'function');
+
+        const state0 = api.getDevRunState();
+        ok('getDevRunState: running=false', state0.running === false);
+        ok('getDevRunState: runId=null',    state0.runId === null);
+
+        // ── Dashboard server integrated dev routes ───────────────────────────
+        function checkHealth() {
+          http.get(`http://localhost:${dport}/health`, (hres) => {
+            let data = '';
+            hres.on('data', d => data += d);
+            hres.on('end', () => {
+              const parsed = JSON.parse(data);
+              ok('dashboard /health returns 200', hres.statusCode === 200);
+              ok('dashboard /health ok=true', parsed.ok === true);
+              checkStatusNoAuth();
+            });
           });
-        } catch (_) {
-          ok('Discord: notifyDone with no channels = no throw', false);
-          summary();
         }
+
+        function checkStatusNoAuth() {
+          http.get(`http://localhost:${dport}/api/dev/status`, (sres) => {
+            ok('dashboard /api/dev/status without auth → 401', sres.statusCode === 401);
+            sres.resume();
+            checkStatusWithAuth();
+          });
+        }
+
+        function checkStatusWithAuth() {
+          const opts = {
+            hostname: 'localhost',
+            port: dport,
+            path: '/api/dev/status',
+            method: 'GET',
+            headers: { 'X-API-Key': 'smoke-server-key' },
+          };
+          const sreq = http.request(opts, (sres2) => {
+            let d2 = '';
+            sres2.on('data', c => d2 += c);
+            sres2.on('end', () => {
+              const p = JSON.parse(d2);
+              ok('dashboard /api/dev/status with auth → 200', sres2.statusCode === 200);
+              ok('dashboard /api/dev/status ok=true', p.ok === true);
+              ok('dashboard /api/dev/status running=false', p.running === false);
+              delete process.env.KOSAME_API_KEY;
+              checkDiscord();
+            });
+          });
+          sreq.end();
+        }
+
+        function checkDiscord() {
+          delete process.env.DISCORD_WEBHOOK_URL;
+          try {
+            const { notifyDone } = require('../tools/real-time-progress-notifier');
+            notifyDone({ message: 'smoke done' }, {}, { dryRun: true, silent: true }).then(() => {
+              ok('Discord: notifyDone with no channels = no throw', true);
+              srv.close();
+              ok('dashboard: server closes cleanly', true);
+              summary();
+            }).catch(() => {
+              ok('Discord: notifyDone with no channels = no throw', false);
+              srv.close();
+              summary();
+            });
+          } catch (_) {
+            ok('Discord: notifyDone with no channels = no throw', false);
+            srv.close();
+            summary();
+          }
+        }
+
+        checkHealth();
       });
     }, 700);
   }, 700);

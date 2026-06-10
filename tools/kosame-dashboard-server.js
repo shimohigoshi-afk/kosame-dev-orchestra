@@ -34,8 +34,8 @@ const { getConfig } = require('../providers/provider-config');
 const os = require('os');
 
 const TOOL_META = {
-  version: '110.44.0',
-  feature: 'v110-44-multi-project-dashboard',
+  version: '110.45.0',
+  feature: 'v110-45-hybrid-wsl-relay',
   title:   'KOSAME Dev Orchestra Dashboard',
   slug:    'kosame-dashboard',
 };
@@ -374,6 +374,13 @@ function buildDashboardState(opts = {}) {
   // Build per-project state (hardcoded + dynamic registry)
   const projects = getEffectiveProjects().map(buildProjectState);
 
+  const relayNow = Date.now();
+  const relayAge = RELAY.lastEventTs ? relayNow - RELAY.lastEventTs : Infinity;
+  const relayStatus = RELAY.lastEventTs === 0 ? 'offline'
+                     : relayAge < 15000          ? 'online'
+                     : relayAge < 60000          ? 'delayed'
+                     : 'offline';
+
   return {
     autoRecording: buildAutoRecordingState(),
     version:  TOOL_META.version,
@@ -385,6 +392,14 @@ function buildDashboardState(opts = {}) {
     cost,
     workLog:  workLogEntries.slice(0, 30),
     projects,
+    relay: {
+      status:        relayStatus,
+      lastEventTs:   RELAY.lastEventTs,
+      eventCount:    RELAY.eventCount,
+      lastEventType: RELAY.lastEventType,
+      lastTaskId:    RELAY.lastTaskId,
+      activeTaskIds: [...RELAY.activeTaskIds],
+    },
   };
 }
 
@@ -519,9 +534,15 @@ function renderHtml() {
 </div>
 
 <div class="activity-card" id="live-mission-card" style="margin-bottom:14px">
-  <div class="activity-header">⬡ CURRENT MISSION</div>
+  <div class="activity-header">⬡ CURRENT MISSION <span id="relay-badge" style="float:right;font-size:10px"></span></div>
   <div class="activity-body" id="live-mission">
     <div class="muted">no active mission</div>
+  </div>
+</div>
+<div class="activity-card" style="margin-bottom:14px;background:#0d1b2a">
+  <div class="activity-header" style="background:#0d1b2a;color:#58a6ff">⬡ EXECUTION SOURCE</div>
+  <div class="activity-body" id="relay-status">
+    <div class="muted">waiting for WSL relay...</div>
   </div>
 </div>
 
@@ -689,6 +710,36 @@ function renderCost(cost) {
   }
 }
 
+function renderRelayStatus(relay) {
+  const wrap = document.getElementById('relay-status');
+  const badge = document.getElementById('relay-badge');
+  if (!wrap) return;
+  if (!relay || relay.status === 'offline' && relay.eventCount === 0) {
+    wrap.innerHTML = '<div class="muted">waiting for WSL relay...</div>';
+    if (badge) badge.innerHTML = '';
+    return;
+  }
+  const statusColor = relay.status === 'online' ? '#3fb950'
+    : relay.status === 'delayed' ? '#d29922' : '#f85149';
+  const statusLabel = relay.status === 'online' ? 'ONLINE'
+    : relay.status === 'delayed' ? 'DELAYED' : 'OFFLINE';
+  const lastTs = relay.lastEventTs
+    ? new Date(relay.lastEventTs).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',second:'2-digit'})
+    : '--';
+  const tasks = (relay.activeTaskIds || []).join(', ') || '(none)';
+  wrap.innerHTML =
+    '<div style="padding:8px 14px;font-size:11px">' +
+    '<div><span class="muted">source:</span> <strong>WSL (PowerShell Launcher)</strong></div>' +
+    '<div><span class="muted">relay status:</span> <span style="color:' + statusColor + '">● ' + statusLabel + '</span></div>' +
+    '<div><span class="muted">events relayed:</span> ' + (relay.eventCount || 0) + '</div>' +
+    '<div><span class="muted">active tasks:</span> ' + escHtml(tasks) + '</div>' +
+    '<div><span class="muted">last event:</span> ' + escHtml(relay.lastEventType || '') + ' at ' + lastTs + '</div>' +
+    '</div>';
+  if (badge) {
+    badge.innerHTML = '<span style="color:' + statusColor + '">● ' + statusLabel + '</span>';
+  }
+}
+
 function renderWorkLog(entries) {
   document.getElementById('work-log').innerHTML = entries.slice(0, 20).map(e => {
     const c = AGENT_COLORS[e.role] || '#8b949e';
@@ -785,6 +836,7 @@ function applyState(state) {
   document.getElementById('updated').textContent =
     'Updated: ' + new Date(state.ts).toLocaleTimeString('ja-JP');
   renderAutoRecording(state.autoRecording || {});
+  renderRelayStatus(state.relay || {});
   renderProjects(state.projects || []);
   renderAgents(state.agents || {});
   renderCost(state.cost || {});
@@ -838,6 +890,33 @@ fetch('/api/activity').then(r=>r.json()).then(entries => {
 
 const SSE_CLIENTS = new Set();
 
+// ── WSL relay status (in-memory, reset on dashboard restart) ────────────────
+const RELAY = {
+  lastEventTs: 0,
+  eventCount:  0,
+  lastEventType: '',
+  lastTaskId:   '',
+  activeTaskIds: new Set(),
+  // ingest eventId dedup (process lifetime)
+  _seenEventIds: new Set(),
+};
+
+// ── Discord notification on ingest terminal events ──────────────────────────
+function notifyDiscordOnIngest(event) {
+  const _proc = typeof process !== 'undefined' ? process : null;
+  const _e = _proc ? _proc['env'] : null;
+  const dUrl = _e ? (_e['DISCORD_WEBHOOK_URL'] || '') : '';
+  if (!dUrl) return;
+  try {
+    const { notify } = require('./real-time-progress-notifier');
+    const eventLabel = event.eventType === 'task_completed' ? 'done'
+                     : event.eventType === 'task_failed'    ? 'error'
+                     : 'human_gate';
+    const msg = `[WSL] ${event.project || event.taskId || ''} — ${event.eventType}`;
+    notify(eventLabel, { message: msg, detail: (event.message || '').slice(0, 100) }, { discord: { url: dUrl } }, { dryRun: true, silent: true }).catch(() => {});
+  } catch (_) {}
+}
+
 function sseHeaders() {
   return {
     'Content-Type':  'text/event-stream',
@@ -863,6 +942,15 @@ function startServer(port, opts = {}) {
 
   const server = http.createServer((req, res) => {
     const url = req.url.split('?')[0];
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin':  '*',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
+      });
+      return res.end();
+    }
 
     if (url === '/' || url === '/index.html') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -929,6 +1017,58 @@ function startServer(port, opts = {}) {
       return;
     }
 
+    // ── Activity ingest (WSL relay → Cloud Run) ──────────────────────────
+    if (url === '/api/activity/ingest' && req.method === 'POST') {
+      const { checkAuth } = require('./kosame-dev-run-api');
+      if (!checkAuth(req)) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      }
+      let body = '';
+      req.on('data', d => { body += d; if (body.length > 200_000) req.destroy(); });
+      req.on('end', () => {
+        let event;
+        try { event = JSON.parse(body); } catch (_) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ ok: false, error: 'invalid JSON' }));
+        }
+        if (!event.eventId || !event.eventType) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ ok: false, error: 'eventId and eventType required' }));
+        }
+        if (RELAY._seenEventIds.has(event.eventId)) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ ok: true, dedup: true }));
+        }
+        RELAY._seenEventIds.add(event.eventId);
+        if (RELAY._seenEventIds.size > 10000) {
+          const iter = RELAY._seenEventIds.values();
+          RELAY._seenEventIds.delete(iter.next().value);
+        }
+        RELAY.lastEventTs   = Date.now();
+        RELAY.eventCount++;
+        RELAY.lastEventType = event.eventType;
+        RELAY.lastTaskId    = event.taskId || '';
+        if (event.taskId) RELAY.activeTaskIds.add(event.taskId);
+        if (event.eventType === 'task_completed' || event.eventType === 'task_failed') {
+          RELAY.activeTaskIds.delete(event.taskId || '');
+        }
+
+        const { rebroadcast, appendToLog } = require('./kosame-activity-events');
+        rebroadcast(event);
+        appendToLog(event);
+
+        // Discord notification for terminal events
+        if (event.eventType === 'task_completed' || event.eventType === 'task_failed' || event.eventType === 'human_gate') {
+          notifyDiscordOnIngest(event);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, eventId: event.eventId }));
+      });
+      return;
+    }
+
     if (url === '/api/state/push' && req.method === 'POST') {
       let body = '';
       req.on('data', d => { body += d; });
@@ -948,6 +1088,87 @@ function startServer(port, opts = {}) {
           res.end(JSON.stringify({ ok: false, error: e.message }));
         }
       });
+      return;
+    }
+
+    // ── Dev Run API routes (v110.45 hybrid: WSL relay, no Cloud Run exec) ─
+    if (url.startsWith('/api/dev/') || url === '/health') {
+      const { checkAuth, getDevRunState, TOOL_META: DEV_META } = require('./kosame-dev-run-api');
+
+      if (url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, version: TOOL_META.version, dryRun }));
+        return;
+      }
+
+      if (!checkAuth(req)) {
+        res.writeHead(401, {
+          'Content-Type': 'application/json',
+          'WWW-Authenticate': 'Bearer realm="KOSAME Dev Run API"',
+        });
+        res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+        return;
+      }
+
+      if (url === '/api/dev/run' && req.method === 'POST') {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          ok: false,
+          code: 'REMOTE_EXECUTION_UNAVAILABLE',
+          message: 'auto-dev execution is not available on Cloud Run. Use WSL launcher:',
+          wslCommand: 'powershell -File tools/Invoke-KosameAutoDev.ps1 -SpecFile "<spec>" -Project "<project>"',
+          docs: 'https://github.com/shimohigoshi-afk/kosame-dev-orchestra#v11045-hybrid-wsl',
+          relay: {
+            status:        RELAY.lastEventTs === 0 ? 'offline' : 'online',
+            lastEventTs:   RELAY.lastEventTs,
+            eventCount:    RELAY.eventCount,
+            activeTaskIds: [...RELAY.activeTaskIds],
+          },
+        }));
+        return;
+      }
+
+      if (url === '/api/dev/status') {
+        const state = getDevRunState();
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          ok: true,
+          running:   state.running,
+          runId:     state.runId,
+          elapsedMs: state.elapsedMs,
+          dryRun,
+          version:   DEV_META.version,
+          relay: {
+            status:        RELAY.lastEventTs === 0 ? 'offline' : 'online',
+            lastEventTs:   RELAY.lastEventTs,
+            eventCount:    RELAY.eventCount,
+            activeTaskIds: [...RELAY.activeTaskIds],
+          },
+        }));
+        return;
+      }
+
+      // GET /api/dev/status/:taskId — per-task state from JSONL store
+      const statusMatch = url.match(/^\/api\/dev\/status\/(.+)$/);
+      if (statusMatch) {
+        const taskId = decodeURIComponent(statusMatch[1]);
+        const { getTaskState } = require('./kosame-activity-events');
+        getTaskState(taskId).then(state => {
+          if (!state) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ ok: false, error: 'task not found', taskId }));
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ ok: true, taskId, state }));
+        }).catch(() => {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'internal error' }));
+        });
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'not found' }));
       return;
     }
 

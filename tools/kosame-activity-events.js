@@ -25,7 +25,7 @@ const os   = require('node:os');
 const readline = require('node:readline');
 
 const TOOL_META = {
-  version: '110.43.0',
+  version: '110.45.0',
   feature: 'v110-43-activity-events',
   slug:    'kosame-activity-events',
 };

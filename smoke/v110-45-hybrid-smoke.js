@@ -1,0 +1,240 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * v110.45 Hybrid (PowerShell → WSL → Cloud Run) smoke test
+ *
+ * Tests the full hybrid integration without WSL/Cloud Run dependency:
+ *   - activity-relay module functions
+ *   - Dashboard activity ingest endpoint
+ *   - eventId dedup, taskId isolation
+ *   - Secret redaction
+ *   - POST /api/dev/run → REMOTE_EXECUTION_UNAVAILABLE
+ *   - relay status ONLINE/DELAYED/OFFLINE
+ *   - PowerShell launcher path conversion logic
+ *   - Discord notification on terminal events
+ */
+
+const http = require('node:http');
+const path = require('node:path');
+const fs   = require('node:fs');
+const os   = require('node:os');
+
+let pass = 0;
+let fail = 0;
+
+function ok(label, cond) {
+  if (cond) { console.log(`  PASS: ${label}`); pass++; }
+  else       { console.error(`  FAIL: ${label}`); fail++; }
+}
+
+// ── 1. PowerShell launcher path conversion ──────────────────────────────────
+
+function wslpath(winPath) {
+  // Simulates wslpath -u behavior: C:\path → /mnt/c/path (cross-platform)
+  // Does not use path.resolve to avoid Linux path normalization
+  const cleaned = winPath.replace(/\\/g, '/');
+  const match = cleaned.match(/^([A-Za-z]):\/(.*)/);
+  if (match) {
+    return '/mnt/' + match[1].toLowerCase() + '/' + match[2];
+  }
+  if (cleaned.startsWith('/')) return cleaned;
+  return cleaned;
+}
+
+ok('wslpath: C:\\path → /mnt/c/path', wslpath('C:\\specs\\feature.md') === '/mnt/c/specs/feature.md');
+ok('wslpath: D:\\a\\b → /mnt/d/a/b', wslpath('D:\\a\\b') === '/mnt/d/a/b');
+ok('wslpath: preserves forward slashes', wslpath('C:/specs/file.md') === '/mnt/c/specs/file.md');
+
+// ── 2. Secret redaction (reuse activity-events redact) ──────────────────────
+
+const { redact } = require('../tools/kosame-activity-events');
+
+ok('redact: API key masked', redact('apiKey=sk-my-secret-key-12345').includes('[REDACTED]'));
+ok('redact: normal text unchanged', redact('hello world') === 'hello world');
+ok('redact: empty string', redact('') === '');
+ok('redact: null', redact(null) === '');
+
+// ── 3. Activity-relay module ────────────────────────────────────────────────
+
+const relayModule = require('../tools/kosame-activity-relay');
+ok('relay: start exported', typeof relayModule.start === 'function');
+
+// Start relay with invalid URL (should log warning but not throw)
+const origUrl = process.env.KOSAME_CLOUD_RUN_URL;
+delete process.env.KOSAME_CLOUD_RUN_URL;
+process.env.KOSAME_API_KEY = 'test-relay-key';
+const relay = relayModule.start();
+ok('relay: start with no URL does not throw', typeof relay.stop === 'function');
+ok('relay: stats returns object', typeof relay.stats === 'function');
+const stats = relay.stats();
+ok('relay: stats.ok is number', typeof stats.ok === 'number');
+relay.stop();
+ok('relay: stop does not throw', true);
+
+// ── 4. Dashboard server integrated routes ───────────────────────────────────
+
+const { startServer } = require('../tools/kosame-dashboard-server');
+process.env.KOSAME_API_KEY = 'smoke-v110-45-key';
+const srv = startServer(0, { dryRun: true });
+const PORT = srv.address().port;
+
+function httpGet(urlPath, headers = {}) {
+  return new Promise((resolve) => {
+    const opts = {
+      hostname: 'localhost',
+      port: PORT,
+      path: urlPath,
+      method: 'GET',
+      headers,
+    };
+    const req = http.request(opts, (res) => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: data }));
+    });
+    req.on('error', (e) => resolve({ status: 0, error: e.message, body: '' }));
+    req.end();
+  });
+}
+
+function httpPost(urlPath, body, headers = {}) {
+  return new Promise((resolve) => {
+    const b = JSON.stringify(body);
+    const opts = {
+      hostname: 'localhost',
+      port: PORT,
+      path: urlPath,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(b), ...headers },
+    };
+    const req = http.request(opts, (res) => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+    });
+    req.on('error', (e) => resolve({ status: 0, error: e.message, body: '' }));
+    req.write(b);
+    req.end();
+  });
+}
+
+async function testIngest() {
+  // 4a. /health
+  const health = await httpGet('/health');
+  ok('ingest: /health returns 200', health.status === 200);
+  const hbody = JSON.parse(health.body);
+  ok('ingest: /health version 110.45.0', hbody.version === '110.45.0');
+
+  // 4b. /api/dev/run without auth
+  const noAuth = await httpPost('/api/dev/run', { spec: 'test', project: 'test' });
+  ok('ingest: /api/dev/run no auth → 401', noAuth.status === 401);
+
+  // 4c. /api/dev/run with wrong key → 401
+  const wrongKey = await httpPost('/api/dev/run', { spec: 'test' }, { 'X-API-Key': 'wrong' });
+  ok('ingest: /api/dev/run wrong key → 401', wrongKey.status === 401);
+
+  // 4d. /api/dev/run with correct key → REMOTE_EXECUTION_UNAVAILABLE
+  const runResp = await httpPost('/api/dev/run', { spec: 'test', project: 'test' }, { 'X-API-Key': 'smoke-v110-45-key' });
+  ok('ingest: /api/dev/run auth OK', runResp.status === 200);
+  const runBody = JSON.parse(runResp.body);
+  ok('ingest: /api/dev/run code REMOTE_EXECUTION_UNAVAILABLE', runBody.code === 'REMOTE_EXECUTION_UNAVAILABLE');
+  ok('ingest: /api/dev/run wslCommand present', typeof runBody.wslCommand === 'string');
+  ok('ingest: /api/dev/run relay status present', typeof runBody.relay === 'object');
+
+  // 4e. /api/activity/ingest without auth → 401
+  const ingestNoAuth = await httpPost('/api/activity/ingest', { eventId: 'e1', eventType: 'task_started' });
+  ok('ingest: /api/activity/ingest no auth → 401', ingestNoAuth.status === 401);
+
+  // 4f. /api/activity/ingest with wrong key → 401
+  const ingestWrongKey = await httpPost('/api/activity/ingest', { eventId: 'e2', eventType: 'task_started' }, { 'X-API-Key': 'wrong' });
+  ok('ingest: /api/activity/ingest wrong key → 401', ingestWrongKey.status === 401);
+
+  // 4g. /api/activity/ingest with correct key → 200
+  const ingestOk = await httpPost('/api/activity/ingest',
+    { eventId: 'e3-test', eventType: 'task_started', taskId: 'T-v110-45', project: 'smoke', message: 'ingest test' },
+    { 'X-API-Key': 'smoke-v110-45-key' }
+  );
+  ok('ingest: /api/activity/ingest correct key → 200', ingestOk.status === 200);
+  const ingestBody = JSON.parse(ingestOk.body);
+  ok('ingest: /api/activity/ingest ok=true', ingestBody.ok === true);
+  ok('ingest: /api/activity/ingest eventId returned', ingestBody.eventId === 'e3-test');
+
+  // 4h. Duplicate eventId → dedup
+  const ingestDup = await httpPost('/api/activity/ingest',
+    { eventId: 'e3-test', eventType: 'task_started', taskId: 'T-v110-45' },
+    { 'X-API-Key': 'smoke-v110-45-key' }
+  );
+  ok('ingest: duplicate eventId → 200 dedup=true', ingestDup.status === 200);
+  const dupBody = JSON.parse(ingestDup.body);
+  ok('ingest: dedup flag set', dupBody.dedup === true);
+
+  // 4i. Missing eventId → 400
+  const badIngest = await httpPost('/api/activity/ingest',
+    { eventType: 'task_started' },
+    { 'X-API-Key': 'smoke-v110-45-key' }
+  );
+  ok('ingest: missing eventId → 400', badIngest.status === 400);
+
+  // 4j. /api/dev/status/:taskId (requires auth)
+  const authHeaders = { 'X-API-Key': 'smoke-v110-45-key' };
+  const taskStatus = await httpGet('/api/dev/status/T-v110-45', authHeaders);
+  ok('ingest: /api/dev/status/T-v110-45 returns 200', taskStatus.status === 200);
+  const tsBody = JSON.parse(taskStatus.body);
+  ok('ingest: task status ok=true', tsBody.ok === true);
+  ok('ingest: task status taskId match', tsBody.taskId === 'T-v110-45');
+
+  // 4k. /api/dev/status/nonexistent → 404
+  const missingTask = await httpGet('/api/dev/status/T-NONEXISTENT', authHeaders);
+  ok('ingest: unknown task → 404', missingTask.status === 404);
+
+  // 4l. /api/state contains relay info
+  const state = await httpGet('/api/state');
+  const sbody = JSON.parse(state.body);
+  ok('ingest: /api/state has relay field', typeof sbody.relay === 'object');
+  ok('ingest: /api/state relay.eventCount > 0', sbody.relay.eventCount > 0);
+
+  // 4m. Ingest terminal event (task_completed) — should not throw (Discord silently skipped)
+  const terminalIngest = await httpPost('/api/activity/ingest',
+    { eventId: 'e4-complete', eventType: 'task_completed', taskId: 'T-complete', project: 'smoke', message: 'done' },
+    { 'X-API-Key': 'smoke-v110-45-key' }
+  );
+  ok('ingest: terminal event task_completed → 200', terminalIngest.status === 200);
+
+  // 4n. Ingest human_gate
+  const gateIngest = await httpPost('/api/activity/ingest',
+    { eventId: 'e5-gate', eventType: 'human_gate', taskId: 'T-gate', project: 'smoke', message: 'approval needed' },
+    { 'X-API-Key': 'smoke-v110-45-key' }
+  );
+  ok('ingest: human_gate → 200', gateIngest.status === 200);
+
+  // 4o. /api/dev/status shows relay info
+  const devStatus = await httpGet('/api/dev/status', authHeaders);
+  const dsBody = JSON.parse(devStatus.body);
+  ok('ingest: /api/dev/status has relay field', typeof dsBody.relay === 'object');
+  ok('ingest: /api/dev/status relay.eventCount > 0', dsBody.relay.eventCount > 0);
+
+  // Cleanup
+  delete process.env.KOSAME_API_KEY;
+  srv.close();
+  ok('ingest: server closes cleanly', true);
+
+  summary();
+}
+
+// Run tests after server is listening
+srv.on('listening', () => {
+  // Small delay for server to be fully ready
+  setTimeout(testIngest, 200);
+});
+
+function summary() {
+  console.log('');
+  if (fail === 0) {
+    console.log(`✅ v110.45 hybrid smoke PASSED (${pass} checks)`);
+    process.exit(0);
+  } else {
+    console.error(`❌ v110.45 hybrid smoke FAILED (pass=${pass} fail=${fail})`);
+    process.exit(1);
+  }
+}

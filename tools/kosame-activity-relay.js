@@ -46,6 +46,7 @@ const QUEUE_FILE  = path.join(os.homedir(), '.kosame', 'activity-relay-queue.jso
 
 const RELAY_URL     = process.env.KOSAME_CLOUD_RUN_URL || '';
 const API_KEY       = process.env.KOSAME_API_KEY       || '';
+const ID_TOKEN      = process.env.KOSAME_IDENTITY_TOKEN || '';
 const POLL_MS       = parseInt(process.env.RELAY_POLL_MS || '1000', 10);
 const MAX_RETRIES   = parseInt(process.env.RELAY_MAX_RETRIES || '5', 10);
 const QUEUE_MAX     = parseInt(process.env.RELAY_QUEUE_MAX || '500', 10);
@@ -173,11 +174,20 @@ function relayEvent(event) {
       },
       timeout: 10000,
     };
+    if (ID_TOKEN) {
+      opts.headers['Authorization'] = 'Bearer ' + ID_TOKEN;
+    }
 
     const req = mod.request(opts, (res) => {
       let data = '';
       res.on('data', d => data += d);
       res.on('end', () => {
+        if (res.statusCode === 403 && ID_TOKEN) {
+          log('warn', 'IAM 403 on ' + event.eventId + ' - may need token refresh');
+        }
+        if (res.statusCode === 401) {
+          log('warn', 'API key 401 on ' + event.eventId + ' - check KOSAME_API_KEY');
+        }
         const ok = res.statusCode >= 200 && res.statusCode < 300;
         resolve({ ok, statusCode: res.statusCode });
       });
@@ -357,6 +367,7 @@ function _stats() {
     sent: _sent.size,
     lastSendMs: _lastSendMs,
     cloudRunUrl: RELAY_URL ? RELAY_URL.replace(/\/\/[^@]+@/, '//***@') : '',
+    iamConfigured: !!ID_TOKEN,
   };
 }
 

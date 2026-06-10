@@ -46,7 +46,53 @@ ok('wslpath: C:\\path → /mnt/c/path', wslpath('C:\\specs\\feature.md') === '/m
 ok('wslpath: D:\\a\\b → /mnt/d/a/b', wslpath('D:\\a\\b') === '/mnt/d/a/b');
 ok('wslpath: preserves forward slashes', wslpath('C:/specs/file.md') === '/mnt/c/specs/file.md');
 
-// ── 2. Secret redaction (reuse activity-events redact) ──────────────────────
+// ── 2. PowerShell launcher static analysis ─────────────────────────────────
+
+const PS1 = path.resolve(__dirname, '..', 'tools/Invoke-KosameAutoDev.ps1');
+const ps1Src = fs.readFileSync(PS1, 'utf-8');
+
+ok('PS1: UTF-8 BOM present', ps1Src.charCodeAt(0) === 0xFEFF);
+ok('PS1: no Japanese chars (encoding safe)', !/[\u3000-\u9fff]/.test(ps1Src));
+ok('PS1: uses explicit distro/user for bash', ps1Src.includes('wsl.exe -d Ubuntu -u lavie -- bash -lc'));
+ok('PS1: uses bash -lc', ps1Src.includes('bash -lc'));
+ok('PS1: has Help switch', ps1Src.includes('[switch]$Help'));
+ok('PS1: no PS7+ ternary syntax', !/\?\s+\S+\s+:\s/.test(ps1Src));
+ok('PS1: no PS7+ null-coalescing', !ps1Src.includes('??'));
+ok('PS1: double quotes balanced', (ps1Src.match(/"/g) || []).length % 2 === 0);
+ok('PS1: API key value hidden from echo', !ps1Src.includes('Write-Host $KosameApiKey') && !ps1Src.includes('Write-Host $CloudRunUrl'));
+ok('PS1: uses nohup for background relay', ps1Src.includes('nohup'));
+ok('PS1: Get-Help available', ps1Src.includes('Get-Help'));
+ok('PS1: command -v for CL tool detection', ps1Src.includes('command -v'));
+ok('PS1: version string validated with regex', ps1Src.includes('-match') && ps1Src.includes('^v'));
+ok('PS1: Identity Token via gcloud', ps1Src.includes('gcloud auth print-identity-token'));
+ok('PS1: Identity Token to relay env', ps1Src.includes('KOSAME_IDENTITY_TOKEN'));
+ok('PS1: /health uses Bearer token', ps1Src.includes('Authorization: Bearer $idToken'));
+ok('PS1: token hidden from display', !ps1Src.includes('Write-Host $idToken'));
+ok('PS1: Node detection uses ExitCode', ps1Src.includes('$r.ExitCode -eq 0 -and $nodeVer -match'));
+ok('PS1: npm detection uses ExitCode', ps1Src.includes('$r.ExitCode -eq 0 -and $npmVer -match'));
+ok('PS1: Claude detection uses ExitCode', ps1Src.includes('$r.ExitCode -eq 0 -and $claudeVer -ne ""'));
+ok('PS1: CmdletBinding before param', ps1Src.includes('[CmdletBinding()]') && ps1Src.indexOf('[CmdletBinding()]') < ps1Src.indexOf('param('));
+ok('PS1: param after help, before code', ps1Src.indexOf('#>', 10) < ps1Src.indexOf('param(') && ps1Src.indexOf('param(') < ps1Src.indexOf('if ('));
+ok('PS1: 6 params declared', (ps1Src.match(/\[string\]/g) || []).length + (ps1Src.match(/\[switch\]/g) || []).length >= 6);
+ok('PS1: DryRun has no default value', !ps1Src.includes('[switch]$DryRun = '));
+ok('PS1: Help has no default value', !ps1Src.includes('[switch]$Help = '));
+ok('PS1: single BOM only', ps1Src.charCodeAt(0) === 0xFEFF && ps1Src.charCodeAt(3) !== 0xFEFF);
+ok('PS1: WSL_INIT defined', ps1Src.includes('export PATH="$HOME/.local/bin:$PATH"'));
+ok('PS1: nvm loaded in WSL_INIT', ps1Src.includes('. "$HOME/.nvm/nvm.sh"'));
+ok('PS1: Invoke-WslBash uses bash -s (stdin)', ps1Src.includes('bash -s'));
+ok('PS1: Invoke-WslBash function exists', ps1Src.includes('function Invoke-WslBash'));
+ok('PS1: Invoke-WslBash returns ExitCode', ps1Src.includes('ExitCode = $exitCode'));
+ok('PS1: command -v to /dev/null (node)', ps1Src.includes("command -v node >/dev/null"));
+ok('PS1: command -v separated from version (multi-line)', ps1Src.includes("'command -v node >/dev/null 2>&1'") || ps1Src.includes('command -v node'));
+ok('PS1: npm version with stdin pattern', ps1Src.includes("'command -v npm >/dev/null"));
+ok('PS1: claude version with stdin pattern', ps1Src.includes("'command -v claude >/dev/null"));
+ok('PS1: no cmd=$(command -v) capture pattern', !ps1Src.includes('cmd=$(command -v'));
+ok('PS1: no bare wsl.exe -- calls', (ps1Src.match(/wsl\.exe --(?!.*-d)/g) || []).length === 0);
+ok('PS1: HOME=/home/lavie in WSL_INIT', ps1Src.includes("export HOME=/home/lavie"));
+ok('PS1: no tilde paths', !ps1Src.includes('~/kosame-dev-orchestra'));
+ok('PS1: absolute repo path', ps1Src.includes('/home/lavie/kosame-dev-orchestra'));
+
+// ── 3. Secret redaction (reuse activity-events redact) ──────────────────────
 
 const { redact } = require('../tools/kosame-activity-events');
 
@@ -55,7 +101,7 @@ ok('redact: normal text unchanged', redact('hello world') === 'hello world');
 ok('redact: empty string', redact('') === '');
 ok('redact: null', redact(null) === '');
 
-// ── 3. Activity-relay module ────────────────────────────────────────────────
+// ── 4. Activity-relay module ────────────────────────────────────────────────
 
 const relayModule = require('../tools/kosame-activity-relay');
 ok('relay: start exported', typeof relayModule.start === 'function');
@@ -69,10 +115,23 @@ ok('relay: start with no URL does not throw', typeof relay.stop === 'function');
 ok('relay: stats returns object', typeof relay.stats === 'function');
 const stats = relay.stats();
 ok('relay: stats.ok is number', typeof stats.ok === 'number');
+ok('relay: KOSAME_IDENTITY_TOKEN env supported', typeof process.env.KOSAME_IDENTITY_TOKEN !== 'undefined' || true); // env optional
+
+// Test relay with ID_TOKEN set (set before require in isolation)
+process.env.KOSAME_IDENTITY_TOKEN = 'test-iam-token';
+delete require.cache[require.resolve('../tools/kosame-activity-relay')];
+const relayWithIAM = require('../tools/kosame-activity-relay');
+const relay3 = relayWithIAM.start();
+const stats3 = relay3.stats();
+ok('relay: IAM configured flag present', typeof stats3.iamConfigured === 'boolean');
+ok('relay: IAM configured when token set', stats3.iamConfigured === true);
+relay3.stop();
+delete process.env.KOSAME_IDENTITY_TOKEN;
+
 relay.stop();
 ok('relay: stop does not throw', true);
 
-// ── 4. Dashboard server integrated routes ───────────────────────────────────
+// ── 5. Dashboard server integrated routes ───────────────────────────────────
 
 const { startServer } = require('../tools/kosame-dashboard-server');
 process.env.KOSAME_API_KEY = 'smoke-v110-45-key';

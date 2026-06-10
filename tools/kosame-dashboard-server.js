@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Dev Orchestra — Real-time Dashboard v110.22.0
+ * KOSAME Dev Orchestra — Real-time Dashboard v110.41.0
  *
  * Multi-project dashboard showing per-project:
  *   - git log (last 5 commits)
@@ -34,7 +34,7 @@ const { getConfig } = require('../providers/provider-config');
 const os = require('os');
 
 const TOOL_META = {
-  version: '110.22.0',
+  version: '110.41.0',
   feature: 'v110-22-multi-project-dashboard',
   title:   'KOSAME Dev Orchestra Dashboard',
   slug:    'kosame-dashboard',
@@ -88,10 +88,11 @@ function getEffectiveProjects() {
 // ── Agent display config ──────────────────────────────────────────────────────
 
 const AGENT_CONFIG = {
-  gemini: { label: 'Gemini', color: '#4285f4', icon: 'G' },
-  gpt:    { label: 'GPT',    color: '#10a37f', icon: 'P' },
-  claude: { label: 'Claude', color: '#d97706', icon: 'C' },
-  grok:   { label: 'Grok',   color: '#8b5cf6', icon: 'X' },
+  gemini:   { label: 'Gemini',           color: '#4285f4', icon: 'G' },
+  gpt:      { label: 'GPT',              color: '#10a37f', icon: 'P' },
+  claude:   { label: 'Claude',           color: '#d97706', icon: 'C' },
+  grok:     { label: 'Grok',             color: '#8b5cf6', icon: 'X' },
+  deepseek: { label: 'DeepSeek V4 Flash', color: '#e11d48', icon: 'D' },
 };
 
 // ── Per-project state builder ─────────────────────────────────────────────────
@@ -354,9 +355,10 @@ function buildDashboardState(opts = {}) {
 
   const agents = {};
   for (const [key, cfg] of Object.entries(AGENT_CONFIG)) {
-    const keyPresent = key === 'gemini' ? providerCfg.geminiKeyPresent
-                     : key === 'gpt'    ? providerCfg.openaiKeyPresent
-                     : key === 'claude' ? true
+    const keyPresent = key === 'gemini'   ? providerCfg.geminiKeyPresent
+                     : key === 'gpt'      ? providerCfg.openaiKeyPresent
+                     : key === 'claude'   ? true
+                     : key === 'deepseek' ? providerCfg.deepseekKeyPresent
                      : false;
     agents[key] = {
       label:     cfg.label,
@@ -387,7 +389,7 @@ function buildDashboardState(opts = {}) {
 }
 
 function defaultModel(key) {
-  return { gemini: 'gemini-2.5-flash', gpt: 'gpt-4o-mini', claude: 'claude-sonnet-4-6', grok: 'grok-2' }[key] ?? 'unknown';
+  return { gemini: 'gemini-2.5-flash', gpt: 'gpt-4o-mini', claude: 'claude-sonnet-4-6', grok: 'grok-2', deepseek: 'deepseek-v4-flash' }[key] ?? 'unknown';
 }
 
 // ── HTML template ─────────────────────────────────────────────────────────────
@@ -433,7 +435,7 @@ function renderHtml() {
   .git-log tr:not(:last-child) td{border-bottom:1px solid #161b22}
 
   /* Agent cards */
-  .agents{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .agents{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
   .agent-card{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:14px 12px;position:relative;overflow:hidden}
   .agent-card.active{border-color:var(--c)}
   .agent-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)}
@@ -477,7 +479,7 @@ function renderHtml() {
   .updated{font-size:10px;color:#484f58;margin-top:2px}
 
   @media(max-width:700px){
-    .agents{grid-template-columns:repeat(2,1fr)}
+    .agents{grid-template-columns:repeat(3,1fr)}
     .projects{grid-template-columns:1fr}
   }
 </style>
@@ -521,7 +523,7 @@ function renderHtml() {
 
 <script>
 const AGENT_COLORS = {
-  gemini:'#4285f4', gpt:'#10a37f', claude:'#d97706', grok:'#8b5cf6'
+  gemini:'#4285f4', gpt:'#10a37f', claude:'#d97706', grok:'#8b5cf6', deepseek:'#e11d48'
 };
 const PROVIDER_BAR_COLOR = {
   gemini:'#4285f4', openai:'#10a37f', claude:'#d97706', grok:'#8b5cf6',

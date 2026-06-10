@@ -91,6 +91,10 @@ ok('PS1: no bare wsl.exe -- calls', (ps1Src.match(/wsl\.exe --(?!.*-d)/g) || [])
 ok('PS1: HOME=/home/lavie in WSL_INIT', ps1Src.includes("export HOME=/home/lavie"));
 ok('PS1: no tilde paths', !ps1Src.includes('~/kosame-dev-orchestra'));
 ok('PS1: absolute repo path', ps1Src.includes('/home/lavie/kosame-dev-orchestra'));
+ok('PS1: UNC WSL path detection', ps1Src.includes('TrimStart'));
+ok('PS1: wslpath uses -d Ubuntu', ps1Src.includes('-d Ubuntu -- wslpath'));
+ok('PS1: auto-dev uses base64 exec', ps1Src.includes('adB64'));
+ok('PS1: auto-dev no direct bash-lc cmd', !ps1Src.includes('$autoDevCmd'));
 
 // ── 3. Secret redaction (reuse activity-events redact) ──────────────────────
 

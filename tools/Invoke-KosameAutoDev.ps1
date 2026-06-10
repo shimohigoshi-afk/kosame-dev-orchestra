@@ -222,10 +222,27 @@ Write-Host ""
 # ---- Convert Windows path to WSL path ----
 $absPath = (Resolve-Path $SpecFile).Path
 $wslSpecPath = ""
-try { $wslSpecPath = & wsl.exe wslpath -u $absPath 2>$null } catch {}
-if (-not $wslSpecPath) {
-  $wslSpecPath = "/mnt/$($absPath -replace '^([A-Z]):\\', '$1/' -replace '\\', '/')".ToLower()
+
+# UNC WSL paths: \\wsl.localhost\Ubuntu\... or \\wsl$\Ubuntu\...
+if ($absPath -match '^\\\\wsl') {
+  $parts = $absPath.TrimStart('\') -split '\\', 3
+  if ($parts.Count -ge 3) { $wslSpecPath = '/' + ($parts[2] -replace '\\', '/') }
 }
+
+# Try wslpath via the correct distro
+if (-not $wslSpecPath) {
+  try {
+    $wslRaw = & wsl.exe -d Ubuntu -- wslpath -u $absPath 2>$null
+    $wslOut  = (($wslRaw | Where-Object { $_ }) -join '').Trim()
+    if ($wslOut -match '^/') { $wslSpecPath = $wslOut }
+  } catch {}
+}
+
+# Fallback: C:\Users\... → /mnt/c/users/...
+if (-not $wslSpecPath) {
+  $wslSpecPath = "/mnt/$($absPath -replace '^([A-Za-z]):\\', '${1}/' -replace '\\', '/')".ToLower()
+}
+
 Write-Host "  WSL spec path: $wslSpecPath" -ForegroundColor $GRAY
 
 # ---- Build relay environment (no secrets displayed) ----
@@ -252,13 +269,21 @@ Write-Host "  Spec    : $SpecFile" -ForegroundColor $GREEN
 Write-Host "============================================" -ForegroundColor $GREEN
 Write-Host ""
 
-$timeoutEnv = "CLAUDE_TIMEOUT_MS=$env:CLAUDE_TIMEOUT_MS"
-$autoDevCmd = "cd $KOSAME_REPO && $timeoutEnv npm run auto:dev -- $autoDevArgs"
-Write-Host "  Executing on WSL..." -ForegroundColor $CYAN
+$timeoutLine = if ($env:CLAUDE_TIMEOUT_MS) { "export CLAUDE_TIMEOUT_MS=$($env:CLAUDE_TIMEOUT_MS)" } else { "" }
+$autoDevScript = @'
+export HOME=/home/lavie
+export PATH="$HOME/.local/bin:$PATH"
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+fi
+'@ + "`n$timeoutLine`ncd /home/lavie/kosame-dev-orchestra`nnpm run auto:dev -- $autoDevArgs`n"
+$adBytes = [System.Text.Encoding]::UTF8.GetBytes($autoDevScript)
+$adB64   = [Convert]::ToBase64String($adBytes)
+Write-Host "  Executing on WSL (nvm)..." -ForegroundColor $CYAN
 
 $exitCode = 0
 try {
-  & wsl.exe -d Ubuntu -u lavie -- bash -lc $autoDevCmd 2>&1 | Write-Host
+  & wsl.exe -d Ubuntu -u lavie -- bash -lc "echo '$adB64' | base64 -d | bash -s" 2>&1 | Write-Host
   $exitCode = $LASTEXITCODE
 } catch {
   Write-Host "ERROR: Auto-dev failed: $_" -ForegroundColor $RED

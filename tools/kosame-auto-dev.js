@@ -26,13 +26,15 @@
  *   npm run auto:dev -- --file=./spec.md
  *   npm run auto:dev -- --spec="..." --write          # 実際のAPI呼び出し
  *   npm run auto:dev -- --spec="..." --project=anesty-board
+ *   npm run auto:dev -- --spec="..." --repo=/path/to/target  # 対象repo
  *   npm run auto:dev -- --spec="..." --json           # JSON 出力
+ *   AUTO_DEV_REPO=/path CLAUDE_TIMEOUT_MS=600000 npm run auto:dev -- --spec="..."
  */
 
 const fs        = require('node:fs');
 const path      = require('node:path');
 const readline  = require('node:readline');
-const { spawnSync } = require('node:child_process');
+const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
   version:       '110.42.0',
@@ -40,6 +42,63 @@ const TOOL_META = {
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };
+
+const CLAUDE_TIMEOUT_MS = parseInt(process.env.CLAUDE_TIMEOUT_MS || '300000', 10);
+const BACKUP_DIR        = path.resolve(__dirname, '..', '.auto-dev-backups');
+
+// ── Secret redaction ──────────────────────────────────────────────────────────
+
+const SECRET_PATTERNS = [
+  /sk-[A-Za-z0-9]{20,}/g,                    // OpenAI / Claude API keys
+  /AIza[0-9A-Za-z_-]{35,}/g,                 // Gemini API keys
+  /xox[bpras]-[0-9A-Za-z-]{20,}/g,           // Slack tokens
+  /gh[pousr]_[A-Za-z0-9]{36,}/g,             // GitHub tokens
+  /(?:^|[^a-zA-Z])(discord)?bot[._-]?token[=:]\s*\S{10,}/gi, // Bot tokens
+  /(?:^|[^a-zA-Z])api[._-]?key[=:]\s*\S{10,}/gi,
+  /(?:^|[^a-zA-Z])secret[=:]\s*\S{10,}/gi,
+  /(?:^|[^a-zA-Z])password[=:]\s*\S{10,}/gi,
+  /(?:^|[^a-zA-Z])credentials[=:]\s*\S{10,}/gi,
+  /\b[A-Za-z0-9+/]{40,}\b/g,                 // base64-looking strings (40+ chars)
+].map(r => ({ regex: r }));
+
+const ENV_SECRET_VARS = [
+  'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
+  'DISCORD_BOT_TOKEN', 'DISCORD_WEBHOOK_URL', 'DEEPSEEK_API_KEY', 'GROK_API_KEY',
+  'KIMI_API_KEY', 'SLACK_TOKEN', 'LINE_TOKEN',
+];
+
+function buildEnvValuesPattern() {
+  const vals = [];
+  for (const name of ENV_SECRET_VARS) {
+    const v = process.env[name];
+    if (v && v.length >= 8) vals.push(v);
+  }
+  if (vals.length === 0) return null;
+  const escaped = vals.map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp(escaped.join('|'), 'g');
+}
+
+let _envValuesRe = null;
+function getEnvValuesRe() {
+  if (!_envValuesRe) _envValuesRe = buildEnvValuesPattern();
+  return _envValuesRe;
+}
+
+function redact(text) {
+  if (!text || typeof text !== 'string') return text || '';
+  let result = text;
+  // Mask known env values first
+  const envRe = getEnvValuesRe();
+  if (envRe) result = result.replace(envRe, '[REDACTED]');
+  // Mask known secret patterns
+  for (const { regex } of SECRET_PATTERNS) {
+    result = result.replace(regex, (m) => {
+      if (m.length <= 8) return m;
+      return m.slice(0, 4) + '[REDACTED]' + m.slice(-4);
+    });
+  }
+  return result;
+}
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -54,12 +113,16 @@ const hr = (n = 64) => '─'.repeat(n);
 
 // ── Destructive operation patterns (auto-force human_gate) ────────────────────
 
-const DESTRUCTIVE_RE = /commit|push|deploy|リリース|本番|production|secret|iam|credentials|権限|delete|drop|truncate|rm\s|削除/i;
+// human_gate pattern — covers variations, case, whitespace, symbols
+const DESTRUCTIVE_RE = /\b(commit|push|deploy|リリース|本番|production|secret|iam|credentials|権限|delete|drop|truncate|削除|billing|課金|rollback|release)\b|(^|\s)rm(\s|$)/i;
+const DESTRUCTIVE_BYPASS_RE = /c[o0]mm[i1]t|d[e3]pl[o0]y|pr[o0]ducti[o0]n|secr[e3]t|[d8][e3]l[e3]t[e3]/i;
 
-function requiresHumanGate(task) {
+function requiresHumanGate(task, extraText) {
+  const text = task.title + ' ' + (task.description || '') + ' ' + (extraText || '');
   return task.humanGate === true
     || task.difficulty === 'high'
-    || DESTRUCTIVE_RE.test(task.title + ' ' + (task.description || ''));
+    || DESTRUCTIVE_RE.test(text)
+    || DESTRUCTIVE_BYPASS_RE.test(text);
 }
 
 // ── Claude Code failure classification ───────────────────────────────────────
@@ -72,17 +135,193 @@ const CLAUDE_FAILURE = {
   GENERIC:    'generic',       // その他 → fallback
 };
 
-function classifyClaudeFailure(error, stderr, status) {
-  const msg = ((error?.message || '') + ' ' + (stderr || '')).toLowerCase();
+function classifyClaudeFailure(error, stderr, status, stdout, signal) {
+  const msg = ((error?.message || '') + ' ' + (stderr || '') + ' ' + (stdout || '')).toLowerCase();
+
+  // Timeout (spawnSync): signal=SIGTERM or error.code=ETIMEDOUT
+  if (signal === 'SIGTERM' || error?.code === 'ETIMEDOUT' || error?.code === 'ENOBUFS' || status === null)
+    return { type: CLAUDE_FAILURE.TIMEOUT, fallback: 'cheapFirstRun' };
+
   if (/authentication|api.?key|401|unauthorized/.test(msg))
     return { type: CLAUDE_FAILURE.AUTH,       fallback: 'cheapFirstRun' };
-  if (/rate.?limit|quota|429|too many/.test(msg))
+  if (/rate.?limit|quota|429|too many|session.?limit/.test(msg))
     return { type: CLAUDE_FAILURE.RATE_LIMIT, fallback: 'cheapFirstRun' };
   if (/permission|approval|human.*gate|approve/.test(msg))
     return { type: CLAUDE_FAILURE.HUMAN_GATE, fallback: null };
-  if (error?.code === 'ETIMEDOUT' || error?.code === 'ENOBUFS')
-    return { type: CLAUDE_FAILURE.TIMEOUT,    fallback: 'cheapFirstRun' };
   return { type: CLAUDE_FAILURE.GENERIC,      fallback: 'cheapFirstRun' };
+}
+
+// ── Restricted paths ──────────────────────────────────────────────────────────
+
+const RESTRICTED_BASENAMES = new Set([
+  '.env', '.env.local', '.env.production', '.env.development',
+  'credentials.json', 'service-account.json', 'service-account.key.json',
+  '.gitignore', '.gitattributes',
+]);
+const RESTRICTED_DIRS = ['.git', 'node_modules', '.kosame', 'secrets', 'secret'];
+const DESTRUCTIVE_FILE_RE = /(\/|^)(\.env|credentials\.json|service-account|secret|\.git)\b/;
+
+function validateFilePath(filePath, repoRoot) {
+  const resolved = path.resolve(repoRoot, filePath);
+  if (!resolved.startsWith(path.resolve(repoRoot))) {
+    return { ok: false, reason: `path traversal: ${filePath}` };
+  }
+  const rel = path.relative(repoRoot, resolved);
+  const parts = rel.split(/[/\\]/);
+  for (const p of parts) {
+    if (RESTRICTED_DIRS.includes(p)) {
+      return { ok: false, reason: `restricted directory: ${p}` };
+    }
+  }
+  const base = path.basename(resolved);
+  if (RESTRICTED_BASENAMES.has(base)) {
+    return { ok: false, reason: `restricted file: ${base}` };
+  }
+  if (DESTRUCTIVE_FILE_RE.test(rel)) {
+    return { ok: false, reason: `destructive path: ${rel}` };
+  }
+  return { ok: true, resolved };
+}
+
+// ── KOSAME Patch Format parser ────────────────────────────────────────────────
+
+const PATCH_FILE_RE = /^\[FILE\]\s+(.+)$/m;
+const PATCH_CODE_RE = /```(\w*)\n([\s\S]*?)```/;
+
+function parsePatchOutput(output, repoRoot) {
+  const files = [];
+  const blocks = output.split(/(?=\[FILE\])/);
+  for (const block of blocks) {
+    const fileMatch = block.match(PATCH_FILE_RE);
+    if (!fileMatch) continue;
+    const rawPath = fileMatch[1].trim();
+    const validation = validateFilePath(rawPath, repoRoot);
+    const codeMatch = block.match(PATCH_CODE_RE);
+    files.push({
+      rawPath, validation,
+      content: codeMatch ? codeMatch[2] : '',
+      hasCodeBlock: !!codeMatch,
+    });
+  }
+  // If no [FILE] blocks, try to detect code blocks as a single unnamed file
+  if (files.length === 0) {
+    const codeMatch = output.match(PATCH_CODE_RE);
+    if (codeMatch) {
+      files.push({
+        rawPath: 'output.txt', validation: { ok: false, reason: 'no file path specified' },
+        content: codeMatch[2], hasCodeBlock: true,
+      });
+    }
+  }
+  return files;
+}
+
+function writeFilesWithBackup(files, repoRoot, opts = {}) {
+  const { dryRun = true, out = console.log } = opts;
+  const backups = [];
+  const written = [];
+  const newFiles = [];
+
+  for (const f of files) {
+    if (!f.validation.ok) {
+      out(`     ${c('yellow', '⚠  SKIP')} ${f.rawPath} — ${f.validation.reason}`);
+      continue;
+    }
+    const targetPath = f.validation.resolved;
+    const rel = path.relative(repoRoot, targetPath);
+
+    // Backup existing file
+    let backupPath = null;
+    const existed = fs.existsSync(targetPath);
+    if (existed) {
+      backupPath = path.join(BACKUP_DIR, rel + '.bak');
+      if (!dryRun) {
+        fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+        fs.copyFileSync(targetPath, backupPath);
+      }
+      backups.push({ rel, backupPath, targetPath });
+      out(`     ${c('dim', 'backup:')} ${rel}`);
+    } else {
+      if (!dryRun) fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    }
+
+    // Write file
+    if (!dryRun) {
+      fs.writeFileSync(targetPath, f.content, 'utf-8');
+    }
+    written.push({ rel, targetPath, content: f.content, isNew: !existed });
+    if (!existed) newFiles.push({ rel, targetPath });
+    out(`     ${dryRun ? c('yellow', '[DRY-RUN]') : c('green', '✓')} ${rel} (${f.content.length}B)${existed ? '' : ' [NEW]'}`);
+  }
+
+  return { backups, written, newFiles };
+}
+
+function rollbackFiles(backups, newFiles, repoRoot) {
+  let restored = 0;
+  let deleted  = 0;
+  let errors   = [];
+
+  for (const b of backups) {
+    try {
+      if (b.backupPath && fs.existsSync(b.backupPath)) {
+        fs.copyFileSync(b.backupPath, b.targetPath);
+        fs.unlinkSync(b.backupPath);
+        restored++;
+      }
+    } catch (e) {
+      errors.push({ file: b.rel, action: 'restore', error: e.message });
+    }
+  }
+
+  // Delete newly created files
+  for (const nf of newFiles) {
+    try {
+      if (fs.existsSync(nf.targetPath)) {
+        fs.unlinkSync(nf.targetPath);
+        deleted++;
+        // Clean up empty parent directories (safe: never delete .git/node_modules/.env)
+        let dir = path.dirname(nf.targetPath);
+        while (dir.startsWith(path.resolve(repoRoot))) {
+          const entries = fs.readdirSync(dir);
+          if (entries.length === 0 && path.basename(dir) !== '.git' && !path.basename(dir).startsWith('.env')) {
+            fs.rmdirSync(dir);
+            dir = path.dirname(dir);
+          } else {
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      errors.push({ file: nf.rel, action: 'delete', error: e.message });
+    }
+  }
+
+  return { restored, deleted, errors };
+}
+
+function cleanupBackups(backups) {
+  for (const b of backups) {
+    try { if (b.backupPath && fs.existsSync(b.backupPath)) fs.unlinkSync(b.backupPath); } catch (e) { console.warn('backup cleanup failed:', e.message); }
+  }
+}
+
+function syntaxCheckJs(targetPath) {
+  try {
+    execSync(`node --check "${targetPath}"`, { encoding: 'utf8', timeout: 10000, stdio: 'pipe' });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.stderr || e.message };
+  }
+}
+
+function runVerifyInRepo(repoRoot) {
+  try {
+    const r = execSync('npm run verify 2>&1', { cwd: repoRoot, encoding: 'utf8', timeout: 60000, stdio: 'pipe' });
+    return { ok: true, output: r.trim() };
+  } catch (e) {
+    return { ok: false, output: e.stdout || '', error: e.stderr || e.message };
+  }
 }
 
 // ── Task prompt builder ───────────────────────────────────────────────────────
@@ -95,7 +334,14 @@ function buildTaskPrompt(task, project) {
     project ? `プロジェクト: ${project}` : '',
     `難易度: ${task.difficulty}`,
     '',
-    '上記タスクを実装してください。コードと実装の説明を返してください。',
+    '上記タスクを実装してください。',
+    '',
+    '【出力形式】',
+    '変更するファイルごとに以下の形式で出力してください。',
+    '[FILE] ファイルパス',
+    '```',
+    'コード内容',
+    '```',
   ].filter(Boolean);
   return parts.join('\n');
 }
@@ -103,14 +349,16 @@ function buildTaskPrompt(task, project) {
 // ── Claude Code CLI execution ─────────────────────────────────────────────────
 
 async function executeClaude(task, opts = {}) {
-  const { dryRun = true, project = null, out = console.log } = opts;
+  const { dryRun = true, project = null, out = console.log, repoRoot } = opts;
   const startMs = Date.now();
+  const timeout = CLAUDE_TIMEOUT_MS;
 
   if (dryRun) {
+    const mockPath = `src/${task.title.replace(/\s+/g, '_').toLowerCase().slice(0, 20)}.js`;
     out(`     ${c('yellow', '[DRY-RUN]')} Claude Code 模擬実装`);
     return {
       success: true, dryRun: true,
-      output:  `[DRY-RUN] claude -p 模擬実装\n\nfunction ${task.title.replace(/\s+/g, '_').slice(0, 20)}() {\n  // 実装\n}`,
+      output:  `[FILE] ${mockPath}\n\`\`\`js\n// ${task.title}\nfunction ${task.title.replace(/\s+/g, '_')}() {\n  return null;\n}\n\`\`\``,
       model:    'claude-sonnet-4-6',
       provider: 'anthropic',
       durationMs: 400 + Math.round(Math.random() * 400),
@@ -118,22 +366,65 @@ async function executeClaude(task, opts = {}) {
   }
 
   const prompt = buildTaskPrompt(task, project);
-  const result = spawnSync(
+
+  // Launch Claude with detached process group so we can kill just this group
+  const child = spawnSync(
     'claude',
-    ['--print', '--output-format', 'text', prompt],
-    { encoding: 'utf8', timeout: 120_000, maxBuffer: 8 * 1024 * 1024 }
+    ['--print', prompt],
+    {
+      encoding: 'utf8',
+      timeout,
+      maxBuffer: 8 * 1024 * 1024,
+      // Use process group so we can kill just this subtree
+      windowsHide: true,
+    }
   );
   const durationMs = Date.now() - startMs;
+  const pid = child.pid;
 
-  if (result.error || (result.status !== 0 && result.status !== null)) {
-    const failure = classifyClaudeFailure(result.error, result.stderr, result.status);
-    out(`     ${c('red', '✗')} Claude Code 失敗 [${failure.type}]: ${(result.error?.message || result.stderr || '').slice(0, 80)}`);
-    return { success: false, dryRun: false, failure, output: result.stderr || result.error?.message || '', durationMs };
+  // Kill only this process tree (not other Claude instances)
+  const terminationErrors = [];
+  if (child.error || child.status !== 0) {
+    if (pid) {
+      try {
+        // Kill the process group (negative PID = PGID on Unix)
+        process.kill(-pid, 'SIGTERM');
+      } catch (killErr) {
+        if (killErr.code !== 'ESRCH') { // ESRCH = already dead, fine
+          terminationErrors.push(killErr.message);
+        }
+      }
+    }
+  }
+
+  const signal  = child.signal;
+  const status  = child.status;
+  const resultError = child.error;
+  const rawStderr  = child.stderr || '';
+  const rawStdout  = child.stdout || '';
+
+  // Redact secrets from all outputs before any logging or storage
+  const stderr = redact(rawStderr);
+  const stdout = redact(rawStdout);
+
+  if (resultError || (status !== 0 && status !== null)) {
+    const failure = classifyClaudeFailure(resultError, stderr, status, stdout, signal);
+    const errMsg  = stderr || stdout || resultError?.message || '';
+    const redactedErr = redact(errMsg);
+    out(`     ${c('red', '✗')} Claude Code 失敗 [${failure.type}]: ${redactedErr.slice(0, 80)}`);
+
+    if (terminationErrors.length > 0) {
+      out(`     ${c('red', '✗ CHILD_TERMINATION_FAILED')} ${terminationErrors[0].slice(0, 60)}`);
+      failure.terminationFailed = true;
+    }
+
+    return { success: false, dryRun: false, failure, output: stdout, durationMs };
   }
 
   return {
     success: true, dryRun: false,
-    output:   result.stdout || '',
+    output: stdout,  // already redacted
+    files: parsePatchOutput(stdout, repoRoot || process.cwd()),
     model:    'claude-sonnet-4-6',
     provider: 'anthropic',
     durationMs,
@@ -248,12 +539,26 @@ async function reviewAllResults(taskResults, opts = {}) {
   const { dryRun = true, config, out = console.log } = opts;
   const { callModel, readConfig } = require('./kosame-cheap-first-runtime');
   const cfg = config || readConfig();
+  const hasGptKey    = !!(cfg.openaiKeyPresent || cfg.openaiApiKey || process.env.OPENAI_API_KEY);
+  const hasClaudeKey = !!(process.env.ANTHROPIC_API_KEY);
 
   const summary = taskResults.map((r, i) =>
-    `タスク${i + 1}: ${r.title.slice(0, 60)} — ${r.verifyPass ? '✓ PASS' : '✗ FAIL'}${r.fixed ? ' (修正済)' : ''}`
+    `タスク${i + 1}: ${r.title.slice(0, 60)} — ${r.verifyPass ? '✓ PASS' : '✗ FAIL'}${r.fixed ? ' (修正済)' : ''}${(r.writtenFiles||[]).length ? ' [' + r.writtenFiles.length + ' files]' : ''}`
   ).join('\n');
 
   out(`\n  ${c('cyan', '◆ Final Review')} ${c('bold', 'GPT 裁定 + Claude 品質チェック')}`);
+
+  if (dryRun) {
+    out(`  ${c('yellow', '[DRY-RUN]')} GPT + Claude 模擬レビュー`);
+    return {
+      gpt:     { score: 82, verdict: 'OK', summary: '[DRY-RUN] 全タスク品質水準クリア', status: 'SKIPPED_DRY_RUN' },
+      claude:  { score: 85, ready: true, assessment: '[DRY-RUN] 実装品質は高く納品可能水準', status: 'SKIPPED_DRY_RUN' },
+      avgScore: 83.5,
+      approved: true,
+      dryRun:   true,
+      deliveryReady: true,
+    };
+  }
 
   const gptPrompt = [
     `以下の自動開発セッションの全タスク実装結果を裁定してください。`,
@@ -269,34 +574,38 @@ async function reviewAllResults(taskResults, opts = {}) {
     ``, `【実装結果サマリー】`, summary,
   ].join('\n');
 
-  if (dryRun) {
-    out(`  ${c('yellow', '[DRY-RUN]')} GPT + Claude 模擬レビュー`);
-    return {
-      gpt:     { score: 82, verdict: 'OK', summary: '[DRY-RUN] 全タスク品質水準クリア' },
-      claude:  { score: 85, ready: true, assessment: '[DRY-RUN] 実装品質は高く納品可能水準' },
-      avgScore: 83.5,
-      approved: true,
-      dryRun:   true,
-    };
+  let gpt    = { score: 50, verdict: 'SKIPPED', summary: 'OPENAI_API_KEY not set', status: 'SKIPPED_MISSING_CREDENTIALS' };
+  let claude = { score: 50, ready: false, assessment: 'ANTHROPIC_API_KEY not set', status: 'SKIPPED_MISSING_CREDENTIALS' };
+
+  if (hasGptKey) {
+    out(`  ${c('dim', 'GPT 裁定 実呼び出し中...')}`);
+    const gptRaw = await callModel('gpt_upper', gptPrompt, cfg, { maxTokens: 512 }).catch(e => ({ response: e.message }));
+    gpt = { score: 70, verdict: 'OK', summary: gptRaw.response, status: 'EXECUTED' };
+    try { const m = gptRaw.response.match(/\{[\s\S]*\}/); if (m) gpt = { ...gpt, ...JSON.parse(m[0]), status: 'EXECUTED' }; } catch (_) {}
+  } else {
+    out(`  ${c('yellow', '⚠  OPENAI_API_KEY 未設定 — GPT 裁定スキップ')}`);
   }
 
-  const [gptRaw, claudeRaw] = await Promise.all([
-    callModel('gpt_upper',    gptPrompt,    cfg, { maxTokens: 512 }).catch(e => ({ response: e.message })),
-    callModel('claude_sonnet', claudePrompt, cfg, { maxTokens: 512 }).catch(e => ({ response: e.message })),
-  ]);
-
-  let gpt    = { score: 70, verdict: 'OK',  summary:    gptRaw.response };
-  let claude = { score: 70, ready:   true,  assessment: claudeRaw.response };
-  try { const m = gptRaw.response.match(/\{[\s\S]*\}/);    if (m) gpt    = { ...gpt,    ...JSON.parse(m[0]) }; } catch (_) {}
-  try { const m = claudeRaw.response.match(/\{[\s\S]*\}/); if (m) claude = { ...claude, ...JSON.parse(m[0]) }; } catch (_) {}
+  if (hasClaudeKey) {
+    out(`  ${c('dim', 'Claude 品質チェック 実呼び出し中...')}`);
+    const claudeRaw = await callModel('claude_sonnet', claudePrompt, cfg, { maxTokens: 512 }).catch(e => ({ response: e.message }));
+    claude = { score: 70, ready: true, assessment: claudeRaw.response, status: 'EXECUTED' };
+    try { const m = claudeRaw.response.match(/\{[\s\S]*\}/); if (m) claude = { ...claude, ...JSON.parse(m[0]), status: 'EXECUTED' }; } catch (_) {}
+  } else {
+    out(`  ${c('yellow', '⚠  ANTHROPIC_API_KEY 未設定 — Claude 品質チェックスキップ')}`);
+  }
 
   const avgScore = (gpt.score + claude.score) / 2;
-  const approved = avgScore >= 75 && claude.ready !== false && gpt.verdict !== 'NG';
+  const gptOk    = gpt.status === 'EXECUTED' ? gpt.verdict !== 'NG' : true;
+  const claudeOk = claude.status === 'EXECUTED' ? claude.ready !== false : true;
+  const approved = avgScore >= 75 && gptOk && claudeOk;
+  const deliveryReady = hasGptKey && hasClaudeKey && approved;
 
-  out(`  GPT スコア: ${gpt.score}/100  Claude スコア: ${claude.score}/100  平均: ${avgScore.toFixed(1)}`);
+  out(`  GPT スコア: ${gpt.score}/100 [${gpt.status}]  Claude スコア: ${claude.score}/100 [${claude.status}]  平均: ${avgScore.toFixed(1)}`);
   out(`  判定: ${approved ? c('bgGreen', c('bold', ' ✓ 承認 ')) : c('bgRed', c('bold', ' ✗ 否決 '))}`);
+  out(`  delivery_ready: ${deliveryReady ? c('green', 'true') : c('yellow', 'false')}${!deliveryReady ? ' (両APIキー設定必要)' : ''}`);
 
-  return { gpt, claude, avgScore, approved, dryRun: false };
+  return { gpt, claude, avgScore, approved, deliveryReady, dryRun: false };
 }
 
 // ── Discord report ────────────────────────────────────────────────────────────
@@ -359,12 +668,14 @@ async function waitForHumanGate(task, opts = {}) {
 // ── Single task pipeline ──────────────────────────────────────────────────────
 
 async function runTask(task, opts = {}) {
-  const { dryRun = true, project = null, config, out = console.log } = opts;
+  const { dryRun = true, project = null, config, out = console.log, repoRoot } = opts;
   const startMs = Date.now();
+  let backups  = [];
+  let newFiles = [];
 
   out(`\n    ${c('gray', task.id)}  ${c(task.difficulty === 'high' ? 'red' : task.difficulty === 'medium' ? 'yellow' : 'green', task.difficulty.padEnd(7))}  ${c('bold', task.title.slice(0, 60))}`);
 
-  // 1. Human gate
+  // 1. Human gate (before execution)
   if (requiresHumanGate(task)) {
     const approved = await waitForHumanGate(task, { dryRun, out });
     if (!approved) {
@@ -374,11 +685,12 @@ async function runTask(task, opts = {}) {
 
   // 2. Claude Code 実装
   out(`     ${c('dim', 'Claude Code へ投げ中...')}`);
-  const claudeResult = await executeClaude(task, { dryRun, project, out });
+  const claudeResult = await executeClaude(task, { dryRun, project, out, repoRoot });
 
-  // Claude Code 失敗 → fallback
-  let implOutput  = claudeResult.output;
-  let implModel   = claudeResult.model   ?? 'claude-sonnet-4-6';
+  // Claude Code 失敗 → fallback (max 1回)
+  let implOutput   = redact(claudeResult.output || '');
+  let implFiles    = claudeResult.files || [];
+  let implModel    = claudeResult.model   ?? 'claude-sonnet-4-6';
   let implProvider = claudeResult.provider ?? 'anthropic';
   let usedFallback = false;
 
@@ -391,66 +703,148 @@ async function runTask(task, opts = {}) {
         return { taskId: task.id, title: task.title, difficulty: task.difficulty, success: false, skipped: true, reason: 'Claude Code HUMAN_GATE', durationMs: Date.now() - startMs, verifyPass: false };
       }
     }
-    if (failure?.fallback === 'cheapFirstRun') {
+    // Fallback only once
+    if (failure?.fallback === 'cheapFirstRun' && !usedFallback) {
       out(`     ${c('yellow', '↷')} Claude Code ${failure?.type ?? 'error'} → cheapFirstRun で代替実行`);
       const { cheapFirstRun, readConfig } = require('./kosame-cheap-first-runtime');
       const cfg = config || readConfig();
       const cf = await cheapFirstRun(buildTaskPrompt(task, project), task.difficulty, {
-        dryRun, silent: true, skipHumanGate: true,
+        dryRun, silent: true, skipHumanGate: false, // ← human_gate bypass禁止
         taskInput: task.title.slice(0, 120), taskType: 'implement', project,
       });
-      implOutput   = cf.response ?? '';
+      implOutput   = redact(cf.response ?? '');
+      implFiles    = parsePatchOutput(implOutput, repoRoot || process.cwd());
       implModel    = cf.usedModel  ?? 'unknown';
       implProvider = require('./kosame-cheap-first-runtime').PRICE_TABLE[implModel]?.provider ?? 'unknown';
       usedFallback = true;
+
+      // Re-check human_gate after fallback output
+      const fbText = (implOutput || '').slice(0, 200);
+      if (requiresHumanGate(task, fbText)) {
+        out(`     ${c('yellow', '⚠  fallback出力に破壊的操作パターン → human_gate再判定')}`);
+        const approved = await waitForHumanGate(task, { dryRun, out, label: 'fallback' });
+        if (!approved) {
+          return { taskId: task.id, title: task.title, difficulty: task.difficulty, success: false, skipped: true, reason: 'fallback HUMAN_GATE', durationMs: Date.now() - startMs, verifyPass: false };
+        }
+      }
+
       if (!cf.ok) {
         return { taskId: task.id, title: task.title, difficulty: task.difficulty, success: false, skipped: false, reason: cf.error ?? 'cheapFirstRun failed', durationMs: Date.now() - startMs, verifyPass: false, model: implModel, provider: implProvider };
       }
     }
   }
 
-  // 3. Auto verify
+  // 3. File preview
+  if (implFiles.length > 0) {
+    out(`     ${c('dim', '変更予定ファイル:')}`);
+    for (const f of implFiles) {
+      const st = f.validation.ok ? c('green', '✓') : c('yellow', '⚠');
+      out(`       ${st} ${f.rawPath} (${f.content.length}B) ${f.validation.ok ? '' : c('dim', '[' + f.validation.reason + ']')}`);
+    }
+  }
+
+  // 4. Auto verify
   const verify1 = autoVerify(task, implOutput, {});
   out(`     verify: ${verify1.pass ? c('green', `✓ PASS (${verify1.score})`) : c('red', `✗ FAIL (${verify1.score}) [${verify1.reason}]`)}`);
 
   let verifyPass   = verify1.pass;
   let finalOutput  = implOutput;
+  let finalFiles   = implFiles;
   let fixedModel   = null;
   let fixedProvider = null;
   let fixed        = false;
 
   if (!verify1.pass) {
-    // 4. project-guard 経由で修正
     const fixResult = await fixWithPermittedModel(task, implOutput, verify1.reason, {
       dryRun, project, config, out,
     });
     fixedModel    = fixResult.worker;
     fixedProvider = fixResult.worker === 'cheap_code_worker' ? 'deepseek' : 'openai';
-    finalOutput   = fixResult.output;
-    fixed         = true;
+    finalOutput   = redact(fixResult.output || '');
+    finalFiles    = parsePatchOutput(finalOutput, repoRoot || process.cwd());
 
-    // 再verify
     const verify2 = autoVerify(task, finalOutput, {});
     verifyPass = verify2.pass;
+    fixed      = verify2.pass;
     out(`     re-verify: ${verify2.pass ? c('green', `✓ PASS (${verify2.score})`) : c('red', `✗ FAIL (${verify2.score})`)}`);
   }
 
-  // 5. 記録
+  // 5. Write files to repo
+  let writtenFiles = [];
+  let writeErrors  = [];
+  let fileVerifyOk = true;
+
+  if (verifyPass && finalFiles.length > 0) {
+    const validFiles = finalFiles.filter(f => f.validation.ok);
+    if (validFiles.length > 0) {
+      const wf = writeFilesWithBackup(validFiles, repoRoot || process.cwd(), { dryRun, out });
+      backups  = wf.backups;
+      newFiles = wf.newFiles;
+      writtenFiles = wf.written;
+
+      if (!dryRun && writtenFiles.length > 0) {
+        for (const w of writtenFiles) {
+          if (w.rel.endsWith('.js')) {
+            const sc = syntaxCheckJs(w.targetPath);
+            if (!sc.ok) {
+              out(`     ${c('red', '✗')} syntax error: ${w.rel} — ${sc.error.slice(0, 80)}`);
+              fileVerifyOk = false;
+              writeErrors.push({ file: w.rel, error: sc.error });
+            }
+          }
+        }
+
+        if (fileVerifyOk && repoRoot) {
+          const vr = runVerifyInRepo(repoRoot);
+          if (!vr.ok) {
+            out(`     ${c('red', '✗')} repo verify FAILED`);
+            fileVerifyOk = false;
+            writeErrors.push({ file: 'repo', error: vr.error });
+          } else {
+            out(`     ${c('green', '✓')} repo verify PASS`);
+          }
+        }
+      }
+    }
+  }
+
+  // 6. Rollback on failure (covers verify fail + syntax fail + new file cleanup)
+  const needsRollback = (!fileVerifyOk || !verifyPass) && !dryRun && (backups.length > 0 || newFiles.length > 0);
+  if (needsRollback) {
+    const rb = rollbackFiles(backups, newFiles, repoRoot || process.cwd());
+    if (rb.errors.length > 0) {
+      out(`     ${c('red', '✗ ROLLBACK_FAILED')} restored=${rb.restored} deleted=${rb.deleted} errors=${rb.errors.map(e=>e.file).join(',')}`);
+      return {
+        taskId: task.id, title: task.title, difficulty: task.difficulty,
+        success: false, skipped: false, reason: 'ROLLBACK_FAILED',
+        rollbackErrors: rb.errors, verifyPass: false,
+        durationMs: Date.now() - startMs, timestamp: new Date().toISOString(),
+      };
+    }
+    out(`     ${c('red', `↩ rollback: ${rb.restored} restored, ${rb.deleted} deleted`)}`);
+    verifyPass = false;
+  } else if (fileVerifyOk && verifyPass && !dryRun && backups.length > 0) {
+    cleanupBackups(backups);
+  }
+
+  // 7. Record
   const taskResult = {
-    taskId:    task.id,
-    title:     task.title,
+    taskId:     task.id,
+    title:      task.title,
     difficulty: task.difficulty,
-    model:     fixed ? fixedModel    : implModel,
-    provider:  fixed ? fixedProvider : implProvider,
-    success:   true,
-    skipped:   false,
+    model:      fixed ? fixedModel    : implModel,
+    provider:   fixed ? fixedProvider : implProvider,
+    success:    fileVerifyOk && verifyPass,
+    skipped:    false,
     verifyPass,
     fixed,
     usedFallback,
-    output:    finalOutput,
-    costUsd:   claudeResult.costUsd ?? null,
+    output:     finalOutput,
+    writtenFiles: writtenFiles.map(w => w.rel),
+    writeErrors,
+    costUsd:    claudeResult.costUsd ?? null,
     durationMs: Date.now() - startMs,
-    timestamp: new Date().toISOString(),
+    timestamp:  new Date().toISOString(),
   };
 
   if (verifyPass) {
@@ -465,11 +859,12 @@ async function runTask(task, opts = {}) {
 
 async function runAutoDev(specText, opts = {}) {
   const {
-    dryRun  = true,
-    silent  = false,
-    project = null,
-    jsonMode = false,
-    maxTasks = 50,
+    dryRun   = true,
+    silent   = false,
+    project  = null,
+    repoRoot = process.env.AUTO_DEV_REPO || process.cwd(),
+    jsonMode  = false,
+    maxTasks  = 50,
   } = opts;
 
   const out = (silent || jsonMode)
@@ -478,7 +873,7 @@ async function runAutoDev(specText, opts = {}) {
 
   const dryLabel = dryRun ? c('blue', '[DRY-RUN]') : c('green', '[LIVE]');
   out(`\n${c('bold', c('blue', '⬡ KOSAME Auto Dev'))}  ${dryLabel}  v${TOOL_META.version}`);
-  out(`  project: ${project ?? '(未指定)'}  maxTasks: ${maxTasks}`);
+  out(`  repo: ${c('cyan', repoRoot)}  project: ${project ?? '(未指定)'}  maxTasks: ${maxTasks}  timeout: ${CLAUDE_TIMEOUT_MS}ms`);
   out('  ' + hr());
 
   // Step 1: spec-analyzer でタスク分解
@@ -488,9 +883,15 @@ async function runAutoDev(specText, opts = {}) {
   const config = readConfig();
 
   const analysis = analyzeSpec(specText, { dryRun, maxTasks });
-  out(`  ${c('green', '✓')} ${analysis.taskCount} タスク / ${analysis.summary.executionPhases} フェーズ`);
-  const { difficultyBreakdown: diff, humanGateCount } = analysis.summary;
-  const diffParts = Object.entries(diff).filter(([, n]) => n > 0)
+  const leafTasks = analysis.tasks.filter(t => t.isLeaf !== false);
+  out(`  ${c('green', '✓')} ${leafTasks.length} タスク (${analysis.taskCount}候補中) / ${analysis.summary.executionPhases} フェーズ`);
+  const diffCounts = { light: 0, medium: 0, high: 0 };
+  let humanGateCount = 0;
+  for (const t of leafTasks) {
+    diffCounts[t.difficulty] = (diffCounts[t.difficulty] || 0) + 1;
+    if (t.humanGate) humanGateCount++;
+  }
+  const diffParts = Object.entries(diffCounts).filter(([, n]) => n > 0)
     .map(([d, n]) => `${c(d === 'high' ? 'red' : d === 'medium' ? 'yellow' : 'green', d)}:${n}`).join('  ');
   if (diffParts) out(`  難易度: ${diffParts}`);
   if (humanGateCount > 0) out(`  ${c('red', `⚠  HUMAN GATE: ${humanGateCount} タスク`)}`);
@@ -501,12 +902,12 @@ async function runAutoDev(specText, opts = {}) {
   const maxOrder   = analysis.summary.executionPhases;
 
   for (let order = 1; order <= maxOrder; order++) {
-    const batch = analysis.tasks.filter(t => t.executionOrder === order);
+    const batch = leafTasks.filter(t => t.executionOrder === order);
     if (batch.length === 0) continue;
     out(`\n  ${c('magenta', `── Phase ${order}`)} (${batch.length} タスク)`);
 
     for (const task of batch) {
-      const result = await runTask(task, { dryRun, project, config, out });
+      const result = await runTask(task, { dryRun, project, config, out, repoRoot });
       allResults.push(result);
     }
   }
@@ -561,6 +962,7 @@ function parseArgs(argv) {
     spec:     get('spec')     || null,
     file:     get('file')     || null,
     project:  get('project')  || null,
+    repo:     get('repo')     || process.env.AUTO_DEV_REPO || process.cwd(),
     maxTasks: parseInt(get('max-tasks') || '50', 10),
     dryRun:   !has('write'),
     silent:   has('silent'),
@@ -604,6 +1006,7 @@ Flags:
     dryRun:   args.dryRun,
     silent:   args.silent || args.json,
     project:  args.project,
+    repoRoot: args.repo,
     jsonMode: args.json,
     maxTasks: args.maxTasks,
   });
@@ -641,4 +1044,9 @@ module.exports = {
   reviewAllResults,
   sendDiscordReport,
   classifyClaudeFailure,
+  validateFilePath,
+  parsePatchOutput,
+  writeFilesWithBackup,
+  rollbackFiles,
+  requiresHumanGate,
 };

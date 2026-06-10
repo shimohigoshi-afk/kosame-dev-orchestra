@@ -8,6 +8,7 @@
     "cheap:config": "node tools/kosame-cheap-first-runtime.js --config",
     "delivery:check": "node tools/kosame-delivery-checker.js",
     "deepseek:guard:test": "node tools/kosame-deepseek-project-guard.js",
+    "auto:dev": "node tools/kosame-auto-dev.js",
     "setup:keys": "node tools/kosame-key-setup.js",
     "setup:keys:check": "node tools/kosame-key-setup.js --check",
     "route:task": "node tools/kosame-difficulty-model-router.js",

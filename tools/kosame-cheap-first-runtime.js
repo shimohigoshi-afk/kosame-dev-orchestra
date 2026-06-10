@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Cheap-First Runtime v110.40.0
+ * KOSAME Cheap-First Runtime v110.41.0
  *
  * 完全AI組織OS — 論理ワーカー名とAPI model IDを分離し、
  * 障害を自動検知・自動交代・自動復帰する直列Cheap-Firstランタイム。

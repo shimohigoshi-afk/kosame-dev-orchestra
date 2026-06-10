@@ -66,8 +66,8 @@ async function main() {
     writeRuntimeConfig(tmpHomeBase, { monthlyBudgetUsd: 20, chains: {} });
     const runtime = loadFreshRuntime(tmpHomeBase);
 
-    assert.strictEqual(runtime.TOOL_META.version, '110.40.0');
-    pass('runtime TOOL_META.version is 110.40.0');
+    assert.strictEqual(runtime.TOOL_META.version, '110.41.0');
+    pass('runtime TOOL_META.version is 110.41.0');
 
     assert.ok(runtime.DEFAULT_WORKER_REGISTRY.cheap_code_worker);
     assert.strictEqual(runtime.DEFAULT_WORKER_REGISTRY.cheap_code_worker.modelId, 'deepseek-chat');

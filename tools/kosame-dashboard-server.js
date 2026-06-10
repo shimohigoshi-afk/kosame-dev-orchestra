@@ -34,8 +34,8 @@ const { getConfig } = require('../providers/provider-config');
 const os = require('os');
 
 const TOOL_META = {
-  version: '110.41.0',
-  feature: 'v110-22-multi-project-dashboard',
+  version: '110.44.0',
+  feature: 'v110-44-multi-project-dashboard',
   title:   'KOSAME Dev Orchestra Dashboard',
   slug:    'kosame-dashboard',
 };
@@ -962,6 +962,12 @@ function startServer(port, opts = {}) {
     }
   }, 10_000);
   ticker.unref();
+
+  // Watch activity JSONL for events from external processes (e.g. kosame-dev-run-api subprocess).
+  // rebroadcast() pushes to /api/activity/stream SSE clients without re-writing to JSONL.
+  const { watchLog, rebroadcast: rebroadcastActivity } = require('./kosame-activity-events');
+  const stopActivityWatch = watchLog(event => rebroadcastActivity(event));
+  server.on('close', stopActivityWatch);
 
   server.listen(port, () => {
     console.log(`\n  ⬡  KOSAME Multi-Project Dashboard  →  http://localhost:${port}`);

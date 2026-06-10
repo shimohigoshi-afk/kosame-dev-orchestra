@@ -224,14 +224,70 @@ function isDuplicate(event) {
   return false;
 }
 
+// ── Locally-emitted event tracking (for cross-process watcher dedup) ──────────
+
+const _locallyEmitted = new Set();
+const _LOCAL_MAX = 500;
+
+function _markLocal(eventId) {
+  _locallyEmitted.add(eventId);
+  if (_locallyEmitted.size > _LOCAL_MAX) {
+    const iter = _locallyEmitted.values();
+    _locallyEmitted.delete(iter.next().value);
+  }
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 function emit(eventType, data = {}) {
   const event = buildEvent(eventType, data);
   if (isDuplicate(event)) return event;
   appendToLog(event);
+  _markLocal(event.eventId);
   _broadcast(event);
   return event;
+}
+
+// Broadcast an event that originated in another process (no JSONL append, no local mark).
+function rebroadcast(event) {
+  _broadcast(event);
+}
+
+// ── Cross-process log watcher ─────────────────────────────────────────────────
+// Polls the JSONL log for events written by other processes (e.g. spawned subprocesses).
+// Skips events emitted by this process (_locallyEmitted) to avoid double-broadcast.
+// Returns a stop() function.
+
+function watchLog(onEvent) {
+  const lf = _logFile();
+  let pos = 0;
+  try { if (fs.existsSync(lf)) pos = fs.statSync(lf).size; } catch (_) {}
+
+  const tick = () => {
+    try {
+      if (!fs.existsSync(lf)) return;
+      const size = fs.statSync(lf).size;
+      if (size <= pos) return;
+      const len = size - pos;
+      const buf = Buffer.alloc(len);
+      const fd  = fs.openSync(lf, 'r');
+      fs.readSync(fd, buf, 0, len, pos);
+      fs.closeSync(fd);
+      pos = size;
+      for (const line of buf.toString('utf-8').split('\n')) {
+        if (!line.trim()) continue;
+        try {
+          const event = JSON.parse(line);
+          if (_locallyEmitted.has(event.eventId)) continue; // skip own events
+          onEvent(event);
+        } catch (_) {}
+      }
+    } catch (_) {}
+  };
+
+  const timer = setInterval(tick, 500);
+  timer.unref();
+  return () => clearInterval(timer);
 }
 
 // ── SSE emission ───────────────────────────────────────────────────────────────
@@ -264,7 +320,7 @@ function sseClientCount() { return _sseClients.size; }
 
 // ── Periodic trim ──────────────────────────────────────────────────────────────
 
-setInterval(trimLog, 300_000); // every 5 minutes
+setInterval(trimLog, 300_000).unref(); // every 5 minutes — unref so smoke tests exit cleanly
 
 // ── Exports ────────────────────────────────────────────────────────────────────
 
@@ -274,6 +330,8 @@ module.exports = {
   AGENT_STATUS,
   buildEvent,
   emit,
+  rebroadcast,
+  watchLog,
   redact,
   appendToLog,
   readAll,

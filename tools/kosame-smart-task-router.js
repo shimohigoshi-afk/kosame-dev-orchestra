@@ -152,6 +152,10 @@ function attachCostPolicy(task, result, context = {}) {
   const scorecard = workerScorecard.recommendWorkerForTask(task, context);
   const currentModel = result.primary || result.selectedModel || result.fallback || scorecard.modelId;
   const workerState = context.workerState || availabilityFallbackMatrix.WORKER_STATES.healthy;
+  const costPolicy = costLedger.buildLedgerRecord(task, {
+    verifyRunCount: task.failureCount || 0,
+    ...context,
+  });
   const availabilityFallback = availabilityFallbackMatrix.recommendAvailabilityFallback(
     task,
     currentModel,
@@ -161,14 +165,23 @@ function attachCostPolicy(task, result, context = {}) {
       approvalReceived: context.approvalReceived ?? result.approvalReceived ?? false,
     },
   );
+  const explainability = require('./kosame-router-explainability-dashboard');
+  const routerExplanation = explainability.buildRouterExplanation(
+    task,
+    {
+      ...result,
+      workerScorecard: scorecard,
+      availabilityFallback,
+      costPolicy,
+    },
+    context,
+  );
   return {
     ...result,
-    costPolicy: costLedger.buildLedgerRecord(task, {
-      verifyRunCount: task.failureCount || 0,
-      ...context,
-    }),
+    costPolicy,
     workerScorecard: scorecard,
     availabilityFallback,
+    routerExplanation,
   };
 }
 

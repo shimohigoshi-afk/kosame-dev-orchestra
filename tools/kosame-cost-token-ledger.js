@@ -233,6 +233,17 @@ function buildLedgerRecord(task, context = {}) {
   } catch (_) {
     availabilityFallback = null;
   }
+  let routerExplanation = null;
+  try {
+    const explainability = require('./kosame-router-explainability-dashboard');
+    routerExplanation = explainability.buildRouterExplanation(task, {
+      costPolicy: record,
+      workerScorecard,
+      availabilityFallback,
+    }, context);
+  } catch (_) {
+    routerExplanation = null;
+  }
 
   return {
     version: TOOL_META.version,
@@ -251,6 +262,7 @@ function buildLedgerRecord(task, context = {}) {
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,
     availabilityFallback,
+    routerExplanation,
   };
 }
 

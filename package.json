@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.51.0",
+  "version": "110.52.0",
   "private": true,
   "scripts": {
     "cheap:run": "node tools/kosame-cheap-first-runtime.js",
@@ -16,6 +16,7 @@
 "smoke:v110-49": "node smoke/v110-49-consolidation-smoke.js",
 "smoke:v110-50": "node smoke/v110-50-graduation-smoke.js",
 "smoke:v110-51": "node smoke/v110-51-deepseek-security-smoke.js",
+"smoke:v110-52": "node smoke/v110-52-anesty-rehearsal-smoke.js",
     "dev:run-api": "node tools/kosame-dev-run-api.js",
     "smoke:v110-44": "node smoke/v110-44-dev-run-api-smoke.js",
     "smoke:v110-45": "node smoke/v110-45-hybrid-smoke.js",

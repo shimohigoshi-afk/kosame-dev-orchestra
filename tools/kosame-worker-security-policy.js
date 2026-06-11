@@ -133,12 +133,8 @@ function isDeepSeekAllowedTask(task, context = {}) {
  * 違反がある場合は HUMAN_GATE_REQUIRED を推奨する。
  */
 function validateWorkerAssignment(worker, task, context = {}) {
-  const isDeepSeek = worker === 'cheap_code_worker' || worker.includes('deepseek');
+  const isDeepSeek = worker === 'cheap_code_worker' || (worker && worker.includes('deepseek'));
   
-  if (!isDeepSeek) {
-    return { ok: true, humanGateRequired: false };
-  }
-
   const check = isDeepSeekAllowedTask(task, context);
   if (!check.allowed) {
     return {
@@ -146,10 +142,11 @@ function validateWorkerAssignment(worker, task, context = {}) {
       humanGateRequired: true,
       reason: check.reason,
       violations: check.violations,
+      isDeepSeek,
     };
   }
 
-  return { ok: true, humanGateRequired: false };
+  return { ok: true, humanGateRequired: false, isDeepSeek };
 }
 
 module.exports = {

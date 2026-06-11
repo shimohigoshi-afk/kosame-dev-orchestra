@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.51.0
+ * KOSAME Smart Task Router v110.52.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -33,8 +33,8 @@
  */
 
 const TOOL_META = {
-  version:       '110.51.0',
-  feature:       'v110-51-worker-security',
+  version:       '110.52.0',
+  feature:       'v110-52-anesty-rehearsal',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
@@ -197,20 +197,19 @@ function assignWorkerByRules(task, context = {}) {
   const isDeepSeek = primary === 'cheap_code_worker' || (primary && primary.includes('deepseek'));
   const deepseekBlocked = isDeepSeek && (task.isSalesDx || task.isConfidential);
 
-  // v110.51: セキュリティポリシーによる詳細チェック
-  if (isDeepSeek && !deepseekBlocked) {
-    const secCheck = security.validateWorkerAssignment(primary, task, context);
-    if (secCheck.humanGateRequired) {
-      return {
-        primary:        policy.fallback || 'general_worker',
-        fallback:       policy.fallback || 'general_worker',
-        reason:         `${policy.reason} → セキュリティ制限: ${secCheck.reason}`,
-        variant,
-        deepseekBlocked: true,
-        humanGate:      true,
-        securityViolation: secCheck.violations,
-      };
-    }
+  // v110.51/v110.52: セキュリティポリシーによる詳細チェック（全ワーカー対象）
+  const secCheck = security.validateWorkerAssignment(primary, task, context);
+  if (secCheck.humanGateRequired) {
+    const newPrimary = isDeepSeek ? (policy.fallback || 'general_worker') : primary;
+    return {
+      primary:        newPrimary,
+      fallback:       policy.fallback || 'general_worker',
+      reason:         `${policy.reason} → セキュリティ制限: ${secCheck.reason}`,
+      variant,
+      deepseekBlocked: isDeepSeek,
+      humanGate:      true,
+      securityViolation: secCheck.violations,
+    };
   }
 
   // DeepSeek ブロック時は safe フォールバックへ

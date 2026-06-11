@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Smoke test: v110.51 DeepSeek Security Policy
+ * Smoke test: v110.52 DeepSeek Security Policy
  *
  * Verifies:
  *   - Allowed: general code, smoke, docs
@@ -18,7 +18,7 @@ const router = require('../tools/kosame-smart-task-router');
 let passed = 0;
 function pass(msg) { passed += 1; console.log(`  PASS: ${msg}`); }
 
-console.log('=== v110.51 deepseek security smoke ===');
+console.log('=== v110.52 deepseek security smoke ===');
 
 // ── 1. Policy Level Checks ──────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ try {
   testPolicyChecks();
   testRouterChecks();
   testLabelCheck();
-  console.log(`\n✅ v110.51 deepseek security smoke PASSED (${passed} checks)`);
+  console.log(`\n✅ v110.52 deepseek security smoke PASSED (${passed} checks)`);
 } catch (e) {
   console.error(`\n❌ smoke FAILED: ${e.message}`);
   process.exit(1);

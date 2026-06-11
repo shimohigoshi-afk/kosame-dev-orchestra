@@ -28,8 +28,8 @@ try {
   assert.strictEqual(data.ok, true, 'Result should be ok:true');
   pass('Execution: ok is true');
   
-  assert.strictEqual(data.version, '110.51.0', 'Version should match 110.51.0');
-  pass('Execution: version matches 110.51.0');
+  assert.strictEqual(data.version, '110.52.0', 'Version should match 110.52.0');
+  pass('Execution: version matches 110.52.0');
 
   console.log(`\n✅ v110.50 graduation smoke PASSED (${passed} checks)`);
 } catch (e) {

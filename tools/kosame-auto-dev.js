@@ -4,7 +4,7 @@
 const activity = require('./kosame-activity-events');
 
 /**
- * KOSAME Auto Dev v110.51.0
+ * KOSAME Auto Dev v110.52.0
  *
  * 設計書 → Claude Code 自動実行パイプライン
  *
@@ -39,8 +39,8 @@ const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
-  version:       '110.51.0',
-  feature:       'v110-51-worker-security',
+  version:       '110.52.0',
+  feature:       'v110-52-anesty-rehearsal',
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };

@@ -20,9 +20,9 @@ pass('tools/kosame-auto-dev.js exists');
 
 const mod = require(toolPath);
 
-assert.strictEqual(mod.TOOL_META.version, '110.51.0');
+assert.strictEqual(mod.TOOL_META.version, '110.52.0');
 pass('TOOL_META.version');
-assert.strictEqual(pkg.version >= '110.51.0', true);
+assert.strictEqual(pkg.version >= '110.52.0', true);
 pass('package version');
 
 // ── 1. Existing file modify + rollback ────────────────────────

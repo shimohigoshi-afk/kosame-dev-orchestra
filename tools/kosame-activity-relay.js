@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Activity Relay v110.50.0
+ * KOSAME Activity Relay v110.51.0
  *
  * Watches the local activity-events.jsonl and relays events to Cloud Run
  * Dashboard's /api/activity/ingest endpoint.
@@ -35,8 +35,8 @@ const https = require('node:https');
 const http = require('node:http');
 
 const TOOL_META = {
-  version: '110.50.0',
-  feature: 'v110-50-graduation',
+  version: '110.51.0',
+  feature: 'v110-51-worker-security',
   slug:    'kosame-activity-relay',
 };
 

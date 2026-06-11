@@ -4,7 +4,7 @@
 const activity = require('./kosame-activity-events');
 
 /**
- * KOSAME Auto Dev v110.50.0
+ * KOSAME Auto Dev v110.51.0
  *
  * 設計書 → Claude Code 自動実行パイプライン
  *
@@ -39,8 +39,8 @@ const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
-  version:       '110.50.0',
-  feature:       'v110-50-graduation',
+  version:       '110.51.0',
+  feature:       'v110-51-worker-security',
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };
@@ -442,8 +442,24 @@ async function executeWithWorker(task, workerName, opts = {}) {
   const startMs = Date.now();
 
   const { callModel, readConfig, resolveWorker } = require('./kosame-cheap-first-runtime');
+  const security = require('./kosame-worker-security-policy');
+
   const cfg    = config || readConfig();
   const worker = resolveWorker(workerName, cfg);
+
+  // v110.51: セキュリティポリシーによる詳細チェック（実行直前）
+  const secCheck = security.validateWorkerAssignment(workerName, task, { specText: opts.specText || '' });
+  if (secCheck.humanGateRequired) {
+    out(`     ${c('bgRed', c('bold', ' ! SECURITY_VIOLATION '))} ${workerName} は ${secCheck.violations[0]} へのアクセスが制限されています`);
+    return {
+      success: false,
+      dryRun,
+      humanGate: true,
+      failure: { type: 'human_gate', reason: secCheck.reason },
+      output: `[SECURITY_BLOCKED] ${secCheck.reason}`,
+      durationMs: 0,
+    };
+  }
 
   if (dryRun) {
     const mockPath = `src/${task.title.replace(/\s+/g, '_').toLowerCase().slice(0, 20)}.js`;

@@ -6,7 +6,7 @@
  *
  * Verifies:
  *   - Fix 2: failedCount > 0 → review rejects (approved=false, deliveryReady=false)
- *   - Fix 3: version 110.50.0 in auto-dev.js and package.json
+ *   - Fix 3: version 110.51.0 in auto-dev.js and package.json
  *   - Fix 5: KOSAME_API_KEY / KOSAME_IDENTITY_TOKEN redacted from logs
  *   - Fix 4: Smart Router preserves mode:smart / general_worker / gemini-2.5-flash
  *   - Secret patterns: JWT token redaction
@@ -29,10 +29,10 @@ pass('tools/kosame-auto-dev.js exists');
 const mod = require(toolPath);
 
 // ── 1. Version check ─────────────────────────────────────────────────────────
-assert.strictEqual(mod.TOOL_META.version, '110.50.0');
-pass('TOOL_META.version is 110.50.0');
-assert.strictEqual(pkg.version, '110.50.0');
-pass('package.json version is 110.50.0');
+assert.strictEqual(mod.TOOL_META.version, '110.51.0');
+pass('TOOL_META.version is 110.51.0');
+assert.strictEqual(pkg.version, '110.51.0');
+pass('package.json version is 110.51.0');
 
 // ── 2. Fix 2: failedCount > 0 → review rejects with DRY-RUN ─────────────────
 async function testDryRunFailedRejects() {

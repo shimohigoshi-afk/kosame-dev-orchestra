@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.48.0
+ * KOSAME Smart Task Router v110.51.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -33,8 +33,8 @@
  */
 
 const TOOL_META = {
-  version:       '110.48.0',
-  feature:       'v110-48-smart-task-router',
+  version:       '110.51.0',
+  feature:       'v110-51-worker-security',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
@@ -95,7 +95,7 @@ const AMBIGUOUS_RE     = /\b(未定|TBD|TODO|検討|要確認|unclear|ambiguous|
 const CONFIDENTIAL_RE  = /\b(機密|confidential|秘密|secret|顧客情報|customer.?data|個人情報|PII|jwt|auth.*token|api.?key)\b/i;
 
 const WORKER_META = {
-  cheap_code_worker:    { label: 'DeepSeek',       color: 'cyan',    provider: 'deepseek'   },
+  cheap_code_worker:    { label: 'DeepSeek (sanitized_only)', color: 'cyan',    provider: 'deepseek'   },
   cheap_general_worker: { label: 'GPT-mini',        color: 'yellow',  provider: 'openai'     },
   general_worker:       { label: 'Gemini Flash',    color: 'blue',    provider: 'gemini'     },
   code_pro_worker:      { label: 'Claude Haiku',    color: 'magenta', provider: 'anthropic'  },
@@ -173,7 +173,9 @@ function gptArbiterNeeded(task) {
  * @param {object} task - classified task
  * @returns {{ primary, fallback, reason, variant, deepseekBlocked }}
  */
-function assignWorkerByRules(task) {
+function assignWorkerByRules(task, context = {}) {
+  const security = require('./kosame-worker-security-policy');
+
   // 最終品質チェックタスク
   if (task.isQualityCheck || task.type === 'quality') {
     return { ...ROUTING_TABLE.quality.default, variant: 'quality', deepseekBlocked: false };
@@ -189,8 +191,27 @@ function assignWorkerByRules(task) {
   const policy = tier[variant] || tier.default;
 
   // DeepSeek 禁止チェック（営業DX・機密はcheap_code_worker禁止）
-  const deepseekBlocked = policy.primary === 'cheap_code_worker'
-    && (task.isSalesDx || task.isConfidential);
+  let primary = policy.primary;
+  let reason  = policy.reason;
+  
+  const isDeepSeek = primary === 'cheap_code_worker' || (primary && primary.includes('deepseek'));
+  const deepseekBlocked = isDeepSeek && (task.isSalesDx || task.isConfidential);
+
+  // v110.51: セキュリティポリシーによる詳細チェック
+  if (isDeepSeek && !deepseekBlocked) {
+    const secCheck = security.validateWorkerAssignment(primary, task, context);
+    if (secCheck.humanGateRequired) {
+      return {
+        primary:        policy.fallback || 'general_worker',
+        fallback:       policy.fallback || 'general_worker',
+        reason:         `${policy.reason} → セキュリティ制限: ${secCheck.reason}`,
+        variant,
+        deepseekBlocked: true,
+        humanGate:      true,
+        securityViolation: secCheck.violations,
+      };
+    }
+  }
 
   // DeepSeek ブロック時は safe フォールバックへ
   if (deepseekBlocked) {
@@ -229,7 +250,7 @@ async function askGptForAssignment(task, reasons, config, opts = {}) {
   const { dryRun = true } = opts;
 
   if (dryRun) {
-    const rules = assignWorkerByRules(task);
+    const rules = assignWorkerByRules(task, { specText: task.specText || '' });
     return {
       dryRun:   true,
       primary:  rules.primary,
@@ -288,7 +309,7 @@ async function askGptForAssignment(task, reasons, config, opts = {}) {
     // fall through to rules
   }
 
-  const rules = assignWorkerByRules(task);
+  const rules = assignWorkerByRules(task, { specText: task.specText || '' });
   return {
     dryRun:   false,
     primary:  rules.primary,
@@ -440,7 +461,7 @@ async function assignWorker(task, opts = {}) {
   if (arbiter.needed) {
     const { readConfig } = require('./kosame-cheap-first-runtime');
     const cfg = config || readConfig();
-    const decision = await askGptForAssignment(classified, arbiter.reasons, cfg, { dryRun });
+    const decision = await askGptForAssignment({ ...classified, specText }, arbiter.reasons, cfg, { dryRun });
     return {
       ...decision,
       needsGptArbiter: true,
@@ -450,7 +471,7 @@ async function assignWorker(task, opts = {}) {
 
   // smart: 裁定不要 → ルールベース
   return {
-    ...assignWorkerByRules(classified),
+    ...assignWorkerByRules(classified, { specText }),
     method:          'rule',
     needsGptArbiter: false,
     arbiterReasons:  [],

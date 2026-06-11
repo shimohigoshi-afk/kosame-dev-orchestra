@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.52.0
+ * KOSAME Smart Task Router v110.53.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -33,8 +33,8 @@
  */
 
 const TOOL_META = {
-  version:       '110.52.0',
-  feature:       'v110-52-anesty-rehearsal',
+  version:       '110.53.0',
+  feature:       'v110-53-ip-protection',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };

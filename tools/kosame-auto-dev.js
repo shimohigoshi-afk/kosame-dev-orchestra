@@ -4,7 +4,7 @@
 const activity = require('./kosame-activity-events');
 
 /**
- * KOSAME Auto Dev v110.52.0
+ * KOSAME Auto Dev v110.53.0
  *
  * 設計書 → Claude Code 自動実行パイプライン
  *
@@ -39,8 +39,8 @@ const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
-  version:       '110.52.0',
-  feature:       'v110-52-anesty-rehearsal',
+  version:       '110.53.0',
+  feature:       'v110-53-ip-protection',
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };
@@ -447,7 +447,7 @@ async function executeWithWorker(task, workerName, opts = {}) {
   const cfg    = config || readConfig();
   const worker = resolveWorker(workerName, cfg);
 
-  // v110.51: セキュリティポリシーによる詳細チェック（実行直前）
+  // v110.51-v110.53: セキュリティ/IPポリシーによる詳細チェック（実行直前）
   const secCheck = security.validateWorkerAssignment(workerName, task, { specText: opts.specText || '' });
   if (secCheck.humanGateRequired) {
     out(`     ${c('bgRed', c('bold', ' ! SECURITY_VIOLATION '))} ${workerName} は ${secCheck.violations[0]} へのアクセスが制限されています`);
@@ -461,19 +461,21 @@ async function executeWithWorker(task, workerName, opts = {}) {
     };
   }
 
+  const sanitizedTask = security.sanitizeTaskForWorker(task);
+
   if (dryRun) {
-    const mockPath = `src/${task.title.replace(/\s+/g, '_').toLowerCase().slice(0, 20)}.js`;
+    const mockPath = `src/${sanitizedTask.title.replace(/\s+/g, '_').toLowerCase().slice(0, 20)}.js`;
     out(`     ${c('yellow', '[DRY-RUN]')} ${workerName} (${worker.modelId}) 模擬実装`);
     return {
       success: true, dryRun: true,
-      output:  `[FILE] ${mockPath}\n\`\`\`js\n// ${task.title}\nfunction ${task.title.replace(/\s+/g, '_')}() {\n  return null;\n}\n\`\`\``,
+      output:  `[FILE] ${mockPath}\n\`\`\`js\n// ${sanitizedTask.title}\nfunction ${sanitizedTask.title.replace(/\s+/g, '_')}() {\n  return null;\n}\n\`\`\``,
       model:    worker.modelId,
       provider: worker.provider,
       durationMs: 400 + Math.round(Math.random() * 400),
     };
   }
 
-  const prompt = buildTaskPrompt(task, project);
+  const prompt = buildTaskPrompt(sanitizedTask, null);
   try {
     const result = await callModel(workerName, prompt, cfg, { maxTokens: 4096 });
     const raw    = result.response || '';
@@ -811,9 +813,11 @@ try { activity.emit('agent_started', { taskId: task.id, project: project || '', 
 try { activity.emit('fallback_started', { taskId: task.id, project: project || '', dryRun, agent: implModel || '', stage: 'fallback', progressPercent: 30 }); } catch (_) {}
       const { cheapFirstRun, readConfig } = require('./kosame-cheap-first-runtime');
       const cfg = config || readConfig();
-      const cf = await cheapFirstRun(buildTaskPrompt(task, project), task.difficulty, {
+      const security = require('./kosame-worker-security-policy');
+      const sanitizedTask = security.sanitizeTaskForWorker(task);
+      const cf = await cheapFirstRun(buildTaskPrompt(sanitizedTask, null), task.difficulty, {
         dryRun, silent: true, skipHumanGate: false, // ← human_gate bypass禁止
-        taskInput: task.title.slice(0, 120), taskType: 'implement', project,
+        taskInput: sanitizedTask.title.slice(0, 120), taskType: 'implement', project,
       });
       implOutput   = redact(cf.response ?? '');
       implFiles    = parsePatchOutput(implOutput, repoRoot || process.cwd());

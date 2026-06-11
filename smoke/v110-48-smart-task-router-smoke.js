@@ -28,13 +28,13 @@ console.log('=== v110.52 smart-task-router smoke ===');
 
 // ── Package version ───────────────────────────────────────────────────────────
 
-assert.ok(pkg.version >= '110.52.0', `version must be >= 110.52.0 (got ${pkg.version})`);
-pass('package version >= 110.52.0');
+assert.ok(pkg.version >= '110.53.0', `version must be >= 110.53.0 (got ${pkg.version})`);
+pass('package version >= 110.53.0');
 
 // ── TOOL_META ─────────────────────────────────────────────────────────────────
 
 assert.strictEqual(router.TOOL_META.slug, 'kosame-smart-task-router');
-assert.ok(router.TOOL_META.version.startsWith('110.52'));
+assert.ok(router.TOOL_META.version >= '110.53.0');
 pass('TOOL_META slug and version');
 
 // ── ROUTING_TABLE structure ───────────────────────────────────────────────────

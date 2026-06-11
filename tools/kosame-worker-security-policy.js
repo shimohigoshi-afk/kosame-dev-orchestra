@@ -2,17 +2,19 @@
 'use strict';
 
 /**
- * KOSAME Worker Security Policy v110.51.0
+ * KOSAME Worker Security Policy v110.53.0
  *
  * DeepSeek / opencode系ワーカーのセキュリティポリシー。
  * - sanitized_only: 一般コード、smoke、docs、UI表示のみ許可
  * - 禁止パス・コマンド・キーワード検出時は HUMAN_GATE_REQUIRED を返す
- * - Secret / 顧客情報 / 営業DX 領域へのアクセスを厳格に制限
+ * - Secret / 顧客情報 / 営業DX / IP・事業資産 領域へのアクセスを厳格に制限
  */
 
+const ipGate = require('./kosame-ip-protection-gate');
+
 const TOOL_META = {
-  version: '110.51.0',
-  feature: 'v110-51-worker-security-policy',
+  version: '110.53.0',
+  feature: 'v110-53-ip-protection',
   slug: 'kosame-worker-security-policy',
 };
 
@@ -123,7 +125,39 @@ function isDeepSeekAllowedTask(task, context = {}) {
     };
   }
 
+  const ipCheck = ipGate.isIPProtectedTask(task, context);
+  if (!ipCheck.allowed) {
+    return {
+      allowed: false,
+      reason: ipCheck.reason,
+      violations: ipCheck.violations,
+    };
+  }
+
   return { allowed: true, reason: null, violations: [] };
+}
+
+function redactForWorker(text) {
+  if (!text || typeof text !== 'string') return text || '';
+  return text
+    .replace(/\b[A-Z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|CREDENTIALS)[A-Z0-9_]*\b/gi, '[REDACTED_SECRET_NAME]')
+    .replace(/\bsk-[A-Za-z0-9_-]{12,}\b/g, 'sk-[REDACTED]')
+    .replace(/\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, '[REDACTED_JWT]')
+    .replace(/\b[A-Za-z0-9+/]{40,}={0,2}\b/g, '[REDACTED_BLOB]');
+}
+
+/**
+ * 外部workerに渡すタスクを sanitized task に絞る。
+ */
+function sanitizeTaskForWorker(task) {
+  return {
+    id: task.id,
+    title: redactForWorker(String(task.title || '')).slice(0, 160),
+    description: redactForWorker(String(task.description || '')).slice(0, 600),
+    difficulty: task.difficulty || 'medium',
+    dependencies: Array.isArray(task.dependencies) ? task.dependencies.slice(0, 10) : [],
+    file_scope: Array.isArray(task.file_scope) ? task.file_scope.slice(0, 20) : [],
+  };
 }
 
 // ── ユーティリティ ────────────────────────────────────────────────────────────
@@ -158,5 +192,7 @@ module.exports = {
   detectForbiddenCommands,
   detectSecretLikeText,
   isDeepSeekAllowedTask,
+  redactForWorker,
+  sanitizeTaskForWorker,
   validateWorkerAssignment,
 };

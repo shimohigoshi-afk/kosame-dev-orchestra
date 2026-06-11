@@ -12,7 +12,7 @@ function pass(msg) { passed += 1; console.log(`  PASS: ${msg}`); }
 
 async function main() {
 
-console.log('=== v110.42 auto-dev smoke ===');
+console.log('=== v110.49 auto-dev smoke ===');
 
 const toolPath = path.resolve(__dirname, '..', 'tools', 'kosame-auto-dev.js');
 assert.ok(fs.existsSync(toolPath), 'tools/kosame-auto-dev.js exists');
@@ -20,9 +20,9 @@ pass('tools/kosame-auto-dev.js exists');
 
 const mod = require(toolPath);
 
-assert.strictEqual(mod.TOOL_META.version, '110.42.0');
+assert.strictEqual(mod.TOOL_META.version, '110.49.0');
 pass('TOOL_META.version');
-assert.strictEqual(pkg.version >= '110.42.0', true);
+assert.strictEqual(pkg.version >= '110.49.0', true);
 pass('package version');
 
 // ── 1. Existing file modify + rollback ────────────────────────
@@ -253,7 +253,7 @@ pass('redacted output stored to learning-log');
 // Cleanup
 fs.rmSync(tmpDir, { recursive: true, force: true });
 
-console.log(`\n✅ v110.42 auto-dev smoke PASSED (${passed} checks)`);
+console.log(`\n✅ v110.49 auto-dev smoke PASSED (${passed} checks)`);
 }
 
 main().catch(err => {

@@ -4,7 +4,7 @@
 const activity = require('./kosame-activity-events');
 
 /**
- * KOSAME Auto Dev v110.42.0
+ * KOSAME Auto Dev v110.49.0
  *
  * 設計書 → Claude Code 自動実行パイプライン
  *
@@ -39,8 +39,8 @@ const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
-  version:       '110.42.0',
-  feature:       'v110-42-auto-dev',
+  version:       '110.49.0',
+  feature:       'v110-49-auto-dev',
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };
@@ -61,12 +61,14 @@ const SECRET_PATTERNS = [
   /(?:^|[^a-zA-Z])password[=:]\s*\S{10,}/gi,
   /(?:^|[^a-zA-Z])credentials[=:]\s*\S{10,}/gi,
   /\b[A-Za-z0-9+/]{40,}\b/g,                 // base64-looking strings (40+ chars)
+  /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, // JWT tokens
 ].map(r => ({ regex: r }));
 
 const ENV_SECRET_VARS = [
   'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_API_KEY',
   'DISCORD_BOT_TOKEN', 'DISCORD_WEBHOOK_URL', 'DEEPSEEK_API_KEY', 'GROK_API_KEY',
   'KIMI_API_KEY', 'SLACK_TOKEN', 'LINE_TOKEN',
+  'KOSAME_API_KEY', 'KOSAME_IDENTITY_TOKEN',
 ];
 
 function buildEnvValuesPattern() {
@@ -593,6 +595,8 @@ async function reviewAllResults(taskResults, opts = {}) {
   const hasGptKey    = !!(cfg.openaiKeyPresent || cfg.openaiApiKey || process.env.OPENAI_API_KEY);
   const hasClaudeKey = !!(process.env.ANTHROPIC_API_KEY);
 
+  const failedCount = taskResults.filter(r => !r.verifyPass && !r.skipped).length;
+
   const summary = taskResults.map((r, i) =>
     `タスク${i + 1}: ${r.title.slice(0, 60)} — ${r.verifyPass ? '✓ PASS' : '✗ FAIL'}${r.fixed ? ' (修正済)' : ''}${(r.writtenFiles||[]).length ? ' [' + r.writtenFiles.length + ' files]' : ''}`
   ).join('\n');
@@ -601,13 +605,16 @@ async function reviewAllResults(taskResults, opts = {}) {
 
   if (dryRun) {
     out(`  ${c('yellow', '[DRY-RUN]')} GPT + Claude 模擬レビュー`);
+    if (failedCount > 0) {
+      out(`  ${c('red', '⚠ FAILタスクあり — 模擬レビューでも否決扱い')}`);
+    }
     return {
       gpt:     { score: 82, verdict: 'OK', summary: '[DRY-RUN] 全タスク品質水準クリア', status: 'SKIPPED_DRY_RUN' },
       claude:  { score: 85, ready: true, assessment: '[DRY-RUN] 実装品質は高く納品可能水準', status: 'SKIPPED_DRY_RUN' },
       avgScore: 83.5,
-      approved: true,
+      approved: failedCount === 0,
       dryRun:   true,
-      deliveryReady: true,
+      deliveryReady: failedCount === 0,
     };
   }
 
@@ -649,11 +656,15 @@ async function reviewAllResults(taskResults, opts = {}) {
   const avgScore = (gpt.score + claude.score) / 2;
   const gptOk    = gpt.status === 'EXECUTED' ? gpt.verdict !== 'NG' : true;
   const claudeOk = claude.status === 'EXECUTED' ? claude.ready !== false : true;
-  const approved = avgScore >= 75 && gptOk && claudeOk;
+  const reviewApproved = avgScore >= 75 && gptOk && claudeOk;
+  const approved = reviewApproved && failedCount === 0;
   const deliveryReady = hasGptKey && hasClaudeKey && approved;
 
+  if (failedCount > 0) {
+    out(`  ${c('red', `⚠ ${failedCount}件のFAILタスクあり — 承認取消`)}`);
+  }
   out(`  GPT スコア: ${gpt.score}/100 [${gpt.status}]  Claude スコア: ${claude.score}/100 [${claude.status}]  平均: ${avgScore.toFixed(1)}`);
-  out(`  判定: ${approved ? c('bgGreen', c('bold', ' ✓ 承認 ')) : c('bgRed', c('bold', ' ✗ 否決 '))}`);
+  out(`  判定: ${approved ? c('bgGreen', c('bold', ' ✓ 承認 ')) : c('bgRed', c('bold', ' ✗ 否決 '))}${failedCount > 0 ? ' ' + c('red', '(要確認)') : ''}`);
   out(`  delivery_ready: ${deliveryReady ? c('green', 'true') : c('yellow', 'false')}${!deliveryReady ? ' (両APIキー設定必要)' : ''}`);
 
   return { gpt, claude, avgScore, approved, deliveryReady, dryRun: false };

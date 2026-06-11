@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Activity Relay v110.45.0
+ * KOSAME Activity Relay v110.49.0
  *
  * Watches the local activity-events.jsonl and relays events to Cloud Run
  * Dashboard's /api/activity/ingest endpoint.
@@ -35,8 +35,8 @@ const https = require('node:https');
 const http = require('node:http');
 
 const TOOL_META = {
-  version: '110.45.0',
-  feature: 'v110-45-activity-relay',
+  version: '110.49.0',
+  feature: 'v110-49-activity-relay',
   slug:    'kosame-activity-relay',
 };
 
@@ -384,7 +384,8 @@ function start() {
 
   loadPersistedQueue();
 
-  log('info', `relay started → ${RELAY_URL}`);
+  const safeUrl = RELAY_URL.replace(/\/\/[^@]+@/, '//***@');
+  log('info', `relay started → ${safeUrl}`);
   log('info', `poll=${POLL_MS}ms maxRetries=${MAX_RETRIES} queueMax=${QUEUE_MAX}`);
 
   const timer = setInterval(tick, POLL_MS);

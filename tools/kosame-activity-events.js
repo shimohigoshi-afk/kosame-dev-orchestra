@@ -66,6 +66,7 @@ const SECRET_PATTERNS = [
   /(?:^|[^a-zA-Z])(discord)?bot[._-]?token[=:]\s*\S{10,}/gi,
   /(?:^|[^a-zA-Z])api[._-]?key[=:]\s*\S{10,}/gi,
   /(?:^|[^a-zA-Z])secret[=:]\s*\S{10,}/gi,
+  /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g,
 ];
 
 function redact(text) {

@@ -246,12 +246,16 @@ if (-not $wslSpecPath) {
 Write-Host "  WSL spec path: $wslSpecPath" -ForegroundColor $GRAY
 
 # ---- Build relay environment (no secrets displayed) ----
-$relayEnv = "KOSAME_CLOUD_RUN_URL=$CloudRunUrl KOSAME_API_KEY=$KosameApiKey KOSAME_IDENTITY_TOKEN=$idToken"
+function Escape-Bash([string]$Value) {
+  # bash single-quote escaping: ' → '\''  then wrap in single quotes
+  return "'" + ($Value -replace "'", "'\''") + "'"
+}
+$relayEnv = "KOSAME_CLOUD_RUN_URL=$(Escape-Bash $CloudRunUrl) KOSAME_API_KEY=$(Escape-Bash $KosameApiKey) KOSAME_IDENTITY_TOKEN=$(Escape-Bash $idToken)"
 
 # ---- Start activity relay on WSL (background) ----
 Write-Host "  Starting activity relay on WSL..." -ForegroundColor $CYAN
 $relayCmd = "cd $KOSAME_REPO && $relayEnv nohup node tools/kosame-activity-relay.js > /dev/null 2>&1 & echo `$!"
-$relayResult = & wsl.exe -d Ubuntu -u lavie -- bash -lc $relayCmd
+$relayResult = & wsl.exe -d Ubuntu -u lavie -- bash -lc "--" "$relayCmd"
 $relayPid = $relayResult.Trim()
 Write-Host "  Relay PID: $relayPid" -ForegroundColor $GRAY
 

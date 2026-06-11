@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.53.0
+ * KOSAME Smart Task Router v110.54.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -13,6 +13,7 @@
  *   high/複雑    → gpt_upper 裁定 → Claude Code / GPT 実装補助
  *   最終品質     → claude_sonnet（温存）
  *   営業DX       → DeepSeek 禁止・許可済みモデルのみ
+ *   cost ledger  → Cheap First / Expensive Last の推奨と台帳記録
  *
  * 【3モード】
  *   --simple   : ルールベース分解のみ（最速・最安）
@@ -33,11 +34,13 @@
  */
 
 const TOOL_META = {
-  version:       '110.53.0',
-  feature:       'v110-53-ip-protection',
+  version:       '110.54.0',
+  feature:       'v110-54-cost-token-ledger',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
+
+const costLedger = require('./kosame-cost-token-ledger');
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -143,6 +146,16 @@ function classifyTask(task, opts = {}) {
   };
 }
 
+function attachCostPolicy(task, result, context = {}) {
+  return {
+    ...result,
+    costPolicy: costLedger.buildLedgerRecord(task, {
+      verifyRunCount: task.failureCount || 0,
+      ...context,
+    }),
+  };
+}
+
 // ── GPT arbiter need check ────────────────────────────────────────────────────
 
 /**
@@ -178,7 +191,7 @@ function assignWorkerByRules(task, context = {}) {
 
   // 最終品質チェックタスク
   if (task.isQualityCheck || task.type === 'quality') {
-    return { ...ROUTING_TABLE.quality.default, variant: 'quality', deepseekBlocked: false };
+    return attachCostPolicy(task, { ...ROUTING_TABLE.quality.default, variant: 'quality', deepseekBlocked: false }, context);
   }
 
   const diff = task.difficulty || 'medium';
@@ -201,7 +214,7 @@ function assignWorkerByRules(task, context = {}) {
   const secCheck = security.validateWorkerAssignment(primary, task, context);
   if (secCheck.humanGateRequired) {
     const newPrimary = isDeepSeek ? (policy.fallback || 'general_worker') : primary;
-    return {
+    return attachCostPolicy(task, {
       primary:        newPrimary,
       fallback:       policy.fallback || 'general_worker',
       reason:         `${policy.reason} → セキュリティ制限: ${secCheck.reason}`,
@@ -209,28 +222,28 @@ function assignWorkerByRules(task, context = {}) {
       deepseekBlocked: isDeepSeek,
       humanGate:      true,
       securityViolation: secCheck.violations,
-    };
+    }, context);
   }
 
   // DeepSeek ブロック時は safe フォールバックへ
   if (deepseekBlocked) {
     const safe = tier.salesDx || tier.default;
-    return {
+    return attachCostPolicy(task, {
       primary:        safe.fallback || 'cheap_general_worker',
       fallback:       safe.fallback || 'general_worker',
       reason:         `${policy.reason} → DeepSeek禁止 → ${safe.fallback}`,
       variant,
       deepseekBlocked: true,
-    };
+    }, context);
   }
 
-  return {
+  return attachCostPolicy(task, {
     primary:        policy.primary,
     fallback:       policy.fallback,
     reason:         policy.reason,
     variant,
     deepseekBlocked: false,
-  };
+  }, context);
 }
 
 // ── GPT assignment (smart mode) ───────────────────────────────────────────────
@@ -256,6 +269,7 @@ async function askGptForAssignment(task, reasons, config, opts = {}) {
       fallback: rules.fallback,
       reason:   `[DRY-RUN] GPT裁定スキップ → ルールベース: ${rules.reason}`,
       method:   'rule_dryrun',
+      costPolicy: rules.costPolicy,
     };
   }
 
@@ -301,6 +315,7 @@ async function askGptForAssignment(task, reasons, config, opts = {}) {
           fallback,
           reason:   `GPT裁定: ${parsed.reason || parsed.worker}`,
           method:   'gpt_arbiter',
+          costPolicy: costLedger.buildLedgerRecord(task, { verifyRunCount: task.failureCount || 0 }),
         };
       }
     }
@@ -315,6 +330,7 @@ async function askGptForAssignment(task, reasons, config, opts = {}) {
     fallback: rules.fallback,
     reason:   `GPT裁定失敗 → ルールベース: ${rules.reason}`,
     method:   'rule_fallback',
+    costPolicy: rules.costPolicy,
   };
 }
 
@@ -343,6 +359,7 @@ async function councilDecide(task, reasons, config, opts = {}) {
       method:    'rule_dryrun',
       gptVote:   null,
       claudeVote:null,
+      costPolicy: rules.costPolicy,
     };
   }
 
@@ -397,7 +414,16 @@ async function councilDecide(task, reasons, config, opts = {}) {
     method  = 'rule_fallback';
   }
 
-  return { dryRun: false, primary, fallback, reason, method, gptVote, claudeVote };
+  return {
+    dryRun: false,
+    primary,
+    fallback,
+    reason,
+    method,
+    gptVote,
+    claudeVote,
+    costPolicy: costLedger.buildLedgerRecord(task, { verifyRunCount: task.failureCount || 0 }),
+  };
 }
 
 // ── Main assign worker ────────────────────────────────────────────────────────

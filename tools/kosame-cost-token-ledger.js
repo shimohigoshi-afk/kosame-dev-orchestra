@@ -212,11 +212,26 @@ function buildLedgerRecord(task, context = {}) {
     ? evaluateRequestedModel(context.requestedModel, task, context)
     : recommendModel(task, context);
   let workerScorecard = null;
+  let availabilityFallback = null;
   try {
     const scorecard = require('./kosame-worker-scorecard');
     workerScorecard = scorecard.recommendWorkerForTask(task, context);
   } catch (_) {
     workerScorecard = null;
+  }
+  try {
+    const fallbackMatrix = require('./kosame-availability-fallback-matrix');
+    availabilityFallback = fallbackMatrix.recommendAvailabilityFallback(
+      task,
+      record.selectedModel,
+      context.workerState || fallbackMatrix.WORKER_STATES.healthy,
+      {
+        ...context,
+        approvalReceived: context.approvalReceived ?? record.approvalReceived,
+      },
+    );
+  } catch (_) {
+    availabilityFallback = null;
   }
 
   return {
@@ -235,6 +250,7 @@ function buildLedgerRecord(task, context = {}) {
     recommendedWorker: workerScorecard?.workerName || null,
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,
+    availabilityFallback,
   };
 }
 

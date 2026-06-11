@@ -42,6 +42,7 @@ const TOOL_META = {
 
 const costLedger = require('./kosame-cost-token-ledger');
 const workerScorecard = require('./kosame-worker-scorecard');
+const availabilityFallbackMatrix = require('./kosame-availability-fallback-matrix');
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,17 @@ function classifyTask(task, opts = {}) {
 
 function attachCostPolicy(task, result, context = {}) {
   const scorecard = workerScorecard.recommendWorkerForTask(task, context);
+  const currentModel = result.primary || result.selectedModel || result.fallback || scorecard.modelId;
+  const workerState = context.workerState || availabilityFallbackMatrix.WORKER_STATES.healthy;
+  const availabilityFallback = availabilityFallbackMatrix.recommendAvailabilityFallback(
+    task,
+    currentModel,
+    workerState,
+    {
+      ...context,
+      approvalReceived: context.approvalReceived ?? result.approvalReceived ?? false,
+    },
+  );
   return {
     ...result,
     costPolicy: costLedger.buildLedgerRecord(task, {
@@ -156,6 +168,7 @@ function attachCostPolicy(task, result, context = {}) {
       ...context,
     }),
     workerScorecard: scorecard,
+    availabilityFallback,
   };
 }
 

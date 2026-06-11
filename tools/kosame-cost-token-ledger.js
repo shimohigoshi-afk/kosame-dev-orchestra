@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Cost & Token Ledger v110.54.0
+ * KOSAME Cost & Token Ledger v110.55.0
  *
  * Cheap First / Expensive Last を守るための軽量モデル治理レイヤー。
  * - 默认は cheap
@@ -14,8 +14,8 @@
  */
 
 const TOOL_META = {
-  version: '110.54.0',
-  feature: 'v110-54-cost-token-ledger',
+  version: '110.55.0',
+  feature: 'v110-55-cost-token-ledger',
   slug: 'kosame-cost-token-ledger',
 };
 
@@ -211,6 +211,13 @@ function buildLedgerRecord(task, context = {}) {
   const record = context.requestedModel
     ? evaluateRequestedModel(context.requestedModel, task, context)
     : recommendModel(task, context);
+  let workerScorecard = null;
+  try {
+    const scorecard = require('./kosame-worker-scorecard');
+    workerScorecard = scorecard.recommendWorkerForTask(task, context);
+  } catch (_) {
+    workerScorecard = null;
+  }
 
   return {
     version: TOOL_META.version,
@@ -225,6 +232,9 @@ function buildLedgerRecord(task, context = {}) {
     costEstimateBand: record.costEstimateBand,
     estimatedRisk: record.estimatedRisk,
     notes: record.notes,
+    recommendedWorker: workerScorecard?.workerName || null,
+    recommendedModelId: workerScorecard?.modelId || null,
+    workerScorecard,
   };
 }
 

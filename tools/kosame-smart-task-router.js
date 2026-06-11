@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.54.0
+ * KOSAME Smart Task Router v110.55.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -34,13 +34,14 @@
  */
 
 const TOOL_META = {
-  version:       '110.54.0',
-  feature:       'v110-54-cost-token-ledger',
+  version:       '110.55.0',
+  feature:       'v110-55-worker-scorecard',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
 
 const costLedger = require('./kosame-cost-token-ledger');
+const workerScorecard = require('./kosame-worker-scorecard');
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -147,12 +148,14 @@ function classifyTask(task, opts = {}) {
 }
 
 function attachCostPolicy(task, result, context = {}) {
+  const scorecard = workerScorecard.recommendWorkerForTask(task, context);
   return {
     ...result,
     costPolicy: costLedger.buildLedgerRecord(task, {
       verifyRunCount: task.failureCount || 0,
       ...context,
     }),
+    workerScorecard: scorecard,
   };
 }
 

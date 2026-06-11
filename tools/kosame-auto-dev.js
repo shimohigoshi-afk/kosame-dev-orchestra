@@ -433,6 +433,55 @@ async function executeClaude(task, opts = {}) {
   };
 }
 
+// ── Worker-based execution (Smart Router) ────────────────────────────────────
+
+async function executeWithWorker(task, workerName, opts = {}) {
+  const { dryRun = true, project = null, out = console.log, repoRoot, config } = opts;
+  const startMs = Date.now();
+
+  const { callModel, readConfig, resolveWorker } = require('./kosame-cheap-first-runtime');
+  const cfg    = config || readConfig();
+  const worker = resolveWorker(workerName, cfg);
+
+  if (dryRun) {
+    const mockPath = `src/${task.title.replace(/\s+/g, '_').toLowerCase().slice(0, 20)}.js`;
+    out(`     ${c('yellow', '[DRY-RUN]')} ${workerName} (${worker.modelId}) 模擬実装`);
+    return {
+      success: true, dryRun: true,
+      output:  `[FILE] ${mockPath}\n\`\`\`js\n// ${task.title}\nfunction ${task.title.replace(/\s+/g, '_')}() {\n  return null;\n}\n\`\`\``,
+      model:    worker.modelId,
+      provider: worker.provider,
+      durationMs: 400 + Math.round(Math.random() * 400),
+    };
+  }
+
+  const prompt = buildTaskPrompt(task, project);
+  try {
+    const result = await callModel(workerName, prompt, cfg, { maxTokens: 4096 });
+    const raw    = result.response || '';
+    return {
+      success:    true,
+      dryRun:     false,
+      output:     redact(raw),
+      files:      parsePatchOutput(redact(raw), repoRoot || process.cwd()),
+      model:      worker.modelId,
+      provider:   worker.provider,
+      durationMs: Date.now() - startMs,
+    };
+  } catch (err) {
+    out(`     ${c('red', '✗')} ${workerName} 失敗: ${err.message.slice(0, 80)}`);
+    return {
+      success:    false,
+      dryRun:     false,
+      failure:    { type: 'generic', fallback: 'cheapFirstRun' },
+      output:     '',
+      model:      worker.modelId,
+      provider:   worker.provider,
+      durationMs: Date.now() - startMs,
+    };
+  }
+}
+
 // ── Auto verify ───────────────────────────────────────────────────────────────
 
 function autoVerify(task, output, opts = {}) {
@@ -670,7 +719,7 @@ async function waitForHumanGate(task, opts = {}) {
 // ── Single task pipeline ──────────────────────────────────────────────────────
 
 async function runTask(task, opts = {}) {
-  const { dryRun = true, project = null, config, out = console.log, repoRoot } = opts;
+  const { dryRun = true, project = null, config, out = console.log, repoRoot, routeMode = 'smart' } = opts;
   const startMs = Date.now();
   let backups  = [];
   let newFiles = [];
@@ -686,10 +735,32 @@ try { activity.emit('human_gate', { taskId: task.id, project: project || '', dry
     }
   }
 
-  // 2. Claude Code 実装
-  out(`     ${c('dim', 'Claude Code へ投げ中...')}`);
-try { activity.emit('agent_started', { taskId: task.id, project: project || '', dryRun, agent: 'Claude Code', provider: 'anthropic', model: 'claude-sonnet-4-6', stage: 'implementing', progressPercent: 10, mission: (task.title || '').slice(0, 60) }); } catch (_) {}
-  const claudeResult = await executeClaude(task, { dryRun, project, out, repoRoot });
+  // 2. Smart Router → AI割り当て → 実行
+  const { assignWorker: _routerAssign, classifyTask: _classifyTask } = require('./kosame-smart-task-router');
+  const _classified  = _classifyTask(task, { project });
+  const _assignment  = await _routerAssign(_classified, { mode: routeMode, dryRun, config });
+  const _workerName  = _assignment.primary;
+  const _useClaudeCLI = _workerName === 'claude_code';
+
+  out(`     ${c('cyan', '→')} ${c('bold', _workerName)}  ${c('dim', _assignment.reason)}`);
+  if (_assignment.needsGptArbiter && _assignment.arbiterReasons.length > 0) {
+    out(`     ${c('dim', '裁定理由:')} ${_assignment.arbiterReasons.join(' / ')}`);
+  }
+
+  const _agentProvider = _workerName.startsWith('claude') ? 'anthropic' : (_workerName.includes('gpt') ? 'openai' : 'gemini');
+try { activity.emit('agent_started', { taskId: task.id, project: project || '', dryRun, agent: _workerName, provider: _agentProvider, model: _workerName, stage: 'implementing', progressPercent: 10, mission: (task.title || '').slice(0, 60) }); } catch (_) {}
+
+  let claudeResult;
+  if (_useClaudeCLI) {
+    out(`     ${c('dim', 'Claude Code CLI へ投げ中...')}`);
+    claudeResult = await executeClaude(task, { dryRun, project, out, repoRoot });
+  } else {
+    claudeResult = await executeWithWorker(task, _workerName, { dryRun, project, out, repoRoot, config });
+    if (!claudeResult.success && _assignment.fallback && _assignment.fallback !== _workerName) {
+      out(`     ${c('yellow', '↷')} ${_workerName} 失敗 → fallback: ${_assignment.fallback}`);
+      claudeResult = await executeWithWorker(task, _assignment.fallback, { dryRun, project, out, repoRoot, config });
+    }
+  }
 
   // Claude Code 失敗 → fallback (max 1回)
   let implOutput   = redact(claudeResult.output || '');
@@ -866,12 +937,13 @@ try { activity.emit(taskResult.verifyPass ? 'task_completed' : 'task_failed', { 
 
 async function runAutoDev(specText, opts = {}) {
   const {
-    dryRun   = true,
-    silent   = false,
-    project  = null,
-    repoRoot = process.env.AUTO_DEV_REPO || process.cwd(),
+    dryRun    = true,
+    silent    = false,
+    project   = null,
+    repoRoot  = process.env.AUTO_DEV_REPO || process.cwd(),
     jsonMode  = false,
     maxTasks  = 50,
+    routeMode = 'smart',
   } = opts;
 
   const out = (silent || jsonMode)
@@ -880,7 +952,7 @@ async function runAutoDev(specText, opts = {}) {
 
   const dryLabel = dryRun ? c('blue', '[DRY-RUN]') : c('green', '[LIVE]');
   out(`\n${c('bold', c('blue', '⬡ KOSAME Auto Dev'))}  ${dryLabel}  v${TOOL_META.version}`);
-  out(`  repo: ${c('cyan', repoRoot)}  project: ${project ?? '(未指定)'}  maxTasks: ${maxTasks}  timeout: ${CLAUDE_TIMEOUT_MS}ms`);
+  out(`  repo: ${c('cyan', repoRoot)}  project: ${project ?? '(未指定)'}  mode: ${c('cyan', routeMode)}  maxTasks: ${maxTasks}  timeout: ${CLAUDE_TIMEOUT_MS}ms`);
   out('  ' + hr());
 
   // Step 1: spec-analyzer でタスク分解
@@ -914,7 +986,7 @@ async function runAutoDev(specText, opts = {}) {
     out(`\n  ${c('magenta', `── Phase ${order}`)} (${batch.length} タスク)`);
 
     for (const task of batch) {
-      const result = await runTask(task, { dryRun, project, config, out, repoRoot });
+      const result = await runTask(task, { dryRun, project, config, out, repoRoot, routeMode });
       allResults.push(result);
     }
   }
@@ -966,14 +1038,15 @@ function parseArgs(argv) {
   const get = (name) => { const p = `--${name}=`; const a = argv.find(x => x.startsWith(p)); return a ? a.slice(p.length) : null; };
   const has = (name) => argv.includes(`--${name}`);
   return {
-    spec:     get('spec')     || null,
-    file:     get('file')     || null,
-    project:  get('project')  || null,
-    repo:     get('repo')     || process.env.AUTO_DEV_REPO || process.cwd(),
-    maxTasks: parseInt(get('max-tasks') || '50', 10),
-    dryRun:   !has('write'),
-    silent:   has('silent'),
-    json:     has('json'),
+    spec:      get('spec')    || null,
+    file:      get('file')    || null,
+    project:   get('project') || null,
+    repo:      get('repo')    || process.env.AUTO_DEV_REPO || process.cwd(),
+    maxTasks:  parseInt(get('max-tasks') || '50', 10),
+    routeMode: get('mode') || (has('simple') ? 'simple' : has('council') ? 'council' : 'smart'),
+    dryRun:    !has('write'),
+    silent:    has('silent'),
+    json:      has('json'),
   };
 }
 
@@ -1010,12 +1083,13 @@ Flags:
   }
 
   const result = await runAutoDev(specText, {
-    dryRun:   args.dryRun,
-    silent:   args.silent || args.json,
-    project:  args.project,
-    repoRoot: args.repo,
-    jsonMode: args.json,
-    maxTasks: args.maxTasks,
+    dryRun:    args.dryRun,
+    silent:    args.silent || args.json,
+    project:   args.project,
+    repoRoot:  args.repo,
+    jsonMode:  args.json,
+    maxTasks:  args.maxTasks,
+    routeMode: args.routeMode,
   });
 
   if (args.json) {
@@ -1046,6 +1120,7 @@ module.exports = {
   runAutoDev,
   runTask,
   executeClaude,
+  executeWithWorker,
   autoVerify,
   fixWithPermittedModel,
   reviewAllResults,

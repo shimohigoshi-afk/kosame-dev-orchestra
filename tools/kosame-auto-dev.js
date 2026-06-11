@@ -4,7 +4,7 @@
 const activity = require('./kosame-activity-events');
 
 /**
- * KOSAME Auto Dev v110.49.0
+ * KOSAME Auto Dev v110.50.0
  *
  * 設計書 → Claude Code 自動実行パイプライン
  *
@@ -39,8 +39,8 @@ const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
 const TOOL_META = {
-  version:       '110.49.0',
-  feature:       'v110-49-auto-dev',
+  version:       '110.50.0',
+  feature:       'v110-50-graduation',
   slug:          'kosame-auto-dev',
   dryRunDefault: true,
 };
@@ -1142,4 +1142,5 @@ module.exports = {
   writeFilesWithBackup,
   rollbackFiles,
   requiresHumanGate,
+  redact,
 };

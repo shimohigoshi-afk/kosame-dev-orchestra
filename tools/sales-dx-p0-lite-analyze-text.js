@@ -41,20 +41,37 @@ function callLLM(text, temperature, alertWords) {
   const hasGuard = guardWords.length > 0;
 
   let followupStyle;
-  if (temperature.level === 'high') {
-    followupStyle = 'アクティブ';
-  } else if (temperature.level === 'guard' || temperature.level === 'low') {
-    followupStyle = 'ライト';
-  } else {
-    followupStyle = '標準';
+  switch (temperature.level) {
+    case 'high':
+      followupStyle = 'アクティブ';
+      break;
+    case 'high_caution':
+      followupStyle = 'アクティブ_注意';
+      break;
+    case 'medium_caution':
+    case 'comparing':
+      followupStyle = '警戒対応';
+      break;
+    case 'guard':
+    case 'low':
+      followupStyle = 'ライト';
+      break;
+    case 'info_low':
+      followupStyle = 'ヒアリング';
+      break;
+    default:
+      followupStyle = '標準';
   }
 
   const caseSummary = text.length > 120 ? text.slice(0, 120) + '…' : text;
 
   const followupTemplates = {
     'アクティブ': `先日は具体的なご質問をいただき、ありがとうございました。前回の続きとして、改めてご提案をさせてください。ご都合のよろしい日時をお知らせいただけますと幸いです。`,
+    'アクティブ_注意': `先日は前向きにご検討いただき、ありがとうございました。ご不安な点や気になることがございましたら、お気軽にお聞かせください。一緒に整理させていただきます。`,
     '標準': `先日はいろいろとお話を伺い、ありがとうございました。追加で気になる点やご質問がございましたら、お気軽にご連絡ください。`,
+    '警戒対応': `先日はお話を伺い、ありがとうございました。比較されている点や気になる点について、追加の情報をご用意いたしました。ご不明な点がございましたら、いつでもお知らせください。`,
     'ライト': `先日はお時間をいただき、ありがとうございました。何か気になる点がございましたら、いつでもお気軽にご連絡ください。`,
+    'ヒアリング': `このたびはお問い合わせいただき、ありがとうございました。もう少し詳しくお話を伺えればと思います。ご都合のよろしい日時をお知らせいただけますと幸いです。`,
   };
 
   return {

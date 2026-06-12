@@ -123,6 +123,28 @@ check('r5: sent === false',           r5.sent === false);
 check('r5: charged === false',        r5.charged === false);
 check('r5: externalApiCalled === false', r5.externalApiCalled === false);
 
+// ── Smoke 6: Mixed high_caution (positive + guard共存) ─────────────────────
+
+const r6 = analyzer.analyzeText({
+  text: '山田さん。いつまでに決めればいいですか？具体的な数字を教えてください。ただ、ちょっと高いですね。主人に相談します。',
+  caseName: '山田さん',
+});
+check('r6: ok === true',              r6.ok === true);
+check('r6: temperature high_caution', r6.temperature.level === 'high_caution');
+check('r6: has positive',             r6.alertWords.positive.length > 0);
+check('r6: has guard',                r6.alertWords.guard.length > 0);
+COMMON_CHECKS(r6, 'r6');
+
+// ── Smoke 7: info_low (情報不足) ────────────────────────────────────────────
+
+const r7 = analyzer.analyzeText({
+  text: '保険の話をしました。特に決めていません。',
+  caseName: 'テスト',
+});
+check('r7: ok === true',              r7.ok === true);
+check('r7: temperature info_low',     r7.temperature.level === 'info_low');
+COMMON_CHECKS(r7, 'r7');
+
 // ── Forbidden content detection ─────────────────────────────────────────────
 
 const rForbidden = analyzer.analyzeText({ text: 'api_key=sk-test' });

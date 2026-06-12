@@ -117,28 +117,50 @@ function calcTemperature(text) {
     if (text.includes(kw)) { matched.compare.push(kw); }
   }
 
-  const isComparing = matched.compare.length > 0;
+  const isComparing  = matched.compare.length > 0;
+  const hasPositive  = matched.high.length > 0;
+  const hasGuard     = matched.guard.length > 0;
+  const hasLow       = matched.low.length > 0;
+  const hasMid       = matched.mid.length > 0;
+  const hasAnySignal = hasPositive || hasGuard || hasLow || hasMid || isComparing;
+  const isMixed      = hasPositive && (hasGuard || hasLow);
 
   let level, label, emoji;
-  if (score >= 3)        { level = 'high';     label = '高温度';     emoji = '🔥'; }
-  else if (score <= -3)  { level = 'guard';    label = '警戒';       emoji = '🛡️'; }
-  else if (isComparing && score >= -2) { level = 'comparing'; label = '競合比較中'; emoji = '🔄'; }
-  else if (score >= 1)   { level = 'medium';   label = '中温度';     emoji = '⚡'; }
-  else if (score <= -1)  { level = 'low';      label = '低温度';     emoji = '❄️'; }
-  else                   { level = 'medium';   label = '中温度';     emoji = '⚡'; }
+
+  if (!hasAnySignal) {
+    level = 'info_low'; label = '情報不足'; emoji = '❓';
+  } else if (isMixed && hasPositive && hasGuard && score >= 0) {
+    level = 'high_caution'; label = '高温度_注意あり'; emoji = '🔥⚠';
+  } else if (isMixed && hasPositive && (hasLow || matched.guard.length >= 2) && score >= -2) {
+    level = 'medium_caution'; label = '中温度_警戒あり'; emoji = '⚡⚠';
+  } else if (score >= 3) {
+    level = 'high'; label = '高温度'; emoji = '🔥';
+  } else if (score <= -3) {
+    level = 'guard'; label = '警戒'; emoji = '🛡️';
+  } else if (isComparing && score >= -2) {
+    level = 'comparing'; label = '競合比較中'; emoji = '🔄';
+  } else if (score >= 1) {
+    level = 'medium'; label = '中温度'; emoji = '⚡';
+  } else if (score <= -1) {
+    level = 'low'; label = '低温度'; emoji = '❄️';
+  } else {
+    level = 'medium'; label = '中温度'; emoji = '⚡';
+  }
 
   const reasons = [];
-  if (matched.high.length) reasons.push(`「${matched.high.join('」「')}」などの前向きワード`);
-  if (matched.mid.length)  reasons.push(`「${matched.mid.join('」「')}」など検討中のワード`);
-  if (matched.low.length)  reasons.push(`「${matched.low.join('」「')}」など消極的ワード`);
-  if (matched.guard.length) reasons.push(`「${matched.guard.join('」「')}」など警戒ワード`);
-  if (isComparing)          reasons.push('競合比較を示唆する表現');
+  if (matched.high.length)   reasons.push(`前向きワード: 「${matched.high.join('」「')}」`);
+  if (matched.mid.length)    reasons.push(`検討ワード: 「${matched.mid.join('」「')}」`);
+  if (matched.low.length)    reasons.push(`消極的ワード: 「${matched.low.join('」「')}」`);
+  if (matched.guard.length)  reasons.push(`警戒ワード: 「${matched.guard.join('」「')}」`);
+  if (isComparing)           reasons.push('競合比較を示唆する表現');
+
+  const note = isMixed ? '前向き要素と警戒要素が混在しています。現場の雰囲気を踏まえて総合判断してください。' : '';
 
   const reason = reasons.length > 0
-    ? reasons.join('。') + 'が検出されました（参考）'
+    ? reasons.join('。') + '。' + (note || '（参考）')
     : '特筆するワードは検出されませんでした（参考）';
 
-  return { level, label, emoji, reason, isReference: true, score };
+  return { level, label, emoji, reason, isReference: true, score, isMixed };
 }
 
 function detectAlertWords(text) {

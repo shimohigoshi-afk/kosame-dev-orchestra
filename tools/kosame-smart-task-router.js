@@ -176,12 +176,23 @@ function attachCostPolicy(task, result, context = {}) {
     },
     context,
   );
+  let sanitizedTaskPack = null;
+  if (context.generateSanitizedTaskPack) {
+    const sanitizedPackGenerator = require('./kosame-sanitized-task-pack-generator');
+    sanitizedTaskPack = sanitizedPackGenerator.buildSanitizedTaskPack(task, {
+      ...context,
+      workerType: scorecard.modelId,
+      requestedModel: scorecard.modelId,
+      externalSanitized: scorecard.sanitizedOnly === true,
+    });
+  }
   return {
     ...result,
     costPolicy,
     workerScorecard: scorecard,
     availabilityFallback,
     routerExplanation,
+    sanitizedTaskPack,
   };
 }
 

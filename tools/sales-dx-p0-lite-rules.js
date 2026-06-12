@@ -117,21 +117,23 @@ function calcTemperature(text) {
     if (text.includes(kw)) { matched.compare.push(kw); }
   }
 
-  const isComparing  = matched.compare.length > 0;
-  const hasPositive  = matched.high.length > 0;
-  const hasGuard     = matched.guard.length > 0;
-  const hasLow       = matched.low.length > 0;
-  const hasMid       = matched.mid.length > 0;
-  const hasAnySignal = hasPositive || hasGuard || hasLow || hasMid || isComparing;
-  const isMixed      = hasPositive && (hasGuard || hasLow);
+  const isComparing   = matched.compare.length > 0;
+  const hasHigh       = matched.high.length > 0;
+  const hasMid        = matched.mid.length > 0;
+  const hasGuard      = matched.guard.length > 0;
+  const hasLow        = matched.low.length > 0;
+  const hasInterest   = hasHigh || hasMid;        // 前向きor検討中 = 関心あり
+  const hasAnySignal  = hasHigh || hasMid || hasGuard || hasLow || isComparing;
+  const hasMixedGuard = hasGuard || hasLow;        // 警戒or消極的と混在
+  const isMixed       = hasInterest && hasMixedGuard;
 
   let level, label, emoji;
 
   if (!hasAnySignal) {
     level = 'info_low'; label = '情報不足'; emoji = '❓';
-  } else if (isMixed && hasPositive && hasGuard && score >= 0) {
+  } else if (isMixed && hasHigh && hasGuard && score >= 0) {
     level = 'high_caution'; label = '高温度_注意あり'; emoji = '🔥⚠';
-  } else if (isMixed && hasPositive && (hasLow || matched.guard.length >= 2) && score >= -2) {
+  } else if (isMixed && hasInterest && hasMixedGuard && score >= -2) {
     level = 'medium_caution'; label = '中温度_警戒あり'; emoji = '⚡⚠';
   } else if (score >= 3) {
     level = 'high'; label = '高温度'; emoji = '🔥';

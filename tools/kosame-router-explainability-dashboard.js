@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Router Explainability Dashboard Lite v110.62.0
+ * KOSAME Router Explainability Dashboard Lite v110.64.0
  *
  * 小さな説明生成レイヤー。
  * 既存の router / ledger / scorecard / fallback の出力を読み、
@@ -17,8 +17,8 @@ const GEMINI = 'gemini-2.5-flash-lite';
 const DEEPSEEK = 'deepseek-chat';
 
 const TOOL_META = {
-  version: '110.62.0',
-  feature: 'v110-62-router-explainability-dashboard-lite',
+  version: '110.64.0',
+  feature: 'v110-64-agent-handoff-coordination-gate',
   slug: 'kosame-router-explainability-dashboard',
 };
 
@@ -29,6 +29,12 @@ function compactText(...parts) {
     .join(' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function uniqueList(values) {
+  return [...new Set((Array.isArray(values) ? values : [values])
+    .flatMap(item => (item == null ? [] : [String(item).trim()]))
+    .filter(Boolean))];
 }
 
 function buildRouterExplanation(task, decision = {}, context = {}) {
@@ -111,6 +117,23 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     || decision.costPolicy?.providerBudgetDecision?.selectedProvider
     || null;
 
+  const coordinationGate = decision.coordinationGate
+    || decision.costPolicy?.coordinationGate
+    || context.coordinationGate
+    || null;
+
+  const coordinationStatus = coordinationGate?.status || null;
+  const coordinationReason = coordinationGate?.coordinationReason
+    || coordinationGate?.humanGateReason
+    || coordinationGate?.coordinationSummary?.nextAllowedAction
+    || null;
+  const coordinationBlockedReasons = uniqueList(coordinationGate?.blockedReasons || []);
+  const coordinationCautions = uniqueList(coordinationGate?.cautions || []);
+  const coordinationNextAllowedAction = coordinationGate?.nextAllowedAction || null;
+  const coordinationAssignedAgent = coordinationGate?.assignedAgent || null;
+  const coordinationTargetVersion = coordinationGate?.targetVersion || null;
+  const coordinationTargetRepo = coordinationGate?.targetRepo || null;
+
   const approvalRequired = !!(
     decision.costPolicy?.approvalRequired
     || decision.workerScorecard?.approvalRequired
@@ -123,6 +146,7 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     || decision.humanGate
     || decision.costPolicy?.selectionBlocked
     || providerBudgetHumanGateRequired
+    || coordinationGate?.humanGateRequired
   );
 
   const fallbackReason = decision.availabilityFallback?.reason
@@ -173,6 +197,7 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
         decision.availabilityFallback?.reason,
         decision.costPolicy?.selectionBlocked ? 'cost gate blocked' : '',
         providerBudgetHumanGateReason,
+        coordinationGate?.humanGateReason,
         taskType === 'ip_core' || taskType === 'security'
           ? 'IP/core/security requires human gate'
           : '',
@@ -216,6 +241,18 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     providerBudgetEscalationReason
       ? `Budget escalation: ${providerBudgetEscalationReason}.`
       : '',
+    coordinationStatus
+      ? `Coordination status: ${coordinationStatus}.`
+      : '',
+    coordinationReason
+      ? `Coordination reason: ${coordinationReason}.`
+      : '',
+    coordinationBlockedReasons.length > 0
+      ? `Coordination blocked: ${coordinationBlockedReasons.join('; ')}.`
+      : '',
+    coordinationCautions.length > 0
+      ? `Coordination cautions: ${coordinationCautions.join('; ')}.`
+      : '',
   );
 
   return {
@@ -231,11 +268,20 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     providerBudgetHumanGateReason,
     providerBudgetBlockedHighCost,
     providerBudgetBlockedHighCostReason,
+    coordinationStatus,
+    coordinationReason,
+    coordinationBlockedReasons,
+    coordinationCautions,
+    coordinationNextAllowedAction,
+    coordinationAssignedAgent,
+    coordinationTargetVersion,
+    coordinationTargetRepo,
     taskType,
     decisionReason: compactText(
       decision.reason,
       decision.method ? `method=${decision.method}` : '',
       decision.primary ? `primary=${decision.primary}` : '',
+      coordinationReason ? `coordination=${coordinationReason}` : '',
     ),
     costReason,
     approvalRequired,

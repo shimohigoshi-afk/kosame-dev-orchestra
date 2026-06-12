@@ -34,8 +34,8 @@
  */
 
 const TOOL_META = {
-  version:       '110.62.0',
-  feature:       'v110-62-worker-scorecard',
+  version:       '110.64.0',
+  feature:       'v110-64-agent-handoff-coordination-gate',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
@@ -152,9 +152,23 @@ function attachCostPolicy(task, result, context = {}) {
   const scorecard = workerScorecard.recommendWorkerForTask(task, context);
   const currentModel = result.primary || result.selectedModel || result.fallback || scorecard.modelId;
   const workerState = context.workerState || availabilityFallbackMatrix.WORKER_STATES.healthy;
+  let coordinationGate = null;
+  if (context.generateCoordinationGate) {
+    const coordinationGateModule = require('./kosame-agent-handoff-coordination-gate');
+    coordinationGate = coordinationGateModule.buildAgentHandoffCoordinationGate(
+      context.handoffPlan || context.coordinationPlan || task,
+      {
+        ...context,
+        assignedAgent: context.assignedAgent || 'gpt',
+        targetVersion: context.targetVersion || '110.64.0',
+        targetRepo: context.targetRepo || 'kosame-dev-orchestra',
+      },
+    );
+  }
   const costPolicy = costLedger.buildLedgerRecord(task, {
     verifyRunCount: task.failureCount || 0,
     ...context,
+    coordinationGate,
   });
   const availabilityFallback = availabilityFallbackMatrix.recommendAvailabilityFallback(
     task,
@@ -173,9 +187,11 @@ function attachCostPolicy(task, result, context = {}) {
       workerScorecard: scorecard,
       availabilityFallback,
       costPolicy,
+      coordinationGate,
     },
     context,
   );
+  costPolicy.coordinationGate = coordinationGate;
   let sanitizedTaskPack = null;
   if (context.generateSanitizedTaskPack) {
     const sanitizedPackGenerator = require('./kosame-sanitized-task-pack-generator');
@@ -236,6 +252,7 @@ function attachCostPolicy(task, result, context = {}) {
     patchIntakeGate,
     safeTrialRunner,
     grokSafeReviewLane,
+    coordinationGate,
   };
 }
 

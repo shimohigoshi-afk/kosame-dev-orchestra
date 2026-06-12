@@ -14,8 +14,8 @@
  */
 
 const TOOL_META = {
-  version: '110.62.0',
-  feature: 'v110-62-cost-token-ledger',
+  version: '110.64.0',
+  feature: 'v110-64-agent-handoff-coordination-gate',
   slug: 'kosame-cost-token-ledger',
 };
 
@@ -285,6 +285,11 @@ function buildLedgerRecord(task, context = {}) {
     providerBudgetBlockedHighCostReason: providerBudgetBucketDecision?.blockedHighCostReason || null,
     providerBudgetDecision: providerBudgetBucketDecision,
     providerBudgetBucketDecision,
+    coordinationGateStatus: context.coordinationGate?.status || null,
+    coordinationGateReason: context.coordinationGate?.coordinationReason || context.coordinationGate?.humanGateReason || null,
+    coordinationBlockedReasons: context.coordinationGate?.blockedReasons || [],
+    coordinationCautions: context.coordinationGate?.cautions || [],
+    coordinationNextAllowedAction: context.coordinationGate?.nextAllowedAction || null,
     recommendedWorker: workerScorecard?.workerName || null,
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,

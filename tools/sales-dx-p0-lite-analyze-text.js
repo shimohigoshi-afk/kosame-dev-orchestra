@@ -222,13 +222,17 @@ function parseArgs(argv) {
     text:      get('text') || '',
     caseName:  get('caseName') || get('case-name') || '',
     json:      args.includes('--json'),
+    demo:      args.includes('--demo'),
   };
 }
 
 if (require.main === module) {
   const cliArgs = parseArgs(process.argv);
   const result = analyzeText({ text: cliArgs.text, caseName: cliArgs.caseName });
-  if (cliArgs.json) {
+  if (cliArgs.demo) {
+    const renderer = require('./sales-dx-p0-lite-demo-renderer');
+    console.log(renderer.render(result));
+  } else if (cliArgs.json) {
     console.log(JSON.stringify(result, null, 2));
   } else {
     printResult(result);

@@ -2,11 +2,15 @@
 'use strict';
 
 /**
- * KOSAME Natural Request Pipeline Runner v110.72.0
+ * KOSAME Natural Request Pipeline Runner v110.73.0
  *
  * 自然文の --request を受け取り、v110.69 Agent Work Order Auto Splitter と
  * v110.71 Work Order Prompt Exporter をつないで、
  * 1行依頼から AI別 prompt pack まで一括生成するCLI。
+ *
+ * v110.73: content_factory モード追加。YouTube/動画/台本/HP/LP/SEO等の
+ * コンテンツ制作系リクエストを検出し、5役(GPT/DeepSeek/Claude/Grok/Gemini)
+ * を自動展開する。
  *
  * 【制約】
  *   - 実AI送信はしない。プロンプト文面の生成のみ。
@@ -15,16 +19,16 @@
  *
  * Usage:
  *   node tools/kosame-natural-request-pipeline-runner.js --request="fix typo in readme"
- *   node tools/kosame-natural-request-pipeline-runner.js --request="..." --json
- *   npm run natural:request -- --request="add smoke test for new module"
+ *   node tools/kosame-natural-request-pipeline-runner.js --request="..." --mode=content_factory --json
+ *   npm run natural:request -- --request="..." --mode content_factory
  */
 
 const workOrderSplitter = require('./kosame-agent-work-order-auto-splitter');
 const promptExporter    = require('./kosame-work-order-prompt-exporter');
 
 const TOOL_META = {
-  version:       '110.72.0',
-  feature:       'v110-72-natural-request-pipeline-runner',
+  version:       '110.73.0',
+  feature:       'v110-73-content-factory-multi-agent-mode',
   slug:          'kosame-natural-request-pipeline-runner',
   dryRunOnly:    true,
 };
@@ -45,15 +49,139 @@ const C = {
 };
 const c = (col, t) => `${C[col] || ''}${t}${C.reset}`;
 
+// ── Content factory detection ─────────────────────────────────────────────────
+
+const CONTENT_FACTORY_KEYWORDS = [
+  'youtube', 'ゆっくり', '動画', 'video', '台本', 'script',
+  'サムネ', 'thumbnail', '企画', '構成', 'コンテンツ', 'content',
+  'ホームページ', 'website', 'ランディング', 'lp制作', 'hp制作',
+  'seo', '記事', 'article', 'ブログ', 'blog',
+  'sns', 'twitter', 'instagram', 'tiktok',
+  '制作', 'creation', 'production', '編集', 'edit',
+  '撮影', 'shooting', 'recording', 'ナレーション', 'narration',
+  'banner', 'バナー', '広告', 'advertisement',
+  'mail', 'メール', 'email', 'newsletter',
+  'vlog', 'podcast', 'ポッドキャスト',
+];
+
+const ALL_AGENTS = ['gpt_codex', 'deepseek_opencode', 'claude', 'grok', 'gemini'];
+
+function detectContentFactory(request, mode) {
+  if (mode === 'content_factory') return true;
+  const text = String(request || '').toLowerCase();
+  return CONTENT_FACTORY_KEYWORDS.some(kw => {
+    if (/[\u3000-\u9fff]/.test(kw)) return text.includes(kw);
+    const re = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+    return re.test(text);
+  });
+}
+
+// ── Content factory work order builder ─────────────────────────────────────────
+
+function buildContentFactoryWorkOrders(request) {
+  const userRequest = String(request.userRequest || request.request || '').trim();
+  const targetRepo  = request.targetRepo || 'kosame-dev-orchestra';
+  const targetVersion = request.targetVersion || '110.73';
+  const riskLevel   = request.riskLevel || 'medium';
+  const synthTask = {
+    id:          `cf-${Date.now()}`,
+    title:       `content factory: ${userRequest.slice(0, 100)}`,
+    description: userRequest.slice(0, 500),
+    difficulty:  riskLevel === 'high' ? 'high' : 'medium',
+  };
+
+  const AGENT_CONFIGS = [
+    {
+      agentKey: 'gpt_codex',
+      role: '企画・構成・台本・設計整理',
+      modelId: 'gpt-5.4-mini',
+      allowedScope: '企画・構成・台本作成・設計整理',
+      targetFiles: ['tools/**', 'smoke/**', 'docs/**'],
+      expectedSmoke: ['npm run verify'],
+    },
+    {
+      agentKey: 'deepseek_opencode',
+      role: 'sanitized_only 低機密テンプレ作成',
+      modelId: 'deepseek-chat',
+      allowedScope: 'sanitized_only low-sensitivity template creation',
+      targetFiles: ['smoke/**', 'docs/**'],
+      expectedSmoke: ['npm run verify'],
+    },
+    {
+      agentKey: 'claude',
+      role: '品質チェック・境界監査・表現チェック・コンプラ確認',
+      modelId: 'claude-sonnet-4-6',
+      allowedScope: '品質チェック・境界監査・最終レビュー',
+      targetFiles: ['docs/**', 'smoke/**'],
+      expectedSmoke: ['npm run verify'],
+    },
+    {
+      agentKey: 'grok',
+      role: '穴探し・反対意見・炎上リスク・弱点レビュー',
+      modelId: 'grok',
+      allowedScope: '穴探し・反対意見・リスクレビュー',
+      targetFiles: ['docs/**'],
+      expectedSmoke: [],
+    },
+    {
+      agentKey: 'gemini',
+      role: 'Google / Cloud / 検索整理 / リサーチ観点 / 環境確認',
+      modelId: 'gemini-2.5-flash-lite',
+      allowedScope: 'Google / Cloud / 検索整理 / 環境確認',
+      targetFiles: ['tools/**', 'fixtures/**'],
+      expectedSmoke: ['npm run verify'],
+    },
+  ];
+
+  const workOrders = AGENT_CONFIGS.map(cfg => ({
+    agentKey: cfg.agentKey,
+    agent: cfg.agentKey === 'gpt_codex' ? 'GPT / Codex'
+         : cfg.agentKey === 'deepseek_opencode' ? 'DeepSeek / opencode'
+         : cfg.agentKey === 'claude' ? 'Claude'
+         : cfg.agentKey === 'grok' ? 'Grok'
+         : 'Gemini',
+    role: cfg.role,
+    provider: cfg.agentKey === 'gpt_codex' ? 'GPT / Codex'
+            : cfg.agentKey === 'deepseek_opencode' ? 'DeepSeek / opencode'
+            : cfg.agentKey === 'claude' ? 'Claude'
+            : cfg.agentKey === 'grok' ? 'Grok'
+            : 'Gemini',
+    providerKey: cfg.agentKey === 'gpt_codex' ? 'gpt_codex'
+               : cfg.agentKey === 'deepseek_opencode' ? 'deepseek_opencode'
+               : cfg.agentKey === 'claude' ? 'claude'
+               : cfg.agentKey === 'grok' ? 'grok'
+               : 'gemini',
+    modelId: cfg.modelId,
+    status: 'safe',
+    allowedScope: cfg.allowedScope,
+    forbiddenScope: 'Secret/customer/salesDX/ANESTY/commit/push/deploy',
+    targetFiles: cfg.targetFiles,
+    expectedSmoke: cfg.expectedSmoke,
+    sanitizedTaskPack: {
+      taskId: `cf-${cfg.agentKey}-${Date.now()}`,
+      taskTitle: `Content factory: ${userRequest.slice(0, 100)}`,
+      taskSummary: `[${cfg.role}] ${userRequest.slice(0, 300)}`,
+      allowedWorkerClass: cfg.agentKey === 'deepseek_opencode' ? 'sanitized_only' : 'standard',
+      safetyNotes: cfg.agentKey === 'deepseek_opencode' ? 'sanitized_only. No real data access.' : '',
+    },
+  }));
+
+  const status = workOrders.some(w => w.status === 'human_gate') ? STATUS.human_gate
+    : workOrders.some(w => w.status === 'blocked') ? STATUS.blocked
+    : workOrders.some(w => w.status === 'caution') ? STATUS.caution
+    : STATUS.safe;
+
+  return { workOrders, status };
+}
+
 // ── Pipeline runner ───────────────────────────────────────────────────────────
 
 function runPipeline(request = {}) {
   const userRequest = String(request.userRequest || request.request || '').trim();
   const targetRepo  = request.targetRepo || 'kosame-dev-orchestra';
-  const targetVersion = request.targetVersion || '110.72';
+  const targetVersion = request.targetVersion || '110.73';
   const riskLevel   = request.riskLevel || 'medium';
-  const preferredAgents = request.preferredAgents || [];
-  const forbiddenAgents = request.forbiddenAgents || [];
+  const mode = request.mode || '';
 
   if (!userRequest) {
     return {
@@ -63,6 +191,7 @@ function runPipeline(request = {}) {
       dryRun:     true,
       status:     STATUS.blocked,
       request:    '',
+      mode:       mode || 'standard',
       workOrders: [],
       promptPacks: [],
       blockedReasons: ['No request provided. Use --request="your request text" or --request "your request text"'],
@@ -76,18 +205,28 @@ function runPipeline(request = {}) {
     };
   }
 
-  // Step 1: Split request into work orders
-  const splitResult = workOrderSplitter.buildAgentWorkOrderAutoSplit({
-    userRequest,
-    requestedOutcome: userRequest,
-    targetRepo,
-    targetVersion,
-    riskLevel,
-    preferredAgents,
-    forbiddenAgents,
-  });
+  const isContentFactory = detectContentFactory(userRequest, request.mode);
+  let workOrders, splitResult, expandedBy;
 
-  const workOrders = splitResult.workOrders || [];
+  if (isContentFactory) {
+    const cfResult = buildContentFactoryWorkOrders({
+      userRequest, targetRepo, targetVersion, riskLevel,
+      preferredAgents: ALL_AGENTS,
+    });
+    workOrders = cfResult.workOrders;
+    expandedBy = 'content_factory_multi_agent_mode';
+    splitResult = { status: cfResult.status, blockedReasons: [], cautions: [] };
+  } else {
+    splitResult = workOrderSplitter.buildAgentWorkOrderAutoSplit({
+      userRequest,
+      requestedOutcome: userRequest,
+      targetRepo,
+      targetVersion,
+      riskLevel,
+    });
+    workOrders = splitResult.workOrders || [];
+    expandedBy = null;
+  }
 
   // Step 2: Generate prompt packs from work orders
   const exportResult = promptExporter.buildPromptExporter(workOrders);
@@ -124,17 +263,19 @@ function runPipeline(request = {}) {
   }
 
   return {
-    tool:       TOOL_META.slug,
-    version:    TOOL_META.version,
-    timestamp:  new Date().toISOString(),
-    dryRun:     true,
+    tool:             TOOL_META.slug,
+    version:          TOOL_META.version,
+    timestamp:        new Date().toISOString(),
+    dryRun:           true,
     status,
-    request:    userRequest,
+    request:          userRequest,
     targetRepo,
     targetVersion,
     riskLevel,
-    workOrderCount: workOrders.length,
-    promptPackCount: exportResult.promptPackCount || exportResult.promptPacks?.length || 0,
+    mode:             isContentFactory ? 'content_factory' : 'standard',
+    ...(expandedBy ? { expandedBy } : {}),
+    workOrderCount:   workOrders.length,
+    promptPackCount:  exportResult.promptPackCount || exportResult.promptPacks?.length || 0,
     workOrders: workOrders.map(w => ({
       agentKey: w.agentKey,
       agent: w.agent,
@@ -175,7 +316,8 @@ function printPipeline(result) {
   console.log(`\n${c('bold', c('blue', '╡ KOSAME Natural Request Pipeline Runner'))}  ${c('cyan', `v${result.version}`)}`);
   const reqText = (result.request || '').slice(0, 120);
   console.log(`  ${c('bold', 'Request:')} ${c('cyan', reqText || '(empty)')}`);
-  console.log(`  ${c('bold', 'Status:')} ${c(statusColor, `${statusIcon} ${result.status.toUpperCase()}`)}  |  ${c('bold', 'Work Orders:')} ${result.workOrderCount || 0}  |  ${c('bold', 'Prompt Packs:')} ${result.promptPackCount || 0}`);
+  const modeLabel = result.mode === 'content_factory' ? c('yellow', `content_factory${result.expandedBy ? ' (expanded)' : ''}`) : 'standard';
+  console.log(`  ${c('bold', 'Mode:')} ${modeLabel}  |  ${c('bold', 'Status:')} ${c(statusColor, `${statusIcon} ${result.status.toUpperCase()}`)}  |  ${c('bold', 'Work Orders:')} ${result.workOrderCount || 0}  |  ${c('bold', 'Prompt Packs:')} ${result.promptPackCount || 0}`);
   console.log(`  ${c('bold', 'Next:')} ${c('bold', result.nextAllowedAction)}`);
   console.log(`  ${c('gray', '─'.repeat(64))}`);
 
@@ -232,7 +374,7 @@ function parseArgs(argv) {
   const get = (name) => {
     const eq = `--${name}=`;
     for (let i = 0; i < args.length; i++) {
-      if (args[i] === eq) return ''; // --request= (empty)
+      if (args[i] === eq) return '';
       if (args[i].startsWith(eq)) return args[i].slice(eq.length);
     }
     const idx = args.indexOf(`--${name}`);
@@ -244,8 +386,9 @@ function parseArgs(argv) {
   return {
     request:       get('request') || get('req') || '',
     targetRepo:    get('target-repo') || 'kosame-dev-orchestra',
-    targetVersion: get('target-version') || '110.72',
+    targetVersion: get('target-version') || '110.73',
     riskLevel:     get('risk-level') || 'medium',
+    mode:          get('mode') || '',
     json:          args.includes('--json'),
     dryRun:        !args.includes('--no-dry-run'),
   };
@@ -258,6 +401,7 @@ if (require.main === module) {
     targetRepo:    cliArgs.targetRepo,
     targetVersion: cliArgs.targetVersion,
     riskLevel:     cliArgs.riskLevel,
+    mode:          cliArgs.mode,
   });
   if (cliArgs.json) {
     console.log(JSON.stringify(result, null, 2));
@@ -269,6 +413,10 @@ if (require.main === module) {
 module.exports = {
   TOOL_META,
   STATUS,
+  CONTENT_FACTORY_KEYWORDS,
+  ALL_AGENTS,
+  detectContentFactory,
+  buildContentFactoryWorkOrders,
   runPipeline,
   printPipeline,
 };

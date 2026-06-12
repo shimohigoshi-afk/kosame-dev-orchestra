@@ -127,6 +127,10 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     || context.providerHealth
     || context.providerAvailabilityHealthSnapshot?.providerHealth
     || null;
+  const workOrderAutoSplitter = decision.workOrderAutoSplitter
+    || decision.costPolicy?.workOrderAutoSplitter
+    || context.workOrderAutoSplitter
+    || null;
 
   const coordinationStatus = coordinationGate?.status || null;
   const coordinationReason = coordinationGate?.coordinationReason
@@ -271,6 +275,12 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     providerHealth?.humanGateRequired
       ? 'Provider health snapshot requires human gate.'
       : '',
+    workOrderAutoSplitter?.status
+      ? `Work-order auto-splitter: ${workOrderAutoSplitter.status}.`
+      : '',
+    workOrderAutoSplitter?.summaryForDashboard?.releaseReadinessSummary
+      ? `Work-order split summary: ${workOrderAutoSplitter.summaryForDashboard.releaseReadinessSummary}.`
+      : '',
   );
 
   return {
@@ -295,6 +305,7 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     coordinationTargetVersion,
     coordinationTargetRepo,
     providerHealth,
+    workOrderAutoSplitter,
     taskType,
     decisionReason: compactText(
       decision.reason,

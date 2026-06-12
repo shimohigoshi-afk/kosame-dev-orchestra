@@ -234,7 +234,7 @@ function buildLedgerRecord(task, context = {}) {
     availabilityFallback = null;
   }
   let providerAvailabilityHealthSnapshot = context.providerAvailabilityHealthSnapshot || null;
-  if (!providerAvailabilityHealthSnapshot && context.generateProviderAvailabilityHealthSnapshot) {
+  if (!providerAvailabilityHealthSnapshot && (context.generateProviderAvailabilityHealthSnapshot || context.generateWorkOrderAutoSplitter)) {
     try {
       const healthSnapshot = require('./kosame-provider-availability-health-snapshot');
       providerAvailabilityHealthSnapshot = healthSnapshot.buildProviderAvailabilityHealthSnapshot(task, {
@@ -245,6 +245,20 @@ function buildLedgerRecord(task, context = {}) {
       });
     } catch (_) {
       providerAvailabilityHealthSnapshot = null;
+    }
+  }
+  let workOrderAutoSplitter = context.workOrderAutoSplitter || null;
+  if (!workOrderAutoSplitter && context.generateWorkOrderAutoSplitter) {
+    try {
+      const splitter = require('./kosame-agent-work-order-auto-splitter');
+      workOrderAutoSplitter = splitter.buildAgentWorkOrderAutoSplit(context.workOrderRequest || task, {
+        ...context,
+        providerAvailabilityHealthSnapshot,
+        providerHealth: providerAvailabilityHealthSnapshot?.providerHealth || null,
+        approvalReceived: context.approvalReceived ?? record.approvalReceived,
+      });
+    } catch (_) {
+      workOrderAutoSplitter = null;
     }
   }
   let providerBudgetBucketDecision = null;
@@ -306,6 +320,9 @@ function buildLedgerRecord(task, context = {}) {
     coordinationBlockedReasons: context.coordinationGate?.blockedReasons || [],
     coordinationCautions: context.coordinationGate?.cautions || [],
     coordinationNextAllowedAction: context.coordinationGate?.nextAllowedAction || null,
+    workOrderAutoSplitter,
+    workOrderAutoSplitStatus: workOrderAutoSplitter?.status || null,
+    workOrderAutoSplitSummary: workOrderAutoSplitter?.summaryForDashboard?.releaseReadinessSummary || null,
     recommendedWorker: workerScorecard?.workerName || null,
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,

@@ -250,6 +250,7 @@ function attachCostPolicy(task, result, context = {}) {
     providerBudgetBlockedHighCostReason: costPolicy.providerBudgetBlockedHighCostReason || null,
     providerAvailabilityHealthSnapshot: costPolicy.providerAvailabilityHealthSnapshot || null,
     providerHealth: costPolicy.providerHealth || null,
+    workOrderAutoSplitter: costPolicy.workOrderAutoSplitter || null,
     sanitizedTaskPack,
     patchIntakeGate,
     safeTrialRunner,

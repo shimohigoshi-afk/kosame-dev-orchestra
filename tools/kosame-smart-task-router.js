@@ -195,6 +195,14 @@ function attachCostPolicy(task, result, context = {}) {
       workerType: scorecard.modelId,
     });
   }
+  let safeTrialRunner = null;
+  if (context.generateSafeTrialRunner) {
+    const safeTrialRunnerModule = require('./kosame-external-worker-safe-trial-runner');
+    safeTrialRunner = safeTrialRunnerModule.buildExternalWorkerSafeTrialRun(task, {
+      ...context,
+      workerType: context.safeTrialWorkerType || 'deepseek-chat',
+    });
+  }
   return {
     ...result,
     costPolicy,
@@ -203,6 +211,7 @@ function attachCostPolicy(task, result, context = {}) {
     routerExplanation,
     sanitizedTaskPack,
     patchIntakeGate,
+    safeTrialRunner,
   };
 }
 

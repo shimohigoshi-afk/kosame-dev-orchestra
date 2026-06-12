@@ -140,8 +140,8 @@ function buildResult({
   const returnDiffOnlyRespected = !(pack.returnDiffOnly === true) || isDiffLike(patchText);
   const patchLooksLikeDiff = isDiffLike(patchText);
   const codeChange = taskType === 'implementation'
-    || changedFiles.some(isCodeFile)
-    || (!changedFiles.some(isDocOrSmokeFile) && /(?:function|class|const |let |var |module\.exports|=>|return )/i.test(String(patchText || '')));
+    || files.some(isCodeFile)
+    || (!files.some(isDocOrSmokeFile) && /(?:function|class|const |let |var|module.exports|=>|return )/i.test(String(patchText || '')));
 
   const patchSummaryText = compactText(patchSummary, declared.join(' '), riskNotes);
   const assessment = costLedger.evaluateRequestedModel(worker || 'gpt-5.4-mini', {

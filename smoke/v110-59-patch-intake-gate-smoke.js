@@ -24,6 +24,11 @@ function includesText(value, fragment) {
   return String(value || '').toLowerCase().includes(String(fragment || '').toLowerCase());
 }
 
+function versionAtLeast(version, major, minor) {
+  const [majorPart = 0, minorPart = 0] = String(version).split('.').map(Number);
+  return majorPart > major || (majorPart === major && minorPart >= minor);
+}
+
 function buildPack(task, workerType, context = {}) {
   return sanitizedPackGenerator.buildSanitizedTaskPack(task, {
     ...context,
@@ -38,7 +43,7 @@ function buildGate(input, context = {}) {
 
 console.log('=== v110.59 patch intake gate smoke ===');
 
-check('package version >= 110.59.0', /^110\.59\./.test(pkg.version));
+check('package version >= 110.59.0', versionAtLeast(pkg.version, 110, 59));
 check('patch intake gate module is available', typeof patchGate.buildPatchIntakeGate === 'function');
 
 const docsTask = {

@@ -94,7 +94,7 @@ const r3 = analyzer.analyzeText({
   caseName: '佐藤さん 学資保険',
 });
 check('r3: ok === true',              r3.ok === true);
-check('r3: temperature comparing/medium', ['comparing', 'medium'].includes(r3.temperature.level));
+check('r3: temperature comparing/medium/caution', ['comparing', 'medium', 'medium_caution'].includes(r3.temperature.level));
 check('r3: alertWords hesitate',      r3.alertWords.hesitate.length > 0);
 check('r3: pendingItems',             r3.transcript.pendingItems.length > 0);
 COMMON_CHECKS(r3, 'r3');
@@ -154,9 +154,25 @@ check('forbidden: error code',        rForbidden.code === 'FORBIDDEN_CONTENT');
 const rSafe = analyzer.analyzeText({ text: '普通の面談メモです' });
 check('safe text: ok === true',       rSafe.ok === true);
 
+// ── Smoke 8: NOTTA insurance investment mixed_caution fixture ──────────────
+
+const r8 = analyzer.analyzeText({
+  text: '投資型保険の提案をした。少額から始められることには興味を示していた。「検討します」と言っていた。ただ、「為替リスクが心配」「ちょっと高い」「考えておきます」と警戒もあった。「もう少し考えます」と迷いも見られた。資料を確認して次回面談で判断したいとのこと。わかりました、と何度か言っていた。',
+  caseName: '投資商品説明',
+});
+check('r8: ok === true',                r8.ok === true);
+check('r8: temperature medium_caution', r8.temperature.level === 'medium_caution');
+check('r8: label 中温度_警戒あり',        r8.temperature.label === '中温度_警戒あり');
+check('r8: guard word 考えておきます',    r8.alertWords.guard.some(w => w.word === '考えておきます'));
+check('r8: guard word ちょっと高い',      r8.alertWords.guard.some(w => w.word === 'ちょっと高い'));
+check('r8: hesitate もう少し考えます',    r8.alertWords.hesitate.some(w => w.word === 'もう少し考えます'));
+check('r8: compliance warnings 0',      r8.compliance.warnings.length === 0);
+check('r8: followup contains 追加の情報', r8.followupDraft.includes('追加の情報'));
+COMMON_CHECKS(r8, 'r8');
+
 // ── No secret leakage ───────────────────────────────────────────────────────
 
-const allJson = JSON.stringify([r1, r2, r3, r4]);
+const allJson = JSON.stringify([r1, r2, r3, r4, r8]);
 check('no API key in output',         !allJson.includes('sk-') && !allJson.includes('AIza'));
 check('no secret value in output',    !allJson.includes('api_key='));
 check('no salesDX in output',         !allJson.includes('salesDX') && !allJson.includes('transcriber'));

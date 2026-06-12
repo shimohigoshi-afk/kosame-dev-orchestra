@@ -203,6 +203,20 @@ function attachCostPolicy(task, result, context = {}) {
       workerType: context.safeTrialWorkerType || 'deepseek-chat',
     });
   }
+  let grokSafeReviewLane = null;
+  if (context.generateGrokSafeReviewLane) {
+    const grokSafeReviewLaneModule = require('./kosame-grok-safe-review-lane');
+    grokSafeReviewLane = grokSafeReviewLaneModule.buildGrokSafeReviewLane(task, {
+      ...context,
+      workerType: context.grokReviewWorkerType || 'grok',
+      sourceTaskPack: safeTrialRunner?.sourceTaskPack || context.sourceTaskPack || sanitizedTaskPack || null,
+      patchIntakeGate: safeTrialRunner?.patchIntakeGate || context.patchIntakeGate || patchIntakeGate || null,
+      trialResult: context.trialResult || safeTrialRunner || null,
+      reviewSummary: context.reviewSummary || safeTrialRunner?.patchIntakeGate?.patchSummary || patchIntakeGate?.patchSummary || null,
+      diffSummary: context.diffSummary || safeTrialRunner?.mockWorkerOutput?.patchSummary || null,
+      intakeSummary: context.intakeSummary || null,
+    });
+  }
   return {
     ...result,
     costPolicy,
@@ -212,6 +226,7 @@ function attachCostPolicy(task, result, context = {}) {
     sanitizedTaskPack,
     patchIntakeGate,
     safeTrialRunner,
+    grokSafeReviewLane,
   };
 }
 

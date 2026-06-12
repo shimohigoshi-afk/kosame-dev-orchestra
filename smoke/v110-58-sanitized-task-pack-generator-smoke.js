@@ -20,6 +20,11 @@ function check(name, condition, details = '') {
   console.log(`  FAIL: ${name}${details ? ` (${details})` : ''}`);
 }
 
+function versionAtLeast(version, major, minor) {
+  const [majorPart = 0, minorPart = 0] = String(version).split('.').map(Number);
+  return majorPart > major || (majorPart === major && minorPart >= minor);
+}
+
 function includesText(value, fragment) {
   return String(value || '').toLowerCase().includes(String(fragment || '').toLowerCase());
 }
@@ -34,7 +39,7 @@ function buildPack(task, workerType, context = {}) {
 
 console.log('=== v110.58 sanitized task pack generator smoke ===');
 
-check('package version >= 110.58.0', /^110\.58\./.test(pkg.version));
+check('package version >= 110.58.0', versionAtLeast(pkg.version, 110, 58));
 check('generator module is available', typeof generator.buildSanitizedTaskPack === 'function');
 
 const docsTask = {

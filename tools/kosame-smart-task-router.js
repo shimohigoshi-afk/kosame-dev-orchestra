@@ -186,6 +186,15 @@ function attachCostPolicy(task, result, context = {}) {
       externalSanitized: scorecard.sanitizedOnly === true,
     });
   }
+  let patchIntakeGate = null;
+  if (context.generatePatchIntakeGate) {
+    const patchGate = require('./kosame-patch-intake-gate');
+    patchIntakeGate = patchGate.buildPatchIntakeGate(context.patchIntake || {}, {
+      ...context,
+      sourceTaskPack: context.sourceTaskPack || sanitizedTaskPack || null,
+      workerType: scorecard.modelId,
+    });
+  }
   return {
     ...result,
     costPolicy,
@@ -193,6 +202,7 @@ function attachCostPolicy(task, result, context = {}) {
     availabilityFallback,
     routerExplanation,
     sanitizedTaskPack,
+    patchIntakeGate,
   };
 }
 

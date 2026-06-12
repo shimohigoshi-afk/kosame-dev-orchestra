@@ -63,13 +63,15 @@ function runPipeline(request = {}) {
       dryRun:     true,
       status:     STATUS.blocked,
       request:    '',
-      error:      'No request provided. Use --request="your request text"',
       workOrders: [],
       promptPacks: [],
-      blockedReasons: ['No request provided'],
+      blockedReasons: ['No request provided. Use --request="your request text" or --request "your request text"'],
       cautions:   [],
+      humanGateItems: [],
       nextAllowedAction: 'provide_a_request_and_rerun',
       humanApprovalRequired: false,
+      workOrderCount: 0,
+      promptPackCount: 0,
       summaryForDashboard: { status: STATUS.blocked, workOrderCount: 0, promptPackCount: 0, nextAllowedAction: 'provide_request' },
     };
   }
@@ -171,42 +173,52 @@ function printPipeline(result) {
     : '⛔';
 
   console.log(`\n${c('bold', c('blue', '╡ KOSAME Natural Request Pipeline Runner'))}  ${c('cyan', `v${result.version}`)}`);
-  console.log(`  ${c('bold', 'Request:')} ${c('cyan', result.request.slice(0, 120))}`);
-  console.log(`  ${c('bold', 'Status:')} ${c(statusColor, `${statusIcon} ${result.status.toUpperCase()}`)}  |  ${c('bold', 'Work Orders:')} ${result.workOrderCount}  |  ${c('bold', 'Prompt Packs:')} ${result.promptPackCount}`);
+  const reqText = (result.request || '').slice(0, 120);
+  console.log(`  ${c('bold', 'Request:')} ${c('cyan', reqText || '(empty)')}`);
+  console.log(`  ${c('bold', 'Status:')} ${c(statusColor, `${statusIcon} ${result.status.toUpperCase()}`)}  |  ${c('bold', 'Work Orders:')} ${result.workOrderCount || 0}  |  ${c('bold', 'Prompt Packs:')} ${result.promptPackCount || 0}`);
   console.log(`  ${c('bold', 'Next:')} ${c('bold', result.nextAllowedAction)}`);
   console.log(`  ${c('gray', '─'.repeat(64))}`);
 
   // Work orders
-  console.log(`\n  ${c('bold', 'Work Orders')}`);
-  for (const wo of result.workOrders) {
-    const woColor = wo.status === 'safe' ? 'green' : wo.status === 'caution' ? 'yellow' : wo.status === 'blocked' ? 'red' : 'magenta';
-    const woIcon = wo.status === 'safe' ? '✓' : wo.status === 'caution' ? '⚠' : wo.status === 'blocked' ? '✗' : '⛔';
-    console.log(`    ${c(woColor, woIcon)} ${c('bold', wo.agent)} — ${c(woColor, wo.status.toUpperCase())}  ${c('gray', `(${wo.role})`)}`);
-    console.log(`      model: ${wo.modelId}  files: ${(wo.targetFiles || []).join(', ') || '-'}`);
+  const workOrders = result.workOrders || [];
+  if (workOrders.length > 0) {
+    console.log(`\n  ${c('bold', 'Work Orders')}`);
+    for (const wo of workOrders) {
+      const woColor = wo.status === 'safe' ? 'green' : wo.status === 'caution' ? 'yellow' : wo.status === 'blocked' ? 'red' : 'magenta';
+      const woIcon = wo.status === 'safe' ? '✓' : wo.status === 'caution' ? '⚠' : wo.status === 'blocked' ? '✗' : '⛔';
+      console.log(`    ${c(woColor, woIcon)} ${c('bold', wo.agent)} — ${c(woColor, wo.status.toUpperCase())}  ${c('gray', `(${wo.role})`)}`);
+      console.log(`      model: ${wo.modelId}  files: ${(wo.targetFiles || []).join(', ') || '-'}`);
+    }
   }
 
   // Prompt packs
-  console.log(`\n  ${c('bold', 'Prompt Packs')}`);
-  for (const pp of result.promptPacks) {
-    const icon = pp.targetAgent === 'gpt_codex' ? 'P' : pp.targetAgent === 'deepseek_opencode' ? 'D' : pp.targetAgent === 'claude' ? 'C' : pp.targetAgent === 'grok' ? 'X' : 'G';
-    console.log(`    ${c('bold', icon)} ${c('cyan', pp.targetAgent)} — ${c('dim', pp.intendedRole)}`);
-    console.log(`      scope: ${pp.allowedScope}  forbidden: ${pp.forbiddenContext}`);
-    const preview = pp.promptText.split('\n').slice(0, 3).join(' ').slice(0, 100);
-    console.log(`      prompt: ${c('gray', preview)}...`);
+  const promptPacks = result.promptPacks || [];
+  if (promptPacks.length > 0) {
+    console.log(`\n  ${c('bold', 'Prompt Packs')}`);
+    for (const pp of promptPacks) {
+      const icon = pp.targetAgent === 'gpt_codex' ? 'P' : pp.targetAgent === 'deepseek_opencode' ? 'D' : pp.targetAgent === 'claude' ? 'C' : pp.targetAgent === 'grok' ? 'X' : 'G';
+      console.log(`    ${c('bold', icon)} ${c('cyan', pp.targetAgent)} — ${c('dim', pp.intendedRole)}`);
+      console.log(`      scope: ${pp.allowedScope}  forbidden: ${pp.forbiddenContext}`);
+      const preview = (pp.promptText || '').split('\n').slice(0, 3).join(' ').slice(0, 100);
+      console.log(`      prompt: ${c('gray', preview)}...`);
+    }
   }
 
   // Issues
-  if (result.blockedReasons.length > 0) {
+  const blockedReasons = result.blockedReasons || [];
+  const cautions = result.cautions || [];
+  const humanGateItems = result.humanGateItems || [];
+  if (blockedReasons.length > 0) {
     console.log(`\n  ${c('bold', c('red', 'BLOCKED'))}`);
-    for (const br of result.blockedReasons) console.log(`    ${c('red', '✗')} ${br}`);
+    for (const br of blockedReasons) console.log(`    ${c('red', '✗')} ${br}`);
   }
-  if (result.cautions.length > 0) {
+  if (cautions.length > 0) {
     console.log(`\n  ${c('bold', c('yellow', 'CAUTIONS'))}`);
-    for (const ca of result.cautions) console.log(`    ${c('yellow', '⚠')} ${ca}`);
+    for (const ca of cautions) console.log(`    ${c('yellow', '⚠')} ${ca}`);
   }
-  if (result.humanGateItems.length > 0) {
+  if (humanGateItems.length > 0) {
     console.log(`\n  ${c('bold', c('magenta', 'HUMAN GATE'))}`);
-    for (const hg of result.humanGateItems) console.log(`    ${c('magenta', '⛔')} ${hg.agent || hg.label}: ${hg.reason}`);
+    for (const hg of humanGateItems) console.log(`    ${c('magenta', '⛔')} ${hg.agent || hg.label}: ${hg.reason}`);
   }
 
   console.log(`\n  ${c('bold', c('blue', '╡ End of Pipeline'))} ${c('gray', `${result.workOrderCount} orders, ${result.promptPackCount} packs`)}`);
@@ -217,9 +229,20 @@ function printPipeline(result) {
 
 function parseArgs(argv) {
   const args = argv.slice(2);
-  const get = (name) => { const p = `--${name}=`; const a = args.find(x => x.startsWith(p)); return a ? a.slice(p.length) : null; };
+  const get = (name) => {
+    const eq = `--${name}=`;
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] === eq) return ''; // --request= (empty)
+      if (args[i].startsWith(eq)) return args[i].slice(eq.length);
+    }
+    const idx = args.indexOf(`--${name}`);
+    if (idx >= 0 && idx + 1 < args.length && !args[idx + 1].startsWith('--')) {
+      return args[idx + 1];
+    }
+    return null;
+  };
   return {
-    request:       get('request'),
+    request:       get('request') || get('req') || '',
     targetRepo:    get('target-repo') || 'kosame-dev-orchestra',
     targetVersion: get('target-version') || '110.72',
     riskLevel:     get('risk-level') || 'medium',

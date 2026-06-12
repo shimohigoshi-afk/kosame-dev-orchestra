@@ -233,6 +233,20 @@ function buildLedgerRecord(task, context = {}) {
   } catch (_) {
     availabilityFallback = null;
   }
+  let providerAvailabilityHealthSnapshot = context.providerAvailabilityHealthSnapshot || null;
+  if (!providerAvailabilityHealthSnapshot && context.generateProviderAvailabilityHealthSnapshot) {
+    try {
+      const healthSnapshot = require('./kosame-provider-availability-health-snapshot');
+      providerAvailabilityHealthSnapshot = healthSnapshot.buildProviderAvailabilityHealthSnapshot(task, {
+        ...context,
+        requestedModel: context.requestedModel || record.selectedModel,
+        workerState: context.workerState || context.providerState || 'healthy',
+        approvalReceived: context.approvalReceived ?? record.approvalReceived,
+      });
+    } catch (_) {
+      providerAvailabilityHealthSnapshot = null;
+    }
+  }
   let providerBudgetBucketDecision = null;
   try {
     const budgetRouter = require('./kosame-provider-budget-bucket-router');
@@ -255,6 +269,8 @@ function buildLedgerRecord(task, context = {}) {
       workerScorecard,
       availabilityFallback,
       providerBudgetBucketDecision,
+      providerHealth: providerAvailabilityHealthSnapshot?.providerHealth || null,
+      providerAvailabilityHealthSnapshot,
     }, context);
   } catch (_) {
     routerExplanation = null;
@@ -294,6 +310,8 @@ function buildLedgerRecord(task, context = {}) {
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,
     availabilityFallback,
+    providerAvailabilityHealthSnapshot,
+    providerHealth: providerAvailabilityHealthSnapshot?.providerHealth || null,
     routerExplanation,
   };
 }

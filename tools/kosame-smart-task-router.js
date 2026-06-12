@@ -248,6 +248,8 @@ function attachCostPolicy(task, result, context = {}) {
     providerBudgetHumanGateReason: costPolicy.providerBudgetHumanGateReason || null,
     providerBudgetBlockedHighCost: costPolicy.providerBudgetBlockedHighCost || false,
     providerBudgetBlockedHighCostReason: costPolicy.providerBudgetBlockedHighCostReason || null,
+    providerAvailabilityHealthSnapshot: costPolicy.providerAvailabilityHealthSnapshot || null,
+    providerHealth: costPolicy.providerHealth || null,
     sanitizedTaskPack,
     patchIntakeGate,
     safeTrialRunner,

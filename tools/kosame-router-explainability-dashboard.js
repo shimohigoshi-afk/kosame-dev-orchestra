@@ -121,6 +121,12 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     || decision.costPolicy?.coordinationGate
     || context.coordinationGate
     || null;
+  const providerHealth = decision.providerHealth
+    || decision.costPolicy?.providerHealth
+    || decision.costPolicy?.providerAvailabilityHealthSnapshot?.providerHealth
+    || context.providerHealth
+    || context.providerAvailabilityHealthSnapshot?.providerHealth
+    || null;
 
   const coordinationStatus = coordinationGate?.status || null;
   const coordinationReason = coordinationGate?.coordinationReason
@@ -253,6 +259,18 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     coordinationCautions.length > 0
       ? `Coordination cautions: ${coordinationCautions.join('; ')}.`
       : '',
+    providerHealth?.hasBlocked
+      ? 'Provider health snapshot reports blocked providers.'
+      : '',
+    providerHealth?.hasLimited
+      ? 'Provider health snapshot reports limited providers.'
+      : '',
+    providerHealth?.recommendedFallback
+      ? `Provider health fallback: ${providerHealth.recommendedFallback}.`
+      : '',
+    providerHealth?.humanGateRequired
+      ? 'Provider health snapshot requires human gate.'
+      : '',
   );
 
   return {
@@ -276,6 +294,7 @@ function buildRouterExplanation(task, decision = {}, context = {}) {
     coordinationAssignedAgent,
     coordinationTargetVersion,
     coordinationTargetRepo,
+    providerHealth,
     taskType,
     decisionReason: compactText(
       decision.reason,

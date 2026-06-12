@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Cost & Token Ledger v110.55.0
+ * KOSAME Cost & Token Ledger v110.62.0
  *
  * Cheap First / Expensive Last を守るための軽量モデル治理レイヤー。
  * - 默认は cheap
@@ -14,8 +14,8 @@
  */
 
 const TOOL_META = {
-  version: '110.55.0',
-  feature: 'v110-55-cost-token-ledger',
+  version: '110.62.0',
+  feature: 'v110-62-cost-token-ledger',
   slug: 'kosame-cost-token-ledger',
 };
 
@@ -233,6 +233,20 @@ function buildLedgerRecord(task, context = {}) {
   } catch (_) {
     availabilityFallback = null;
   }
+  let providerBudgetBucketDecision = null;
+  try {
+    const budgetRouter = require('./kosame-provider-budget-bucket-router');
+    providerBudgetBucketDecision = context.providerBudgetBucketDecision
+      || budgetRouter.recommendProviderBudgetBucket(task, {
+        ...context,
+        requestedModel: context.requestedModel || record.selectedModel,
+        workerScorecard,
+        availabilityFallback,
+        approvalReceived: context.approvalReceived ?? record.approvalReceived,
+      });
+  } catch (_) {
+    providerBudgetBucketDecision = context.providerBudgetBucketDecision || null;
+  }
   let routerExplanation = null;
   try {
     const explainability = require('./kosame-router-explainability-dashboard');
@@ -240,6 +254,7 @@ function buildLedgerRecord(task, context = {}) {
       costPolicy: record,
       workerScorecard,
       availabilityFallback,
+      providerBudgetBucketDecision,
     }, context);
   } catch (_) {
     routerExplanation = null;
@@ -258,6 +273,18 @@ function buildLedgerRecord(task, context = {}) {
     costEstimateBand: record.costEstimateBand,
     estimatedRisk: record.estimatedRisk,
     notes: record.notes,
+    providerBudgetBucket: providerBudgetBucketDecision?.providerBudgetBucket || null,
+    providerBudgetBucketReason: providerBudgetBucketDecision?.providerBudgetBucketReason || null,
+    providerBudgetBucketPath: providerBudgetBucketDecision?.providerBudgetBucketPath || [],
+    providerBudgetCandidates: providerBudgetBucketDecision?.providerBudgetCandidates || [],
+    providerBudgetEscalationReason: providerBudgetBucketDecision?.escalationReason || null,
+    providerBudgetFallbackReason: providerBudgetBucketDecision?.fallbackReason || null,
+    providerBudgetHumanGateRequired: providerBudgetBucketDecision?.humanGateRequired || false,
+    providerBudgetHumanGateReason: providerBudgetBucketDecision?.humanGateReason || null,
+    providerBudgetBlockedHighCost: providerBudgetBucketDecision?.blockedHighCost || false,
+    providerBudgetBlockedHighCostReason: providerBudgetBucketDecision?.blockedHighCostReason || null,
+    providerBudgetDecision: providerBudgetBucketDecision,
+    providerBudgetBucketDecision,
     recommendedWorker: workerScorecard?.workerName || null,
     recommendedModelId: workerScorecard?.modelId || null,
     workerScorecard,

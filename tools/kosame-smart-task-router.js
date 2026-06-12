@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Smart Task Router v110.55.0
+ * KOSAME Smart Task Router v110.62.0
  *
  * タスクを難易度・リスク・機密性に応じて最適なAIワーカーに自動ルーティング。
  * kosame-auto-dev と統合し、Claude Code 固定を廃止。
@@ -34,8 +34,8 @@
  */
 
 const TOOL_META = {
-  version:       '110.55.0',
-  feature:       'v110-55-worker-scorecard',
+  version:       '110.62.0',
+  feature:       'v110-62-worker-scorecard',
   slug:          'kosame-smart-task-router',
   dryRunDefault: true,
 };
@@ -223,6 +223,15 @@ function attachCostPolicy(task, result, context = {}) {
     workerScorecard: scorecard,
     availabilityFallback,
     routerExplanation,
+    providerBudgetBucketDecision: costPolicy.providerBudgetBucketDecision || costPolicy.providerBudgetDecision || null,
+    providerBudgetBucket: costPolicy.providerBudgetBucket || null,
+    providerBudgetBucketReason: costPolicy.providerBudgetBucketReason || null,
+    providerBudgetBucketPath: costPolicy.providerBudgetBucketPath || [],
+    providerBudgetEscalationReason: costPolicy.providerBudgetEscalationReason || null,
+    providerBudgetHumanGateRequired: costPolicy.providerBudgetHumanGateRequired || false,
+    providerBudgetHumanGateReason: costPolicy.providerBudgetHumanGateReason || null,
+    providerBudgetBlockedHighCost: costPolicy.providerBudgetBlockedHighCost || false,
+    providerBudgetBlockedHighCostReason: costPolicy.providerBudgetBlockedHighCostReason || null,
     sanitizedTaskPack,
     patchIntakeGate,
     safeTrialRunner,

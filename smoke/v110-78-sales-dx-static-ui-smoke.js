@@ -55,7 +55,8 @@ const content = fs.readFileSync(htmlPath, 'utf-8');
 
 // ── Key content checks ────────────────────────────────────────────────────────
 
-check('contains "営業DX P0 Lite"', content.includes('営業DX P0 Lite'));
+check('contains "KOSAME 商談アシスト"', content.includes('KOSAME 商談アシスト'));
+check('contains "β版"', content.includes('β版'));
 check('contains "面談メモ"',        content.includes('面談メモ'));
 check('contains "デモ解析"',        content.includes('デモ解析'));
 check('contains "中温度_警戒あり"', content.includes('中温度_警戒あり'));

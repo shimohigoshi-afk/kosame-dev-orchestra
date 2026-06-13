@@ -2,63 +2,159 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>営業DX P0 Lite デモ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KOSAME 商談アシスト デモ</title>
 <style>
+*, *::before, *::after { box-sizing: border-box; }
 body {
-  margin: 0; padding: 20px; font-family: sans-serif;
-  background: #f5f5f5; color: #333;
+  margin: 0; padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  background: #f0f2f5; color: #1f2937;
+  -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 800px; margin: 0 auto; }
-h1 { font-size: 1.6em; margin: 0 0 4px; color: #1a237e; }
-.subtitle { font-size: 0.9em; color: #666; margin: 0 0 20px; }
-.section {
-  background: #fff; border: 1px solid #ddd; border-radius: 8px;
-  padding: 16px; margin-bottom: 16px;
+.container { max-width: 480px; margin: 0 auto; padding: 24px 16px 40px; }
+
+/* header */
+.header { text-align: center; margin-bottom: 28px; padding-top: 8px; }
+.header h1 {
+  font-size: 1.5em; font-weight: 700; margin: 0 0 2px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
-.section h2 { font-size: 1.1em; margin: 0 0 12px; color: #1a237e; }
+.beta-badge {
+  display: inline-block; vertical-align: super;
+  font-size: 0.45em; font-weight: 600;
+  background: #2563eb; color: #fff;
+  padding: 2px 7px; border-radius: 4px;
+  line-height: 1.3; margin-left: 4px;
+  -webkit-text-fill-color: #fff;
+}
+.header .subtitle {
+  font-size: 0.8em; color: #9ca3af; margin: 4px 0 0;
+  line-height: 1.4;
+}
+
+/* card */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+}
+.card-title {
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #9ca3af; margin: 0 0 14px;
+}
+
+/* form elements */
 textarea, input[type=text], select {
-  width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc;
-  border-radius: 4px; font-size: 0.95em; margin-bottom: 8px;
+  width: 100%; padding: 12px 14px;
+  background: #f8f9fb; color: #1f2937;
+  border: 1.5px solid #e5e7eb; border-radius: 12px;
+  font-size: 0.95em; font-family: inherit;
+  margin-bottom: 12px; transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none; appearance: none;
 }
-textarea { height: 120px; resize: vertical; }
-button {
-  background: #1a237e; color: #fff; border: none; border-radius: 4px;
-  padding: 10px 24px; font-size: 1em; cursor: pointer;
+textarea:focus, input[type=text]:focus, select:focus {
+  outline: none; border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
-button:hover { background: #283593; }
+textarea::placeholder, input::placeholder { color: #9ca3af; }
+textarea { height: 130px; resize: vertical; line-height: 1.6; }
+
+/* select arrow */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* button */
+.btn-primary {
+  display: block; width: 100%;
+  padding: 14px; border: none; border-radius: 12px;
+  font-size: 1em; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  transition: transform 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.02em;
+}
+.btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+.btn-primary:active { transform: scale(0.98); }
+
+/* output section */
+#outputArea { display: none; }
+.result-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.result-label {
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+}
+.result-value { font-size: 0.95em; line-height: 1.7; color: #1f2937; }
+
+/* tags */
+.tag-positive { color: #059669; font-weight: 500; }
+.tag-guard { color: #d97706; font-weight: 500; }
+.tag-hesitate { color: #7c3aed; font-weight: 500; }
+.compliance-pass { color: #059669; font-weight: 600; }
+
+/* safety */
 .safety {
-  background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
-  padding: 12px 16px; margin-bottom: 16px; font-size: 0.85em; color: #6d4c00;
+  background: #fefce8;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
 }
-.safety p { margin: 4px 0; }
+.safety-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 0.82em; color: #92400e; line-height: 1.5;
+}
+.safety-item + .safety-item { margin-top: 8px; }
+.safety-item .icon {
+  flex-shrink: 0; width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fde68a; border-radius: 50%;
+  font-size: 0.7em; margin-top: 1px;
+}
+
+/* dryrun */
 .dryrun {
-  background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px;
-  padding: 12px 16px; margin-bottom: 16px; font-size: 0.85em; color: #1b5e20;
+  background: #f0fdf4;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
 }
-.dryrun table { width: 100%; border-collapse: collapse; }
-.dryrun td { padding: 2px 8px; }
-.dryrun td:first-child { font-weight: bold; width: 120px; }
-.output-item {
-  border-bottom: 1px solid #eee; padding: 10px 0;
+.dryrun-title {
+  font-size: 0.72em; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #16a34a; margin-bottom: 10px;
 }
-.output-item:last-child { border-bottom: none; }
-.output-label { font-weight: bold; font-size: 0.9em; color: #555; margin-bottom: 4px; }
-.output-value { font-size: 0.95em; white-space: pre-wrap; }
-.tag-positive { color: #2e7d32; }
-.tag-guard { color: #e65100; }
-.tag-hesitate { color: #6a1b9a; }
-.compliance-pass { color: #2e7d32; font-weight: bold; }
+.dryrun-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px;
+}
+.dryrun-item {
+  display: flex; justify-content: space-between;
+  font-size: 0.82em; padding: 4px 0;
+}
+.dryrun-item .label { color: #6b7280; }
+.dryrun-item .value { color: #16a34a; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="container">
 
-<h1>営業DX P0 Lite</h1>
+<div class="header">
+<h1>KOSAME 商談アシスト<span class="beta-badge">β版</span></h1>
 <p class="subtitle">面談メモから、議事録下書き・温度感・追客文案を整理</p>
+</div>
 
-<div class="section">
-<h2>入力</h2>
+<div class="card">
+<div class="card-title">面談メモ</div>
 <textarea id="memo" placeholder="面談メモを入力してください">投資型保険の提案をした。少額から始められることには興味を示していた。「検討します」と言っていた。ただ、「為替リスクが心配」「ちょっと高い」「考えておきます」と警戒もあった。「もう少し考えます」と迷いも見られた。資料を確認して次回面談で判断したいとのこと。わかりました、と何度か言っていた。</textarea>
 <input type="text" id="caseName" placeholder="ケース名（例: 鈴木さん 保険見直し）" value="投資商品説明">
 <select id="sampleSelect" onchange="loadSample()">
@@ -67,28 +163,29 @@ button:hover { background: #283593; }
 <option value="high">高温度サンプル</option>
 <option value="guard">警戒サンプル</option>
 </select>
-<button onclick="runDemo()">デモ解析</button>
+<button class="btn-primary" onclick="runDemo()">デモ解析を実行</button>
 </div>
 
-<div id="outputArea" class="section" style="display:none">
-<h2>解析結果</h2>
+<div id="outputArea" class="card" style="display:none">
+<div class="card-title">解析結果</div>
 <div id="outputContent"></div>
 </div>
 
 <div class="safety">
-<p>⚠ この出力はAIによる下書きです</p>
-<p>⚠ 最終確認は人間が行ってください</p>
-<p>⚠ 法令遵守の確認を代替するものではありません</p>
+<div class="safety-item"><span class="icon">!</span><span>この出力はAIによる下書きです</span></div>
+<div class="safety-item"><span class="icon">!</span><span>最終確認は人間が行ってください</span></div>
+<div class="safety-item"><span class="icon">!</span><span>法令遵守の確認を代替するものではありません</span></div>
 </div>
 
 <div class="dryrun">
-<table>
-<tr><td>Dry Run</td><td>YES</td></tr>
-<tr><td>保存</td><td>NO</td></tr>
-<tr><td>送信</td><td>NO</td></tr>
-<tr><td>課金</td><td>NO</td></tr>
-<tr><td>外部API接続</td><td>NO</td></tr>
-</table>
+<div class="dryrun-title">デモ確認 / Dry Run</div>
+<div class="dryrun-grid">
+<div class="dryrun-item"><span class="label">Dry Run</span><span class="value">YES</span></div>
+<div class="dryrun-item"><span class="label">保存</span><span class="value">NO</span></div>
+<div class="dryrun-item"><span class="label">送信</span><span class="value">NO</span></div>
+<div class="dryrun-item"><span class="label">課金</span><span class="value">NO</span></div>
+<div class="dryrun-item"><span class="label">外部API接続</span><span class="value">NO</span></div>
+</div>
 </div>
 
 </div>
@@ -184,15 +281,15 @@ function renderOutput(result, caseName) {
 
   let alertWordsHtml = '';
   if (result.alertWords.positive.length) {
-    alertWordsHtml += '<div class="output-item"><div class="output-label">前向きワード</div><div class="output-value tag-positive">' +
+    alertWordsHtml += '<div class="result-card"><div class="result-label">前向きワード</div><div class="result-value tag-positive">' +
       result.alertWords.positive.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
   }
   if (result.alertWords.guard.length) {
-    alertWordsHtml += '<div class="output-item"><div class="output-label">警戒ワード</div><div class="output-value tag-guard">' +
+    alertWordsHtml += '<div class="result-card"><div class="result-label">警戒ワード</div><div class="result-value tag-guard">' +
       result.alertWords.guard.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
   }
   if (result.alertWords.hesitate.length) {
-    alertWordsHtml += '<div class="output-item"><div class="output-label">迷いワード</div><div class="output-value tag-hesitate">' +
+    alertWordsHtml += '<div class="result-card"><div class="result-label">迷いワード</div><div class="result-value tag-hesitate">' +
       result.alertWords.hesitate.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
   }
 
@@ -201,34 +298,34 @@ function renderOutput(result, caseName) {
     : result.compliance.warnings.map(w => w.category + ': ' + w.message).join('<br>');
 
   content.innerHTML = `
-    <div class="output-item">
-      <div class="output-label">温度感</div>
-      <div class="output-value">${result.temperature.label}</div>
+    <div class="result-card">
+      <div class="result-label">温度感</div>
+      <div class="result-value">${result.temperature.label}</div>
     </div>
-    <div class="output-item">
-      <div class="output-label">温度感理由</div>
-      <div class="output-value">${result.temperatureReason}</div>
+    <div class="result-card">
+      <div class="result-label">温度感理由</div>
+      <div class="result-value">${result.temperatureReason}</div>
     </div>
     ${alertWordsHtml}
-    <div class="output-item">
-      <div class="output-label">コンプラ簡易チェック</div>
-      <div class="output-value">${complianceHtml}</div>
+    <div class="result-card">
+      <div class="result-label">コンプラ簡易チェック</div>
+      <div class="result-value">${complianceHtml}</div>
     </div>
-    <div class="output-item">
-      <div class="output-label">議事録下書き</div>
-      <div class="output-value">${result.transcript.summary}</div>
+    <div class="result-card">
+      <div class="result-label">議事録下書き</div>
+      <div class="result-value">${result.transcript.summary}</div>
     </div>
-    <div class="output-item">
-      <div class="output-label">次回対応TODO</div>
-      <div class="output-value">${result.nextTodos.map(t => '☐ ' + t).join('\n')}</div>
+    <div class="result-card">
+      <div class="result-label">次回対応TODO</div>
+      <div class="result-value">${result.nextTodos.map(t => '☐ ' + t).join('\n')}</div>
     </div>
-    <div class="output-item">
-      <div class="output-label">保留・確認事項</div>
-      <div class="output-value">${result.transcript.pendingItems.length ? result.transcript.pendingItems.map(t => '・' + t).join('\n') : 'なし'}</div>
+    <div class="result-card">
+      <div class="result-label">保留・確認事項</div>
+      <div class="result-value">${result.transcript.pendingItems.length ? result.transcript.pendingItems.map(t => '・' + t).join('\n') : 'なし'}</div>
     </div>
-    <div class="output-item">
-      <div class="output-label">追客文下書き</div>
-      <div class="output-value">${result.followupDraft}</div>
+    <div class="result-card">
+      <div class="result-label">追客文下書き</div>
+      <div class="result-value">${result.followupDraft}</div>
     </div>
   `;
 }

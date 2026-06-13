@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>営業DX P0 Lite デモ</title>
+<style>
+body {
+  margin: 0; padding: 20px; font-family: sans-serif;
+  background: #f5f5f5; color: #333;
+}
+.container { max-width: 800px; margin: 0 auto; }
+h1 { font-size: 1.6em; margin: 0 0 4px; color: #1a237e; }
+.subtitle { font-size: 0.9em; color: #666; margin: 0 0 20px; }
+.section {
+  background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  padding: 16px; margin-bottom: 16px;
+}
+.section h2 { font-size: 1.1em; margin: 0 0 12px; color: #1a237e; }
+textarea, input[type=text], select {
+  width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc;
+  border-radius: 4px; font-size: 0.95em; margin-bottom: 8px;
+}
+textarea { height: 120px; resize: vertical; }
+button {
+  background: #1a237e; color: #fff; border: none; border-radius: 4px;
+  padding: 10px 24px; font-size: 1em; cursor: pointer;
+}
+button:hover { background: #283593; }
+.safety {
+  background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 16px; font-size: 0.85em; color: #6d4c00;
+}
+.safety p { margin: 4px 0; }
+.dryrun {
+  background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 16px; font-size: 0.85em; color: #1b5e20;
+}
+.dryrun table { width: 100%; border-collapse: collapse; }
+.dryrun td { padding: 2px 8px; }
+.dryrun td:first-child { font-weight: bold; width: 120px; }
+.output-item {
+  border-bottom: 1px solid #eee; padding: 10px 0;
+}
+.output-item:last-child { border-bottom: none; }
+.output-label { font-weight: bold; font-size: 0.9em; color: #555; margin-bottom: 4px; }
+.output-value { font-size: 0.95em; white-space: pre-wrap; }
+.tag-positive { color: #2e7d32; }
+.tag-guard { color: #e65100; }
+.tag-hesitate { color: #6a1b9a; }
+.compliance-pass { color: #2e7d32; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>営業DX P0 Lite</h1>
+<p class="subtitle">面談メモから、議事録下書き・温度感・追客文案を整理</p>
+
+<div class="section">
+<h2>入力</h2>
+<textarea id="memo" placeholder="面談メモを入力してください">投資型保険の提案をした。少額から始められることには興味を示していた。「検討します」と言っていた。ただ、「為替リスクが心配」「ちょっと高い」「考えておきます」と警戒もあった。「もう少し考えます」と迷いも見られた。資料を確認して次回面談で判断したいとのこと。わかりました、と何度か言っていた。</textarea>
+<input type="text" id="caseName" placeholder="ケース名（例: 鈴木さん 保険見直し）" value="投資商品説明">
+<select id="sampleSelect" onchange="loadSample()">
+<option value="">サンプルを選択</option>
+<option value="notta" selected>NOTTA混合温度サンプル</option>
+<option value="high">高温度サンプル</option>
+<option value="guard">警戒サンプル</option>
+</select>
+<button onclick="runDemo()">デモ解析</button>
+</div>
+
+<div id="outputArea" class="section" style="display:none">
+<h2>解析結果</h2>
+<div id="outputContent"></div>
+</div>
+
+<div class="safety">
+<p>⚠ この出力はAIによる下書きです</p>
+<p>⚠ 最終確認は人間が行ってください</p>
+<p>⚠ 法令遵守の確認を代替するものではありません</p>
+</div>
+
+<div class="dryrun">
+<table>
+<tr><td>Dry Run</td><td>YES</td></tr>
+<tr><td>保存</td><td>NO</td></tr>
+<tr><td>送信</td><td>NO</td></tr>
+<tr><td>課金</td><td>NO</td></tr>
+<tr><td>外部API接続</td><td>NO</td></tr>
+</table>
+</div>
+
+</div>
+
+<script>
+const SAMPLES = {
+  notta: {
+    text: '投資型保険の提案をした。少額から始められることには興味を示していた。「検討します」と言っていた。ただ、「為替リスクが心配」「ちょっと高い」「考えておきます」と警戒もあった。「もう少し考えます」と迷いも見られた。資料を確認して次回面談で判断したいとのこと。わかりました、と何度か言っていた。',
+    caseName: '投資商品説明'
+  },
+  high: {
+    text: '鈴木さん。いつまでに決めればいいですか？具体的な数字を教えてください。申し込み手続きを教えてください。',
+    caseName: '鈴木さん 保険見直し'
+  },
+  guard: {
+    text: '田中さん。考えておきます。また連絡します。他にも聞いてます。保険は間に合ってます。わかりました。わかりました。わかりました。わかりました。わかりました。',
+    caseName: '田中さん 年金相談'
+  }
+};
+
+const FIXTURE_RESULTS = {
+  notta: {
+    temperature: { level: 'medium_caution', label: '中温度_警戒あり' },
+    temperatureReason: '肯定的な発言と警戒的な発言が混在しているため',
+    alertWords: {
+      positive: [{ word: '興味を示していた', count: 1 }, { word: '検討します', count: 1 }],
+      guard: [{ word: '考えておきます', count: 1 }, { word: 'ちょっと高い', count: 1 }],
+      hesitate: [{ word: 'もう少し考えます', count: 1 }, { word: '検討します', count: 1 }]
+    },
+    compliance: { warnings: [], passed: true },
+    transcript: {
+      summary: '投資型保険の提案に対し、少額からの開始には興味を示したが、為替リスクや費用面で警戒感も見られた。次回面談で判断したいとの意向。',
+      pendingItems: ['為替リスクの詳細説明資料の準備']
+    },
+    nextTodos: ['為替リスクの比較資料を用意する', '他社商品との比較表を作成する'],
+    followupDraft: '先日は貴重なお時間をいただきありがとうございました。比較されている点や気になる点について、追加の情報をご用意いたしました。ご不明な点がございましたら、いつでもお知らせください。'
+  },
+  high: {
+    temperature: { level: 'high', label: '高温度_前向き' },
+    temperatureReason: '積極的な質問と前向きな発言が多数確認されたため',
+    alertWords: {
+      positive: [{ word: '決めればいいですか', count: 1 }, { word: '教えてください', count: 2 }, { word: '申し込み手続き', count: 1 }],
+      guard: [],
+      hesitate: []
+    },
+    compliance: { warnings: [], passed: true },
+    transcript: {
+      summary: '顧客から積極的に質問があり、具体的な数字や申し込み手続きについての関心が高い。前向きな商談進行が期待できる。',
+      pendingItems: ['具体的な数字の提示', '申し込み手続きの案内']
+    },
+    nextTodos: ['見積書を作成する', '申し込み手続きの案内資料を準備する'],
+    followupDraft: '先日はお忙しい中、面談の機会をいただきありがとうございました。ご質問いただいた点について、詳細な資料をご用意いたしました。ご確認いただけますと幸いです。'
+  },
+  guard: {
+    temperature: { level: 'low', label: '低温度_警戒' },
+    temperatureReason: '警戒語「考えておきます」が繰り返し検出されたため',
+    alertWords: {
+      positive: [],
+      guard: [{ word: '考えておきます', count: 2 }, { word: 'また連絡します', count: 1 }],
+      hesitate: []
+    },
+    compliance: { warnings: [], passed: true },
+    transcript: {
+      summary: '顧客の反応が消極的で、警戒語が複数検出された。一旦距離を置いたフォローが適切。',
+      pendingItems: ['顧客の検討状況の確認']
+    },
+    nextTodos: ['1週間程度空けてからフォローする', '比較資料を送付する'],
+    followupDraft: '先日はお話を聞かせていただきありがとうございました。ご検討いただく中でご不明な点がございましたら、いつでもご連絡ください。引き続きよろしくお願いいたします。'
+  }
+};
+
+function loadSample() {
+  const sel = document.getElementById('sampleSelect');
+  const sample = SAMPLES[sel.value];
+  if (!sample) return;
+  document.getElementById('memo').value = sample.text;
+  document.getElementById('caseName').value = sample.caseName;
+}
+
+function runDemo() {
+  const memo = document.getElementById('memo').value.trim();
+  const caseName = document.getElementById('caseName').value.trim();
+  if (!memo) { alert('面談メモを入力してください'); return; }
+  const sel = document.getElementById('sampleSelect').value;
+  const fixture = FIXTURE_RESULTS[sel] || FIXTURE_RESULTS.notta;
+  renderOutput(fixture, caseName);
+}
+
+function renderOutput(result, caseName) {
+  const area = document.getElementById('outputArea');
+  const content = document.getElementById('outputContent');
+  area.style.display = 'block';
+
+  let alertWordsHtml = '';
+  if (result.alertWords.positive.length) {
+    alertWordsHtml += '<div class="output-item"><div class="output-label">前向きワード</div><div class="output-value tag-positive">' +
+      result.alertWords.positive.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
+  }
+  if (result.alertWords.guard.length) {
+    alertWordsHtml += '<div class="output-item"><div class="output-label">警戒ワード</div><div class="output-value tag-guard">' +
+      result.alertWords.guard.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
+  }
+  if (result.alertWords.hesitate.length) {
+    alertWordsHtml += '<div class="output-item"><div class="output-label">迷いワード</div><div class="output-value tag-hesitate">' +
+      result.alertWords.hesitate.map(w => w.word + (w.count > 1 ? ' (' + w.count + ')' : '')).join('、 ') + '</div></div>';
+  }
+
+  const complianceHtml = result.compliance.passed
+    ? '<span class="compliance-pass">今回の簡易チェックでは検出なし</span>'
+    : result.compliance.warnings.map(w => w.category + ': ' + w.message).join('<br>');
+
+  content.innerHTML = `
+    <div class="output-item">
+      <div class="output-label">温度感</div>
+      <div class="output-value">${result.temperature.label}</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">温度感理由</div>
+      <div class="output-value">${result.temperatureReason}</div>
+    </div>
+    ${alertWordsHtml}
+    <div class="output-item">
+      <div class="output-label">コンプラ簡易チェック</div>
+      <div class="output-value">${complianceHtml}</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">議事録下書き</div>
+      <div class="output-value">${result.transcript.summary}</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">次回対応TODO</div>
+      <div class="output-value">${result.nextTodos.map(t => '☐ ' + t).join('\n')}</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">保留・確認事項</div>
+      <div class="output-value">${result.transcript.pendingItems.length ? result.transcript.pendingItems.map(t => '・' + t).join('\n') : 'なし'}</div>
+    </div>
+    <div class="output-item">
+      <div class="output-label">追客文下書き</div>
+      <div class="output-value">${result.followupDraft}</div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

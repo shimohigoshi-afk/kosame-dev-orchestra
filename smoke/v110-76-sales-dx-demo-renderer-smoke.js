@@ -66,19 +66,30 @@ for (const [name, fn] of Object.entries(renderer.FIXTURES)) {
 
 const nottaResult = renderer.FIXTURES.notta();
 const nottaOutput = renderer.render(nottaResult);
-check('notta: temperature 中温度_警戒あり', nottaOutput.includes('中温度_警戒あり') || nottaOutput.includes('medium_caution'));
+check('notta: title "営業DX P0 Lite デモ出力"', nottaOutput.includes('営業DX P0 Lite デモ出力'));
+check('notta: temperature 中温度_警戒あり', nottaOutput.includes('中温度_警戒あり'));
+check('notta: 参考情報',               nottaOutput.includes('参考情報'));
+check('notta: 簡易チェック',           nottaOutput.includes('簡易チェック'));
 check('notta: guard words',           nottaOutput.includes('考えておきます'));
-check('notta: dryRun NO',            nottaOutput.includes('NO'));
-check('notta: humanGateNote',        nottaResult.humanGateNote && nottaResult.humanGateNote.length > 0);
+check('notta: Human Gate / 最終確認',  nottaOutput.includes('Human Gate / 最終確認'));
+check('notta: AIによる下書き',         nottaOutput.includes('AIによる下書き'));
+check('notta: Dry Run | YES',         nottaOutput.includes('YES'));
+check('notta: 保存 | NO',             nottaOutput.includes('NO'));
 
 // ── render is pure (no side effects) ─────────────────────────────────────────
 
 const renderCount = Object.keys(renderer.FIXTURES).length;
 check('all fixtures rendered', renderCount >= 5);
 
-// ── No secret leakage ───────────────────────────────────────────────────────
+// ── No forbidden expressions ─────────────────────────────────────────────────
 
 const allOutput = Object.values(renderer.FIXTURES).map(fn => renderer.render(fn())).join(' ');
+const forbiddenExpr = ['自動判定', '確定', '正確に判断', 'コンプラ保証', '法令遵守を保証', '最適な追客', '完全自動化'];
+for (const fe of forbiddenExpr) {
+  check(`no forbidden expr: "${fe}"`, !allOutput.includes(fe));
+}
+
+// ── No secret leakage ───────────────────────────────────────────────────────
 check('no API key in output',         !allOutput.includes('sk-') && !allOutput.includes('AIza'));
 check('no secret value in output',    !allOutput.includes('api_key='));
 check('no salesDX in output',         !allOutput.includes('salesDX') && !allOutput.includes('transcriber'));

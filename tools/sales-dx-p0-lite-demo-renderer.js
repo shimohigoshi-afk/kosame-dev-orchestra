@@ -68,7 +68,7 @@ function render(result) {
   const hr = '─'.repeat(60);
 
   lines.push('');
-  lines.push(`# Sales DX P0 Lite Demo${result.caseName ? ` — ${result.caseName}` : ''}`);
+  lines.push(`# 営業DX P0 Lite デモ出力${result.caseName ? ` — ${result.caseName}` : ''}`);
   lines.push('');
   lines.push(hr);
   lines.push('');
@@ -79,7 +79,8 @@ function render(result) {
   lines.push(`## 温度感`);
   lines.push('');
   lines.push(`${t.emoji} **${t.label}**`);
-  if (t.isReference) lines.push(`> ${colorize(t.level, '(参考)')}`);
+  lines.push('');
+  lines.push(`> ${colorize(t.level, 'この判定は参考情報です。面談の雰囲気を踏まえて総合判断してください。')}`);
   lines.push('');
   if (t.reason) {
     const parts = t.reason.split(/[。.．]+/).filter(Boolean);
@@ -96,30 +97,44 @@ function render(result) {
   if (hasAlert) {
     lines.push(`## 警戒・迷いワード`);
     lines.push('');
-    for (const w of aw.guard)    lines.push(`* ${colorize('low', '⚠')} ${w.word}（${w.category}）`);
-    for (const w of aw.hesitate) lines.push(`* ${colorize('low', '⚠')} ${w.word}（${w.category}）`);
-    for (const w of aw.positive) lines.push(`* ${colorize('high', '✓')} ${w.word}（${w.category}）`);
-    if (aw.wakamamaNote) lines.push(`* ${aw.wakamamaNote}`);
-    lines.push('');
+    if (aw.guard.length) {
+      lines.push('**警戒がうかがえる発言:**');
+      for (const w of aw.guard) lines.push(`* ${w.word}`);
+      lines.push('');
+    }
+    if (aw.hesitate.length) {
+      lines.push('**迷い・検討中の発言:**');
+      for (const w of aw.hesitate) lines.push(`* ${w.word}`);
+      lines.push('');
+    }
+    if (aw.positive.length) {
+      lines.push('**前向きな発言:**');
+      for (const w of aw.positive) lines.push(`* ${w.word}`);
+      lines.push('');
+    }
+    if (aw.wakamamaNote) {
+      lines.push(`**「わかりました」に注目:**`);
+      lines.push(`* ${aw.wakamamaNote}`);
+      lines.push('');
+    }
   }
 
   // 3. Compliance
-  lines.push(`## コンプラ警告`);
+  lines.push(`## コンプラチェック（参考）`);
   lines.push('');
   if (result.compliance.warnings.length > 0) {
+    lines.push(`気になる表現が検出されました。最終確認は人間が行ってください。`);
     for (const w of result.compliance.warnings) {
-      lines.push(`* ${colorize('guard', '⚠')} 「${w.word}」（${w.category}）`);
+      lines.push(`* 「${w.word}」（${w.category}）`);
     }
   } else {
-    lines.push('検出なし');
+    lines.push('今回の簡易チェックでは、特に気になる表現は検出されませんでした。');
   }
   lines.push('');
-  if (result.compliance.note) {
-    lines.push(`> ${result.compliance.note}`);
-    lines.push('');
-  }
+  lines.push(`> ${result.compliance.note || ''}`);
+  lines.push('');
 
-  // 4. Transcript
+  // 4. Transcript / TODO / Pending
   lines.push(`## 議事録下書き`);
   lines.push('');
   if (result.transcript.summary) {
@@ -130,19 +145,16 @@ function render(result) {
     }
     lines.push('');
   }
-  if (result.transcript.decisions && result.transcript.decisions.length > 0) {
-    lines.push('**【決定事項】**');
-    for (const d of result.transcript.decisions) lines.push(`* ${d}`);
-    lines.push('');
-  }
-  if (result.transcript.pendingItems && result.transcript.pendingItems.length > 0) {
-    lines.push('**【保留事項】**');
-    for (const p of result.transcript.pendingItems) lines.push(`* ${p.text || p}`);
-    lines.push('');
-  }
+
   if (result.transcript.nextTodos && result.transcript.nextTodos.length > 0) {
-    lines.push('**【TODO】**');
+    lines.push('**次回対応TODO:**');
     for (const t of result.transcript.nextTodos) lines.push(`* ☐ ${t.text || t}`);
+    lines.push('');
+  }
+
+  if (result.transcript.pendingItems && result.transcript.pendingItems.length > 0) {
+    lines.push('**保留・確認事項:**');
+    for (const p of result.transcript.pendingItems) lines.push(`* ${p.text || p}`);
     lines.push('');
   }
 
@@ -158,20 +170,19 @@ function render(result) {
   }
 
   // 6. Human gate
-  lines.push(`## Human Gate`);
+  lines.push(`## Human Gate / 最終確認`);
   lines.push('');
-  if (result.humanGateNote) {
-    lines.push(`> ${colorize('medium', result.humanGateNote)}`);
-    lines.push('');
-  }
+  lines.push(`> ${colorize('medium', 'この出力はAIによる下書きです。')}`);
+  lines.push(`> ${colorize('medium', 'お客様へ送信・保存・提案に使う前に、必ず人間が内容を確認してください。')}`);
+  lines.push('');
 
   // 7. Dry run guarantee
-  lines.push(`## Dry Run`);
+  lines.push(`## Dry Run（動作モード）`);
   lines.push('');
   lines.push(`| 項目 | 状態 |`);
   lines.push(`|------|------|`);
   for (const [key, label] of [
-    ['dryRun', 'Dry Run'],
+    ['dryRun', 'Dry Run（実動作なし）'],
     ['saved', '保存'],
     ['sent', '送信'],
     ['charged', '課金'],

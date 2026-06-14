@@ -1,6 +1,6 @@
-# KOSAME Live Cockpit Readonly Monitor 作業票
+# ☂️ KOSAME Readonly Monitor 作業票
 
-> バージョン: 110.80.0  
+> バージョン: 110.80.1  
 > 作業名: v110.80 KOSAME Live Cockpit Readonly Monitor  
 > 種別: 作業票 / 実装前計画  
 > 方針: read-only 監視画面から開始する
@@ -8,7 +8,8 @@
 ## 目的
 
 じゅんやさんが別画面で、KOSAME Dev Orchestra と `kosame-sales-dx` の動きを同時に見られるようにする。  
-まずは安全のため、操作ボタンなし・read-only の監視画面として実装する。
+まずは安全のため、操作ボタンなし・read-only の監視画面として実装する。  
+画面タイトルは `☂️ KOSAME Readonly Monitor` に固定し、見出し・説明・警告文は日本語中心で整える。
 
 ## 監視対象
 
@@ -160,4 +161,3 @@
 - 変更予定ファイル
 - 危険ゲート
 - `v110.80` を進めてよいか
-

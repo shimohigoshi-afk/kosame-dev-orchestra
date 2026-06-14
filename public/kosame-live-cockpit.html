@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOSAME Live Cockpit Readonly Monitor</title>
+<title>☂️ KOSAME Readonly Monitor</title>
 <style>
 :root {
   --bg: #07111f;
@@ -61,6 +61,12 @@ h1 {
   margin: 0;
   font-size: clamp(30px, 4vw, 54px);
   line-height: 1.02;
+}
+.title-copy {
+  margin-top: 8px;
+  color: #dbeafe;
+  font-size: 17px;
+  line-height: 1.55;
 }
 .mission-copy {
   margin-top: 12px;
@@ -200,23 +206,24 @@ h1 {
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">CURRENT MISSION</div>
-        <h1>Readonly Monitor</h1>
-        <div class="mission-copy" id="current-mission">Loading...</div>
+        <h1>☂️ KOSAME Readonly Monitor</h1>
+        <div class="title-copy">落ち着いた開発OSの司令室として、変更せずに状態だけを見守ります。</div>
+        <div class="mission-copy" id="current-mission">読み込み中...</div>
         <div class="status-chip-row">
-          <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">Loading...</span></span>
+          <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">読み込み中...</span></span>
           <span class="chip"><strong>MODE</strong> read-only</span>
           <span class="chip"><strong>UPDATE</strong> passive</span>
         </div>
-        <div class="timestamp" id="timestamp">Waiting for snapshot...</div>
+        <div class="timestamp" id="timestamp">スナップショット待機中...</div>
       </div>
       <div class="hero-aside">
         <div class="hero-card">
-          <div class="eyebrow">Danger Gate</div>
+          <div class="eyebrow">危険ゲート</div>
           <div class="mission-copy" id="hero-gate">Loading...</div>
         </div>
         <div class="hero-card">
         <div class="eyebrow">NEXT ACTION</div>
-          <div class="mission-copy" id="hero-next">Loading...</div>
+          <div class="mission-copy" id="hero-next">読み込み中...</div>
         </div>
       </div>
     </section>
@@ -224,17 +231,19 @@ h1 {
     <section class="grid">
       <article class="panel">
         <h2>DEV ORCHESTRA STATUS</h2>
+        <div class="lead">KOSAME Dev Orchestra 側の read-only 状態を、Git 状況と直近の履歴で確認します。</div>
         <div class="repo-meta">
-          <div><code id="dev-path">...</code></div>
-          <div id="dev-health">...</div>
+          <div><code id="dev-path">読み込み中...</code></div>
+          <div id="dev-health">読み込み中...</div>
         </div>
         <div class="stack" id="dev-panel"></div>
       </article>
       <article class="panel">
         <h2>SALES DX STATUS</h2>
+        <div class="lead">kosame-sales-dx 側の read-only 状態を、同じ見方で並べて表示します。</div>
         <div class="repo-meta">
-          <div><code id="sales-path">...</code></div>
-          <div id="sales-health">...</div>
+          <div><code id="sales-path">読み込み中...</code></div>
+          <div id="sales-health">読み込み中...</div>
         </div>
         <div class="stack" id="sales-panel"></div>
       </article>
@@ -251,7 +260,7 @@ h1 {
       </article>
       <article class="panel">
         <h2>RECENT COMMITS</h2>
-        <div class="small" id="recent-summary">Loading...</div>
+        <div class="small" id="recent-summary">読み込み中...</div>
       </article>
     </section>
   </div>
@@ -272,10 +281,10 @@ function badgeClass(repo) {
 }
 
 function repoStatusSummary(repo) {
-  const clean = repo.dirty ? 'dirty' : 'clean';
+  const clean = repo.dirty ? '要確認' : '正常';
   const commits = (repo.recentCommits || []).length;
   const actions = (repo.githubActions || []).length;
-  return `${clean} / ${commits} recent commits / ${actions} GitHub Actions lines`;
+  return `${clean} / 直近コミット ${commits} 件 / Actions ${actions} 行`;
 }
 
 function renderRepoPanel(repo, mountId) {
@@ -326,7 +335,7 @@ async function loadSnapshot() {
 
     text(document.getElementById('current-mission'), snapshot.currentMission);
     text(document.getElementById('active-repo'), snapshot.activeRepo ? snapshot.activeRepo.path : '');
-    text(document.getElementById('timestamp'), `Generated at ${snapshot.generatedAt}`);
+    text(document.getElementById('timestamp'), `生成時刻: ${snapshot.generatedAt}`);
     text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
     text(document.getElementById('hero-next'), snapshot.nextAction);
 
@@ -351,8 +360,8 @@ async function loadSnapshot() {
 
     renderRepoPanel(dev, 'dev-panel');
     renderRepoPanel(sales, 'sales-panel');
-    renderList(document.getElementById('human-gate'), snapshot.humanGate || [], 'No human gate notes.');
-    renderList(document.getElementById('warnings'), snapshot.warnings || [], 'No warnings.');
+    renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
+    renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
     text(
       document.getElementById('recent-summary'),
       [
@@ -361,7 +370,7 @@ async function loadSnapshot() {
       ].join('\n\n')
     );
   } catch (error) {
-    text(document.getElementById('current-mission'), 'Snapshot unavailable');
+    text(document.getElementById('current-mission'), 'スナップショットを取得できませんでした');
     text(document.getElementById('active-repo'), '—');
     text(document.getElementById('timestamp'), String(error && error.message ? error.message : error));
   }

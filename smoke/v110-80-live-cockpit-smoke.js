@@ -30,7 +30,7 @@ mustExist(snapshotPath);
 mustExist(serverPath);
 mustExist(htmlPath);
 
-assert.equal(pkg.version, '110.80.0', 'package version must be 110.80.0');
+assert.equal(pkg.version, '110.80.1', 'package version must be 110.80.1');
 assert.ok(pkg.scripts['cockpit:snapshot'], 'cockpit:snapshot must exist');
 assert.ok(pkg.scripts['cockpit:server'], 'cockpit:server must exist');
 assert.ok(pkg.scripts['smoke:v110-80'], 'smoke:v110-80 must exist');
@@ -38,6 +38,7 @@ assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-80'), 'verify must run
 
 const html = read(htmlPath);
 include(html, 'CURRENT MISSION', 'HTML');
+include(html, '☂️ KOSAME Readonly Monitor', 'HTML');
 include(html, 'ACTIVE REPO', 'HTML');
 include(html, 'DEV ORCHESTRA STATUS', 'HTML');
 include(html, 'SALES DX STATUS', 'HTML');
@@ -95,8 +96,8 @@ assert.ok(Array.from(READ_ONLY_COMMANDS).every(cmd => [
 
 const snapshot = collectLiveCockpitSnapshot();
 assert.ok(snapshot, 'snapshot must be created');
-assert.equal(snapshot.version, '110.80.0', 'snapshot version must match package version');
-assert.equal(snapshot.currentMission, 'KOSAME Live Cockpit Readonly Monitor', 'snapshot mission must match');
+assert.equal(snapshot.version, '110.80.1', 'snapshot version must match package version');
+assert.equal(snapshot.currentMission, '☂️ KOSAME Readonly Monitor', 'snapshot mission must match');
 assert.ok(snapshot.activeRepo && snapshot.activeRepo.path, 'snapshot must include activeRepo');
 assert.ok(snapshot.devOrchestra && snapshot.salesDx, 'snapshot must include both repos');
 assert.ok(Array.isArray(snapshot.humanGate) && snapshot.humanGate.length > 0, 'snapshot must include human gate');

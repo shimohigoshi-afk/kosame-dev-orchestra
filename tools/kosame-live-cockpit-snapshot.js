@@ -131,32 +131,32 @@ function collectLiveCockpitSnapshot(options = {}) {
   });
 
   const warnings = [
-    'Read-only monitor only. Do not use git add / commit / push / tag / reset / checkout.',
-    'Secret / API key / .env / credentials contents are intentionally not read.',
+    'この cockpit は read-only 監視専用です。git add / commit / push / tag / reset / checkout は使いません。',
+    'Secret / API key / .env / credentials の中身は読みません。',
     ...devOrchestra.warnings,
     ...salesDx.warnings,
   ];
 
   if (devOrchestra.dirty || salesDx.dirty) {
-    warnings.push('At least one monitored repo has uncommitted or staged changes.');
+    warnings.push('監視対象のどちらかに未コミットまたはステージ済み変更があります。');
   }
 
   const humanGate = [
-    'Human approval is required before any write action is considered.',
-    'Review changed files and staged files before any future commit candidate.',
-    'Keep DeepSeek / opencode out of this cockpit.',
+    '書き込み操作の前には必ず人間承認が必要です。',
+    'commit 候補に進む前に changed files と staged files を確認してください。',
+    'DeepSeek / opencode はこの cockpit では使いません。',
   ];
 
   const nextAction = warnings.some(w => w.includes('unavailable') || w.includes('missing'))
-    ? 'Keep the cockpit read-only and inspect the unavailable read-only feeds.'
+    ? 'read-only のまま、取得できないフィードの状態を確認してください。'
     : (devOrchestra.dirty || salesDx.dirty)
-      ? 'Review changed and staged files, then wait for human approval before any mutation.'
-      : 'Continue passive monitoring. No write action is allowed from this cockpit.';
+      ? 'changed files と staged files を見直し、書き込み前の人間承認を待ってください。'
+      : '引き続き passive monitoring を続けてください。この cockpit からの書き込みはできません。';
 
   return {
     version: PACKAGE.version,
     generatedAt: new Date().toISOString(),
-    currentMission: 'KOSAME Live Cockpit Readonly Monitor',
+    currentMission: '☂️ KOSAME Readonly Monitor',
     activeRepo: {
       label: activeRepoPath === salesRepoPath ? 'kosame-sales-dx' : 'KOSAME Dev Orchestra',
       path: activeRepoPath,
@@ -180,4 +180,3 @@ module.exports = {
   collectLiveCockpitSnapshot,
   READ_ONLY_COMMANDS,
 };
-

@@ -121,6 +121,7 @@ function canReadGcloudStatus() {
   const env = process['env'];
   if (env.KOSAME_DASHBOARD_GCLOUD_STATUS_DISABLED === '1') return false;
   if (env.CI === 'true' || env.GITHUB_ACTIONS === 'true') return false;
+  if (!process.stdout.isTTY || !process.stdin.isTTY) return false;
 
   const configDir = getGcloudConfigDir();
   const configParent = path.dirname(configDir);
@@ -1261,17 +1262,31 @@ function startServer(port, opts = {}) {
   const stopActivityWatch = watchLog(event => rebroadcastActivity(event));
   server.on('close', stopActivityWatch);
 
-  server.listen(port, () => {
-    console.log(`\n  ⬡  KOSAME Multi-Project Dashboard  →  http://localhost:${port}`);
-    console.log(`     Projects: ${PROJECTS.map(p => p.key).join(', ')}`);
-    console.log(`     dryRun: ${dryRun}  |  state file: ${fs.existsSync(STATE_FILE) ? 'found' : 'demo mode'}`);
-    console.log(`     Cloud Shell preview: https://shell.cloud.google.com  (port ${port})\n`);
-  });
+  try {
+    server.listen(port, () => {
+      console.log(`\n  ⬡  KOSAME Multi-Project Dashboard  →  http://localhost:${port}`);
+      console.log(`     Projects: ${PROJECTS.map(p => p.key).join(', ')}`);
+      console.log(`     dryRun: ${dryRun}  |  state file: ${fs.existsSync(STATE_FILE) ? 'found' : 'demo mode'}`);
+      console.log(`     Cloud Shell preview: https://shell.cloud.google.com  (port ${port})\n`);
+    });
+  } catch (err) {
+    if (err && err.code === 'EPERM') {
+      server.listenUnavailable = true;
+      console.warn('  WARN: dashboard listen unavailable in this environment; running read-only without local socket');
+      return server;
+    }
+    throw err;
+  }
 
   server.on('error', err => {
     if (err.code === 'EADDRINUSE') {
       console.error(`  ERROR: port ${port} already in use. Try --port=<other>`);
       process.exit(1);
+    }
+    if (err.code === 'EPERM') {
+      server.listenUnavailable = true;
+      console.warn('  WARN: dashboard listen unavailable in this environment; running read-only without local socket');
+      return;
     }
     throw err;
   });

@@ -21,6 +21,7 @@
 body {
   margin: 0;
   font-family: Inter, "Noto Sans JP", system-ui, sans-serif;
+  font-size: clamp(14px, 0.55vw + 11px, 16px);
   color: var(--text);
   background:
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.24), transparent 28%),
@@ -29,14 +30,14 @@ body {
   min-height: 100vh;
 }
 .shell {
-  width: min(1440px, calc(100vw - 32px));
+  width: min(1560px, calc(100vw - 24px));
   margin: 0 auto;
-  padding: 20px 0 40px;
+  padding: 18px 0 36px;
 }
 .hero {
   display: grid;
   gap: 14px;
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.85fr);
   align-items: stretch;
   margin-bottom: 18px;
 }
@@ -48,7 +49,7 @@ body {
   backdrop-filter: blur(16px);
 }
 .hero-card {
-  padding: 24px;
+  padding: 22px;
 }
 .eyebrow {
   text-transform: uppercase;
@@ -59,19 +60,19 @@ body {
 }
 h1 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 54px);
+  font-size: clamp(28px, 3vw, 46px);
   line-height: 1.02;
 }
 .title-copy {
   margin-top: 8px;
   color: #dbeafe;
-  font-size: 17px;
+  font-size: clamp(15px, 1.1vw, 17px);
   line-height: 1.55;
 }
 .mission-copy {
   margin-top: 12px;
   color: var(--muted);
-  font-size: 15px;
+  font-size: clamp(14px, 0.9vw, 15px);
   line-height: 1.8;
 }
 .hero-aside {
@@ -98,7 +99,7 @@ h1 {
 .chip strong { color: white; }
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 14px;
 }
 .panel {
@@ -183,12 +184,12 @@ h1 {
   margin-top: 14px;
   display: grid;
   gap: 14px;
-  grid-template-columns: 1.1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 .footer .panel { min-height: 180px; }
 .vault-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin: 12px 0 14px;
 }
@@ -217,6 +218,43 @@ h1 {
   color: var(--muted);
   line-height: 1.7;
 }
+.chat-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 10px;
+}
+.chat-sound-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(125, 211, 252, 0.08);
+  color: #dbeafe;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.chat-sound-chip .sound-label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.chat-sound-btn {
+  cursor: pointer;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  background: rgba(125, 211, 252, 0.1);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.chat-sound-btn:hover {
+  background: rgba(125, 211, 252, 0.18);
+}
 .timestamp {
   margin-top: 16px;
   color: var(--muted);
@@ -225,17 +263,21 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { height: 280px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chat-thread { min-height: 160px; max-height: 230px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
-.chat-bubble-user { background: rgba(125,211,252,0.15); border: 1px solid rgba(125,211,252,0.25); padding: 8px 12px; border-radius: 14px 14px 4px 14px; max-width: 85%; font-size: 14px; line-height: 1.6; }
-.chat-bubble-ai { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 14px 14px 14px 4px; max-width: 90%; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.chat-bubble-user { background: rgba(125,211,252,0.15); border: 1px solid rgba(125,211,252,0.25); padding: 8px 12px; border-radius: 14px 14px 4px 14px; max-width: 82%; font-size: 14px; line-height: 1.6; }
+.chat-bubble-ai { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 14px 14px 14px 4px; max-width: 84%; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 60px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 48px; max-height: 120px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
 .chat-btn { cursor: pointer; padding: 10px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
 .chat-btn.cb-active { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.12); color: #fbbf24; }
+@media (max-width: 760px) {
+  .chat-input-row { flex-direction: column; align-items: stretch; }
+  .chat-btn, .chat-sound-btn { width: 100%; text-align: center; }
+}
 </style>
 </head>
 <body>
@@ -320,6 +362,15 @@ h1 {
       <article class="panel" id="chat-panel">
         <h2>KOSAME CHAT — こさめ相談</h2>
         <p class="lead">こさめ人格のGPTと相談できます。Codexの確認待ちがある場合は「確認待ちを要約」で内容を判断できます。Codexへのキー入力は行いません。</p>
+        <div class="chat-meta-row" aria-label="通知音設定">
+          <span class="chat-sound-chip">
+            <span class="sound-label">通知音</span>
+            <span id="sound-state">OFF</span>
+          </span>
+          <button type="button" class="chat-sound-btn" id="sound-toggle">ON</button>
+          <button type="button" class="chat-sound-btn" id="sound-test">テスト音</button>
+          <span class="small" id="sound-hint" style="color:var(--muted)">ブラウザ操作後に有効化してください</span>
+        </div>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div class="chat-input-row">
@@ -518,6 +569,171 @@ const state = {
 
 const chatHistory = [];
 let latestBridge = null;
+let notificationAudioContext = null;
+let notificationEnabled = false;
+let notificationUnlocked = false;
+let notificationLastAt = 0;
+let notificationLastAssistantCue = '';
+let notificationLastBridgeDetected = false;
+let notificationLastHumanGateCount = 0;
+let notificationLastFeedQuestion = '';
+let notificationInitialized = false;
+
+const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
+const NOTIFICATION_COOLDOWN_MS = 5000;
+const NOTIFICATION_FREQ = 880;
+const NOTIFICATION_FREQ_2 = 660;
+const NOTIFICATION_DURATION_MS = 120;
+
+function readNotificationPreference() {
+  try {
+    return localStorage.getItem(NOTIFICATION_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeNotificationPreference(enabled) {
+  try {
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, enabled ? '1' : '0');
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
+function isQuestionCue(text) {
+  const value = String(text || '');
+  return /[?？]/.test(value) || /(確認|承認|お願いします)/.test(value);
+}
+
+function updateNotificationUI() {
+  const stateNode = document.getElementById('sound-state');
+  const toggleNode = document.getElementById('sound-toggle');
+  const hintNode = document.getElementById('sound-hint');
+  if (stateNode) stateNode.textContent = notificationEnabled ? 'ON' : 'OFF';
+  if (toggleNode) toggleNode.textContent = notificationEnabled ? 'OFF' : 'ON';
+  if (hintNode) {
+    hintNode.textContent = notificationEnabled
+      ? (notificationUnlocked ? '通知音は有効です' : 'ブラウザ操作後に有効化してください')
+      : '通知音はOFFです';
+  }
+}
+
+function ensureNotificationAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!notificationAudioContext) {
+    notificationAudioContext = new AudioCtx();
+  }
+  return notificationAudioContext;
+}
+
+async function unlockNotificationAudio() {
+  const ctx = ensureNotificationAudioContext();
+  if (!ctx) {
+    notificationUnlocked = false;
+    updateNotificationUI();
+    return false;
+  }
+  try {
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+    notificationUnlocked = ctx.state === 'running';
+    updateNotificationUI();
+    return notificationUnlocked;
+  } catch {
+    notificationUnlocked = false;
+    updateNotificationUI();
+    return false;
+  }
+}
+
+function setNotificationEnabled(nextEnabled, { persist = true } = {}) {
+  notificationEnabled = !!nextEnabled;
+  if (!notificationEnabled) {
+    notificationUnlocked = false;
+  }
+  if (persist) writeNotificationPreference(notificationEnabled);
+  updateNotificationUI();
+}
+
+function playNotificationBeep() {
+  const ctx = ensureNotificationAudioContext();
+  if (!ctx || !notificationEnabled || !notificationUnlocked) {
+    updateNotificationUI();
+    return false;
+  }
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(NOTIFICATION_FREQ, now);
+  osc.frequency.exponentialRampToValueAtTime(NOTIFICATION_FREQ_2, now + 0.06);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + (NOTIFICATION_DURATION_MS / 1000));
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + (NOTIFICATION_DURATION_MS / 1000));
+  notificationLastAt = Date.now();
+  return true;
+}
+
+function maybePlayNotification() {
+  const now = Date.now();
+  if (!notificationEnabled || now - notificationLastAt < NOTIFICATION_COOLDOWN_MS) return false;
+  if (!notificationUnlocked) {
+    updateNotificationUI();
+    return false;
+  }
+  return playNotificationBeep();
+}
+
+function feedQuestionSignature(feed) {
+  const selected = Array.isArray(feed?.selectedTasks) ? feed.selectedTasks : [];
+  return selected
+    .map((task) => [task.taskId, task.nextQuestionForJunya || task.nextQuestion || task.recommendedAction || '']
+      .filter(Boolean)
+      .join(' | '))
+    .filter(Boolean)
+    .join('\n');
+}
+
+function maybeNotifyFromAssistant(reply) {
+  if (!notificationEnabled || !isQuestionCue(reply)) return;
+  const signature = `assistant:${reply}`;
+  if (signature === notificationLastAssistantCue) return;
+  notificationLastAssistantCue = signature;
+  maybePlayNotification();
+}
+
+function maybeNotifyFromSnapshot(snapshot) {
+  const bridgeDetected = !!(snapshot.confirmationBridge && snapshot.confirmationBridge.detected);
+  const humanGateCount = Array.isArray(snapshot.humanGate) ? snapshot.humanGate.length : 0;
+  const questionSignature = feedQuestionSignature(snapshot.taskFeeder || {});
+
+  if (!notificationInitialized) {
+    notificationInitialized = true;
+    notificationLastBridgeDetected = bridgeDetected;
+    notificationLastHumanGateCount = humanGateCount;
+    notificationLastFeedQuestion = questionSignature;
+    return;
+  }
+
+  const bridgeBecamePending = !notificationLastBridgeDetected && bridgeDetected;
+  const humanGateIncreased = humanGateCount > notificationLastHumanGateCount;
+  const feedQuestionChanged = !!questionSignature && questionSignature !== notificationLastFeedQuestion;
+
+  notificationLastBridgeDetected = bridgeDetected;
+  notificationLastHumanGateCount = humanGateCount;
+  notificationLastFeedQuestion = questionSignature;
+
+  if (bridgeBecamePending || humanGateIncreased || feedQuestionChanged) {
+    maybePlayNotification();
+  }
+}
 
 function text(node, value) {
   node.textContent = value == null || value === '' ? '—' : String(value);
@@ -907,6 +1123,7 @@ async function sendChatMessage(userText, confirmationContext) {
     const reply = data.reply || data.error || '応答なし';
     chatHistory.push({ role: 'assistant', content: reply });
     renderChatThread();
+    maybeNotifyFromAssistant(reply);
 
     if (data.noKey) {
       statusEl.textContent = 'AI相談は未接続（APIキー未設定）';
@@ -964,6 +1181,7 @@ async function loadSnapshot() {
     renderApiCost(snapshot.apiCost || {});
     renderTaskFeeder(snapshot.taskFeeder || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
+    maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
     text(
@@ -980,6 +1198,8 @@ async function loadSnapshot() {
   }
 }
 
+setNotificationEnabled(readNotificationPreference(), { persist: false });
+updateNotificationUI();
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 
@@ -1004,6 +1224,24 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
   }
   const ctx = buildConfirmationContext(latestBridge);
   sendChatMessage(null, ctx);
+});
+
+document.getElementById('sound-toggle').addEventListener('click', async () => {
+  const nextEnabled = !notificationEnabled;
+  setNotificationEnabled(nextEnabled);
+  if (nextEnabled) {
+    await unlockNotificationAudio();
+  }
+});
+
+document.getElementById('sound-test').addEventListener('click', async () => {
+  if (!notificationEnabled) {
+    setNotificationEnabled(true);
+  }
+  const unlocked = await unlockNotificationAudio();
+  if (unlocked) {
+    maybePlayNotification();
+  }
 });
 </script>
 </body>

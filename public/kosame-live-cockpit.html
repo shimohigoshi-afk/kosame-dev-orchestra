@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOSAME Live Cockpit Readonly Monitor</title>
+<style>
+:root {
+  --bg: #07111f;
+  --panel: rgba(13, 23, 38, 0.88);
+  --panel-border: rgba(147, 197, 253, 0.16);
+  --text: #e5eefb;
+  --muted: #8ba3c7;
+  --accent: #7dd3fc;
+  --accent-2: #f59e0b;
+  --danger: #f87171;
+  --ok: #34d399;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, "Noto Sans JP", system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.24), transparent 28%),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 26%),
+    linear-gradient(180deg, #06101d, #0a1527 60%, #09101b);
+  min-height: 100vh;
+}
+.shell {
+  width: min(1440px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 20px 0 40px;
+}
+.hero {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.6fr 1fr;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.hero-card, .panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+.hero-card {
+  padding: 24px;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 1.02;
+}
+.mission-copy {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+.hero-aside {
+  display: grid;
+  gap: 14px;
+}
+.status-chip-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.chip strong { color: white; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.panel {
+  padding: 18px;
+}
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+.panel .lead {
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.repo-meta {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.repo-meta code {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.08); }
+.status-badge.warn { color: #fbbf24; background: rgba(251, 191, 36, 0.08); }
+.status-badge.danger { color: var(--danger); background: rgba(248, 113, 113, 0.08); }
+.list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  line-height: 1.7;
+}
+.list li { margin-bottom: 6px; }
+.muted-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.stack {
+  display: grid;
+  gap: 12px;
+}
+.stack .subpanel {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.subpanel h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #cfe4ff;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #dbeafe;
+}
+.footer {
+  margin-top: 14px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.1fr 1fr 1fr;
+}
+.footer .panel { min-height: 180px; }
+.small {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.timestamp {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 1100px) {
+  .hero, .grid, .footer { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="eyebrow">CURRENT MISSION</div>
+        <h1>Readonly Monitor</h1>
+        <div class="mission-copy" id="current-mission">Loading...</div>
+        <div class="status-chip-row">
+          <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">Loading...</span></span>
+          <span class="chip"><strong>MODE</strong> read-only</span>
+          <span class="chip"><strong>UPDATE</strong> passive</span>
+        </div>
+        <div class="timestamp" id="timestamp">Waiting for snapshot...</div>
+      </div>
+      <div class="hero-aside">
+        <div class="hero-card">
+          <div class="eyebrow">Danger Gate</div>
+          <div class="mission-copy" id="hero-gate">Loading...</div>
+        </div>
+        <div class="hero-card">
+        <div class="eyebrow">NEXT ACTION</div>
+          <div class="mission-copy" id="hero-next">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>DEV ORCHESTRA STATUS</h2>
+        <div class="repo-meta">
+          <div><code id="dev-path">...</code></div>
+          <div id="dev-health">...</div>
+        </div>
+        <div class="stack" id="dev-panel"></div>
+      </article>
+      <article class="panel">
+        <h2>SALES DX STATUS</h2>
+        <div class="repo-meta">
+          <div><code id="sales-path">...</code></div>
+          <div id="sales-health">...</div>
+        </div>
+        <div class="stack" id="sales-panel"></div>
+      </article>
+    </section>
+
+    <section class="footer">
+      <article class="panel">
+        <h2>HUMAN GATE</h2>
+        <ul class="list" id="human-gate"></ul>
+      </article>
+      <article class="panel">
+        <h2>WARNINGS</h2>
+        <ul class="muted-list" id="warnings"></ul>
+      </article>
+      <article class="panel">
+        <h2>RECENT COMMITS</h2>
+        <div class="small" id="recent-summary">Loading...</div>
+      </article>
+    </section>
+  </div>
+
+<script>
+const state = {
+  endpoint: '/api/snapshot'
+};
+
+function text(node, value) {
+  node.textContent = value == null || value === '' ? '—' : String(value);
+}
+
+function badgeClass(repo) {
+  if (repo.dirty) return 'warn';
+  if (repo.warnings && repo.warnings.length) return 'danger';
+  return 'ok';
+}
+
+function repoStatusSummary(repo) {
+  const clean = repo.dirty ? 'dirty' : 'clean';
+  const commits = (repo.recentCommits || []).length;
+  const actions = (repo.githubActions || []).length;
+  return `${clean} / ${commits} recent commits / ${actions} GitHub Actions lines`;
+}
+
+function renderRepoPanel(repo, mountId) {
+  const mount = document.getElementById(mountId);
+  mount.innerHTML = '';
+
+  const pieces = [
+    ['git status -sb', repo.statusLines || []],
+    ['CHANGED FILES', repo.changedFiles || []],
+    ['STAGED FILES', repo.stagedFiles || []],
+    ['RECENT COMMITS', (repo.recentCommits || []).map(item => item.raw)],
+    ['GITHUB ACTIONS', repo.githubActions || []],
+  ];
+
+  for (const [title, lines] of pieces) {
+    const subpanel = document.createElement('div');
+    subpanel.className = 'subpanel';
+    const h3 = document.createElement('h3');
+    h3.textContent = title;
+    const body = document.createElement('div');
+    body.className = 'mono';
+    body.textContent = lines.length ? lines.join('\n') : '—';
+    subpanel.appendChild(h3);
+    subpanel.appendChild(body);
+    mount.appendChild(subpanel);
+  }
+}
+
+function renderList(node, lines, emptyLabel) {
+  node.innerHTML = '';
+  if (!lines || !lines.length) {
+    const li = document.createElement('li');
+    li.textContent = emptyLabel || '—';
+    node.appendChild(li);
+    return;
+  }
+  for (const line of lines) {
+    const li = document.createElement('li');
+    li.textContent = line;
+    node.appendChild(li);
+  }
+}
+
+async function loadSnapshot() {
+  try {
+    const response = await fetch(state.endpoint, { cache: 'no-store' });
+    const snapshot = await response.json();
+
+    text(document.getElementById('current-mission'), snapshot.currentMission);
+    text(document.getElementById('active-repo'), snapshot.activeRepo ? snapshot.activeRepo.path : '');
+    text(document.getElementById('timestamp'), `Generated at ${snapshot.generatedAt}`);
+    text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
+    text(document.getElementById('hero-next'), snapshot.nextAction);
+
+    const dev = snapshot.devOrchestra || {};
+    const sales = snapshot.salesDx || {};
+    text(document.getElementById('dev-path'), dev.path || '');
+    text(document.getElementById('sales-path'), sales.path || '');
+
+    const devBadge = document.createElement('span');
+    devBadge.className = `status-badge ${badgeClass(dev)}`;
+    devBadge.textContent = repoStatusSummary(dev);
+    const salesBadge = document.createElement('span');
+    salesBadge.className = `status-badge ${badgeClass(sales)}`;
+    salesBadge.textContent = repoStatusSummary(sales);
+
+    const devHealth = document.getElementById('dev-health');
+    const salesHealth = document.getElementById('sales-health');
+    devHealth.innerHTML = '';
+    salesHealth.innerHTML = '';
+    devHealth.appendChild(devBadge);
+    salesHealth.appendChild(salesBadge);
+
+    renderRepoPanel(dev, 'dev-panel');
+    renderRepoPanel(sales, 'sales-panel');
+    renderList(document.getElementById('human-gate'), snapshot.humanGate || [], 'No human gate notes.');
+    renderList(document.getElementById('warnings'), snapshot.warnings || [], 'No warnings.');
+    text(
+      document.getElementById('recent-summary'),
+      [
+        `Dev commits: ${(dev.recentCommits || []).map(c => c.raw).join(' | ') || '—'}`,
+        `Sales commits: ${(sales.recentCommits || []).map(c => c.raw).join(' | ') || '—'}`,
+      ].join('\n\n')
+    );
+  } catch (error) {
+    text(document.getElementById('current-mission'), 'Snapshot unavailable');
+    text(document.getElementById('active-repo'), '—');
+    text(document.getElementById('timestamp'), String(error && error.message ? error.message : error));
+  }
+}
+
+loadSnapshot();
+setInterval(loadSnapshot, 30000);
+</script>
+</body>
+</html>

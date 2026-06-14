@@ -41,22 +41,52 @@ function summarizeCost(apiCost) {
 
 function summarizeTaskFeeder(taskFeeder) {
   const feeder = taskFeeder && typeof taskFeeder === 'object' ? taskFeeder : {};
-  return [
+  const base = [
     `selected=${countList(feeder.selectedTasks)}`,
     `ready=${Number(feeder.readyTaskCount || 0)}`,
     `blocked=${Number(feeder.blockedCount || 0)}`,
     `humanGate=${Number(feeder.humanGateWaitingCount || 0)}`,
   ].join(' / ');
+
+  const selectedTasks = Array.isArray(feeder.selectedTasks) ? feeder.selectedTasks : [];
+  if (!selectedTasks.length) return base;
+
+  const taskLines = selectedTasks.slice(0, 3).map((t) => {
+    const title = normalizeText(t.title || t.taskId || '');
+    if (!title) return null;
+    const parts = [title];
+    const project = normalizeText(t.project || t.relatedProject || '');
+    if (project) parts.push(`project=${project}`);
+    const ver = normalizeText(t.relatedVersion || '');
+    if (ver) parts.push(`version=${ver}`);
+    const priority = normalizeText(t.priority || '');
+    if (priority) parts.push(`priority=${priority}`);
+    return parts.join(' / ');
+  }).filter(Boolean);
+
+  if (!taskLines.length) return base;
+  return `${base}; nextCandidates=[${taskLines.join(' | ')}]`;
 }
 
 function summarizeWishlist(wishlist) {
   const list = wishlist && typeof wishlist === 'object' ? wishlist : {};
-  return [
+  const base = [
     `pending=${Number(list.pendingCount || 0)}`,
     `suggested=${Number(list.suggestedCount || 0)}`,
     `later=${countList(list.laterIdeas)}`,
     `total=${Number(list.totalCount || 0)}`,
   ].join(' / ');
+
+  const laterIdeas = Array.isArray(list.laterIdeas) ? list.laterIdeas : [];
+  if (!laterIdeas.length) return base;
+
+  const ideaTitles = laterIdeas.slice(0, 3).map((idea) => {
+    if (typeof idea === 'string') return normalizeText(idea);
+    return normalizeText(idea && (idea.title || idea.wishlistId || idea.id || '') || '');
+  }).filter(Boolean);
+
+  if (!ideaTitles.length) return base;
+  return `${base}; laterIdeas=[${ideaTitles.join(' | ')}]`;
 }
 
 function buildConsoleContextSummary(snapshot) {

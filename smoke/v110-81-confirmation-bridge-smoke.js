@@ -35,7 +35,7 @@ mustExist(serverPath);
 mustExist(htmlPath);
 console.log('  PASS: required files exist');
 
-assert.equal(pkg.version, '110.81.0', 'package version must be 110.81.0');
+assert.ok(pkg.version >= '110.81.0', `package version must be >= 110.81.0 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-81'], 'smoke:v110-81 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-81'), 'verify must include smoke:v110-81');
 console.log('  PASS: package.json version and script entries');

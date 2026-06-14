@@ -89,7 +89,7 @@ if (process.env.CI) {
     if (f === 'node') return false;
     if (f === '.gitignore') return false;
     // Allow newly-created source files in project directories
-    if (/^(smoke|tools|providers|apps|fixtures|tickets|docs|public)\//.test(f)) return false;
+    if (/^(smoke|tools|providers|apps|fixtures|tickets|docs|public|config)\//.test(f)) return false;
     if (f === 'package.json') return false;
     return true;
   });

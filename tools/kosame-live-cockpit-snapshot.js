@@ -9,6 +9,8 @@ const ROOT = path.resolve(__dirname, '..');
 const DEV_ORCHESTRA_REPO = ROOT;
 const SALES_DX_REPO = '/home/lavie/repos/kosame-sales-dx';
 const PACKAGE = require('../package.json');
+const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
+const { buildApiCostSnapshot } = require('./kosame-cost-meter');
 
 const READ_ONLY_COMMANDS = new Set([
   'git status -sb',
@@ -117,6 +119,14 @@ function collectLiveCockpitSnapshot(options = {}) {
   const devRepoPath = options.devRepoPath || DEV_ORCHESTRA_REPO;
   const salesRepoPath = options.salesRepoPath || SALES_DX_REPO;
   const activeRepoPath = options.activeRepoPath || devRepoPath;
+  const taskVaultDir = options.taskVaultDir;
+  const taskVaultSnapshot = buildAutoSaveSnapshot({
+    taskVaultDir,
+    savedAt: options.savedAt,
+  });
+  const taskVault = taskVaultSnapshot.taskVault;
+  const autoSave = taskVaultSnapshot.autoSave;
+  const apiCost = buildApiCostSnapshot(taskVaultDir);
 
   const devOrchestra = buildRepoState({
     name: 'dev-orchestra',
@@ -133,9 +143,18 @@ function collectLiveCockpitSnapshot(options = {}) {
   const warnings = [
     'この cockpit は read-only 監視専用です。git add / commit / push / tag / reset / checkout は使いません。',
     'Secret / API key / .env / credentials の中身は読みません。',
+    taskVault.status !== 'ok'
+      ? `Task Vault は ${taskVault.status.toUpperCase()} 状態です。`
+      : null,
+    taskVault.warningCount > 0
+      ? `Task Vault に ${taskVault.warningCount} 件の保存禁止データ検出があります。`
+      : null,
+    apiCost.warningCount > 0
+      ? `API Cost Meter に ${apiCost.warningCount} 件の警告があります。`
+      : null,
     ...devOrchestra.warnings,
     ...salesDx.warnings,
-  ];
+  ].filter(Boolean);
 
   if (devOrchestra.dirty || salesDx.dirty) {
     warnings.push('監視対象のどちらかに未コミットまたはステージ済み変更があります。');
@@ -164,6 +183,9 @@ function collectLiveCockpitSnapshot(options = {}) {
     monitoredRepos: [devOrchestra, salesDx],
     devOrchestra,
     salesDx,
+    taskVault,
+    autoSave,
+    apiCost,
     humanGate,
     warnings,
     nextAction,

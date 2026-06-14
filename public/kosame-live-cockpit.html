@@ -186,6 +186,32 @@ h1 {
   grid-template-columns: 1.1fr 1fr 1fr;
 }
 .footer .panel { min-height: 180px; }
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0 14px;
+}
+.metric {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.metric .label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.metric .value {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
 .small {
   font-size: 12px;
   color: var(--muted);
@@ -300,6 +326,96 @@ h1 {
           <textarea id="chat-input" placeholder="こさめへのメッセージ... (Ctrl+Enter で送信)"></textarea>
           <div class="chat-btn" id="chat-send">送信</div>
           <div class="chat-btn" id="chat-summarize">確認待ちを要約</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="vault-outer" style="margin-top:14px">
+      <article class="panel">
+        <h2>AUTO SAVE / TASK VAULT</h2>
+        <p class="lead">現在のミッション、判断、タスク、verify結果、引継ぎメモをローカルに保存し、次の AI が復旧しやすい形で保持します。</p>
+        <div class="vault-grid">
+          <div class="metric">
+            <div class="label">最終保存</div>
+            <div class="value" id="vault-last-saved">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">保存状態</div>
+            <div class="value" id="vault-status">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">最新 checkpoint</div>
+            <div class="value" id="vault-latest-checkpoint">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">次回 autosave 目安</div>
+            <div class="value" id="vault-next-autosave">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">保存先</div>
+            <div class="value" id="vault-dir">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">復旧用 handoff</div>
+            <div class="value" id="vault-handoff">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">禁止データ警告数</div>
+            <div class="value" id="vault-warning-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">現在タスク数</div>
+            <div class="value" id="vault-task-count">読み込み中...</div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="subpanel">
+            <h3>Task Vault 詳細</h3>
+            <div id="vault-details" class="mono">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>Auto Save 詳細</h3>
+            <div id="autosave-details" class="mono">読み込み中...</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="vault-outer" style="margin-top:14px">
+      <article class="panel">
+        <h2>API COST METER</h2>
+        <p class="lead">モデル別・provider別の usage を local pricing で概算し、使いすぎを早めに見つけます。実請求額ではありません。</p>
+        <div class="vault-grid">
+          <div class="metric">
+            <div class="label">このセッション概算</div>
+            <div class="value" id="cost-session">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">本日概算</div>
+            <div class="value" id="cost-today">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">今月推定</div>
+            <div class="value" id="cost-month">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">unknown 件数</div>
+            <div class="value" id="cost-unknown-count">読み込み中...</div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="subpanel">
+            <h3>Provider 別合計</h3>
+            <div id="cost-by-provider" class="mono">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>Model 別一覧</h3>
+            <div id="cost-by-model" class="mono">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>警告 / 注記</h3>
+            <div id="cost-warnings" class="mono">読み込み中...</div>
+          </div>
         </div>
       </article>
     </section>
@@ -429,6 +545,97 @@ function renderConfirmationBridge(bridge) {
     : '—';
 }
 
+function statusLabel(status) {
+  if (status === 'ok' || status === 'success') return ['ok', 'OK'];
+  if (status === 'error' || status === 'danger') return ['danger', 'ERROR'];
+  return ['warn', 'WARNING'];
+}
+
+function renderTaskVault(taskVault, autoSave) {
+  const vault = taskVault || {};
+  const save = autoSave || {};
+  const [badgeClassName, badgeText] = statusLabel(vault.status || save.status || 'warning');
+  const badge = document.getElementById('vault-status');
+  badge.innerHTML = '';
+  const span = document.createElement('span');
+  span.className = `status-badge ${badgeClassName}`;
+  span.textContent = `保存状態 ${badgeText}`;
+  badge.appendChild(span);
+
+  text(document.getElementById('vault-last-saved'), save.lastSavedAt || vault.lastSavedAt || '—');
+  text(document.getElementById('vault-latest-checkpoint'), save.latestCheckpointAt || vault.latestCheckpointAt || '—');
+  text(document.getElementById('vault-next-autosave'), save.nextAutosaveAt || '—');
+  text(document.getElementById('vault-dir'), vault.root || save.taskVaultDir || '—');
+  text(document.getElementById('vault-handoff'), vault.handoffExists ? 'あり' : 'なし');
+  text(document.getElementById('vault-warning-count'), String(vault.warningCount ?? save.warningCount ?? 0));
+  text(document.getElementById('vault-task-count'), String(vault.currentTaskCount ?? save.currentTaskCount ?? 0));
+
+  const vaultDetails = [
+    `taskVaultDir: ${vault.root || save.taskVaultDir || '—'}`,
+    `currentMission: ${vault.currentMission || '—'}`,
+    `targetRepo: ${vault.targetRepo || '—'}`,
+    `assignedAI: ${vault.assignedAI || '—'}`,
+    `currentState: ${vault.currentStatePath || '—'}`,
+    `tasks.jsonl: ${vault.tasksJsonlPath || '—'}`,
+    `decisions.jsonl: ${vault.decisionsJsonlPath || '—'}`,
+    `handoff: ${vault.handoffPath || '—'}`,
+    `warningCount: ${vault.warningCount ?? 0}`,
+  ];
+  text(document.getElementById('vault-details'), vaultDetails.join('\n'));
+
+  const autosaveDetails = [
+    `status: ${save.status || vault.status || 'warning'}`,
+    `autoSaveIntervalMinutes: ${save.autoSaveIntervalMinutes ?? '—'}`,
+    `checkpointIntervalMinutes: ${save.checkpointIntervalMinutes ?? '—'}`,
+    `lastSavedAt: ${save.lastSavedAt || '—'}`,
+    `latestAutosaveAt: ${save.latestAutosaveAt || '—'}`,
+    `latestCheckpointAt: ${save.latestCheckpointAt || '—'}`,
+    `nextAutosaveAt: ${save.nextAutosaveAt || '—'}`,
+    `nextCheckpointAt: ${save.nextCheckpointAt || '—'}`,
+    `handoffExists: ${save.handoffExists ? 'yes' : 'no'}`,
+  ];
+  text(document.getElementById('autosave-details'), autosaveDetails.join('\n'));
+}
+
+function formatMoneyUsd(value) {
+  if (value == null || Number.isNaN(Number(value))) return '—';
+  return `$${Number(value).toFixed(6)}`;
+}
+
+function formatMoneyJpy(value) {
+  if (value == null || Number.isNaN(Number(value))) return '—';
+  return `¥${Number(value).toFixed(2)}`;
+}
+
+function renderApiCost(apiCost) {
+  const cost = apiCost || {};
+  const total = cost.total || {};
+  text(document.getElementById('cost-session'), `${formatMoneyUsd(total.sessionUsd)} / ${formatMoneyJpy(total.sessionJpy)}`);
+  text(document.getElementById('cost-today'), `${formatMoneyUsd(total.todayUsd)} / ${formatMoneyJpy(total.todayJpy)}`);
+  text(document.getElementById('cost-month'), `${formatMoneyUsd(total.monthUsd)} / ${formatMoneyJpy(total.monthJpy)}`);
+  text(document.getElementById('cost-unknown-count'), String(total.unknownCount ?? cost.unknownUsageCount ?? 0));
+
+  const providerLines = Object.values(cost.byProvider || {}).map((item) => (
+    `${item.provider}: calls=${item.callCount} input=${item.inputTokens} output=${item.outputTokens} total=${item.totalTokens} cost=${formatMoneyUsd(item.estimatedCostUsd)} / ${formatMoneyJpy(item.estimatedCostJpy)} last=${item.lastUsedAt || '—'}`
+  ));
+  text(document.getElementById('cost-by-provider'), providerLines.length ? providerLines.join('\n') : '—');
+
+  const modelLines = (cost.byModel || []).map((item) => (
+    `${item.model} [${item.provider}] calls=${item.callCount} input=${item.inputTokens} output=${item.outputTokens} total=${item.totalTokens} cost=${formatMoneyUsd(item.estimatedCostUsd)} / ${formatMoneyJpy(item.estimatedCostJpy)} last=${item.lastUsedAt || '—'} tier=${item.budgetTier || 'unknown'} warning=${item.warning ? 'yes' : 'no'}`
+  ));
+  text(document.getElementById('cost-by-model'), modelLines.length ? modelLines.join('\n') : '—');
+
+  const warnings = [];
+  if (cost.highCostModelWarning) warnings.push('高額モデル利用があります。明示承認が必要です。');
+  if (cost.unknownUsageCount > 0) warnings.push(`unknown usage が ${cost.unknownUsageCount} 件あります。`);
+  if (cost.sessionBudgetOver) warnings.push('sessionBudget を超過しました。');
+  if (cost.dailyBudgetOver) warnings.push('dailyBudget を超過しました。');
+  if (cost.monthlyBudgetOver) warnings.push('monthlyBudget を超過しました。');
+  if (cost.warningCount > 0) warnings.push(...(cost.warnings || []));
+  warnings.push('概算であり実請求額ではありません。');
+  text(document.getElementById('cost-warnings'), warnings.join('\n'));
+}
+
 function renderChatThread() {
   const thread = document.getElementById('chat-thread');
   thread.innerHTML = '';
@@ -543,6 +750,8 @@ async function loadSnapshot() {
 
     renderRepoPanel(dev, 'dev-panel');
     renderRepoPanel(sales, 'sales-panel');
+    renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
+    renderApiCost(snapshot.apiCost || {});
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
     text(

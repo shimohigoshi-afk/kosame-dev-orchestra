@@ -112,6 +112,51 @@ function recentGitLog(projPath, n = 5) {
   }
 }
 
+function getGcloudConfigDir() {
+  const env = process['env'];
+  return env.CLOUDSDK_CONFIG || path.join(os.homedir(), '.config', 'gcloud');
+}
+
+function canReadGcloudStatus() {
+  const env = process['env'];
+  if (env.KOSAME_DASHBOARD_GCLOUD_STATUS_DISABLED === '1') return false;
+  if (env.CI === 'true' || env.GITHUB_ACTIONS === 'true') return false;
+
+  const configDir = getGcloudConfigDir();
+  const configParent = path.dirname(configDir);
+  try {
+    fs.accessSync(configParent, fs.constants.W_OK);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function buildUnavailableCloudRunStatus(reason = 'not_authenticated') {
+  return {
+    status: 'warning',
+    availability: 'unavailable',
+    reason,
+    url: '',
+    ready: false,
+    revision: '',
+    version: '',
+  };
+}
+
+function buildUnavailableSchedulerStatus(reason = 'not_authenticated') {
+  return {
+    status: 'warning',
+    availability: 'unavailable',
+    reason,
+    schedule: '',
+    timeZone: '',
+    state: 'unavailable',
+    lastRun: '',
+    nextRun: '',
+  };
+}
+
 function readCiState(githubRepo) {
   try {
     const out = execSync(
@@ -158,6 +203,9 @@ function buildDemoCostForProject(key) {
 function readCloudRunStatus(proj) {
   const cr = proj.cloudRun;
   if (!cr) return null;
+  if (!canReadGcloudStatus()) {
+    return buildUnavailableCloudRunStatus('not_authenticated');
+  }
   try {
     const out = execSync(
       `gcloud run services describe ${cr.service} --region=${cr.region} --project=${cr.project} --format=json`,
@@ -172,8 +220,12 @@ function readCloudRunStatus(proj) {
       revision: svc?.status?.latestReadyRevisionName || '',
       version:  versionLabel.replace(/_/g, '.'),
     };
-  } catch (_) {
-    return { url: '', ready: false, revision: '', version: '' };
+  } catch (err) {
+    const msg = String(err && (err.stderr || err.message || err)).toLowerCase();
+    const reason = /reauth|auth|credential|login|token|permission|unauthori/.test(msg)
+      ? 'not_authenticated'
+      : 'unavailable';
+    return buildUnavailableCloudRunStatus(reason);
   }
 }
 
@@ -193,6 +245,9 @@ function readGitTag(projPath) {
 function readSchedulerStatus(proj) {
   const sc = proj.scheduler;
   if (!sc) return null;
+  if (!canReadGcloudStatus()) {
+    return buildUnavailableSchedulerStatus('not_authenticated');
+  }
   try {
     const out = execSync(
       `gcloud scheduler jobs describe ${sc.job} --location=${sc.location} --project=${sc.project} --format=json`,
@@ -206,8 +261,12 @@ function readSchedulerStatus(proj) {
       lastRun:    job.lastAttemptTime || '',
       nextRun:    job.scheduleTime || '',
     };
-  } catch (_) {
-    return { schedule: '', timeZone: '', state: '', lastRun: '', nextRun: '' };
+  } catch (err) {
+    const msg = String(err && (err.stderr || err.message || err)).toLowerCase();
+    const reason = /reauth|auth|credential|login|token|permission|unauthori/.test(msg)
+      ? 'not_authenticated'
+      : 'unavailable';
+    return buildUnavailableSchedulerStatus(reason);
   }
 }
 
@@ -636,12 +695,24 @@ function renderProjects(projects) {
         <td class="git-subject">\${escHtml(c.subject)}</td>
       </tr>\`
     ).join('');
+    const cloudRunState = p.cloudRun?.availability === 'unavailable'
+      ? '<span style="color:#d29922">● UNAVAILABLE</span>'
+      : p.cloudRun?.ready
+        ? '<span style="color:#3fb950">● RUNNING</span>'
+        : '<span style="color:#f85149">● STOPPED</span>';
     const cloudRunHtml = p.cloudRun ? '<div class="project-cost"><span class="muted">Cloud Run:</span> ' +
-      (p.cloudRun.ready ? '<span style="color:#3fb950">● RUNNING</span>' : '<span style="color:#f85149">● STOPPED</span>') +
+      cloudRunState +
       (p.cloudRun.revision ? ' <span style="color:#8b949e">' + escHtml(p.cloudRun.revision) + '</span>' : '') +
+      (p.cloudRun.reason ? ' <span style="color:#d29922">(' + escHtml(p.cloudRun.reason) + ')</span>' : '') +
       '</div>' : '';
+    const schedState = p.scheduler?.availability === 'unavailable'
+      ? '<span style="color:#d29922">● UNAVAILABLE</span>'
+      : p.scheduler.state === 'ENABLED'
+        ? '<span style="color:#3fb950">● ENABLED</span>'
+        : '<span style="color:#d29922">● ' + escHtml(p.scheduler.state) + '</span>';
     const schedHtml = p.scheduler ? '<div class="project-cost"><span class="muted">Scheduler:</span> ' +
-      (p.scheduler.state === 'ENABLED' ? '<span style="color:#3fb950">● ENABLED</span>' : '<span style="color:#d29922">● ' + escHtml(p.scheduler.state) + '</span>') +
+      schedState +
+      (p.scheduler.reason ? ' <span style="color:#d29922">(' + escHtml(p.scheduler.reason) + ')</span>' : '') +
       (p.scheduler.schedule ? ' <span style="color:#8b949e">' + escHtml(p.scheduler.schedule) + ' ' + escHtml(p.scheduler.timeZone) + '</span>' : '') +
       '</div>' : '';
     return \`<div class="project-card">

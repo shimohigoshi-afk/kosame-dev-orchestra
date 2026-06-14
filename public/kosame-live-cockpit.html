@@ -249,6 +249,36 @@ h1 {
       </article>
     </section>
 
+    <section class="cb-outer" style="margin-top:14px">
+      <article class="panel" id="cb-panel" style="transition:border-color 0.3s">
+        <h2>CONFIRMATION BRIDGE</h2>
+        <p class="lead">Codexの確認待ち状態をread-onlyで監視します。Codexへのキー入力は送信しません。</p>
+        <div id="cb-badge-row">読み込み中...</div>
+        <div id="cb-body" style="display:none">
+          <div class="stack" style="margin-top:14px">
+            <div class="subpanel">
+              <h3>対象ファイル</h3>
+              <div id="cb-files" class="mono">—</div>
+            </div>
+            <div class="subpanel">
+              <h3>編集内容の概要</h3>
+              <div id="cb-summary" class="mono">—</div>
+            </div>
+            <div class="subpanel">
+              <h3>選択肢（参照のみ）</h3>
+              <div id="cb-choices" class="mono">—</div>
+              <div class="small" style="margin-top:8px;color:var(--muted)">※ この画面からCodexへのキー送信は行いません（read-only）</div>
+            </div>
+            <div class="subpanel">
+              <h3>Codex出力コンテキスト</h3>
+              <div id="cb-context" class="mono">—</div>
+              <div id="cb-source" class="timestamp">—</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
     <section class="footer">
       <article class="panel">
         <h2>HUMAN GATE</h2>
@@ -328,6 +358,49 @@ function renderList(node, lines, emptyLabel) {
   }
 }
 
+function renderConfirmationBridge(bridge) {
+  const panel = document.getElementById('cb-panel');
+  const badgeRow = document.getElementById('cb-badge-row');
+  const body = document.getElementById('cb-body');
+
+  if (!bridge) {
+    badgeRow.innerHTML = '<span class="status-badge warn">取得できませんでした</span>';
+    return;
+  }
+
+  if (!bridge.detected) {
+    badgeRow.innerHTML = '<span class="status-badge ok">✅ 確認待ち: なし</span>';
+    panel.style.borderColor = '';
+    body.style.display = 'none';
+    return;
+  }
+
+  badgeRow.innerHTML = '<span class="status-badge warn">🟡 確認待ち: あり — Codexが確認を求めています</span>';
+  panel.style.borderColor = 'rgba(251,191,36,0.5)';
+  body.style.display = '';
+
+  const cbFiles = document.getElementById('cb-files');
+  cbFiles.textContent = bridge.files.length ? bridge.files.join('\n') : '—';
+
+  const cbSummary = document.getElementById('cb-summary');
+  cbSummary.textContent = bridge.editSummary.length ? bridge.editSummary.join('\n') : '—';
+
+  const cbChoices = document.getElementById('cb-choices');
+  if (bridge.choices.length) {
+    cbChoices.textContent = bridge.choices.map(c => `[${c.key}] ${c.label}`).join('\n');
+  } else {
+    cbChoices.textContent = '—';
+  }
+
+  const cbContext = document.getElementById('cb-context');
+  cbContext.textContent = bridge.rawContext || '—';
+
+  const cbSource = document.getElementById('cb-source');
+  cbSource.textContent = bridge.sourceFile
+    ? `ソースファイル: ${bridge.sourceFile}  /  確認時刻: ${bridge.checkedAt}`
+    : '—';
+}
+
 async function loadSnapshot() {
   try {
     const response = await fetch(state.endpoint, { cache: 'no-store' });
@@ -338,6 +411,8 @@ async function loadSnapshot() {
     text(document.getElementById('timestamp'), `生成時刻: ${snapshot.generatedAt}`);
     text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
     text(document.getElementById('hero-next'), snapshot.nextAction);
+
+    renderConfirmationBridge(snapshot.confirmationBridge);
 
     const dev = snapshot.devOrchestra || {};
     const sales = snapshot.salesDx || {};

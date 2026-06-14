@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
+const { detectConfirmation } = require('./kosame-confirmation-detector');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -26,12 +27,24 @@ function createLiveCockpitServer(options = {}) {
         devRepoPath: options.devRepoPath,
         salesRepoPath: options.salesRepoPath,
       });
+      snapshot.confirmationBridge = detectConfirmation();
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-store',
         'X-Content-Type-Options': 'nosniff',
       });
       res.end(JSON.stringify(snapshot, null, 2));
+      return;
+    }
+
+    if (url.pathname === '/api/confirmation') {
+      const result = detectConfirmation();
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+      });
+      res.end(JSON.stringify(result, null, 2));
       return;
     }
 

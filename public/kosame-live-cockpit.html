@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>☂️ KOSAME Readonly Monitor</title>
+<title>☂️ KOSAME Console</title>
 <style>
 :root {
   --bg: #07111f;
@@ -60,13 +60,13 @@ body {
 }
 h1 {
   margin: 0;
-  font-size: clamp(28px, 3vw, 46px);
+  font-size: clamp(26px, 2.4vw, 40px);
   line-height: 1.02;
 }
 .title-copy {
   margin-top: 8px;
   color: #dbeafe;
-  font-size: clamp(15px, 1.1vw, 17px);
+  font-size: clamp(14px, 0.9vw, 16px);
   line-height: 1.55;
 }
 .mission-copy {
@@ -285,12 +285,12 @@ h1 {
     <section class="hero">
       <div class="hero-card">
         <div class="eyebrow">CURRENT MISSION</div>
-        <h1>☂️ KOSAME Readonly Monitor</h1>
-        <div class="title-copy">落ち着いた開発OSの司令室として、変更せずに状態だけを見守ります。</div>
-        <div class="mission-copy" id="current-mission">読み込み中...</div>
+        <h1>☂️ KOSAME Console</h1>
+        <div class="title-copy">Dev Orchestra Command Center</div>
+        <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
         <div class="status-chip-row">
           <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">読み込み中...</span></span>
-          <span class="chip"><strong>MODE</strong> read-only</span>
+          <span class="chip"><strong>MODE</strong> <span id="mode-display">Readonly</span></span>
           <span class="chip"><strong>UPDATE</strong> passive</span>
         </div>
         <div class="timestamp" id="timestamp">スナップショット待機中...</div>
@@ -307,25 +307,7 @@ h1 {
       </div>
     </section>
 
-    <section class="grid">
-      <article class="panel">
-        <h2>DEV ORCHESTRA STATUS</h2>
-        <div class="lead">KOSAME Dev Orchestra 側の read-only 状態を、Git 状況と直近の履歴で確認します。</div>
-        <div class="repo-meta">
-          <div><code id="dev-path">読み込み中...</code></div>
-          <div id="dev-health">読み込み中...</div>
-        </div>
-        <div class="stack" id="dev-panel"></div>
-      </article>
-      <article class="panel">
-        <h2>SALES DX STATUS</h2>
-        <div class="lead">kosame-sales-dx 側の read-only 状態を、同じ見方で並べて表示します。</div>
-        <div class="repo-meta">
-          <div><code id="sales-path">読み込み中...</code></div>
-          <div id="sales-health">読み込み中...</div>
-        </div>
-        <div class="stack" id="sales-panel"></div>
-      </article>
+    <section class="grid" id="project-status-grid">
     </section>
 
     <section class="cb-outer" style="margin-top:14px">
@@ -567,7 +549,29 @@ const state = {
   endpoint: '/api/snapshot'
 };
 
+const fallbackProjectRegistry = [
+  {
+    id: 'dev-orchestra',
+    name: 'KOSAME Dev Orchestra',
+    shortName: 'DEV ORCHESTRA',
+    statusTitle: 'DEV ORCHESTRA STATUS',
+    repoPath: '/home/lavie/kosame-dev-orchestra',
+    type: 'dev-os',
+    enabled: true,
+  },
+  {
+    id: 'sales-dx',
+    name: 'Sales DX',
+    shortName: 'SALES DX',
+    statusTitle: 'SALES DX STATUS',
+    repoPath: '/home/lavie/repos/kosame-sales-dx',
+    type: 'product',
+    enabled: true,
+  },
+];
+
 const chatHistory = [];
+let latestSnapshot = null;
 let latestBridge = null;
 let notificationAudioContext = null;
 let notificationEnabled = false;
@@ -658,27 +662,38 @@ function setNotificationEnabled(nextEnabled, { persist = true } = {}) {
   updateNotificationUI();
 }
 
-function playNotificationBeep() {
+function playNotificationTone(ctx, frequency, startAt, duration, volume) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(frequency, startAt);
+  osc.frequency.exponentialRampToValueAtTime(frequency * 1.02, startAt + duration * 0.7);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration + 0.02);
+}
+
+function playNotificationChime() {
   const ctx = ensureNotificationAudioContext();
   if (!ctx || !notificationEnabled || !notificationUnlocked) {
     updateNotificationUI();
     return false;
   }
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(NOTIFICATION_FREQ, now);
-  osc.frequency.exponentialRampToValueAtTime(NOTIFICATION_FREQ_2, now + 0.06);
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + (NOTIFICATION_DURATION_MS / 1000));
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + (NOTIFICATION_DURATION_MS / 1000));
+  const firstDuration = 0.12;
+  const secondDuration = 0.14;
+  playNotificationTone(ctx, 520, now, firstDuration, 0.07);
+  playNotificationTone(ctx, 784, now + 0.16, secondDuration, 0.08);
   notificationLastAt = Date.now();
   return true;
+}
+
+function playNotificationBeep() {
+  return playNotificationChime();
 }
 
 function maybePlayNotification() {
@@ -745,11 +760,78 @@ function badgeClass(repo) {
   return 'ok';
 }
 
+function projectBadgeClass(project) {
+  if (!project) return 'warn';
+  if (project.availability && project.availability !== 'available') return 'warn';
+  if (project.dirty) return 'warn';
+  if (project.warnings && project.warnings.length) return 'danger';
+  return 'ok';
+}
+
 function repoStatusSummary(repo) {
+  if (repo && repo.availability && repo.availability !== 'available') {
+    return '未接続';
+  }
   const clean = repo.dirty ? '要確認' : '正常';
   const commits = (repo.recentCommits || []).length;
   const actions = (repo.githubActions || []).length;
   return `${clean} / 直近コミット ${commits} 件 / Actions ${actions} 行`;
+}
+
+function renderProjectRegistry(snapshot) {
+  const grid = document.getElementById('project-status-grid');
+  grid.innerHTML = '';
+
+  const fallbackProjects = [
+    snapshot.devOrchestra,
+    snapshot.salesDx,
+  ].filter(Boolean).map((project) => ({
+    ...project,
+    enabled: true,
+  }));
+
+  const projects = Array.isArray(snapshot.projects) && snapshot.projects.length
+    ? snapshot.projects
+    : fallbackProjects;
+
+  for (const [index, project] of projects.entries()) {
+    const article = document.createElement('article');
+    article.className = 'panel';
+
+    const title = document.createElement('h2');
+    title.textContent = project.statusTitle || `${project.shortName || project.name || `PROJECT ${index + 1}`} STATUS`;
+    article.appendChild(title);
+
+    const lead = document.createElement('div');
+    lead.className = 'lead';
+    lead.textContent = `${project.name || project.shortName || 'Project'} / ${project.type || 'unknown'} / ${project.enabled === false ? 'disabled' : 'enabled'}`;
+    article.appendChild(lead);
+
+    const repoMeta = document.createElement('div');
+    repoMeta.className = 'repo-meta';
+
+    const pathLine = document.createElement('div');
+    const code = document.createElement('code');
+    code.textContent = project.repoPath || '—';
+    pathLine.appendChild(code);
+    repoMeta.appendChild(pathLine);
+
+    const badgeLine = document.createElement('div');
+    const badge = document.createElement('span');
+    badge.className = `status-badge ${projectBadgeClass(project)}`;
+    badge.textContent = `${project.availability && project.availability !== 'available' ? `${project.availability} / ` : ''}${repoStatusSummary(project)}`;
+    badgeLine.appendChild(badge);
+    repoMeta.appendChild(badgeLine);
+    article.appendChild(repoMeta);
+
+    const stack = document.createElement('div');
+    stack.className = 'stack';
+    stack.id = `project-stack-${project.id || index}`;
+    article.appendChild(stack);
+
+    grid.appendChild(article);
+    renderRepoPanel(project, stack.id);
+  }
 }
 
 function renderRepoPanel(repo, mountId) {
@@ -1077,6 +1159,21 @@ function renderChatThread() {
   thread.scrollTop = thread.scrollHeight;
 }
 
+function buildChatPayload(userText, confirmationContext) {
+  const payload = {
+    message: userText || '',
+    messages: chatHistory
+      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+      .map((msg) => ({ role: msg.role, content: msg.content })),
+  };
+  if (confirmationContext) payload.confirmationContext = confirmationContext;
+  if (latestSnapshot && latestSnapshot.consoleContextSummary) {
+    payload.contextSummary = latestSnapshot.consoleContextSummary;
+    payload.contextStatus = latestSnapshot.consoleContextStatus || 'ok';
+  }
+  return payload;
+}
+
 function buildConfirmationContext(bridge) {
   const parts = [];
   if (bridge.editSummary && bridge.editSummary.length) {
@@ -1109,9 +1206,8 @@ async function sendChatMessage(userText, confirmationContext) {
 
   try {
     const payload = {
-      messages: chatHistory.filter(m => m.role === 'user' || m.role === 'assistant'),
+      ...buildChatPayload(userText || '', confirmationContext),
     };
-    if (confirmationContext) payload.confirmationContext = confirmationContext;
 
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -1127,6 +1223,8 @@ async function sendChatMessage(userText, confirmationContext) {
 
     if (data.noKey) {
       statusEl.textContent = 'AI相談は未接続（APIキー未設定）';
+    } else if (data.noContext) {
+      statusEl.textContent = '状態コンテキスト未取得です。';
     } else if (!statusEl.textContent.includes('接続済')) {
       statusEl.textContent = 'こさめ相談AI: 接続済';
     }
@@ -1142,9 +1240,11 @@ async function loadSnapshot() {
   try {
     const response = await fetch(state.endpoint, { cache: 'no-store' });
     const snapshot = await response.json();
+    latestSnapshot = snapshot;
 
     text(document.getElementById('current-mission'), snapshot.currentMission);
     text(document.getElementById('active-repo'), snapshot.activeRepo ? snapshot.activeRepo.path : '');
+    text(document.getElementById('mode-display'), snapshot.mode || 'Readonly');
     text(document.getElementById('timestamp'), `生成時刻: ${snapshot.generatedAt}`);
     text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
     text(document.getElementById('hero-next'), snapshot.nextAction);
@@ -1158,25 +1258,7 @@ async function loadSnapshot() {
 
     const dev = snapshot.devOrchestra || {};
     const sales = snapshot.salesDx || {};
-    text(document.getElementById('dev-path'), dev.path || '');
-    text(document.getElementById('sales-path'), sales.path || '');
-
-    const devBadge = document.createElement('span');
-    devBadge.className = `status-badge ${badgeClass(dev)}`;
-    devBadge.textContent = repoStatusSummary(dev);
-    const salesBadge = document.createElement('span');
-    salesBadge.className = `status-badge ${badgeClass(sales)}`;
-    salesBadge.textContent = repoStatusSummary(sales);
-
-    const devHealth = document.getElementById('dev-health');
-    const salesHealth = document.getElementById('sales-health');
-    devHealth.innerHTML = '';
-    salesHealth.innerHTML = '';
-    devHealth.appendChild(devBadge);
-    salesHealth.appendChild(salesBadge);
-
-    renderRepoPanel(dev, 'dev-panel');
-    renderRepoPanel(sales, 'sales-panel');
+    renderProjectRegistry(snapshot);
     renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
     renderApiCost(snapshot.apiCost || {});
     renderTaskFeeder(snapshot.taskFeeder || {});
@@ -1240,7 +1322,7 @@ document.getElementById('sound-test').addEventListener('click', async () => {
   }
   const unlocked = await unlockNotificationAudio();
   if (unlocked) {
-    maybePlayNotification();
+    playNotificationChime();
   }
 });
 </script>

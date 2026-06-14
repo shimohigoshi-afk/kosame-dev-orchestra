@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
+const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
 const { handleChatRequest } = require('./kosame-cockpit-chat-server');
 
@@ -23,12 +24,14 @@ function createLiveCockpitServer(options = {}) {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
     if (url.pathname === '/api/snapshot') {
+      const confirmationBridge = detectConfirmation();
       const snapshot = collectLiveCockpitSnapshot({
         activeRepoPath: options.activeRepoPath,
         devRepoPath: options.devRepoPath,
         salesRepoPath: options.salesRepoPath,
+        projectRegistryPath: options.projectRegistryPath,
+        confirmationBridge,
       });
-      snapshot.confirmationBridge = detectConfirmation();
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-store',
@@ -61,7 +64,32 @@ function createLiveCockpitServer(options = {}) {
       req.on('end', () => {
         let parsed = {};
         try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
-        handleChatRequest(parsed).then((result) => {
+        let contextSummary = '';
+        let contextStatus = 'unavailable';
+        try {
+          const confirmationBridge = detectConfirmation();
+          const snapshot = collectLiveCockpitSnapshot({
+            activeRepoPath: options.activeRepoPath,
+            devRepoPath: options.devRepoPath,
+            salesRepoPath: options.salesRepoPath,
+            projectRegistryPath: options.projectRegistryPath,
+            confirmationBridge,
+          });
+          const consoleContext = buildConsoleContextSummary(snapshot);
+          contextSummary = consoleContext.summary;
+          contextStatus = consoleContext.status;
+        } catch {
+          contextSummary = '';
+          contextStatus = 'unavailable';
+        }
+
+        handleChatRequest({
+          ...parsed,
+          contextSummary: parsed.contextSummary || contextSummary,
+          contextStatus: parsed.contextStatus || contextStatus,
+          consoleContextSummary: contextSummary,
+          consoleContextStatus: contextStatus,
+        }).then((result) => {
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store',
@@ -102,7 +130,7 @@ function createLiveCockpitServer(options = {}) {
 function main() {
   const { server, port, host } = createLiveCockpitServer();
   server.listen(port, host, () => {
-    console.log(`KOSAME Live Cockpit Readonly Monitor listening on http://${host}:${port}`);
+    console.log(`☂️ KOSAME Console listening on http://${host}:${port}`);
   });
 }
 
@@ -113,4 +141,3 @@ if (require.main === module) {
 module.exports = {
   createLiveCockpitServer,
 };
-

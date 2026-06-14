@@ -38,10 +38,10 @@ assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-80'), 'verify must run
 
 const html = read(htmlPath);
 include(html, 'CURRENT MISSION', 'HTML');
-include(html, '☂️ KOSAME Readonly Monitor', 'HTML');
+include(html, '☂️ KOSAME Console', 'HTML');
+include(html, 'Dev Orchestra Command Center', 'HTML');
 include(html, 'ACTIVE REPO', 'HTML');
-include(html, 'DEV ORCHESTRA STATUS', 'HTML');
-include(html, 'SALES DX STATUS', 'HTML');
+include(html, 'Readonly', 'HTML');
 include(html, 'CHANGED FILES', 'HTML');
 include(html, 'STAGED FILES', 'HTML');
 include(html, 'RECENT COMMITS', 'HTML');
@@ -110,9 +110,13 @@ assert.ok(Array.from(READ_ONLY_COMMANDS).every(cmd => [
 const snapshot = collectLiveCockpitSnapshot();
 assert.ok(snapshot, 'snapshot must be created');
 assert.ok(snapshot.version >= '110.80.1', `snapshot version must be >= 110.80.1 (got ${snapshot.version})`);
-assert.equal(snapshot.currentMission, '☂️ KOSAME Readonly Monitor', 'snapshot mission must match');
+assert.equal(snapshot.currentMission, '☂️ KOSAME Console', 'snapshot mission must match');
+assert.equal(snapshot.mode, 'Readonly', 'snapshot mode must be Readonly');
 assert.ok(snapshot.activeRepo && snapshot.activeRepo.path, 'snapshot must include activeRepo');
+assert.ok(Array.isArray(snapshot.projects) && snapshot.projects.length >= 2, 'snapshot must include project registry');
 assert.ok(snapshot.devOrchestra && snapshot.salesDx, 'snapshot must include both repos');
+assert.ok(snapshot.projects.some((project) => project.statusTitle === 'DEV ORCHESTRA STATUS'), 'snapshot must include DEV ORCHESTRA STATUS');
+assert.ok(snapshot.projects.some((project) => project.statusTitle === 'SALES DX STATUS'), 'snapshot must include SALES DX STATUS');
 assert.ok(Array.isArray(snapshot.humanGate) && snapshot.humanGate.length > 0, 'snapshot must include human gate');
 assert.ok(Array.isArray(snapshot.warnings), 'snapshot must include warnings');
 assert.ok(snapshot.nextAction && typeof snapshot.nextAction === 'string', 'snapshot must include next action');

@@ -8,10 +8,12 @@ const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const DEV_ORCHESTRA_REPO = ROOT;
 const SALES_DX_REPO = '/home/lavie/repos/kosame-sales-dx';
+const DEFAULT_PROJECT_REGISTRY_PATH = path.join(ROOT, 'config', 'kosame-projects.json');
 const PACKAGE = require('../package.json');
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
 const { buildApiCostSnapshot } = require('./kosame-cost-meter');
 const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
+const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 
 const READ_ONLY_COMMANDS = new Set([
   'git status -sb',
@@ -72,6 +74,56 @@ function normalizeCommitLines(output) {
   });
 }
 
+function fallbackProjectRegistry() {
+  return [
+    {
+      id: 'dev-orchestra',
+      name: 'KOSAME Dev Orchestra',
+      shortName: 'DEV ORCHESTRA',
+      statusTitle: 'DEV ORCHESTRA STATUS',
+      repoPath: DEV_ORCHESTRA_REPO,
+      type: 'dev-os',
+      enabled: true,
+    },
+    {
+      id: 'sales-dx',
+      name: 'Sales DX',
+      shortName: 'SALES DX',
+      statusTitle: 'SALES DX STATUS',
+      repoPath: SALES_DX_REPO,
+      type: 'product',
+      enabled: true,
+    },
+  ];
+}
+
+function normalizeProjectEntry(entry, index = 0) {
+  const id = String(entry && entry.id ? entry.id : `project-${index + 1}`);
+  const shortName = entry && entry.shortName ? String(entry.shortName) : id.toUpperCase();
+  return {
+    id,
+    name: entry && entry.name ? String(entry.name) : shortName,
+    shortName,
+    statusTitle: entry && entry.statusTitle ? String(entry.statusTitle) : `${shortName} STATUS`,
+    repoPath: entry && entry.repoPath ? String(entry.repoPath) : '',
+    type: entry && entry.type ? String(entry.type) : 'unknown',
+    enabled: entry && entry.enabled !== false,
+  };
+}
+
+function loadProjectRegistry(projectRegistryPath = DEFAULT_PROJECT_REGISTRY_PATH) {
+  const registryPath = projectRegistryPath ? path.resolve(String(projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH;
+  try {
+    if (!fs.existsSync(registryPath)) return fallbackProjectRegistry();
+    const raw = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+    const entries = Array.isArray(raw) ? raw : Array.isArray(raw && raw.projects) ? raw.projects : [];
+    const normalized = entries.map((entry, index) => normalizeProjectEntry(entry, index)).filter(Boolean);
+    return normalized.length ? normalized : fallbackProjectRegistry();
+  } catch {
+    return fallbackProjectRegistry();
+  }
+}
+
 function buildRepoState({ name, label, cwd }) {
   const status = runReadOnlyCommand(cwd, ['git', 'status', '-sb']);
   const changed = runReadOnlyCommand(cwd, ['git', 'diff', '--name-only']);
@@ -85,6 +137,7 @@ function buildRepoState({ name, label, cwd }) {
   const recentCommits = normalizeCommitLines(commits.output);
   const githubActions = splitLines(actions.output);
   const dirty = changedFiles.length > 0 || stagedFiles.length > 0;
+  const availability = fs.existsSync(cwd) ? 'available' : 'not_found';
 
   const warnings = [];
   if (!status.ok) warnings.push(`${label}: git status unavailable`);
@@ -104,6 +157,7 @@ function buildRepoState({ name, label, cwd }) {
     recentCommits,
     githubActions,
     dirty,
+    availability,
     warnings,
     readOnlyCommands: [
       status.command,
@@ -116,10 +170,48 @@ function buildRepoState({ name, label, cwd }) {
   };
 }
 
+function buildProjectState(project, options = {}) {
+  const repoPath = project.repoPath || '';
+  const repoState = buildRepoState({
+    name: project.id,
+    label: project.name || project.shortName || project.statusTitle || project.id,
+    cwd: repoPath || path.join(ROOT, '__missing__', project.id),
+  });
+  const missingRepo = !repoPath || !fs.existsSync(repoPath);
+  const warnings = [...(repoState.warnings || [])];
+  if (missingRepo) {
+    warnings.unshift(`${project.statusTitle || project.name || project.id}: repoPath not_found`);
+  }
+
+  return {
+    ...project,
+    repoPath: repoPath || project.repoPath || '',
+    statusTitle: project.statusTitle || `${project.shortName || project.name || project.id} STATUS`,
+    availability: missingRepo ? 'not_found' : 'available',
+    warnings,
+    warningCount: warnings.length,
+    dirty: repoState.dirty,
+    statusLines: repoState.statusLines,
+    changedFiles: repoState.changedFiles,
+    stagedFiles: repoState.stagedFiles,
+    recentCommits: repoState.recentCommits,
+    githubActions: repoState.githubActions,
+    readOnlyCommands: repoState.readOnlyCommands,
+    health: missingRepo ? 'monitoring' : repoState.health,
+    path: repoPath || repoState.path,
+    label: project.name || project.shortName || project.statusTitle || project.id,
+  };
+}
+
 function collectLiveCockpitSnapshot(options = {}) {
   const devRepoPath = options.devRepoPath || DEV_ORCHESTRA_REPO;
   const salesRepoPath = options.salesRepoPath || SALES_DX_REPO;
   const activeRepoPath = options.activeRepoPath || devRepoPath;
+  const projectRegistry = loadProjectRegistry(options.projectRegistryPath);
+  const projects = projectRegistry
+    .filter((project) => project.enabled !== false)
+    .map((project) => buildProjectState(project, options));
+  const findProject = (id) => projects.find((project) => project.id === id || project.name === id || project.shortName === id);
   const taskVaultDir = options.taskVaultDir;
   const taskVaultSnapshot = buildAutoSaveSnapshot({
     taskVaultDir,
@@ -131,20 +223,26 @@ function collectLiveCockpitSnapshot(options = {}) {
   const taskFeeder = buildTaskFeederSnapshot({
     taskVaultDir,
     currentVersion: PACKAGE.version,
-    currentMission: '☂️ KOSAME Readonly Monitor',
+    currentMission: '☂️ KOSAME Console',
   });
-
-  const devOrchestra = buildRepoState({
-    name: 'dev-orchestra',
-    label: 'KOSAME Dev Orchestra',
-    cwd: devRepoPath,
-  });
-
-  const salesDx = buildRepoState({
-    name: 'sales-dx',
-    label: 'kosame-sales-dx',
-    cwd: salesRepoPath,
-  });
+  const devOrchestra = findProject('dev-orchestra') || buildProjectState({
+    id: 'dev-orchestra',
+    name: 'KOSAME Dev Orchestra',
+    shortName: 'DEV ORCHESTRA',
+    statusTitle: 'DEV ORCHESTRA STATUS',
+    repoPath: devRepoPath,
+    type: 'dev-os',
+    enabled: true,
+  }, options);
+  const salesDx = findProject('sales-dx') || buildProjectState({
+    id: 'sales-dx',
+    name: 'Sales DX',
+    shortName: 'SALES DX',
+    statusTitle: 'SALES DX STATUS',
+    repoPath: salesRepoPath,
+    type: 'product',
+    enabled: true,
+  }, options);
 
   const warnings = [
     'この cockpit は read-only 監視専用です。git add / commit / push / tag / reset / checkout は使いません。',
@@ -175,6 +273,24 @@ function collectLiveCockpitSnapshot(options = {}) {
     'DeepSeek / opencode はこの cockpit では使いません。',
   ];
 
+  const consoleContext = buildConsoleContextSummary({
+    version: PACKAGE.version,
+    currentMission: '☂️ KOSAME Console',
+    mode: 'Readonly',
+    projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
+    projects,
+    devOrchestra,
+    salesDx,
+    monitoredRepos: [devOrchestra, salesDx],
+    taskFeeder,
+    wishlist: taskFeeder.wishlist,
+    autoSave,
+    apiCost,
+    confirmationBridge: options.confirmationBridge || null,
+    humanGate,
+    warnings,
+  });
+
   const nextAction = taskFeeder.selectedTasks.length > 0
     ? taskFeeder.nextAction
     : warnings.some(w => w.includes('unavailable') || w.includes('missing'))
@@ -186,11 +302,15 @@ function collectLiveCockpitSnapshot(options = {}) {
   return {
     version: PACKAGE.version,
     generatedAt: new Date().toISOString(),
-    currentMission: '☂️ KOSAME Readonly Monitor',
+    currentMission: '☂️ KOSAME Console',
+    mode: 'Readonly',
     activeRepo: {
-      label: activeRepoPath === salesRepoPath ? 'kosame-sales-dx' : 'KOSAME Dev Orchestra',
+      label: projects.find((project) => project.repoPath === activeRepoPath)?.name
+        || (activeRepoPath === salesRepoPath ? 'Sales DX' : 'KOSAME Dev Orchestra'),
       path: activeRepoPath,
     },
+    projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
+    projects,
     monitoredRepos: [devOrchestra, salesDx],
     devOrchestra,
     salesDx,
@@ -199,6 +319,9 @@ function collectLiveCockpitSnapshot(options = {}) {
     apiCost,
     taskFeeder,
     wishlist: taskFeeder.wishlist,
+    confirmationBridge: options.confirmationBridge || null,
+    consoleContextSummary: consoleContext.summary,
+    consoleContextStatus: consoleContext.status,
     humanGate,
     warnings,
     nextAction,
@@ -214,4 +337,5 @@ if (require.main === module) {
 module.exports = {
   collectLiveCockpitSnapshot,
   READ_ONLY_COMMANDS,
+  loadProjectRegistry,
 };

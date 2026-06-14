@@ -1,0 +1,20 @@
+[
+  {
+    "id": "dev-orchestra",
+    "name": "KOSAME Dev Orchestra",
+    "shortName": "DEV ORCHESTRA",
+    "statusTitle": "DEV ORCHESTRA STATUS",
+    "repoPath": "/home/lavie/kosame-dev-orchestra",
+    "type": "dev-os",
+    "enabled": true
+  },
+  {
+    "id": "sales-dx",
+    "name": "Sales DX",
+    "shortName": "SALES DX",
+    "statusTitle": "SALES DX STATUS",
+    "repoPath": "/home/lavie/repos/kosame-sales-dx",
+    "type": "product",
+    "enabled": true
+  }
+]

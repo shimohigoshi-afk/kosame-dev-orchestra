@@ -68,7 +68,7 @@ function includesAny(text, needles) {
 
 console.log('=== v110.83 task vault / autosave / cost meter smoke ===');
 
-assert.equal(pkg.version, '110.83.0', `package version must be 110.83.0 (got ${pkg.version})`);
+assert.ok(pkg.version >= '110.83.0', `package version must be >= 110.83.0 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-83'], 'smoke:v110-83 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-83'), 'verify must include smoke:v110-83');
 console.log('  PASS: package.json version and script wiring');

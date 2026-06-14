@@ -12,6 +12,7 @@ const DEFAULT_TASK_VAULT_DIR = path.join(os.homedir(), '.kosame', 'task-vault');
 const JSONL_NAMES = {
   tasks: 'tasks.jsonl',
   decisions: 'decisions.jsonl',
+  wishlist: 'wishlist.jsonl',
 };
 
 const REDACTION_RULES = [
@@ -37,6 +38,7 @@ function getTaskVaultPaths(taskVaultDir = resolveTaskVaultDir()) {
     currentState: path.join(root, 'current-state.json'),
     tasksJsonl: path.join(root, JSONL_NAMES.tasks),
     decisionsJsonl: path.join(root, JSONL_NAMES.decisions),
+    wishlistJsonl: path.join(root, JSONL_NAMES.wishlist),
     costLedgerJsonl: path.join(root, 'cost-ledger.jsonl'),
     costSummaryJson: path.join(root, 'cost-summary.json'),
     autosavesDir: path.join(root, 'autosaves'),
@@ -86,6 +88,26 @@ function readJson(filePath) {
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch {
     return null;
+  }
+}
+
+function readJsonlRecords(filePath) {
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    return fs.readFileSync(filePath, 'utf8')
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        try {
+          return JSON.parse(line);
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
   }
 }
 
@@ -206,6 +228,7 @@ function buildCurrentStateRecord(input = {}) {
     handoffMemo: input.handoffMemo || '',
     plannedFiles: Array.isArray(input.plannedFiles) ? input.plannedFiles : [],
     taskLists,
+    wishlistCount: Number.isFinite(Number(input.wishlistCount)) ? Number(input.wishlistCount) : 0,
     decisions: Array.isArray(input.decisions) ? input.decisions : [],
     safetyWarnings: Array.isArray(input.safetyWarnings) ? input.safetyWarnings : [],
     currentTaskCount: countCurrentTasks(taskLists),
@@ -303,6 +326,7 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
   const paths = getTaskVaultPaths(root);
   const currentState = readJson(paths.currentState);
   const taskLists = currentState?.taskLists || createTaskLists(currentState || {});
+  const wishlistRecords = readJsonlRecords(paths.wishlistJsonl);
   const warnings = [
     ...(Array.isArray(currentState?.safetyWarnings) ? currentState.safetyWarnings : []),
   ];
@@ -314,6 +338,7 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
   const latestCheckpointAt = currentState?.latestCheckpointAt || newestEntryTime(paths.checkpointsDir);
   const handoffExists = fs.existsSync(paths.latestHandoff);
   const currentTaskCount = countCurrentTasks(taskLists);
+  const wishlistCount = currentState?.wishlistCount || wishlistRecords.length;
   const warningCount = warnings.length;
 
   const status = !fs.existsSync(root)
@@ -331,12 +356,14 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
     safetyWarnings: warnings,
     currentTaskCount,
     taskLists,
+    wishlistCount,
     currentState,
     currentMission: currentState?.currentMission || 'KOSAME Task Vault & Auto Save',
     targetRepo: currentState?.targetRepo || 'unknown',
     assignedAI: currentState?.assignedAI || 'unknown',
     lastGitStatus: currentState?.lastGitStatus || null,
     lastVerifyResult: currentState?.lastVerifyResult || null,
+    wishlistCount: currentState?.wishlistCount || 0,
     lastSavedAt: currentState?.lastSavedAt || currentState?.savedAt || null,
     latestCheckpointAt,
     latestAutosaveAt,
@@ -345,9 +372,69 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
     currentStatePath: paths.currentState,
     tasksJsonlPath: paths.tasksJsonl,
     decisionsJsonlPath: paths.decisionsJsonl,
+    wishlistJsonlPath: paths.wishlistJsonl,
     costLedgerPath: paths.costLedgerJsonl,
     costSummaryPath: paths.costSummaryJson,
   };
+}
+
+function appendWishlistRecord(taskVaultDir, wishlistRecord) {
+  const paths = ensureTaskVaultLayout(taskVaultDir);
+  const now = new Date().toISOString();
+  const sanitized = sanitizeRecord(wishlistRecord || {});
+  const record = {
+    version: PACKAGE.version,
+    recordType: 'wishlist',
+    savedAt: now,
+    status: sanitized.value.status || 'pending',
+    ...sanitized.value,
+    safetyWarnings: sanitized.warnings.map(w => `redacted ${w.path || 'value'} (${w.categories.join(', ')})`),
+  };
+  appendJsonl(paths.wishlistJsonl, record);
+  return { path: paths.wishlistJsonl, record };
+}
+
+function readTaskRecords(taskVaultDir = resolveTaskVaultDir()) {
+  const root = resolveTaskVaultDir(taskVaultDir);
+  const paths = getTaskVaultPaths(root);
+  const taskRecords = readJsonlRecords(paths.tasksJsonl);
+  if (taskRecords.length > 0) return taskRecords;
+
+  const currentState = readJson(paths.currentState);
+  const taskLists = currentState?.taskLists || createTaskLists(currentState || {});
+  const fallbackRecords = [];
+  const addRecords = (items, status) => {
+    (Array.isArray(items) ? items : []).forEach((item, index) => {
+      if (item == null) return;
+      if (typeof item === 'object') {
+        fallbackRecords.push({
+          recordType: 'task',
+          taskId: String(item.taskId || item.id || `${status}-${index + 1}`),
+          ...item,
+          status: item.status || status,
+        });
+        return;
+      }
+      fallbackRecords.push({
+        recordType: 'task',
+        taskId: `${status}-${index + 1}`,
+        title: String(item),
+        status,
+      });
+    });
+  };
+
+  addRecords(taskLists.pending, 'ready');
+  addRecords(taskLists.inProgress, 'in_progress');
+  addRecords(taskLists.hold, 'blocked');
+  addRecords(taskLists.completed, 'done');
+  return fallbackRecords;
+}
+
+function readWishlistRecords(taskVaultDir = resolveTaskVaultDir()) {
+  const root = resolveTaskVaultDir(taskVaultDir);
+  const paths = getTaskVaultPaths(root);
+  return readJsonlRecords(paths.wishlistJsonl);
 }
 
 function createTaskVault(taskVaultDir = resolveTaskVaultDir()) {
@@ -357,10 +444,13 @@ function createTaskVault(taskVaultDir = resolveTaskVaultDir()) {
     saveCurrentState: (state) => saveCurrentState(paths.root, state),
     appendTaskRecord: (taskRecord) => appendTaskRecord(paths.root, taskRecord),
     appendDecisionRecord: (decisionRecord) => appendDecisionRecord(paths.root, decisionRecord),
+    appendWishlistRecord: (wishlistRecord) => appendWishlistRecord(paths.root, wishlistRecord),
     saveAutoSaveSnapshot: (snapshot) => saveAutoSaveSnapshot(paths.root, snapshot),
     saveCheckpointSnapshot: (snapshot) => saveCheckpointSnapshot(paths.root, snapshot),
     writeHandoffMarkdown: (text) => writeHandoffMarkdown(paths.root, text),
     readOverview: () => readTaskVaultOverview(paths.root),
+    readTaskRecords: () => readTaskRecords(paths.root),
+    readWishlistRecords: () => readWishlistRecords(paths.root),
   };
 }
 
@@ -378,11 +468,15 @@ module.exports = {
   saveCurrentState,
   appendTaskRecord,
   appendDecisionRecord,
+  appendWishlistRecord,
   saveAutoSaveSnapshot,
   saveCheckpointSnapshot,
   writeHandoffMarkdown,
   sanitizePlainText,
   readTaskVaultOverview,
+  readJsonlRecords,
+  readTaskRecords,
+  readWishlistRecords,
   createTaskVault,
 };
 

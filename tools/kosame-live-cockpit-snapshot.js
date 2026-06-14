@@ -11,6 +11,7 @@ const SALES_DX_REPO = '/home/lavie/repos/kosame-sales-dx';
 const PACKAGE = require('../package.json');
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
 const { buildApiCostSnapshot } = require('./kosame-cost-meter');
+const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
 
 const READ_ONLY_COMMANDS = new Set([
   'git status -sb',
@@ -127,6 +128,11 @@ function collectLiveCockpitSnapshot(options = {}) {
   const taskVault = taskVaultSnapshot.taskVault;
   const autoSave = taskVaultSnapshot.autoSave;
   const apiCost = buildApiCostSnapshot(taskVaultDir);
+  const taskFeeder = buildTaskFeederSnapshot({
+    taskVaultDir,
+    currentVersion: PACKAGE.version,
+    currentMission: '☂️ KOSAME Readonly Monitor',
+  });
 
   const devOrchestra = buildRepoState({
     name: 'dev-orchestra',
@@ -152,6 +158,9 @@ function collectLiveCockpitSnapshot(options = {}) {
     apiCost.warningCount > 0
       ? `API Cost Meter に ${apiCost.warningCount} 件の警告があります。`
       : null,
+    taskFeeder.warnings.length > 0
+      ? `Task Feeder に ${taskFeeder.warnings.length} 件の警告があります。`
+      : null,
     ...devOrchestra.warnings,
     ...salesDx.warnings,
   ].filter(Boolean);
@@ -166,9 +175,11 @@ function collectLiveCockpitSnapshot(options = {}) {
     'DeepSeek / opencode はこの cockpit では使いません。',
   ];
 
-  const nextAction = warnings.some(w => w.includes('unavailable') || w.includes('missing'))
-    ? 'read-only のまま、取得できないフィードの状態を確認してください。'
-    : (devOrchestra.dirty || salesDx.dirty)
+  const nextAction = taskFeeder.selectedTasks.length > 0
+    ? taskFeeder.nextAction
+    : warnings.some(w => w.includes('unavailable') || w.includes('missing'))
+      ? 'read-only のまま、取得できないフィードの状態を確認してください。'
+      : (devOrchestra.dirty || salesDx.dirty)
       ? 'changed files と staged files を見直し、書き込み前の人間承認を待ってください。'
       : '引き続き passive monitoring を続けてください。この cockpit からの書き込みはできません。';
 
@@ -186,6 +197,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     taskVault,
     autoSave,
     apiCost,
+    taskFeeder,
+    wishlist: taskFeeder.wishlist,
     humanGate,
     warnings,
     nextAction,

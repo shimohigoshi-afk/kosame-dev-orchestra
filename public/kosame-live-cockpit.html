@@ -420,6 +420,81 @@ h1 {
       </article>
     </section>
 
+    <section class="grid" style="margin-top:14px">
+      <article class="panel">
+        <h2>NEXT TASK FEED</h2>
+        <p class="lead">Task Vault から今やるべき 1〜3 件だけを選び、危険ゲートや human gate を分けて表示します。</p>
+        <div class="vault-grid">
+          <div class="metric">
+            <div class="label">次にやる候補</div>
+            <div class="value" id="feed-selected-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">blocked 件数</div>
+            <div class="value" id="feed-blocked-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">human gate 待ち</div>
+            <div class="value" id="feed-human-gate-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">最終 feed 生成</div>
+            <div class="value" id="feed-last-generated">読み込み中...</div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="subpanel">
+            <h3>今やる候補 1〜3件</h3>
+            <div id="feed-selected" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>human gate 候補</h3>
+            <div id="feed-human-gate" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>危険ゲート / 注意</h3>
+            <div id="feed-warnings" class="mono">読み込み中...</div>
+          </div>
+        </div>
+      </article>
+      <article class="panel">
+        <h2>WISHLIST / LATER IDEAS</h2>
+        <p class="lead">今すぐやらないアイデアを優しく保留し、提案タイミングが来たら拾えるようにします。</p>
+        <div class="vault-grid">
+          <div class="metric">
+            <div class="label">保留中アイデア</div>
+            <div class="value" id="wishlist-pending-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">そろそろ提案候補</div>
+            <div class="value" id="wishlist-later-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">全 wishlist</div>
+            <div class="value" id="wishlist-total-count">読み込み中...</div>
+          </div>
+          <div class="metric">
+            <div class="label">最終更新</div>
+            <div class="value" id="wishlist-last-updated">読み込み中...</div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="subpanel">
+            <h3>保留中アイデア</h3>
+            <div id="wishlist-pending" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>そろそろ提案候補</h3>
+            <div id="wishlist-later" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel">
+            <h3>次に提案する理由</h3>
+            <div id="wishlist-guidance" class="mono">読み込み中...</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
     <section class="footer">
       <article class="panel">
         <h2>HUMAN GATE</h2>
@@ -578,8 +653,10 @@ function renderTaskVault(taskVault, autoSave) {
     `currentState: ${vault.currentStatePath || '—'}`,
     `tasks.jsonl: ${vault.tasksJsonlPath || '—'}`,
     `decisions.jsonl: ${vault.decisionsJsonlPath || '—'}`,
+    `wishlist.jsonl: ${vault.wishlistJsonlPath || '—'}`,
     `handoff: ${vault.handoffPath || '—'}`,
     `warningCount: ${vault.warningCount ?? 0}`,
+    `wishlistCount: ${vault.wishlistCount ?? 0}`,
   ];
   text(document.getElementById('vault-details'), vaultDetails.join('\n'));
 
@@ -595,6 +672,139 @@ function renderTaskVault(taskVault, autoSave) {
     `handoffExists: ${save.handoffExists ? 'yes' : 'no'}`,
   ];
   text(document.getElementById('autosave-details'), autosaveDetails.join('\n'));
+}
+
+function renderCardStack(node, items, emptyLabel, buildTitle, buildBody) {
+  node.innerHTML = '';
+  if (!items || !items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'mono';
+    empty.textContent = emptyLabel || '—';
+    node.appendChild(empty);
+    return;
+  }
+
+  for (const item of items) {
+    const subpanel = document.createElement('div');
+    subpanel.className = 'subpanel';
+    const h3 = document.createElement('h3');
+    h3.textContent = typeof buildTitle === 'function' ? buildTitle(item) : '項目';
+    const body = document.createElement('div');
+    body.className = 'mono';
+    body.textContent = typeof buildBody === 'function' ? buildBody(item) : String(item);
+    subpanel.appendChild(h3);
+    subpanel.appendChild(body);
+    node.appendChild(subpanel);
+  }
+}
+
+function joinMaybeList(value) {
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+  if (value == null || value === '') return '—';
+  return String(value);
+}
+
+function formatTaskFeedItem(task) {
+  return [
+    `taskId: ${task.taskId || '—'}`,
+    `title: ${task.title || '—'}`,
+    `project: ${task.project || '—'}`,
+    `repo: ${task.repo || '—'}`,
+    `priority: ${task.priority || '—'} / status: ${task.status || '—'}`,
+    `risk: ${task.risk || '—'} / costTier: ${task.costTierEstimate || '—'}`,
+    `recommendedWorker: ${task.recommendedWorker || '—'}`,
+    `forbiddenWorkers: ${joinMaybeList(task.forbiddenWorkers)}`,
+    `whyNow: ${task.whyNow || '—'}`,
+    `nextQuestionForJunya: ${task.nextQuestionForJunya || '—'}`,
+    `recommendedAction: ${task.recommendedAction || '—'}`,
+    `humanGateRequired: ${task.humanGateRequired ? 'yes' : 'no'}`,
+    `dependencies: ${joinMaybeList(task.dependencies)}`,
+    `allowedFiles: ${joinMaybeList(task.allowedFiles)}`,
+    `expectedOutput: ${task.expectedOutput || '—'}`,
+    task.safetyWarnings && task.safetyWarnings.length ? `safetyWarnings: ${task.safetyWarnings.join(' / ')}` : '',
+  ].filter(Boolean).join('\n');
+}
+
+function formatWishlistItem(item) {
+  return [
+    `wishlistId: ${item.wishlistId || '—'}`,
+    `title: ${item.title || '—'}`,
+    `summary: ${item.summary || '—'}`,
+    `sourceContext: ${item.sourceContext || '—'}`,
+    `relatedVersion: ${item.relatedVersion || '—'}`,
+    `relatedProject: ${item.relatedProject || '—'}`,
+    `status: ${item.status || '—'} / priority: ${item.priority || '—'}`,
+    `timingHint: ${item.timingHint || '—'}`,
+    `whyNotNow: ${item.whyNotNow || '—'}`,
+    `suggestedAfter: ${item.suggestedAfter || '—'}`,
+    `relatedCapabilities: ${joinMaybeList(item.relatedCapabilities)}`,
+    `risk: ${item.risk || '—'} / costTier: ${item.costTierEstimate || '—'}`,
+    `createdAt: ${item.createdAt || '—'} / updatedAt: ${item.updatedAt || '—'}`,
+    item.safetyWarnings && item.safetyWarnings.length ? `safetyWarnings: ${item.safetyWarnings.join(' / ')}` : '',
+  ].filter(Boolean).join('\n');
+}
+
+function renderTaskFeeder(taskFeeder) {
+  const feed = taskFeeder || {};
+  text(document.getElementById('feed-last-generated'), feed.lastFeedGeneratedAt || feed.generatedAt || '—');
+  const selectedCount = Number.isFinite(Number(feed.selectedCount)) ? Number(feed.selectedCount) : (feed.selectedTasks || []).length;
+  const blockedCount = Number.isFinite(Number(feed.blockedCount)) ? Number(feed.blockedCount) : (feed.blockedTasks || []).length;
+  const humanGateCount = Number.isFinite(Number(feed.humanGateWaitingCount)) ? Number(feed.humanGateWaitingCount) : (feed.humanGateTasks || []).length;
+  text(document.getElementById('feed-selected-count'), String(selectedCount));
+  text(document.getElementById('feed-blocked-count'), String(blockedCount));
+  text(document.getElementById('feed-human-gate-count'), String(humanGateCount));
+
+  renderCardStack(
+    document.getElementById('feed-selected'),
+    feed.selectedTasks || [],
+    '今やる候補はまだありません。',
+    (task) => `${task.taskId || 'task'} / ${task.priority || 'P?'}`,
+    formatTaskFeedItem,
+  );
+
+  renderCardStack(
+    document.getElementById('feed-human-gate'),
+    feed.humanGateTasks || [],
+    'human gate 待ちのタスクはありません。',
+    (task) => `${task.taskId || 'task'} / ${task.risk || 'risk?'}`,
+    formatTaskFeedItem,
+  );
+
+  text(
+    document.getElementById('feed-warnings'),
+    feed.warnings && feed.warnings.length
+      ? feed.warnings.join('\n')
+      : '危険ゲートの追加注意はありません。'
+  );
+}
+
+function renderWishlist(wishlist) {
+  const list = wishlist || {};
+  text(document.getElementById('wishlist-total-count'), String(list.totalCount ?? 0));
+  text(document.getElementById('wishlist-pending-count'), String(list.pendingCount ?? 0));
+  text(document.getElementById('wishlist-later-count'), String(list.laterIdeas ? list.laterIdeas.length : 0));
+  text(document.getElementById('wishlist-last-updated'), list.lastUpdatedAt || '—');
+
+  renderCardStack(
+    document.getElementById('wishlist-pending'),
+    list.pending || [],
+    '保留中アイデアはありません。',
+    (item) => `${item.wishlistId || 'wishlist'} / ${item.priority || 'P?'}`,
+    formatWishlistItem,
+  );
+
+  renderCardStack(
+    document.getElementById('wishlist-later'),
+    list.laterIdeas || [],
+    'そろそろ提案候補はありません。',
+    (item) => `${item.wishlistId || 'wishlist'} / ${item.timingHint || 'timing?'}`,
+    formatWishlistItem,
+  );
+
+  const nextLine = (list.laterIdeas || []).length
+    ? 'これ良いアイデアですっ。ただ、今は v110.84 の本線を先に固めた方が安全です。Wishlist に保存して、次のタイミングでこさめから提案しますね☂️'
+    : '現時点では新しい提案候補はありません。';
+  text(document.getElementById('wishlist-guidance'), nextLine);
 }
 
 function formatMoneyUsd(value) {
@@ -752,6 +962,8 @@ async function loadSnapshot() {
     renderRepoPanel(sales, 'sales-panel');
     renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
     renderApiCost(snapshot.apiCost || {});
+    renderTaskFeeder(snapshot.taskFeeder || {});
+    renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
     text(

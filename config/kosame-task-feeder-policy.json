@@ -1,0 +1,38 @@
+{
+  "version": "110.84.0",
+  "maxCandidates": 3,
+  "priorityOrder": {
+    "P0": 0,
+    "P1": 1,
+    "P2": 2,
+    "P3": 3,
+    "default": 9
+  },
+  "riskOrder": {
+    "low": 0,
+    "medium": 1,
+    "high": 4,
+    "critical": 6,
+    "unknown": 2
+  },
+  "costTierOrder": {
+    "free": 0,
+    "ultra_low": 1,
+    "low": 2,
+    "medium": 3,
+    "high": 6,
+    "approval_required": 9,
+    "unknown": 3
+  },
+  "blockedStatuses": ["blocked", "done", "completed", "closed", "rejected", "archived"],
+  "humanGateStatuses": ["human_gate", "approval_required", "waiting_human"],
+  "readyStatuses": ["ready"],
+  "suggestionKeywords": ["そろそろ", "次", "next", "soon", "ready", "今", "提案"],
+  "sensitivitySignals": ["営業DX", "sales-dx", "transcriber", "Secret", "API key", ".env", "credentials", "顧客", "customer", "DeepSeek", "opencode"],
+  "avoidWorkers": ["DeepSeek", "opencode"],
+  "currentVersionHint": "110.84.0",
+  "laterSuggestionRule": {
+    "mustBePending": true,
+    "allowStatuses": ["pending", "suggested"]
+  }
+}

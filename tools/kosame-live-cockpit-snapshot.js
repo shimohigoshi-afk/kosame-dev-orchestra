@@ -102,6 +102,26 @@ function resolveVersionContext() {
   };
 }
 
+function formatLocalTimestamp(isoString) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '';
+  try {
+    const formatted = new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
+    return `${formatted.replace(/\//g, '-')} JST`;
+  } catch {
+    return date.toISOString();
+  }
+}
+
 function fallbackProjectRegistry() {
   return [
     {
@@ -275,7 +295,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   }, options);
 
   const warnings = [
-    'この cockpit は read-only 監視専用です。git add / commit / push / tag / reset / checkout は使いません。',
+    'この Console は read-only 監視専用です。git add / commit / push / tag / reset / checkout は使いません。',
     'Secret / API key / .env / credentials の中身は読みません。',
     taskVault.status !== 'ok'
       ? `Task Vault は ${taskVault.status.toUpperCase()} 状態です。`
@@ -303,7 +323,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   const humanGate = [
     '書き込み操作の前には必ず人間承認が必要です。',
     'commit 候補に進む前に changed files と staged files を確認してください。',
-    'DeepSeek / opencode はこの cockpit では使いません。',
+    'DeepSeek / opencode はこの Console では使いません。',
   ];
 
   const consoleContext = buildConsoleContextSummary({
@@ -336,11 +356,13 @@ function collectLiveCockpitSnapshot(options = {}) {
       ? 'read-only のまま、取得できないフィードの状態を確認してください。'
       : (devOrchestra.dirty || salesDx.dirty)
       ? 'changed files と staged files を見直し、書き込み前の人間承認を待ってください。'
-      : '引き続き passive monitoring を続けてください。この cockpit からの書き込みはできません。';
+      : '引き続き passive monitoring を続けてください。この Console からの書き込みはできません。';
 
+  const generatedAt = new Date().toISOString();
   return {
     version: PACKAGE.version,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
+    generatedAtLocal: formatLocalTimestamp(generatedAt),
     currentMission: '☂️ KOSAME Console',
     mode: 'Readonly',
     activeRepo: {

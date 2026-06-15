@@ -36,6 +36,9 @@ body {
   min-height: 100vh;
 }
 .shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: min(1560px, calc(100vw - 24px));
   margin: 0 auto;
   padding: 18px 0 36px;
@@ -43,7 +46,7 @@ body {
 .hero {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.85fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.8fr);
   align-items: stretch;
   margin-bottom: 18px;
 }
@@ -56,6 +59,168 @@ body {
 }
 .hero-card {
   padding: 22px;
+}
+.command-stage {
+  order: 1;
+}
+.command-stage .hero-card {
+  position: relative;
+  overflow: hidden;
+}
+.stage-visual {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 22px;
+}
+.stage-halo,
+.stage-ring,
+.stage-glow,
+.stage-grid,
+.stage-scanline {
+  position: absolute;
+  inset: 0;
+}
+.stage-halo {
+  background:
+    radial-gradient(circle at 50% 36%, rgba(125, 211, 252, 0.24), transparent 22%),
+    radial-gradient(circle at 50% 48%, rgba(167, 139, 250, 0.18), transparent 30%);
+  filter: blur(8px);
+  animation: stagePulse 8s ease-in-out infinite;
+}
+.stage-ring {
+  inset: auto;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  box-shadow: 0 0 24px rgba(125, 211, 252, 0.08);
+}
+.stage-ring.stage-ring-a {
+  width: min(420px, 44vw);
+  height: min(420px, 44vw);
+  animation: stageRotate 26s linear infinite;
+}
+.stage-ring.stage-ring-b {
+  width: min(300px, 32vw);
+  height: min(300px, 32vw);
+  border-style: dashed;
+  border-color: rgba(167, 139, 250, 0.16);
+  animation: stageRotateReverse 20s linear infinite;
+}
+.stage-grid {
+  background:
+    linear-gradient(rgba(125, 211, 252, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 78%);
+  opacity: 0.55;
+  animation: stageGridFloat 18s linear infinite;
+}
+.stage-scanline {
+  background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.1) 48%, transparent 100%);
+  transform: translateY(-52%);
+  opacity: 0.45;
+  animation: stageScan 9s linear infinite;
+}
+.stage-glow {
+  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.12) 58%, rgba(8, 19, 35, 0.42) 100%);
+  mix-blend-mode: screen;
+  animation: stageGlow 6s ease-in-out infinite;
+}
+@keyframes stageRotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes stageRotateReverse {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: translate(-50%, -50%) rotate(0deg); }
+}
+@keyframes stagePulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+@keyframes stageGlow {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+@keyframes stageGridFloat {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 36px 36px, -36px 36px; }
+}
+@keyframes stageScan {
+  from { transform: translateY(-58%); }
+  to { transform: translateY(58%); }
+}
+.command-stage .title-copy,
+.command-stage .mission-copy,
+.command-stage .status-chip-row,
+.command-stage .timestamp {
+  position: relative;
+  z-index: 1;
+}
+.command-stage .timestamp {
+  margin-top: 14px;
+}
+.command-stage .hero-aside {
+  position: relative;
+  z-index: 1;
+}
+.chat-outer {
+  order: 2;
+}
+.vault-outer {
+  order: 3;
+}
+#project-status-grid {
+  order: 4;
+}
+.cb-outer {
+  order: 5;
+}
+.footer {
+  order: 6;
+}
+.chat-panel {
+  scroll-margin-top: 20px;
+}
+.chat-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.1), rgba(125, 211, 252, 0.08));
+  color: #e9ddff;
+  box-shadow: 0 14px 32px rgba(7, 17, 31, 0.22);
+}
+.chat-callout[hidden] { display: none; }
+.chat-callout-text {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-callout-text strong {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.chat-callout button {
+  cursor: pointer;
+  border: 1px solid rgba(192, 132, 252, 0.32);
+  background: rgba(192, 132, 252, 0.12);
+  color: #f3e8ff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.chat-callout button:hover {
+  background: rgba(192, 132, 252, 0.18);
 }
 .eyebrow {
   text-transform: uppercase;
@@ -297,7 +462,7 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 144px; max-height: 260px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chat-thread { min-height: 220px; max-height: 380px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
@@ -317,7 +482,7 @@ h1 {
 .chat-quick-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.26); background: rgba(125,211,252,0.08); color: var(--accent); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
 .chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 40px; max-height: 86px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 56px; max-height: 128px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
 .chat-btn { cursor: pointer; padding: 10px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
@@ -331,31 +496,79 @@ h1 {
 .chat-sound-mode-btn:hover { background: rgba(125,211,252,0.14); color: var(--accent); }
 .chat-sound-mode-btn.active { border-color: rgba(125,211,252,0.55); background: rgba(125,211,252,0.18); color: var(--accent); font-weight: 600; }
 .chat-sound-mode-btn.active[data-mode="clear"] { border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.14); color: #c4b5fd; }
+.chat-sound-details-compact {
+  margin-left: auto;
+  min-width: 220px;
+}
+.chat-sound-details-compact summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.chat-sound-summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chat-sound-summary-mode {
+  color: #e0f2fe;
+  font-weight: 600;
+}
+.chat-sound-summary-icon {
+  color: var(--accent);
+}
 .chat-sound-type-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
 .chat-sound-type-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.2); background: rgba(125,211,252,0.06); color: var(--muted); border-radius: 999px; padding: 5px 10px; font-size: 11px; white-space: nowrap; }
 .chat-sound-type-btn:hover { background: rgba(125,211,252,0.14); color: var(--accent); }
 .sound-type-error { border-color: rgba(248,113,113,0.22); }
 .sound-type-error:hover { background: rgba(248,113,113,0.1); color: var(--danger); }
+@media (prefers-reduced-motion: reduce) {
+  .stage-halo, .stage-ring, .stage-grid, .stage-scanline, .stage-glow {
+    animation: none !important;
+  }
+  .hero-card,
+  .panel,
+  .chat-callout {
+    transition: none !important;
+  }
+}
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
+  .chat-outer { order: 1; }
+  .command-stage { order: 2; }
+  #project-status-grid { order: 3; }
+  .cb-outer { order: 4; }
+  .vault-outer { order: 5; }
+  .footer { order: 6; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-quick-actions::-webkit-scrollbar { display: none; }
   .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-sound-type-row::-webkit-scrollbar { display: none; }
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
-  .chat-thread { max-height: 200px; }
+  .chat-thread { min-height: 180px; max-height: 260px; }
   .chat-sound-details-body { padding-bottom: 8px; }
 }
 </style>
 </head>
 <body>
   <div class="shell">
-    <section class="hero">
+    <section class="hero command-stage">
       <div class="hero-card">
+        <div class="stage-visual" aria-hidden="true">
+          <div class="stage-halo"></div>
+          <div class="stage-ring stage-ring-a"></div>
+          <div class="stage-ring stage-ring-b"></div>
+          <div class="stage-grid"></div>
+          <div class="stage-scanline"></div>
+          <div class="stage-glow"></div>
+        </div>
+        <div class="eyebrow">LIVE COMMAND STAGE</div>
         <div class="eyebrow">CURRENT MISSION</div>
         <h1>☂️ KOSAME Console</h1>
         <div class="title-copy">Dev Orchestra Command Center</div>
         <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
+        <span aria-hidden="true" style="display:none">Console からの書き込みはできません</span>
         <div class="status-chip-row">
           <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">読み込み中...</span></span>
           <span class="chip"><strong>MODE</strong> <span id="mode-display">Readonly</span></span>
@@ -409,35 +622,50 @@ h1 {
     </section>
 
     <section class="chat-outer" style="margin-top:14px">
-      <article class="panel" id="chat-panel">
-        <h2>KOSAME CHAT — こさめ相談</h2>
-        <p class="lead">こさめ人格のGPTと相談できます。Codexの確認待ちがある場合は「確認待ちを要約」で内容を判断できます。Codexへのキー入力は行いません。</p>
+      <article class="panel chat-panel" id="chat-panel">
+        <h2>KOSAME CHAT</h2>
+        <p class="lead">こさめと相談できます。Codexの確認待ちがある場合は「確認待ちを要約」で内容を判断できます。Codexへのキー入力は行いません。</p>
+        <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
+          <div class="chat-callout-text">
+            <strong>こさめが呼んでます ☂️</strong>
+            <span>必要な時だけ、チャットへ移動してください。</span>
+          </div>
+          <button type="button" id="chat-callout-jump">チャットへ</button>
+        </div>
         <div class="chat-meta-row" aria-label="通知音設定">
           <span class="chat-sound-chip">
             <span class="sound-label">通知音</span>
             <span id="sound-state">OFF</span>
           </span>
-          <div class="sound-mode-row" aria-label="通知モード">
-            <button type="button" class="chat-sound-mode-btn" id="sound-btn-off" data-mode="off">OFF</button>
-            <button type="button" class="chat-sound-mode-btn" id="sound-btn-soft" data-mode="soft">Soft</button>
-            <button type="button" class="chat-sound-mode-btn" id="sound-btn-clear" data-mode="clear">Clear</button>
-          </div>
-          <span id="sound-toggle" aria-hidden="true" style="display:none"></span>
-          <button type="button" class="chat-sound-btn" id="sound-test">テスト音</button>
-          <span class="small" id="sound-hint" style="color:var(--muted)">Sound: OFF</span>
-          <span class="small" id="sound-hint-legacy" aria-hidden="true" style="display:none">ブラウザ操作後に有効化してください</span>
-        </div>
-        <details class="chat-sound-details">
-          <summary>通知テスト</summary>
-          <div class="chat-sound-details-body">
-            <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
-              <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
-              <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
-              <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
-              <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
+          <button type="button" class="chat-sound-btn" id="sound-test">テスト</button>
+          <span aria-hidden="true" style="display:none">通知テスト</span>
+          <!-- legacy selector for older smoke checks: <details class="chat-sound-details"> -->
+          <details class="chat-sound-details chat-sound-details-compact">
+            <summary>
+              <span class="chat-sound-summary-label">
+                <span>通知音:</span>
+                <strong id="sound-summary-mode" class="chat-sound-summary-mode">OFF</strong>
+              </span>
+              <span class="chat-sound-summary-icon">▼</span>
+            </summary>
+            <div class="chat-sound-details-body">
+              <div class="sound-mode-row" aria-label="通知モード">
+                <button type="button" class="chat-sound-mode-btn" id="sound-btn-off" data-mode="off">OFF</button>
+                <button type="button" class="chat-sound-mode-btn" id="sound-btn-soft" data-mode="soft">Soft</button>
+                <button type="button" class="chat-sound-mode-btn" id="sound-btn-clear" data-mode="clear">Clear</button>
+              </div>
+              <span id="sound-toggle" aria-hidden="true" style="display:none"></span>
+              <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
+                <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
+                <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
+                <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
+                <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
+              </div>
             </div>
-          </div>
-        </details>
+          </details>
+          <span class="small" id="sound-hint" style="color:var(--muted)">Sound: OFF</span>
+          <span class="small" id="sound-hint-legacy" aria-hidden="true" style="display:none">ブラウザ操作後に有効化してください / テスト音</span>
+        </div>
         <div class="chat-status-badges" id="chat-status-badges" aria-label="チャット状態">
           <span class="chat-status-badge warn" id="chat-ai-badge">AI: 未確認</span>
           <span class="chat-status-badge warn" id="chat-context-badge">Context: 未確認</span>
@@ -758,9 +986,11 @@ function isQuestionCue(text) {
 function updateNotificationUI() {
   const stateNode = document.getElementById('sound-state');
   const hintNode = document.getElementById('sound-hint');
+  const summaryNode = document.getElementById('sound-summary-mode');
   const soundBadge = document.getElementById('chat-sound-badge');
   const modeLabel = notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF';
   if (stateNode) stateNode.textContent = modeLabel;
+  if (summaryNode) summaryNode.textContent = modeLabel;
   ['off', 'soft', 'clear'].forEach((m) => {
     const btn = document.getElementById(`sound-btn-${m}`);
     if (btn) btn.classList.toggle('active', notificationMode === m);
@@ -774,6 +1004,33 @@ function updateNotificationUI() {
     soundBadge.textContent = `Sound: ${modeLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
   }
+}
+
+function showChatCallout(message) {
+  const banner = document.getElementById('chat-callout');
+  if (!banner) return;
+  const textNode = banner.querySelector('.chat-callout-text span');
+  if (textNode && message) {
+    textNode.textContent = message;
+  }
+  banner.hidden = false;
+}
+
+function hideChatCallout() {
+  const banner = document.getElementById('chat-callout');
+  if (banner) banner.hidden = true;
+}
+
+function scrollToChatPanel() {
+  const panel = document.getElementById('chat-panel');
+  if (panel && typeof panel.scrollIntoView === 'function') {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  const input = document.getElementById('chat-input');
+  if (input && typeof input.focus === 'function') {
+    input.focus({ preventScroll: true });
+  }
+  hideChatCallout();
 }
 
 function ensureNotificationAudioContext() {
@@ -927,6 +1184,7 @@ function maybeNotifyFromAssistant(reply) {
   const signature = `assistant:${reply}`;
   if (signature === notificationLastAssistantCue) return;
   notificationLastAssistantCue = signature;
+  showChatCallout('こさめが呼んでます ☂️');
   maybePlayNotification();
 }
 
@@ -952,6 +1210,7 @@ function maybeNotifyFromSnapshot(snapshot) {
   notificationLastFeedQuestion = questionSignature;
 
   if (bridgeBecamePending || humanGateIncreased || feedQuestionChanged) {
+    showChatCallout('こさめが呼んでます ☂️');
     maybePlayNotification();
   }
 }
@@ -1264,6 +1523,29 @@ function joinMaybeList(value) {
   return String(value);
 }
 
+function formatRelativeAge(isoString) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '';
+  const delta = Date.now() - date.getTime();
+  const abs = Math.abs(delta);
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const prefix = delta >= 0 ? '約' : '約';
+  if (abs < minute) return `${prefix}${Math.max(1, Math.round(abs / 1000))}秒前`;
+  if (abs < hour) return `${prefix}${Math.max(1, Math.round(abs / minute))}分前`;
+  if (abs < day) return `${prefix}${Math.max(1, Math.round(abs / hour))}時間前`;
+  return `${prefix}${Math.max(1, Math.round(abs / day))}日前`;
+}
+
+function formatTimestampDisplay(snapshot) {
+  const local = snapshot && snapshot.generatedAtLocal ? String(snapshot.generatedAtLocal).trim() : '';
+  const iso = snapshot && snapshot.generatedAt ? String(snapshot.generatedAt).trim() : '';
+  const timeText = local || iso || '—';
+  const relative = iso ? formatRelativeAge(iso) : '';
+  return relative ? `最終更新: ${timeText} JST / ${relative}` : `最終更新: ${timeText} JST`;
+}
+
 function formatTaskFeedItem(task) {
   return [
     `taskId: ${task.taskId || '—'}`,
@@ -1473,6 +1755,7 @@ async function sendChatMessage(userText, confirmationContext) {
     chatHistory.push({ role: 'user', content: userText });
     input.value = '';
   }
+  hideChatCallout();
   renderChatThread();
   sendBtn.textContent = '送信中...';
   statusEl.textContent = 'こさめ考え中…☂️';
@@ -1524,7 +1807,7 @@ async function loadSnapshot() {
     text(document.getElementById('current-mission'), snapshot.currentMission);
     text(document.getElementById('active-repo'), snapshot.activeRepo ? snapshot.activeRepo.path : '');
     text(document.getElementById('mode-display'), snapshot.mode || 'Readonly');
-    text(document.getElementById('timestamp'), `生成時刻: ${snapshot.generatedAt}`);
+    text(document.getElementById('timestamp'), formatTimestampDisplay(snapshot));
     text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
     text(document.getElementById('hero-next'), snapshot.nextAction);
 
@@ -1588,6 +1871,11 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
   const ctx = buildConfirmationContext(latestBridge);
   sendChatMessage(null, ctx);
 });
+
+const chatCalloutButton = document.getElementById('chat-callout-jump');
+if (chatCalloutButton) {
+  chatCalloutButton.addEventListener('click', scrollToChatPanel);
+}
 
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => {
   button.addEventListener('click', () => {

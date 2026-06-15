@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const pkg = require('../package.json');
 const { buildConsoleContextSummary } = require('../tools/kosame-cockpit-context');
+const { isVersionAtLeast } = require('./version-compare');
 
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');
@@ -30,7 +31,7 @@ mustExist(contextPath);
 mustExist(chatServerPath);
 console.log('  PASS: required files exist');
 
-assert.ok(pkg.version >= '110.84.3', `package version must be >= 110.84.3 (got ${pkg.version})`);
+assert.ok(isVersionAtLeast(pkg.version, '110.84.3'), `package version must be >= 110.84.3 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-3'], 'smoke:v110-84-3 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-3'), 'verify must include smoke:v110-84-3');
 console.log('  PASS: package.json version and script wiring');

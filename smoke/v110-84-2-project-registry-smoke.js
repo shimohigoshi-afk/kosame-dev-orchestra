@@ -9,6 +9,7 @@ const pkg = require('../package.json');
 const { collectLiveCockpitSnapshot } = require('../tools/kosame-live-cockpit-snapshot');
 const chatServer = require('../tools/kosame-cockpit-chat-server');
 const { buildConsoleContextSummary } = require('../tools/kosame-cockpit-context');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -28,7 +29,7 @@ console.log('=== v110.84.2 project registry smoke ===');
 
 mustExist(CONFIG_PATH);
 mustExist(HTML_PATH);
-assert.ok(pkg.version >= '110.84.2', `package version must be >= 110.84.2 (got ${pkg.version})`);
+assert.ok(isVersionAtLeast(pkg.version, '110.84.2'), `package version must be >= 110.84.2 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-2'], 'smoke:v110-84-2 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-2'), 'verify must include smoke:v110-84-2');
 console.log('  PASS: package wiring and base files exist');

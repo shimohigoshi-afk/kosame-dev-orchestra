@@ -88,74 +88,75 @@ body {
 }
 .stage-halo {
   background:
-    radial-gradient(circle at 46% 34%, rgba(125, 211, 252, 0.18), transparent 18%),
-    radial-gradient(circle at 60% 44%, rgba(167, 139, 250, 0.14), transparent 24%),
-    radial-gradient(circle at 50% 58%, rgba(59, 130, 246, 0.12), transparent 34%);
+    radial-gradient(circle at 54% 42%, rgba(125, 211, 252, 0.08), transparent 24%),
+    radial-gradient(circle at 74% 34%, rgba(167, 139, 250, 0.07), transparent 22%),
+    radial-gradient(circle at 46% 64%, rgba(59, 130, 246, 0.06), transparent 32%);
   filter: blur(10px);
-  animation: stagePulse 10s ease-in-out infinite;
+  animation: stagePulse 14s ease-in-out infinite;
 }
 .stage-ring {
   inset: auto;
-  left: 50%;
+  left: 72%;
   top: 46%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(125, 211, 252, 0.10);
-  box-shadow: 0 0 20px rgba(125, 211, 252, 0.05);
+  border: 1px solid rgba(125, 211, 252, 0.05);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.03);
 }
 .stage-ring.stage-ring-a {
-  width: min(320px, 34vw);
-  height: min(320px, 34vw);
-  animation: stageRotate 28s linear infinite;
+  width: min(205px, 22vw);
+  height: min(205px, 22vw);
+  animation: stageRotate 34s linear infinite;
 }
 .stage-ring.stage-ring-b {
-  width: min(228px, 24vw);
-  height: min(228px, 24vw);
+  width: min(132px, 15vw);
+  height: min(132px, 15vw);
   border-style: dashed;
-  border-color: rgba(167, 139, 250, 0.14);
-  animation: stageRotateReverse 22s linear infinite;
+  border-color: rgba(167, 139, 250, 0.07);
+  animation: stageRotateReverse 28s linear infinite;
 }
 .stage-arc {
   background:
-    conic-gradient(from 220deg, transparent 0 30deg, rgba(125,211,252,0.22) 30deg 44deg, transparent 44deg 120deg, rgba(167,139,250,0.18) 120deg 136deg, transparent 136deg 300deg, rgba(59,130,246,0.16) 300deg 318deg, transparent 318deg 360deg);
-  mask: radial-gradient(circle at center, transparent 0 42%, rgba(0,0,0,0.95) 43% 57%, transparent 58%);
-  opacity: 0.72;
-  animation: stageArcSpin 24s linear infinite;
+    conic-gradient(from 210deg, transparent 0 34deg, rgba(125,211,252,0.13) 34deg 42deg, transparent 42deg 118deg, rgba(167,139,250,0.10) 118deg 128deg, transparent 128deg 304deg, rgba(59,130,246,0.08) 304deg 316deg, transparent 316deg 360deg);
+  mask: radial-gradient(circle at center, transparent 0 44%, rgba(0,0,0,0.95) 45% 57%, transparent 58%);
+  opacity: 0.52;
+  animation: stageArcSpin 26s linear infinite;
 }
 .stage-trace {
-  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.08) 45%, rgba(125,211,252,0.18) 50%, rgba(167,139,250,0.08) 55%, transparent 100%);
+  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.05) 45%, rgba(125,211,252,0.12) 50%, rgba(167,139,250,0.05) 55%, transparent 100%);
   transform: translate3d(0, 0, 0);
   mask: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 74%);
-  animation: stageTraceSweep 11s ease-in-out infinite;
+  animation: stageTraceSweep 18s ease-in-out infinite;
 }
 .stage-dots {
   background:
-    radial-gradient(circle at 38% 42%, rgba(125,211,252,0.32) 0 1.2px, transparent 1.4px),
-    radial-gradient(circle at 62% 56%, rgba(167,139,250,0.26) 0 1.2px, transparent 1.4px),
-    radial-gradient(circle at 50% 34%, rgba(125,211,252,0.22) 0 1.4px, transparent 1.6px);
+    radial-gradient(circle at 22% 28%, rgba(125,211,252,0.28) 0 1.3px, transparent 1.6px),
+    radial-gradient(circle at 68% 24%, rgba(167,139,250,0.25) 0 1.4px, transparent 1.7px),
+    radial-gradient(circle at 74% 66%, rgba(59,130,246,0.24) 0 1.4px, transparent 1.7px),
+    radial-gradient(circle at 28% 76%, rgba(125,211,252,0.16) 0 1.3px, transparent 1.6px);
   background-size: 100% 100%;
-  opacity: 0.62;
-  animation: stageDotsFlicker 7s ease-in-out infinite;
+  opacity: 0.42;
+  animation: stageDotsFlicker 11s ease-in-out infinite;
 }
 .stage-grid {
   background:
-    linear-gradient(rgba(125, 211, 252, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(125, 211, 252, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(125, 211, 252, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.035) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 80%);
-  opacity: 0.4;
-  animation: stageGridFloat 20s linear infinite;
+  opacity: 0.26;
+  animation: stageGridFloat 30s linear infinite;
 }
 .stage-scanline {
-  background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.1) 48%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.06) 48%, transparent 100%);
   transform: translateY(-52%);
-  opacity: 0.3;
-  animation: stageScan 10s linear infinite;
+  opacity: 0.18;
+  animation: stageScan 16s linear infinite;
 }
 .stage-glow {
-  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.10) 58%, rgba(8, 19, 35, 0.36) 100%);
+  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.08) 58%, rgba(8, 19, 35, 0.30) 100%);
   mix-blend-mode: screen;
-  animation: stageGlow 8s ease-in-out infinite;
+  animation: stageGlow 10s ease-in-out infinite;
 }
 @keyframes stageRotate {
   from { transform: translate(-50%, -50%) rotate(0deg); }
@@ -207,21 +208,11 @@ body {
   position: relative;
   z-index: 1;
 }
-.chat-outer {
-  order: 3;
-}
-.vault-outer {
-  order: 3;
-}
-#project-status-grid {
-  order: 5;
-}
-.cb-outer {
-  order: 6;
-}
-.footer {
-  order: 8;
-}
+.chat-outer { order: 4; }
+.support-details-outer { order: 5; }
+.footer { order: 6; }
+.active-task-board { order: 3; }
+#project-status-grid { order: 2; }
 .chat-panel {
   scroll-margin-top: 20px;
 }
@@ -501,7 +492,7 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 300px; max-height: 520px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-thread { min-height: 320px; max-height: 560px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
@@ -522,30 +513,24 @@ h1 {
 .chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
 .chat-primary-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.4fr);
   gap: 8px;
   margin: 10px 0 8px;
 }
 .chat-primary-btn {
   cursor: pointer;
   border-radius: 14px;
-  padding: 11px 14px;
+  padding: 12px 16px;
   font-size: 13px;
   font-weight: 700;
   border: 1px solid rgba(125,211,252,0.22);
-  background: linear-gradient(180deg, rgba(125,211,252,0.16), rgba(125,211,252,0.08));
+  background: linear-gradient(180deg, rgba(125,211,252,0.18), rgba(125,211,252,0.09));
   color: #e0f2fe;
   box-shadow: 0 12px 24px rgba(7,17,31,0.18);
 }
 .chat-primary-btn:hover { background: linear-gradient(180deg, rgba(125,211,252,0.22), rgba(125,211,252,0.12)); }
-.chat-primary-btn.secondary {
-  border-color: rgba(167,139,250,0.22);
-  background: linear-gradient(180deg, rgba(167,139,250,0.14), rgba(167,139,250,0.06));
-  color: #ede9fe;
-}
-.chat-primary-btn.secondary:hover { background: linear-gradient(180deg, rgba(167,139,250,0.2), rgba(167,139,250,0.1)); }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 70px; max-height: 156px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 78px; max-height: 176px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
 .chat-btn { cursor: pointer; padding: 11px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
@@ -574,6 +559,16 @@ h1 {
 .chat-action-drawer[open] > summary::after { content: '▴'; }
 .chat-action-drawer-body {
   padding: 0 12px 10px;
+}
+.chat-action-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 8px;
+}
+.chat-action-tabs .chat-quick-btn {
+  min-height: 32px;
+  padding: 5px 11px;
 }
 @media (max-width: 760px) {
   .chat-input-row { flex-direction: column; align-items: stretch; }
@@ -660,7 +655,7 @@ h1 {
 .status-chip.danger { color: var(--danger); border-color: rgba(248,113,113,0.22); background: rgba(248,113,113,0.07); }
 
 /* ===== Active Task Board ===== */
-.active-task-board { order: 2; }
+.active-task-board { order: 3; }
 .active-task-board .panel {
   animation: boardIdlePulse 9s ease-in-out infinite;
 }
@@ -688,6 +683,12 @@ h1 {
 }
 .task-board-section { margin-top: 18px; }
 .task-board-summary { margin-top: 12px; }
+.task-board-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
 .task-board-section-title {
   font-size: 11px;
   letter-spacing: 0.2em;
@@ -702,7 +703,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 14px 0 4px;
+  margin: 14px 0 8px;
 }
 .task-count-card {
   flex: 1 1 90px;
@@ -727,7 +728,7 @@ h1 {
 }
 .task-motion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: minmax(280px, 1.4fr) repeat(3, minmax(190px, 1fr));
   gap: 10px;
 }
 .task-motion-panel {
@@ -735,19 +736,28 @@ h1 {
   overflow: hidden;
   min-height: 176px;
 }
+.task-motion-panel.running-panel {
+  grid-column: 1 / -1;
+  min-height: 228px;
+}
 .task-motion-panel h3,
 .task-motion-panel .stack {
   position: relative;
   z-index: 1;
 }
-.task-board-details {
+.support-details {
   margin-top: 18px;
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 14px;
   background: rgba(255,255,255,0.02);
   overflow: hidden;
 }
-.task-board-details > summary {
+.support-details-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.support-details > summary {
   cursor: pointer;
   list-style: none;
   display: flex;
@@ -758,10 +768,10 @@ h1 {
   font-size: 12px;
   letter-spacing: 0.07em;
 }
-.task-board-details > summary::-webkit-details-marker { display: none; }
-.task-board-details > summary::after { content: '▾'; color: var(--accent); }
-.task-board-details[open] > summary::after { content: '▴'; }
-.task-board-details-body { padding: 0 14px 14px; }
+.support-details > summary::-webkit-details-marker { display: none; }
+.support-details > summary::after { content: '▾'; color: var(--accent); }
+.support-details[open] > summary::after { content: '▴'; }
+.support-details-body { padding: 0 14px 14px; }
 
 /* ===== Running task animation ===== */
 .running-task-wrapper {
@@ -814,6 +824,15 @@ h1 {
   inset: 0;
   background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.06) 38%, rgba(125,211,252,0.16) 50%, rgba(167,139,250,0.06) 62%, transparent 100%);
   animation: taskScanLine 2.9s linear infinite;
+}
+.task-signal-stream {
+  position: relative;
+  z-index: 1;
+  margin: 2px 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(125,211,252,0.82);
 }
 .running-task-wrapper .task-activity-dots {
   position: absolute;
@@ -905,14 +924,12 @@ h1 {
 }
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
-  .chat-outer { order: 1; }
-  .active-task-board { order: 2; }
-  .idea-board-outer { order: 3; }
-  #project-status-grid { order: 4; }
-  .cb-outer { order: 5; }
-  .api-cost-outer { order: 6; }
-  .footer { order: 7; }
-  .command-stage { order: 8; }
+  .command-stage { order: 1; }
+  #project-status-grid { order: 2; }
+  .active-task-board { order: 3; }
+  .chat-outer { order: 4; }
+.support-details-outer { order: 5; }
+  .footer { order: 6; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -946,7 +963,7 @@ h1 {
         </div>
         <div class="hero-compact-inner">
           <div class="hero-compact-left">
-            <div class="eyebrow">LIVE COMMAND STAGE &nbsp;/&nbsp; CURRENT MISSION</div>
+          <div class="eyebrow">CURRENT MISSION &nbsp;/&nbsp; SIGNAL GRID HERO <span aria-hidden="true" style="display:none">LIVE COMMAND STAGE</span></div>
             <h1>☂️ KOSAME Console</h1>
             <div class="title-copy">Dev Orchestra Command Center</div>
             <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
@@ -976,8 +993,11 @@ h1 {
     <!-- Active Task Board (order 2) -->
     <section class="active-task-board" id="active-task-board" style="margin-top:14px">
       <article class="panel">
-        <h2>ACTIVE TASK BOARD</h2>
-        <p class="lead">今やっていることを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
+        <div class="task-board-title-row">
+          <h2>ACTIVE TASK STRIP <span aria-hidden="true" style="display:none">ACTIVE TASK BOARD</span></h2>
+          <div class="small" style="color:var(--muted);letter-spacing:0.12em;text-transform:uppercase">ACTIVE RUNNER / 最優先: 実行中タスク</div>
+        </div>
+        <p class="lead">今ほんとうに動いているものを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
 
         <div class="task-board-counts task-board-summary">
           <div class="task-count-card">
@@ -1003,7 +1023,7 @@ h1 {
         </div>
 
         <div class="task-board-section">
-          <h3 class="task-board-section-title">NEXT TASK FEED</h3>
+          <h3 class="task-board-section-title">ACTIVE RUNNER STREAM <span aria-hidden="true" style="display:none">NEXT TASK FEED</span></h3>
           <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
           <div class="task-motion-grid" style="margin-top:10px">
             <div class="subpanel task-motion-panel">
@@ -1024,124 +1044,10 @@ h1 {
             </div>
           </div>
         </div>
-
-        <details class="task-board-details">
-          <summary>Collapsed Details / AUTO SAVE / TASK VAULT / WARNINGS</summary>
-          <div class="task-board-details-body">
-            <div class="subpanel" style="margin-bottom:12px">
-              <h3>危険ゲート / 注意</h3>
-              <div id="feed-warnings" class="mono">読み込み中...</div>
-            </div>
-            <div class="vault-grid" style="margin-bottom:14px">
-              <div class="metric">
-                <div class="label">最終保存</div>
-                <div class="value" id="vault-last-saved">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">保存状態</div>
-                <div class="value" id="vault-status">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">最新 checkpoint</div>
-                <div class="value" id="vault-latest-checkpoint">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">次回 autosave 目安</div>
-                <div class="value" id="vault-next-autosave">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">保存先</div>
-                <div class="value" id="vault-dir">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">復旧用 handoff</div>
-                <div class="value" id="vault-handoff">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">禁止データ警告数</div>
-                <div class="value" id="vault-warning-count">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">現在タスク数</div>
-                <div class="value" id="vault-task-count">読み込み中...</div>
-              </div>
-            </div>
-            <div class="stack">
-              <div class="subpanel">
-                <h3>MEMORY VAULT</h3>
-                <div class="vault-grid memory-grid">
-                  <div class="metric">
-                    <div class="label">Memory Vault</div>
-                    <div class="value" id="memory-vault-status">読み込み中...</div>
-                  </div>
-                  <div class="metric">
-                    <div class="label">作業記憶</div>
-                    <div class="value" id="memory-work-status">読み込み中...</div>
-                  </div>
-                  <div class="metric">
-                    <div class="label">状態記憶</div>
-                    <div class="value" id="memory-state-updated">読み込み中...</div>
-                  </div>
-                  <div class="metric">
-                    <div class="label">やりたいこと記憶</div>
-                    <div class="value" id="memory-wishlist-count">読み込み中...</div>
-                  </div>
-                  <div class="metric">
-                    <div class="label">handoff</div>
-                    <div class="value" id="memory-handoff">読み込み中...</div>
-                  </div>
-                  <div class="metric">
-                    <div class="label">保存禁止データ検出</div>
-                    <div class="value" id="memory-warning-count">読み込み中...</div>
-                  </div>
-                </div>
-                <div id="memory-vault-details" class="mono">読み込み中...</div>
-              </div>
-              <div class="subpanel">
-                <h3>Task Vault 詳細</h3>
-                <div id="vault-details" class="mono">読み込み中...</div>
-              </div>
-              <div class="subpanel">
-                <h3>Auto Save 詳細</h3>
-                <div id="autosave-details" class="mono">読み込み中...</div>
-              </div>
-            </div>
-          </div>
-        </details>
       </article>
     </section>
 
     <section class="grid" id="project-status-grid">
-    </section>
-
-    <section class="cb-outer" style="margin-top:14px">
-      <article class="panel" id="cb-panel" style="transition:border-color 0.3s">
-        <h2>CONFIRMATION BRIDGE</h2>
-        <p class="lead">Codexの確認待ち状態をread-onlyで監視します。Codexへのキー入力は送信しません。</p>
-        <div id="cb-badge-row">読み込み中...</div>
-        <div id="cb-body" style="display:none">
-          <div class="stack" style="margin-top:14px">
-            <div class="subpanel">
-              <h3>対象ファイル</h3>
-              <div id="cb-files" class="mono">—</div>
-            </div>
-            <div class="subpanel">
-              <h3>編集内容の概要</h3>
-              <div id="cb-summary" class="mono">—</div>
-            </div>
-            <div class="subpanel">
-              <h3>選択肢（参照のみ）</h3>
-              <div id="cb-choices" class="mono">—</div>
-              <div class="small" style="margin-top:8px;color:var(--muted)">※ この画面からCodexへのキー送信は行いません（read-only）</div>
-            </div>
-            <div class="subpanel">
-              <h3>Codex出力コンテキスト</h3>
-              <div id="cb-context" class="mono">—</div>
-              <div id="cb-source" class="timestamp">—</div>
-            </div>
-          </div>
-        </div>
-      </article>
     </section>
 
     <section class="chat-outer" style="margin-top:14px">
@@ -1197,17 +1103,23 @@ h1 {
         </div>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
         <div class="chat-primary-actions" aria-label="提案アクション">
-          <button type="button" class="chat-primary-btn" data-chat-prompt="この案で進めます。Console の現在地、次の一手、危険ゲートを短く整理して。">この案で進める</button>
-          <button type="button" class="chat-primary-btn secondary" data-chat-prompt="代替案を1〜3件、危険ゲートとコスト感つきで提案して。">代替案を出す</button>
+          <button type="button" class="chat-primary-btn" data-chat-prompt="この内容で進めます。Console の現在地、次の一手、危険ゲートを短く整理して。">この内容で進める</button>
+          <span aria-hidden="true" style="display:none">この案で進める</span>
         </div>
         <details class="chat-action-drawer">
           <summary>クイック操作</summary>
           <div class="chat-quick-actions chat-action-drawer-body" aria-label="クイックアクション">
-            <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
-            <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
-            <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
-            <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
-            <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
+            <div class="chat-action-tabs" aria-label="相談タブ">
+              <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
+              <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
+              <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
+              <button type="button" class="chat-quick-btn" data-chat-prompt="代替案を1〜3件、危険ゲートとコスト感つきで提案して。">代替案を出す</button>
+            </div>
+            <div class="chat-action-tabs" aria-label="補助アクション">
+              <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
+              <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
+            </div>
+            <div class="small" style="color:var(--muted);letter-spacing:0.03em">クイック操作 / 相談メニュー</div>
           </div>
         </details>
         <div id="chat-thread" class="chat-thread"></div>
@@ -1232,105 +1144,217 @@ h1 {
       </article>
     </section>
 
-    <section class="idea-board-outer" style="margin-top:14px">
-      <article class="panel idea-board-panel">
-        <h2>IDEA BOARD</h2>
-        <p class="lead">WISHLIST / LATER IDEAS はここでまとめます。今やることと、あとで効くことを分けて見せます。</p>
-        <div class="task-board-counts">
-          <div class="task-count-card">
-            <div class="task-count-label">保留中アイデア</div>
-            <div class="task-count-value" id="idea-wishlist-pending-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">提案候補</div>
-            <div class="task-count-value" id="idea-wishlist-later-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">最終更新</div>
-            <div class="task-count-value" id="idea-wishlist-last-updated">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">Wishlist 全件</div>
-            <div class="task-count-value" id="idea-wishlist-total-count">—</div>
-          </div>
-        </div>
-        <div class="task-board-section">
-          <h3 class="task-board-section-title">WISHLIST / LATER IDEAS</h3>
-          <div class="task-board-meta small">
-            保留: <span id="wishlist-pending-count">—</span> &nbsp;/&nbsp;
-            提案候補: <span id="wishlist-later-count">—</span> &nbsp;/&nbsp;
-            最終更新: <span id="wishlist-last-updated">—</span>
-          </div>
-          <div class="stack" style="margin-top:10px">
-            <div class="subpanel">
-              <h3>保留中アイデア</h3>
-              <div id="wishlist-pending" class="stack">読み込み中...</div>
+    <section class="support-details-outer" style="margin-top:14px">
+      <article class="panel">
+        <h2>COLLAPSED DETAILS <span aria-hidden="true" style="display:none">Collapsed Details</span></h2>
+        <p class="lead">AUTO SAVE / TASK VAULT / WISHLIST / IDEA BOARD / WARNINGS / 補助情報を、必要なときだけ開けるようにまとめています。<span aria-hidden="true" style="display:none">task-board-details</span></p>
+        <div class="support-details-stack">
+          <details class="support-details" id="autosave-support" open>
+            <summary>AUTO SAVE / TASK VAULT</summary>
+            <div class="support-details-body">
+              <div class="task-board-counts task-board-summary">
+                <div class="task-count-card">
+                  <div class="task-count-label">最終保存</div>
+                  <div class="task-count-value" id="vault-last-saved">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">保存状態</div>
+                  <div class="task-count-value" id="vault-status">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">最新 checkpoint</div>
+                  <div class="task-count-value" id="vault-latest-checkpoint">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">次回 autosave</div>
+                  <div class="task-count-value" id="vault-next-autosave">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">保存先</div>
+                  <div class="task-count-value" id="vault-dir">—</div>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="subpanel">
+                  <h3>Task Vault 詳細</h3>
+                  <div id="vault-details" class="mono">読み込み中...</div>
+                </div>
+                <div class="subpanel">
+                  <h3>Auto Save 詳細</h3>
+                  <div id="autosave-details" class="mono">読み込み中...</div>
+                </div>
+              </div>
             </div>
-            <div class="subpanel">
-              <h3>そろそろ提案候補</h3>
-              <div id="wishlist-later" class="stack">読み込み中...</div>
+          </details>
+
+          <details class="support-details" id="memory-support" open>
+            <summary>MEMORY VAULT <span aria-hidden="true" style="display:none">やりたいこと記憶</span></summary>
+            <div class="support-details-body">
+              <div class="task-board-counts task-board-summary">
+                <div class="task-count-card">
+                  <div class="task-count-label">Memory Vault</div>
+                  <div class="task-count-value" id="memory-vault-status">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">作業記憶</div>
+                  <div class="task-count-value" id="memory-work-status">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">状態記憶</div>
+                  <div class="task-count-value" id="memory-state-updated">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">やりたいこと</div>
+                  <div class="task-count-value" id="memory-wishlist-count">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">Handoff</div>
+                  <div class="task-count-value" id="memory-handoff">—</div>
+                </div>
+              </div>
+              <div class="subpanel">
+                <h3>Memory Vault 詳細</h3>
+                <div id="memory-vault-details" class="mono">読み込み中...</div>
+              </div>
             </div>
-            <div class="subpanel">
-              <h3>次に提案する理由</h3>
-              <div id="wishlist-guidance" class="mono">読み込み中...</div>
+          </details>
+
+          <details class="support-details" id="idea-support">
+            <summary>WISHLIST / IDEA BOARD</summary>
+            <div class="support-details-body">
+              <div class="task-board-counts">
+                <div class="task-count-card">
+                  <div class="task-count-label">保留中アイデア</div>
+                  <div class="task-count-value" id="idea-wishlist-pending-count">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">提案候補</div>
+                  <div class="task-count-value" id="idea-wishlist-later-count">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">最終更新</div>
+                  <div class="task-count-value" id="idea-wishlist-last-updated">—</div>
+                </div>
+                <div class="task-count-card">
+                  <div class="task-count-label">Wishlist 全件</div>
+                  <div class="task-count-value" id="idea-wishlist-total-count">—</div>
+                </div>
+              </div>
+              <div class="task-board-section">
+                <h3 class="task-board-section-title">WISHLIST / LATER IDEAS</h3>
+                <div class="task-board-meta small">
+                  保留: <span id="wishlist-pending-count">—</span> &nbsp;/&nbsp;
+                  提案候補: <span id="wishlist-later-count">—</span> &nbsp;/&nbsp;
+                  最終更新: <span id="wishlist-last-updated">—</span>
+                </div>
+                <div class="stack" style="margin-top:10px">
+                  <div class="subpanel">
+                    <h3>保留中アイデア</h3>
+                    <div id="wishlist-pending" class="stack">読み込み中...</div>
+                  </div>
+                  <div class="subpanel">
+                    <h3>そろそろ提案候補</h3>
+                    <div id="wishlist-later" class="stack">読み込み中...</div>
+                  </div>
+                  <div class="subpanel">
+                    <h3>次に提案する理由</h3>
+                    <div id="wishlist-guidance" class="mono">読み込み中...</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </article>
-    </section>
+          </details>
 
-    <section class="api-cost-outer" style="margin-top:14px">
-      <article class="panel">
-        <h2>API COST METER</h2>
-        <p class="lead">モデル別・provider別の usage を local pricing で概算し、使いすぎを早めに見つけます。実請求額ではありません。</p>
-        <div class="vault-grid">
-          <div class="metric">
-            <div class="label">このセッション概算</div>
-            <div class="value" id="cost-session">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">本日概算</div>
-            <div class="value" id="cost-today">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">今月推定</div>
-            <div class="value" id="cost-month">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">unknown 件数</div>
-            <div class="value" id="cost-unknown-count">読み込み中...</div>
-          </div>
-        </div>
-        <div class="stack">
-          <div class="subpanel">
-            <h3>Provider 別合計</h3>
-            <div id="cost-by-provider" class="mono">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>Model 別一覧</h3>
-            <div id="cost-by-model" class="mono">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>警告 / 注記</h3>
-            <div id="cost-warnings" class="mono">読み込み中...</div>
-          </div>
-        </div>
-      </article>
-    </section>
+          <details class="support-details" id="cost-support">
+            <summary>API COST METER</summary>
+            <div class="support-details-body">
+              <div class="vault-grid">
+                <div class="metric">
+                  <div class="label">このセッション概算</div>
+                  <div class="value" id="cost-session">読み込み中...</div>
+                </div>
+                <div class="metric">
+                  <div class="label">本日概算</div>
+                  <div class="value" id="cost-today">読み込み中...</div>
+                </div>
+                <div class="metric">
+                  <div class="label">今月推定</div>
+                  <div class="value" id="cost-month">読み込み中...</div>
+                </div>
+                <div class="metric">
+                  <div class="label">unknown 件数</div>
+                  <div class="value" id="cost-unknown-count">読み込み中...</div>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="subpanel">
+                  <h3>Provider 別合計</h3>
+                  <div id="cost-by-provider" class="mono">読み込み中...</div>
+                </div>
+                <div class="subpanel">
+                  <h3>Model 別一覧</h3>
+                  <div id="cost-by-model" class="mono">読み込み中...</div>
+                </div>
+                <div class="subpanel">
+                  <h3>警告 / 注記</h3>
+                  <div id="cost-warnings" class="mono">読み込み中...</div>
+                </div>
+              </div>
+            </div>
+          </details>
 
+          <details class="support-details" id="cb-support">
+            <summary>CONFIRMATION BRIDGE</summary>
+            <div class="support-details-body">
+              <article class="panel" id="cb-panel" style="transition:border-color 0.3s">
+                <p class="lead">Codexの確認待ち状態をread-onlyで監視します。Codexへのキー入力は送信しません。</p>
+                <div id="cb-badge-row">読み込み中...</div>
+                <div id="cb-body" style="display:none">
+                  <div class="stack" style="margin-top:14px">
+                    <div class="subpanel">
+                      <h3>対象ファイル</h3>
+                      <div id="cb-files" class="mono">—</div>
+                    </div>
+                    <div class="subpanel">
+                      <h3>編集内容の概要</h3>
+                      <div id="cb-summary" class="mono">—</div>
+                    </div>
+                    <div class="subpanel">
+                      <h3>選択肢（参照のみ）</h3>
+                      <div id="cb-choices" class="mono">—</div>
+                      <div class="small" style="margin-top:8px;color:var(--muted)">※ この画面からCodexへのキー送信は行いません（read-only）</div>
+                    </div>
+                    <div class="subpanel">
+                      <h3>Codex出力コンテキスト</h3>
+                      <div id="cb-context" class="mono">—</div>
+                      <div id="cb-source" class="timestamp">—</div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </details>
 
-    <section class="footer">
-      <article class="panel">
-        <h2>HUMAN GATE</h2>
-        <ul class="list" id="human-gate"></ul>
-      </article>
-      <article class="panel">
-        <h2>WARNINGS</h2>
-        <ul class="muted-list" id="warnings"></ul>
-      </article>
-      <article class="panel">
-        <h2>RECENT COMMITS</h2>
-        <div class="small" id="recent-summary">読み込み中...</div>
+          <details class="support-details" id="support-info">
+            <summary>WARNINGS / HUMAN GATE / RECENT COMMITS</summary>
+            <div class="support-details-body">
+              <div class="stack">
+                <div class="subpanel">
+                  <h3>HUMAN GATE</h3>
+                  <ul class="list" id="human-gate"></ul>
+                </div>
+                <div class="subpanel">
+                  <h3>WARNINGS</h3>
+                  <ul class="muted-list" id="warnings"></ul>
+                </div>
+                <div class="subpanel">
+                  <h3>RECENT COMMITS</h3>
+                  <div class="small" id="recent-summary">読み込み中...</div>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
       </article>
     </section>
   </div>
@@ -2018,7 +2042,7 @@ function renderCardStack(node, items, emptyLabel, buildTitle, buildBody, isActiv
 
     if (running) {
       const wrapper = document.createElement('div');
-      wrapper.className = 'running-task-wrapper';
+      wrapper.className = 'subpanel task-motion-panel running-panel running-task-wrapper';
       const motion = document.createElement('div');
       motion.className = 'task-motion-layer';
       motion.style.zIndex = '0';
@@ -2026,17 +2050,23 @@ function renderCardStack(node, items, emptyLabel, buildTitle, buildBody, isActiv
       dots.className = 'task-activity-dots';
       dots.style.zIndex = '1';
       dots.innerHTML = '<span></span><span></span><span></span>';
-      const inner = document.createElement('div');
-      inner.className = 'subpanel active-task-card running';
+      const stream = document.createElement('div');
+      stream.className = 'task-signal-stream';
+      const signalText = [
+        'running',
+        item.title || item.taskId || 'task',
+        item.recommendedAction || item.nextQuestionForJunya || item.status || 'working',
+      ].filter(Boolean).join(' • ');
+      stream.textContent = signalText;
       h3.style.position = 'relative';
       h3.style.zIndex = '1';
       body.style.position = 'relative';
       body.style.zIndex = '1';
-      inner.appendChild(h3);
-      inner.appendChild(body);
-      inner.appendChild(motion);
-      inner.appendChild(dots);
-      wrapper.appendChild(inner);
+      wrapper.appendChild(h3);
+      wrapper.appendChild(stream);
+      wrapper.appendChild(body);
+      wrapper.appendChild(motion);
+      wrapper.appendChild(dots);
       node.appendChild(wrapper);
     } else {
       const subpanel = document.createElement('div');

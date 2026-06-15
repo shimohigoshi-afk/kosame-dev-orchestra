@@ -9,6 +9,7 @@ const path = require('node:path');
 const pkg = require('../package.json');
 const { collectLiveCockpitSnapshot } = require('../tools/kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('../tools/kosame-cockpit-context');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -24,7 +25,7 @@ function readText(filePath) {
 
 console.log('=== v110.84.8 hero task board motion smoke ===');
 
-assert.ok(pkg.version >= '110.84.8', `package version must be >= 110.84.8 (got ${pkg.version})`);
+assert.ok(isVersionAtLeast(pkg.version, '110.84.8'), `package version must be >= 110.84.8 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-8'], 'smoke:v110-84-8 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-8'), 'verify must include smoke:v110-84-8');
 console.log('  PASS: package wiring for v110.84.8');

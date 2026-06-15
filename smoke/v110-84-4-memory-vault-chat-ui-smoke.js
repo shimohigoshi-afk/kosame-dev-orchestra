@@ -17,6 +17,7 @@ const {
 const { buildAutoSaveSnapshot } = require('../tools/kosame-autosave-state');
 const { collectLiveCockpitSnapshot } = require('../tools/kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('../tools/kosame-cockpit-context');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -43,7 +44,7 @@ function normalizeStatus(value) {
 
 console.log('=== v110.84.4 memory vault / chat ui smoke ===');
 
-assert.ok(pkg.version >= '110.84.4', `package version must be >= 110.84.4 (got ${pkg.version})`);
+assert.ok(isVersionAtLeast(pkg.version, '110.84.4'), `package version must be >= 110.84.4 (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-4'], 'smoke:v110-84-4 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-4'), 'verify must include smoke:v110-84-4');
 mustExist(BOOTSTRAP_TOOL_PATH);

@@ -523,24 +523,222 @@ h1 {
 .chat-sound-type-btn:hover { background: rgba(125,211,252,0.14); color: var(--accent); }
 .sound-type-error { border-color: rgba(248,113,113,0.22); }
 .sound-type-error:hover { background: rgba(248,113,113,0.1); color: var(--danger); }
+
+/* ===== Console Hero compact ===== */
+.command-stage { order: 1; }
+.hero-compact-card { position: relative; overflow: hidden; }
+.hero-compact-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.hero-compact-left { flex: 1 1 0; min-width: 0; }
+.hero-meta {
+  flex-shrink: 0;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  z-index: 1;
+}
+.hero-meta-row { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.hero-meta-row code { font-size: 11px; }
+.hero-meta-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(125,211,252,0.55);
+  margin-right: 4px;
+}
+.status-chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; position: relative; z-index: 1; }
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: background 0.2s;
+}
+.status-chip.ok { color: var(--ok); border-color: rgba(52,211,153,0.22); background: rgba(52,211,153,0.07); }
+.status-chip.warn { color: #fbbf24; border-color: rgba(251,191,36,0.22); background: rgba(251,191,36,0.07); }
+.status-chip.danger { color: var(--danger); border-color: rgba(248,113,113,0.22); background: rgba(248,113,113,0.07); }
+
+/* ===== Active Task Board ===== */
+.active-task-board { order: 2; }
+.active-task-board .panel {
+  animation: boardIdlePulse 9s ease-in-out infinite;
+}
+@keyframes boardIdlePulse {
+  0%, 100% { box-shadow: var(--shadow); }
+  50% { box-shadow: var(--shadow), 0 0 28px rgba(125,211,252,0.055); }
+}
+.task-board-section { margin-top: 18px; }
+.task-board-section-title {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(125,211,252,0.1);
+}
+.task-board-meta { margin-bottom: 10px; }
+.task-board-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+.task-count-card {
+  flex: 1 1 90px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  text-align: center;
+}
+.task-count-label {
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.task-count-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.task-board-details {
+  margin-top: 18px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+}
+.task-board-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.07em;
+}
+.task-board-details > summary::-webkit-details-marker { display: none; }
+.task-board-details > summary::after { content: '▾'; color: var(--accent); }
+.task-board-details[open] > summary::after { content: '▴'; }
+.task-board-details-body { padding: 0 14px 14px; }
+
+/* ===== Running task animation ===== */
+.running-task-wrapper {
+  position: relative;
+  border-radius: 18px;
+  padding: 1.5px;
+  overflow: hidden;
+}
+.running-task-wrapper::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(125, 211, 252, 0) 0deg,
+    rgba(125, 211, 252, 0.75) 60deg,
+    rgba(167, 139, 250, 0.7) 180deg,
+    rgba(125, 211, 252, 0.75) 300deg,
+    rgba(125, 211, 252, 0) 360deg
+  );
+  animation: taskBorderSpin 2.8s linear infinite;
+}
+@keyframes taskBorderSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.active-task-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(13, 23, 38, 0.96);
+  border-color: rgba(125,211,252,0.12);
+}
+
+/* ===== Typing indicator ===== */
+.chat-typing-indicator[hidden] { display: none; }
+.chat-typing-indicator { margin-bottom: 0; }
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingDotBlink 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.22s; }
+.typing-dot:nth-child(3) { animation-delay: 0.44s; }
+.typing-label {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+@keyframes typingDotBlink {
+  0%, 65%, 100% { opacity: 0.15; transform: scale(0.82); }
+  32% { opacity: 1; transform: scale(1); }
+}
+
+/* Chat improvements */
+.chat-thread { min-height: 260px; max-height: 460px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 72px; max-height: 160px; outline: none; }
+.chat-btn#chat-send { background: rgba(125,211,252,0.15); border-color: rgba(125,211,252,0.38); font-weight: 600; }
+.chat-btn#chat-send:hover { background: rgba(125,211,252,0.26); }
+
+/* API Cost section */
+.api-cost-outer { order: 6; }
+
 @media (prefers-reduced-motion: reduce) {
   .stage-halo, .stage-ring, .stage-grid, .stage-scanline, .stage-glow {
     animation: none !important;
   }
-  .hero-card,
-  .panel,
-  .chat-callout {
-    transition: none !important;
+  .hero-card, .panel, .chat-callout { transition: none !important; }
+  .active-task-board .panel { animation: none; }
+  .running-task-wrapper::before { animation: none; }
+  .running-task-wrapper {
+    background: linear-gradient(135deg, rgba(125,211,252,0.3), rgba(167,139,250,0.25));
   }
+  .typing-dot { animation: none; opacity: 0.45; }
+}
+@media (max-width: 1100px) {
+  .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .chat-outer { order: 1; }
   .command-stage { order: 2; }
-  #project-status-grid { order: 3; }
-  .cb-outer { order: 4; }
-  .vault-outer { order: 5; }
-  .footer { order: 6; }
+  .active-task-board { order: 3; }
+  #project-status-grid { order: 4; }
+  .cb-outer { order: 5; }
+  .api-cost-outer { order: 6; }
+  .footer { order: 7; }
+  .hero-compact-inner { flex-direction: column; gap: 10px; }
+  .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-quick-actions::-webkit-scrollbar { display: none; }
   .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -548,13 +746,15 @@ h1 {
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
   .chat-thread { min-height: 180px; max-height: 260px; }
   .chat-sound-details-body { padding-bottom: 8px; }
+  .task-board-counts { gap: 8px; }
+  .task-count-card { flex-basis: calc(50% - 4px); }
 }
 </style>
 </head>
 <body>
   <div class="shell">
-    <section class="hero command-stage">
-      <div class="hero-card">
+    <section class="command-stage" style="margin-bottom:14px">
+      <div class="hero-card hero-compact-card">
         <div class="stage-visual" aria-hidden="true">
           <div class="stage-halo"></div>
           <div class="stage-ring stage-ring-a"></div>
@@ -563,29 +763,190 @@ h1 {
           <div class="stage-scanline"></div>
           <div class="stage-glow"></div>
         </div>
-        <div class="eyebrow">LIVE COMMAND STAGE</div>
-        <div class="eyebrow">CURRENT MISSION</div>
-        <h1>☂️ KOSAME Console</h1>
-        <div class="title-copy">Dev Orchestra Command Center</div>
-        <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
-        <span aria-hidden="true" style="display:none">Console からの書き込みはできません</span>
+        <div class="hero-compact-inner">
+          <div class="hero-compact-left">
+            <div class="eyebrow">LIVE COMMAND STAGE &nbsp;/&nbsp; CURRENT MISSION</div>
+            <h1>☂️ KOSAME Console</h1>
+            <div class="title-copy">Dev Orchestra Command Center</div>
+            <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
+          </div>
+          <div class="hero-meta">
+            <div class="hero-meta-row"><span class="hero-meta-label">VER</span><code id="hero-version">—</code></div>
+            <div class="hero-meta-row timestamp" id="timestamp">—</div>
+            <div class="hero-meta-row"><span class="hero-meta-label">ACTIVE REPO</span><span id="active-repo">—</span></div>
+            <div class="hero-meta-row"><span class="hero-meta-label">MODE</span><span id="mode-display">Readonly</span></div>
+          </div>
+        </div>
         <div class="status-chip-row">
-          <span class="chip"><strong>ACTIVE REPO</strong> <span id="active-repo">読み込み中...</span></span>
-          <span class="chip"><strong>MODE</strong> <span id="mode-display">Readonly</span></span>
-          <span class="chip"><strong>UPDATE</strong> passive</span>
+          <span class="status-chip" id="hero-chip-dev">Dev Orchestra</span>
+          <span class="status-chip" id="hero-chip-sales">Sales DX</span>
+          <span class="status-chip" id="hero-chip-memory">Memory</span>
+          <span class="status-chip" id="hero-chip-chat">Chat</span>
+          <span class="status-chip" id="hero-chip-sound">Sound: OFF</span>
         </div>
-        <div class="timestamp" id="timestamp">スナップショット待機中...</div>
+        <span aria-hidden="true" style="display:none">Console からの書き込みはできません</span>
+        <span aria-hidden="true" style="display:none">危険ゲート</span>
+        <span aria-hidden="true" style="display:none">NEXT ACTION</span>
+        <div id="hero-gate" style="display:none"></div>
+        <div id="hero-next" style="display:none"></div>
       </div>
-      <div class="hero-aside">
-        <div class="hero-card">
-          <div class="eyebrow">危険ゲート</div>
-          <div class="mission-copy" id="hero-gate">Loading...</div>
+    </section>
+
+    <!-- Active Task Board (order 2) -->
+    <section class="active-task-board" id="active-task-board" style="margin-top:14px">
+      <article class="panel">
+        <h2>ACTIVE TASK BOARD</h2>
+        <p class="lead">タスク・ウィッシュリスト・保存状態を一か所に統合して表示します。進行中タスクは発光枠で強調されます。</p>
+
+        <!-- Count cards -->
+        <div class="task-board-counts">
+          <div class="task-count-card">
+            <div class="task-count-label">次にやる候補</div>
+            <div class="task-count-value" id="feed-selected-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">Human Gate待ち</div>
+            <div class="task-count-value" id="feed-human-gate-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">blocked</div>
+            <div class="task-count-value" id="feed-blocked-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">Wishlist 全件</div>
+            <div class="task-count-value" id="wishlist-total-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">Auto Save</div>
+            <div class="task-count-value" id="vault-status-chip">—</div>
+          </div>
         </div>
-        <div class="hero-card">
-        <div class="eyebrow">NEXT ACTION</div>
-          <div class="mission-copy" id="hero-next">読み込み中...</div>
+
+        <!-- NEXT TASK FEED subsection -->
+        <div class="task-board-section">
+          <h3 class="task-board-section-title">NEXT TASK FEED</h3>
+          <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
+          <div class="stack" style="margin-top:10px">
+            <div class="subpanel">
+              <h3>今やる候補 1〜3件</h3>
+              <div id="feed-selected" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>Human Gate 候補</h3>
+              <div id="feed-human-gate" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>危険ゲート / 注意</h3>
+              <div id="feed-warnings" class="mono">読み込み中...</div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <!-- WISHLIST / LATER IDEAS subsection -->
+        <div class="task-board-section">
+          <h3 class="task-board-section-title">WISHLIST / LATER IDEAS</h3>
+          <div class="task-board-meta small">
+            保留: <span id="wishlist-pending-count">—</span> &nbsp;/&nbsp;
+            提案候補: <span id="wishlist-later-count">—</span> &nbsp;/&nbsp;
+            最終更新: <span id="wishlist-last-updated">—</span>
+          </div>
+          <div class="stack" style="margin-top:10px">
+            <div class="subpanel">
+              <h3>保留中アイデア</h3>
+              <div id="wishlist-pending" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>そろそろ提案候補</h3>
+              <div id="wishlist-later" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>次に提案する理由</h3>
+              <div id="wishlist-guidance" class="mono">読み込み中...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible details: Task Vault + Auto Save + Memory Vault -->
+        <details class="task-board-details">
+          <summary>AUTO SAVE / TASK VAULT 詳細 / デバッグ情報を開く</summary>
+          <div class="task-board-details-body">
+            <div class="vault-grid" style="margin-bottom:14px">
+              <div class="metric">
+                <div class="label">最終保存</div>
+                <div class="value" id="vault-last-saved">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">保存状態</div>
+                <div class="value" id="vault-status">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">最新 checkpoint</div>
+                <div class="value" id="vault-latest-checkpoint">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">次回 autosave 目安</div>
+                <div class="value" id="vault-next-autosave">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">保存先</div>
+                <div class="value" id="vault-dir">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">復旧用 handoff</div>
+                <div class="value" id="vault-handoff">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">禁止データ警告数</div>
+                <div class="value" id="vault-warning-count">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">現在タスク数</div>
+                <div class="value" id="vault-task-count">読み込み中...</div>
+              </div>
+            </div>
+            <div class="stack">
+              <div class="subpanel">
+                <h3>MEMORY VAULT</h3>
+                <div class="vault-grid memory-grid">
+                  <div class="metric">
+                    <div class="label">Memory Vault</div>
+                    <div class="value" id="memory-vault-status">読み込み中...</div>
+                  </div>
+                  <div class="metric">
+                    <div class="label">作業記憶</div>
+                    <div class="value" id="memory-work-status">読み込み中...</div>
+                  </div>
+                  <div class="metric">
+                    <div class="label">状態記憶</div>
+                    <div class="value" id="memory-state-updated">読み込み中...</div>
+                  </div>
+                  <div class="metric">
+                    <div class="label">やりたいこと記憶</div>
+                    <div class="value" id="memory-wishlist-count">読み込み中...</div>
+                  </div>
+                  <div class="metric">
+                    <div class="label">handoff</div>
+                    <div class="value" id="memory-handoff">読み込み中...</div>
+                  </div>
+                  <div class="metric">
+                    <div class="label">保存禁止データ検出</div>
+                    <div class="value" id="memory-warning-count">読み込み中...</div>
+                  </div>
+                </div>
+                <div id="memory-vault-details" class="mono">読み込み中...</div>
+              </div>
+              <div class="subpanel">
+                <h3>Task Vault 詳細</h3>
+                <div id="vault-details" class="mono">読み込み中...</div>
+              </div>
+              <div class="subpanel">
+                <h3>Auto Save 詳細</h3>
+                <div id="autosave-details" class="mono">読み込み中...</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </article>
     </section>
 
     <section class="grid" id="project-status-grid">
@@ -624,7 +985,7 @@ h1 {
     <section class="chat-outer" style="margin-top:14px">
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
-        <p class="lead">こさめと相談できます。Codexの確認待ちがある場合は「確認待ちを要約」で内容を判断できます。Codexへのキー入力は行いません。</p>
+        <p class="lead">こさめに質問・相談ができます。Console の状態をコンテキストとして共有します。Codexへのキー入力は行いません。</p>
         <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
           <div class="chat-callout-text">
             <strong>こさめが呼んでます ☂️</strong>
@@ -681,96 +1042,28 @@ h1 {
           <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
         </div>
         <div id="chat-thread" class="chat-thread"></div>
+        <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
+          <div class="chat-msg-ai">
+            <div class="chat-bubble-ai">
+              <div class="chat-bubble-header"><span class="chat-bubble-role">こさめ ☂️</span></div>
+              <div class="typing-dots" aria-label="こさめが入力中...">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-label">こさめが入力中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="chat-input-row">
-          <textarea id="chat-input" placeholder="こさめに相談する内容を入力してください。Enterで送信、Shift+Enterで改行。"></textarea>
+          <textarea id="chat-input" placeholder="入力してください。Enterで送信、Shift+Enterで改行。"></textarea>
           <div class="chat-btn" id="chat-send">送信</div>
           <div class="chat-btn" id="chat-summarize">確認待ちを要約</div>
         </div>
       </article>
     </section>
 
-    <section class="vault-outer" style="margin-top:14px">
-      <article class="panel">
-        <h2>AUTO SAVE / TASK VAULT</h2>
-        <p class="lead">現在のミッション、判断、タスク、verify結果、引継ぎメモをローカルに保存し、次の AI が復旧しやすい形で保持します。</p>
-        <div class="vault-grid">
-          <div class="metric">
-            <div class="label">最終保存</div>
-            <div class="value" id="vault-last-saved">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">保存状態</div>
-            <div class="value" id="vault-status">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">最新 checkpoint</div>
-            <div class="value" id="vault-latest-checkpoint">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">次回 autosave 目安</div>
-            <div class="value" id="vault-next-autosave">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">保存先</div>
-            <div class="value" id="vault-dir">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">復旧用 handoff</div>
-            <div class="value" id="vault-handoff">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">禁止データ警告数</div>
-            <div class="value" id="vault-warning-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">現在タスク数</div>
-            <div class="value" id="vault-task-count">読み込み中...</div>
-          </div>
-        </div>
-        <div class="stack">
-          <div class="subpanel">
-            <h3>MEMORY VAULT</h3>
-            <div class="vault-grid memory-grid">
-              <div class="metric">
-                <div class="label">Memory Vault</div>
-                <div class="value" id="memory-vault-status">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">作業記憶</div>
-                <div class="value" id="memory-work-status">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">状態記憶</div>
-                <div class="value" id="memory-state-updated">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">やりたいこと記憶</div>
-                <div class="value" id="memory-wishlist-count">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">handoff</div>
-                <div class="value" id="memory-handoff">読み込み中...</div>
-              </div>
-              <div class="metric">
-                <div class="label">保存禁止データ検出</div>
-                <div class="value" id="memory-warning-count">読み込み中...</div>
-              </div>
-            </div>
-            <div id="memory-vault-details" class="mono">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>Task Vault 詳細</h3>
-            <div id="vault-details" class="mono">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>Auto Save 詳細</h3>
-            <div id="autosave-details" class="mono">読み込み中...</div>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <section class="vault-outer" style="margin-top:14px">
+    <section class="api-cost-outer" style="margin-top:14px">
       <article class="panel">
         <h2>API COST METER</h2>
         <p class="lead">モデル別・provider別の usage を local pricing で概算し、使いすぎを早めに見つけます。実請求額ではありません。</p>
@@ -809,80 +1102,6 @@ h1 {
       </article>
     </section>
 
-    <section class="grid" style="margin-top:14px">
-      <article class="panel">
-        <h2>NEXT TASK FEED</h2>
-        <p class="lead">Task Vault から今やるべき 1〜3 件だけを選び、危険ゲートや human gate を分けて表示します。</p>
-        <div class="vault-grid">
-          <div class="metric">
-            <div class="label">次にやる候補</div>
-            <div class="value" id="feed-selected-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">blocked 件数</div>
-            <div class="value" id="feed-blocked-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">human gate 待ち</div>
-            <div class="value" id="feed-human-gate-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">最終 feed 生成</div>
-            <div class="value" id="feed-last-generated">読み込み中...</div>
-          </div>
-        </div>
-        <div class="stack">
-          <div class="subpanel">
-            <h3>今やる候補 1〜3件</h3>
-            <div id="feed-selected" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>human gate 候補</h3>
-            <div id="feed-human-gate" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>危険ゲート / 注意</h3>
-            <div id="feed-warnings" class="mono">読み込み中...</div>
-          </div>
-        </div>
-      </article>
-      <article class="panel">
-        <h2>WISHLIST / LATER IDEAS</h2>
-        <p class="lead">今すぐやらないアイデアを優しく保留し、提案タイミングが来たら拾えるようにします。</p>
-        <div class="vault-grid">
-          <div class="metric">
-            <div class="label">保留中アイデア</div>
-            <div class="value" id="wishlist-pending-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">そろそろ提案候補</div>
-            <div class="value" id="wishlist-later-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">全 wishlist</div>
-            <div class="value" id="wishlist-total-count">読み込み中...</div>
-          </div>
-          <div class="metric">
-            <div class="label">最終更新</div>
-            <div class="value" id="wishlist-last-updated">読み込み中...</div>
-          </div>
-        </div>
-        <div class="stack">
-          <div class="subpanel">
-            <h3>保留中アイデア</h3>
-            <div id="wishlist-pending" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>そろそろ提案候補</h3>
-            <div id="wishlist-later" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel">
-            <h3>次に提案する理由</h3>
-            <div id="wishlist-guidance" class="mono">読み込み中...</div>
-          </div>
-        </div>
-      </article>
-    </section>
 
     <section class="footer">
       <article class="panel">
@@ -1003,6 +1222,11 @@ function updateNotificationUI() {
   if (soundBadge) {
     soundBadge.textContent = `Sound: ${modeLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
+  }
+  const heroSoundChip = document.getElementById('hero-chip-sound');
+  if (heroSoundChip) {
+    heroSoundChip.textContent = `Sound: ${modeLabel}`;
+    heroSoundChip.className = `status-chip${notificationEnabled ? ' ok' : ''}`;
   }
 }
 
@@ -1215,6 +1439,49 @@ function maybeNotifyFromSnapshot(snapshot) {
   }
 }
 
+function showTypingIndicator() {
+  const el = document.getElementById('chat-typing-indicator');
+  if (!el) return;
+  el.hidden = false;
+  const thread = document.getElementById('chat-thread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+}
+
+function hideTypingIndicator() {
+  const el = document.getElementById('chat-typing-indicator');
+  if (el) el.hidden = true;
+}
+
+function isTaskRunning(task) {
+  const s = (task.status || '').toLowerCase();
+  return s === 'in_progress' || s === 'running' || s === 'active';
+}
+
+function updateHeroChips(snapshot) {
+  const dev = snapshot.devOrchestra || {};
+  const sales = snapshot.salesDx || {};
+  const memory = snapshot.memoryVault || {};
+
+  const setChip = (id, label, cls) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = label;
+    el.className = `status-chip${cls ? ' ' + cls : ''}`;
+  };
+
+  const devOk = !dev.dirty && (!dev.warnings || !dev.warnings.length);
+  setChip('hero-chip-dev', `Dev Orchestra${devOk ? ' ✓' : ' ⚠'}`, devOk ? 'ok' : 'warn');
+
+  const salesOk = !sales.dirty && sales.availability !== 'unavailable';
+  setChip('hero-chip-sales', `Sales DX${salesOk ? ' ✓' : ' ⚠'}`, salesOk ? 'ok' : 'warn');
+
+  const memStatus = memory.status || 'missing';
+  setChip('hero-chip-memory', `Memory: ${memStatus}`, memStatus === 'ready' ? 'ok' : 'warn');
+
+  const chatCls = chatStatusState.ai === 'connected' ? 'ok' : 'warn';
+  setChip('hero-chip-chat', `Chat${chatStatusState.ai === 'connected' ? ' ✓' : ': —'}`, chatCls);
+}
+
 function text(node, value) {
   node.textContent = value == null || value === '' ? '—' : String(value);
 }
@@ -1414,11 +1681,15 @@ function renderTaskVault(taskVault, autoSave) {
   const save = autoSave || {};
   const [badgeClassName, badgeText] = statusLabel(vault.status || save.status || 'warning');
   const badge = document.getElementById('vault-status');
-  badge.innerHTML = '';
-  const span = document.createElement('span');
-  span.className = `status-badge ${badgeClassName}`;
-  span.textContent = `保存状態 ${badgeText}`;
-  badge.appendChild(span);
+  if (badge) {
+    badge.innerHTML = '';
+    const span = document.createElement('span');
+    span.className = `status-badge ${badgeClassName}`;
+    span.textContent = `保存状態 ${badgeText}`;
+    badge.appendChild(span);
+  }
+  const chipNode = document.getElementById('vault-status-chip');
+  if (chipNode) chipNode.textContent = badgeText;
 
   text(document.getElementById('vault-last-saved'), save.lastSavedAt || vault.lastSavedAt || '—');
   text(document.getElementById('vault-latest-checkpoint'), save.latestCheckpointAt || vault.latestCheckpointAt || '—');
@@ -1493,7 +1764,7 @@ function renderMemoryVault(memoryVault, taskVault) {
   text(document.getElementById('memory-vault-details'), details.join('\n'));
 }
 
-function renderCardStack(node, items, emptyLabel, buildTitle, buildBody) {
+function renderCardStack(node, items, emptyLabel, buildTitle, buildBody, isActiveTask) {
   node.innerHTML = '';
   if (!items || !items.length) {
     const empty = document.createElement('div');
@@ -1504,16 +1775,29 @@ function renderCardStack(node, items, emptyLabel, buildTitle, buildBody) {
   }
 
   for (const item of items) {
-    const subpanel = document.createElement('div');
-    subpanel.className = 'subpanel';
+    const running = typeof isActiveTask === 'function' && isActiveTask(item);
     const h3 = document.createElement('h3');
     h3.textContent = typeof buildTitle === 'function' ? buildTitle(item) : '項目';
     const body = document.createElement('div');
     body.className = 'mono';
     body.textContent = typeof buildBody === 'function' ? buildBody(item) : String(item);
-    subpanel.appendChild(h3);
-    subpanel.appendChild(body);
-    node.appendChild(subpanel);
+
+    if (running) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'running-task-wrapper';
+      const inner = document.createElement('div');
+      inner.className = 'subpanel active-task-card running';
+      inner.appendChild(h3);
+      inner.appendChild(body);
+      wrapper.appendChild(inner);
+      node.appendChild(wrapper);
+    } else {
+      const subpanel = document.createElement('div');
+      subpanel.className = 'subpanel';
+      subpanel.appendChild(h3);
+      subpanel.appendChild(body);
+      node.appendChild(subpanel);
+    }
   }
 }
 
@@ -1602,6 +1886,7 @@ function renderTaskFeeder(taskFeeder) {
     '今やる候補はまだありません。',
     (task) => `${task.taskId || 'task'} / ${task.priority || 'P?'}`,
     formatTaskFeedItem,
+    isTaskRunning,
   );
 
   renderCardStack(
@@ -1759,6 +2044,7 @@ async function sendChatMessage(userText, confirmationContext) {
   renderChatThread();
   sendBtn.textContent = '送信中...';
   statusEl.textContent = 'こさめ考え中…☂️';
+  showTypingIndicator();
 
   try {
     const payload = {
@@ -1774,22 +2060,24 @@ async function sendChatMessage(userText, confirmationContext) {
 
     const reply = data.reply || data.error || '応答なし';
     chatHistory.push({ role: 'assistant', content: reply });
+    hideTypingIndicator();
     renderChatThread();
     maybeNotifyFromAssistant(reply);
 
     if (data.noKey) {
-      statusEl.textContent = 'AI相談は未接続（APIキー未設定）';
+      statusEl.textContent = 'AI未接続（APIキー未設定）';
       chatStatusState.ai = 'missing';
     } else if (data.noContext) {
       statusEl.textContent = '状態コンテキスト未取得です。';
       chatStatusState.context = 'missing';
     } else if (!statusEl.textContent.includes('接続済')) {
-      statusEl.textContent = 'こさめ相談AI: 接続済';
+      statusEl.textContent = 'こさめ AI: 接続済';
       chatStatusState.ai = 'connected';
       chatStatusState.context = 'loaded';
     }
     renderChatStatusBadges(latestSnapshot || {});
   } catch {
+    hideTypingIndicator();
     chatHistory.push({ role: 'assistant', content: 'エラーが発生しました。サーバーに接続できません。' });
     renderChatThread();
     statusEl.textContent = 'エラーが発生しました。サーバーに接続できません。';
@@ -1810,6 +2098,9 @@ async function loadSnapshot() {
     text(document.getElementById('timestamp'), formatTimestampDisplay(snapshot));
     text(document.getElementById('hero-gate'), (snapshot.humanGate || []).join(' '));
     text(document.getElementById('hero-next'), snapshot.nextAction);
+    const heroVer = document.getElementById('hero-version');
+    if (heroVer) heroVer.textContent = `v${snapshot.currentVersion || ''}`;
+    updateHeroChips(snapshot);
 
     latestBridge = snapshot.confirmationBridge || null;
     renderConfirmationBridge(latestBridge);

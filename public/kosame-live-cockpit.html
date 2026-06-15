@@ -2,7 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KOSAME Console">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/kosame-icon.svg">
 <title>☂️ KOSAME Console</title>
 <style>
 :root {
@@ -292,6 +298,25 @@ h1 {
   .chat-input-row { flex-direction: column; align-items: stretch; }
   .chat-btn, .chat-sound-btn { width: 100%; text-align: center; }
 }
+.sound-mode-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.chat-sound-mode-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.25); background: rgba(125,211,252,0.06); color: var(--muted); border-radius: 999px; padding: 5px 9px; font-size: 11px; white-space: nowrap; }
+.chat-sound-mode-btn:hover { background: rgba(125,211,252,0.14); color: var(--accent); }
+.chat-sound-mode-btn.active { border-color: rgba(125,211,252,0.55); background: rgba(125,211,252,0.18); color: var(--accent); font-weight: 600; }
+.chat-sound-mode-btn.active[data-mode="clear"] { border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.14); color: #c4b5fd; }
+.chat-sound-type-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+.chat-sound-type-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.2); background: rgba(125,211,252,0.06); color: var(--muted); border-radius: 999px; padding: 5px 10px; font-size: 11px; white-space: nowrap; }
+.chat-sound-type-btn:hover { background: rgba(125,211,252,0.14); color: var(--accent); }
+.sound-type-error { border-color: rgba(248,113,113,0.22); }
+.sound-type-error:hover { background: rgba(248,113,113,0.1); color: var(--danger); }
+@media (max-width: 600px) {
+  .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
+  .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .chat-quick-actions::-webkit-scrollbar { display: none; }
+  .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .chat-sound-type-row::-webkit-scrollbar { display: none; }
+  .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
+  .chat-thread { max-height: 200px; }
+}
 </style>
 </head>
 <body>
@@ -363,9 +388,20 @@ h1 {
             <span class="sound-label">通知音</span>
             <span id="sound-state">OFF</span>
           </span>
-          <button type="button" class="chat-sound-btn" id="sound-toggle">ON</button>
+          <div class="sound-mode-row">
+            <button type="button" class="chat-sound-mode-btn" id="sound-btn-off" data-mode="off">OFF</button>
+            <button type="button" class="chat-sound-mode-btn" id="sound-btn-soft" data-mode="soft">Soft</button>
+            <button type="button" class="chat-sound-mode-btn" id="sound-btn-clear" data-mode="clear">Clear</button>
+          </div>
+          <span id="sound-toggle" aria-hidden="true" style="display:none"></span>
           <button type="button" class="chat-sound-btn" id="sound-test">テスト音</button>
           <span class="small" id="sound-hint" style="color:var(--muted)">ブラウザ操作後に有効化してください</span>
+        </div>
+        <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
+          <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
+          <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
+          <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
+          <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
         </div>
         <div class="chat-status-badges" id="chat-status-badges" aria-label="チャット状態">
           <span class="chat-status-badge warn" id="chat-ai-badge">AI: 未確認</span>
@@ -636,6 +672,7 @@ let chatStatusState = {
   memory: 'missing',
 };
 let notificationAudioContext = null;
+let notificationMode = 'off';
 let notificationEnabled = false;
 let notificationUnlocked = false;
 let notificationLastAt = 0;
@@ -646,25 +683,36 @@ let notificationLastFeedQuestion = '';
 let notificationInitialized = false;
 
 const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
+const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
 const NOTIFICATION_COOLDOWN_MS = 5000;
 const NOTIFICATION_FREQ = 880;
 const NOTIFICATION_FREQ_2 = 660;
 const NOTIFICATION_DURATION_MS = 120;
 
-function readNotificationPreference() {
+function readNotificationMode() {
   try {
-    return localStorage.getItem(NOTIFICATION_STORAGE_KEY) === '1';
+    const mode = localStorage.getItem(NOTIFICATION_MODE_KEY);
+    if (mode === 'soft' || mode === 'clear') return mode;
+    if (localStorage.getItem(NOTIFICATION_STORAGE_KEY) === '1') return 'soft';
+    return 'off';
   } catch {
-    return false;
+    return 'off';
   }
 }
 
-function writeNotificationPreference(enabled) {
+function writeNotificationMode(mode) {
   try {
-    localStorage.setItem(NOTIFICATION_STORAGE_KEY, enabled ? '1' : '0');
-  } catch {
-    // ignore localStorage failures
-  }
+    localStorage.setItem(NOTIFICATION_MODE_KEY, mode);
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, mode !== 'off' ? '1' : '0');
+  } catch {}
+}
+
+function readNotificationPreference() {
+  return readNotificationMode() !== 'off';
+}
+
+function writeNotificationPreference(enabled) {
+  writeNotificationMode(enabled ? 'soft' : 'off');
 }
 
 function isQuestionCue(text) {
@@ -674,18 +722,21 @@ function isQuestionCue(text) {
 
 function updateNotificationUI() {
   const stateNode = document.getElementById('sound-state');
-  const toggleNode = document.getElementById('sound-toggle');
   const hintNode = document.getElementById('sound-hint');
   const soundBadge = document.getElementById('chat-sound-badge');
-  if (stateNode) stateNode.textContent = notificationEnabled ? 'ON' : 'OFF';
-  if (toggleNode) toggleNode.textContent = notificationEnabled ? 'OFF' : 'ON';
+  const modeLabel = notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF';
+  if (stateNode) stateNode.textContent = modeLabel;
+  ['off', 'soft', 'clear'].forEach((m) => {
+    const btn = document.getElementById(`sound-btn-${m}`);
+    if (btn) btn.classList.toggle('active', notificationMode === m);
+  });
   if (hintNode) {
     hintNode.textContent = notificationEnabled
-      ? (notificationUnlocked ? '通知音は有効です' : 'ブラウザ操作後に有効化してください')
-      : '通知音はOFFです';
+      ? (notificationUnlocked ? '通知音は有効ですっ☂️' : 'ブラウザ操作後に有効化してください')
+      : '通知音はOFFですっ';
   }
   if (soundBadge) {
-    soundBadge.textContent = `Sound: ${notificationEnabled ? 'ON' : 'OFF'}`;
+    soundBadge.textContent = `Sound: ${modeLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
   }
 }
@@ -720,13 +771,19 @@ async function unlockNotificationAudio() {
   }
 }
 
-function setNotificationEnabled(nextEnabled, { persist = true } = {}) {
-  notificationEnabled = !!nextEnabled;
-  if (!notificationEnabled) {
-    notificationUnlocked = false;
-  }
-  if (persist) writeNotificationPreference(notificationEnabled);
+function setNotificationMode(mode, { persist = true } = {}) {
+  notificationMode = mode;
+  notificationEnabled = mode !== 'off';
+  if (!notificationEnabled) notificationUnlocked = false;
+  if (persist) writeNotificationMode(mode);
   updateNotificationUI();
+}
+
+function setNotificationEnabled(nextEnabled, { persist = true } = {}) {
+  setNotificationMode(
+    nextEnabled ? (notificationMode !== 'off' ? notificationMode : 'soft') : 'off',
+    { persist }
+  );
 }
 
 function playNotificationTone(ctx, frequency, startAt, duration, volume) {
@@ -744,19 +801,66 @@ function playNotificationTone(ctx, frequency, startAt, duration, volume) {
   osc.stop(startAt + duration + 0.02);
 }
 
+function playSoftChimeCtx(ctx) {
+  const now = ctx.currentTime;
+  playNotificationTone(ctx, 520, now, 0.12, 0.07);
+  playNotificationTone(ctx, 784, now + 0.16, 0.14, 0.08);
+  notificationLastAt = Date.now();
+  return true;
+}
+
+function playClearChimeCtx(ctx) {
+  const now = ctx.currentTime;
+  playNotificationTone(ctx, 880, now, 0.10, 0.12);
+  playNotificationTone(ctx, 1109, now + 0.14, 0.10, 0.13);
+  playNotificationTone(ctx, 1319, now + 0.28, 0.12, 0.14);
+  notificationLastAt = Date.now();
+  return true;
+}
+
+function playClearTypeSoundCtx(ctx, type) {
+  const now = ctx.currentTime;
+  if (type === 'error') {
+    playNotificationTone(ctx, 660, now, 0.14, 0.14);
+    playNotificationTone(ctx, 440, now + 0.18, 0.18, 0.15);
+    notificationLastAt = Date.now();
+  } else if (type === 'done') {
+    playNotificationTone(ctx, 784, now, 0.10, 0.11);
+    playNotificationTone(ctx, 988, now + 0.13, 0.10, 0.12);
+    playNotificationTone(ctx, 1175, now + 0.26, 0.13, 0.13);
+    notificationLastAt = Date.now();
+  } else if (type === 'human_gate') {
+    playNotificationTone(ctx, 880, now, 0.08, 0.13);
+    playNotificationTone(ctx, 880, now + 0.12, 0.08, 0.13);
+    playNotificationTone(ctx, 1109, now + 0.24, 0.14, 0.14);
+    notificationLastAt = Date.now();
+  } else {
+    return playClearChimeCtx(ctx);
+  }
+  return true;
+}
+
 function playNotificationChime() {
   const ctx = ensureNotificationAudioContext();
   if (!ctx || !notificationEnabled || !notificationUnlocked) {
     updateNotificationUI();
     return false;
   }
-  const now = ctx.currentTime;
-  const firstDuration = 0.12;
-  const secondDuration = 0.14;
-  playNotificationTone(ctx, 520, now, firstDuration, 0.07);
-  playNotificationTone(ctx, 784, now + 0.16, secondDuration, 0.08);
-  notificationLastAt = Date.now();
-  return true;
+  if (notificationMode === 'clear') return playClearChimeCtx(ctx);
+  return playSoftChimeCtx(ctx);
+}
+
+async function playSoundTypeTest(type) {
+  if (notificationMode === 'off') setNotificationMode('soft');
+  const unlocked = await unlockNotificationAudio();
+  if (!unlocked) return;
+  const ctx = ensureNotificationAudioContext();
+  if (!ctx) return;
+  if (notificationMode === 'clear') {
+    playClearTypeSoundCtx(ctx, type);
+  } else {
+    playSoftChimeCtx(ctx);
+  }
 }
 
 function playNotificationBeep() {
@@ -1422,7 +1526,7 @@ async function loadSnapshot() {
   }
 }
 
-setNotificationEnabled(readNotificationPreference(), { persist: false });
+setNotificationMode(readNotificationMode(), { persist: false });
 updateNotificationUI();
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
@@ -1462,23 +1566,28 @@ document.querySelectorAll('[data-chat-prompt]').forEach((button) => {
   });
 });
 
-document.getElementById('sound-toggle').addEventListener('click', async () => {
-  const nextEnabled = !notificationEnabled;
-  setNotificationEnabled(nextEnabled);
-  if (nextEnabled) {
-    await unlockNotificationAudio();
-  }
+['off', 'soft', 'clear'].forEach((mode) => {
+  const btn = document.getElementById(`sound-btn-${mode}`);
+  if (btn) btn.addEventListener('click', async () => {
+    setNotificationMode(mode);
+    if (mode !== 'off') await unlockNotificationAudio();
+  });
 });
 
 document.getElementById('sound-test').addEventListener('click', async () => {
-  if (!notificationEnabled) {
-    setNotificationEnabled(true);
-  }
+  if (notificationMode === 'off') setNotificationMode('soft');
   const unlocked = await unlockNotificationAudio();
-  if (unlocked) {
-    playNotificationChime();
-  }
+  if (unlocked) playNotificationChime();
 });
+
+['question', 'human-gate', 'done', 'error'].forEach((type) => {
+  const btn = document.getElementById(`sound-test-${type}`);
+  if (btn) btn.addEventListener('click', () => playSoundTypeTest(type === 'human-gate' ? 'human_gate' : type));
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/kosame-sw.js').catch(() => {}); });
+}
 </script>
 </body>
 </html>

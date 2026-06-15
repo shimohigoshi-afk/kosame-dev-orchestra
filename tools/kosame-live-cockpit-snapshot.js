@@ -74,6 +74,34 @@ function normalizeCommitLines(output) {
   });
 }
 
+function runGitReadOnly(argv) {
+  try {
+    const output = execFileSync('git', argv, {
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 10000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return String(output || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+function resolveVersionContext() {
+  const packageVersion = String(PACKAGE.version || 'unknown');
+  const headCommit = runGitReadOnly(['rev-parse', '--short', 'HEAD']) || 'unknown';
+  const exactTag = runGitReadOnly(['describe', '--tags', '--exact-match', 'HEAD']);
+  const latestTag = exactTag || runGitReadOnly(['describe', '--tags', '--abbrev=0']) || `v${packageVersion}`;
+  return {
+    packageVersion,
+    currentVersion: packageVersion,
+    latestTag,
+    headCommit,
+    source: exactTag ? 'git-tag' : 'package.json',
+  };
+}
+
 function fallbackProjectRegistry() {
   return [
     {
@@ -208,6 +236,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   const salesRepoPath = options.salesRepoPath || SALES_DX_REPO;
   const activeRepoPath = options.activeRepoPath || devRepoPath;
   const projectRegistry = loadProjectRegistry(options.projectRegistryPath);
+  const versionContext = resolveVersionContext();
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -223,7 +252,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   const apiCost = buildApiCostSnapshot(taskVaultDir);
   const taskFeeder = buildTaskFeederSnapshot({
     taskVaultDir,
-    currentVersion: PACKAGE.version,
+    currentVersion: versionContext.currentVersion,
     currentMission: '☂️ KOSAME Console',
   });
   const devOrchestra = findProject('dev-orchestra') || buildProjectState({
@@ -278,7 +307,12 @@ function collectLiveCockpitSnapshot(options = {}) {
   ];
 
   const consoleContext = buildConsoleContextSummary({
-    version: PACKAGE.version,
+    version: versionContext.currentVersion,
+    currentVersion: versionContext.currentVersion,
+    packageVersion: versionContext.packageVersion,
+    latestTag: versionContext.latestTag,
+    headCommit: versionContext.headCommit,
+    versionSource: versionContext.source,
     currentMission: '☂️ KOSAME Console',
     mode: 'Readonly',
     projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
@@ -333,6 +367,11 @@ function collectLiveCockpitSnapshot(options = {}) {
     confirmationBridge: options.confirmationBridge || null,
     consoleContextSummary: consoleContext.summary,
     consoleContextStatus: consoleContext.status,
+    currentVersion: versionContext.currentVersion,
+    packageVersion: versionContext.packageVersion,
+    latestTag: versionContext.latestTag,
+    headCommit: versionContext.headCommit,
+    versionSource: versionContext.source,
     humanGate,
     warnings,
     nextAction,

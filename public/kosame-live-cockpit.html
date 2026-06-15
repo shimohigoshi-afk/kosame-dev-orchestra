@@ -227,20 +227,20 @@ h1 {
 .chat-meta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px 8px;
   align-items: center;
-  margin: 8px 0 10px;
+  margin: 8px 0 8px;
 }
 .chat-sound-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 999px;
   border: 1px solid rgba(125, 211, 252, 0.22);
   background: rgba(125, 211, 252, 0.08);
   color: #dbeafe;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.4;
 }
 .chat-sound-chip .sound-label {
@@ -254,12 +254,40 @@ h1 {
   background: rgba(125, 211, 252, 0.1);
   color: var(--accent);
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 5px 9px;
+  font-size: 11px;
   white-space: nowrap;
 }
 .chat-sound-btn:hover {
   background: rgba(125, 211, 252, 0.18);
+}
+.chat-sound-details {
+  margin: 4px 0 10px;
+  border: 1px solid rgba(125, 211, 252, 0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+}
+.chat-sound-details summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 7px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.chat-sound-details summary::-webkit-details-marker {
+  display: none;
+}
+.chat-sound-details summary::after {
+  content: '▾';
+  float: right;
+  color: var(--accent);
+}
+.chat-sound-details[open] summary::after {
+  content: '▴';
+}
+.chat-sound-details-body {
+  padding: 0 10px 10px;
 }
 .timestamp {
   margin-top: 16px;
@@ -280,16 +308,16 @@ h1 {
 .chat-bubble-user .chat-bubble-header { justify-content: flex-end; color: #cffafe; }
 .chat-bubble-user .chat-bubble-role { color: #e0f2fe; }
 .chat-bubble-ai .chat-bubble-role { color: #7dd3fc; }
-.chat-status-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
-.chat-status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
+.chat-status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 9px; }
+.chat-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
 .chat-status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.18); }
 .chat-status-badge.warn { color: #fbbf24; background: rgba(251, 191, 36, 0.09); border-color: rgba(251, 191, 36, 0.18); }
 .chat-status-badge.danger { color: var(--danger); background: rgba(248, 113, 113, 0.09); border-color: rgba(248, 113, 113, 0.18); }
-.chat-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.chat-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 12px; padding-top: 8px; border-top: 1px solid rgba(125,211,252,0.09); }
 .chat-quick-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.26); background: rgba(125,211,252,0.08); color: var(--accent); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
 .chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 42px; max-height: 96px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 40px; max-height: 86px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
 .chat-btn { cursor: pointer; padding: 10px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
@@ -316,6 +344,7 @@ h1 {
   .chat-sound-type-row::-webkit-scrollbar { display: none; }
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
   .chat-thread { max-height: 200px; }
+  .chat-sound-details-body { padding-bottom: 8px; }
 }
 </style>
 </head>
@@ -388,21 +417,27 @@ h1 {
             <span class="sound-label">通知音</span>
             <span id="sound-state">OFF</span>
           </span>
-          <div class="sound-mode-row">
+          <div class="sound-mode-row" aria-label="通知モード">
             <button type="button" class="chat-sound-mode-btn" id="sound-btn-off" data-mode="off">OFF</button>
             <button type="button" class="chat-sound-mode-btn" id="sound-btn-soft" data-mode="soft">Soft</button>
             <button type="button" class="chat-sound-mode-btn" id="sound-btn-clear" data-mode="clear">Clear</button>
           </div>
           <span id="sound-toggle" aria-hidden="true" style="display:none"></span>
           <button type="button" class="chat-sound-btn" id="sound-test">テスト音</button>
-          <span class="small" id="sound-hint" style="color:var(--muted)">ブラウザ操作後に有効化してください</span>
+          <span class="small" id="sound-hint" style="color:var(--muted)">Sound: OFF</span>
+          <span class="small" id="sound-hint-legacy" aria-hidden="true" style="display:none">ブラウザ操作後に有効化してください</span>
         </div>
-        <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
-          <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
-          <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
-          <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
-          <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
-        </div>
+        <details class="chat-sound-details">
+          <summary>通知テスト</summary>
+          <div class="chat-sound-details-body">
+            <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
+              <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
+              <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
+              <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
+              <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
+            </div>
+          </div>
+        </details>
         <div class="chat-status-badges" id="chat-status-badges" aria-label="チャット状態">
           <span class="chat-status-badge warn" id="chat-ai-badge">AI: 未確認</span>
           <span class="chat-status-badge warn" id="chat-context-badge">Context: 未確認</span>
@@ -732,8 +767,8 @@ function updateNotificationUI() {
   });
   if (hintNode) {
     hintNode.textContent = notificationEnabled
-      ? (notificationUnlocked ? '通知音は有効ですっ☂️' : 'ブラウザ操作後に有効化してください')
-      : '通知音はOFFですっ';
+      ? (notificationUnlocked ? `Sound: ${modeLabel}` : `Sound: ${modeLabel} / ブラウザ操作後に有効化`)
+      : 'Sound: OFF';
   }
   if (soundBadge) {
     soundBadge.textContent = `Sound: ${modeLabel}`;

@@ -154,6 +154,7 @@ async function handleChatRequest(body) {
       content: [
         'KOSAME Console の現在地を次の安全な要約から判断してください。',
         'APIキー未設定 と 状態コンテキスト未取得 を混同しないでください。',
+        '現在Versionを聞かれたら、currentVersion または versionContext の package / tag / head を優先して使ってください。',
         '現在地や状態を聞かれたら、この要約に基づいて3行以内で短く答えてください。',
         '要約にない秘密情報、.env、credentials、customer data、音声データ、sales-dxの内部プロンプト、transcriber機密、保険ロジック、価格戦略、温度判定詳細は推測しないでください。',
         '',

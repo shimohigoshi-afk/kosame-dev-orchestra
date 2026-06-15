@@ -118,7 +118,13 @@ function buildConsoleContextSummary(snapshot) {
   const lines = [];
   const warnings = [];
 
-  lines.push(`KOSAME Console / version=${normalizeText(snapshot.version || 'unknown')} / mode=${normalizeText(snapshot.mode || 'Readonly')}`);
+  const currentVersion = normalizeText(snapshot.currentVersion || snapshot.version || 'unknown');
+  const packageVersion = normalizeText(snapshot.packageVersion || currentVersion || 'unknown');
+  const latestTag = normalizeText(snapshot.latestTag || `v${packageVersion}`);
+  const headCommit = normalizeText(snapshot.headCommit || 'unknown');
+  lines.push(`KOSAME Console / version=${currentVersion} / mode=${normalizeText(snapshot.mode || 'Readonly')}`);
+  lines.push(`currentVersion=${currentVersion}`);
+  lines.push(`versionContext=package=${packageVersion} / tag=${latestTag} / head=${headCommit}`);
   if (snapshot.currentMission) {
     lines.push(`currentMission=${normalizeText(snapshot.currentMission)}`);
   }
@@ -205,7 +211,7 @@ function buildConsoleContextSummary(snapshot) {
     lines.push(`latestCommit=${latestCommit}`);
   }
 
-  lines.push(`releaseTag=v${normalizeText(snapshot.version || 'unknown')}`);
+  lines.push(`releaseTag=v${currentVersion}`);
   lines.push('excluded=redacted sensitive categories');
 
   const summary = lines.join('\n');

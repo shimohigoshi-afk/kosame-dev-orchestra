@@ -50,6 +50,7 @@ body {
   align-items: stretch;
   margin-bottom: 18px;
 }
+.idea-board-outer { order: 4; }
 .hero-card, .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -78,57 +79,83 @@ body {
 .stage-ring,
 .stage-glow,
 .stage-grid,
-.stage-scanline {
+.stage-scanline,
+.stage-arc,
+.stage-trace,
+.stage-dots {
   position: absolute;
   inset: 0;
 }
 .stage-halo {
   background:
-    radial-gradient(circle at 50% 36%, rgba(125, 211, 252, 0.24), transparent 22%),
-    radial-gradient(circle at 50% 48%, rgba(167, 139, 250, 0.18), transparent 30%);
-  filter: blur(8px);
-  animation: stagePulse 8s ease-in-out infinite;
+    radial-gradient(circle at 46% 34%, rgba(125, 211, 252, 0.18), transparent 18%),
+    radial-gradient(circle at 60% 44%, rgba(167, 139, 250, 0.14), transparent 24%),
+    radial-gradient(circle at 50% 58%, rgba(59, 130, 246, 0.12), transparent 34%);
+  filter: blur(10px);
+  animation: stagePulse 10s ease-in-out infinite;
 }
 .stage-ring {
   inset: auto;
   left: 50%;
-  top: 48%;
+  top: 46%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(125, 211, 252, 0.16);
-  box-shadow: 0 0 24px rgba(125, 211, 252, 0.08);
+  border: 1px solid rgba(125, 211, 252, 0.10);
+  box-shadow: 0 0 20px rgba(125, 211, 252, 0.05);
 }
 .stage-ring.stage-ring-a {
-  width: min(420px, 44vw);
-  height: min(420px, 44vw);
-  animation: stageRotate 26s linear infinite;
+  width: min(320px, 34vw);
+  height: min(320px, 34vw);
+  animation: stageRotate 28s linear infinite;
 }
 .stage-ring.stage-ring-b {
-  width: min(300px, 32vw);
-  height: min(300px, 32vw);
+  width: min(228px, 24vw);
+  height: min(228px, 24vw);
   border-style: dashed;
-  border-color: rgba(167, 139, 250, 0.16);
-  animation: stageRotateReverse 20s linear infinite;
+  border-color: rgba(167, 139, 250, 0.14);
+  animation: stageRotateReverse 22s linear infinite;
+}
+.stage-arc {
+  background:
+    conic-gradient(from 220deg, transparent 0 30deg, rgba(125,211,252,0.22) 30deg 44deg, transparent 44deg 120deg, rgba(167,139,250,0.18) 120deg 136deg, transparent 136deg 300deg, rgba(59,130,246,0.16) 300deg 318deg, transparent 318deg 360deg);
+  mask: radial-gradient(circle at center, transparent 0 42%, rgba(0,0,0,0.95) 43% 57%, transparent 58%);
+  opacity: 0.72;
+  animation: stageArcSpin 24s linear infinite;
+}
+.stage-trace {
+  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.08) 45%, rgba(125,211,252,0.18) 50%, rgba(167,139,250,0.08) 55%, transparent 100%);
+  transform: translate3d(0, 0, 0);
+  mask: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 74%);
+  animation: stageTraceSweep 11s ease-in-out infinite;
+}
+.stage-dots {
+  background:
+    radial-gradient(circle at 38% 42%, rgba(125,211,252,0.32) 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 62% 56%, rgba(167,139,250,0.26) 0 1.2px, transparent 1.4px),
+    radial-gradient(circle at 50% 34%, rgba(125,211,252,0.22) 0 1.4px, transparent 1.6px);
+  background-size: 100% 100%;
+  opacity: 0.62;
+  animation: stageDotsFlicker 7s ease-in-out infinite;
 }
 .stage-grid {
   background:
     linear-gradient(rgba(125, 211, 252, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(125, 211, 252, 0.04) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: radial-gradient(circle at center, rgba(0,0,0,0.95), transparent 78%);
-  opacity: 0.55;
-  animation: stageGridFloat 18s linear infinite;
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 80%);
+  opacity: 0.4;
+  animation: stageGridFloat 20s linear infinite;
 }
 .stage-scanline {
   background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.1) 48%, transparent 100%);
   transform: translateY(-52%);
-  opacity: 0.45;
-  animation: stageScan 9s linear infinite;
+  opacity: 0.3;
+  animation: stageScan 10s linear infinite;
 }
 .stage-glow {
-  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.12) 58%, rgba(8, 19, 35, 0.42) 100%);
+  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.10) 58%, rgba(8, 19, 35, 0.36) 100%);
   mix-blend-mode: screen;
-  animation: stageGlow 6s ease-in-out infinite;
+  animation: stageGlow 8s ease-in-out infinite;
 }
 @keyframes stageRotate {
   from { transform: translate(-50%, -50%) rotate(0deg); }
@@ -145,6 +172,18 @@ body {
 @keyframes stageGlow {
   0%, 100% { opacity: 0.65; }
   50% { opacity: 1; }
+}
+@keyframes stageArcSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes stageTraceSweep {
+  0%, 100% { opacity: 0.25; transform: translateX(-3%); }
+  50% { opacity: 0.7; transform: translateX(3%); }
+}
+@keyframes stageDotsFlicker {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.75; }
 }
 @keyframes stageGridFloat {
   from { background-position: 0 0, 0 0; }
@@ -169,19 +208,19 @@ body {
   z-index: 1;
 }
 .chat-outer {
-  order: 2;
+  order: 3;
 }
 .vault-outer {
   order: 3;
 }
 #project-status-grid {
-  order: 4;
-}
-.cb-outer {
   order: 5;
 }
-.footer {
+.cb-outer {
   order: 6;
+}
+.footer {
+  order: 8;
 }
 .chat-panel {
   scroll-margin-top: 20px;
@@ -462,7 +501,7 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 220px; max-height: 380px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-thread { min-height: 300px; max-height: 520px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
@@ -481,12 +520,61 @@ h1 {
 .chat-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 12px; padding-top: 8px; border-top: 1px solid rgba(125,211,252,0.09); }
 .chat-quick-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.26); background: rgba(125,211,252,0.08); color: var(--accent); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
 .chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
+.chat-primary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 8px;
+  margin: 10px 0 8px;
+}
+.chat-primary-btn {
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(125,211,252,0.22);
+  background: linear-gradient(180deg, rgba(125,211,252,0.16), rgba(125,211,252,0.08));
+  color: #e0f2fe;
+  box-shadow: 0 12px 24px rgba(7,17,31,0.18);
+}
+.chat-primary-btn:hover { background: linear-gradient(180deg, rgba(125,211,252,0.22), rgba(125,211,252,0.12)); }
+.chat-primary-btn.secondary {
+  border-color: rgba(167,139,250,0.22);
+  background: linear-gradient(180deg, rgba(167,139,250,0.14), rgba(167,139,250,0.06));
+  color: #ede9fe;
+}
+.chat-primary-btn.secondary:hover { background: linear-gradient(180deg, rgba(167,139,250,0.2), rgba(167,139,250,0.1)); }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 56px; max-height: 128px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 70px; max-height: 156px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
-.chat-btn { cursor: pointer; padding: 10px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
+.chat-btn { cursor: pointer; padding: 11px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
 .chat-btn.cb-active { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.12); color: #fbbf24; }
+.chat-action-drawer {
+  margin: 10px 0 2px;
+  border: 1px solid rgba(125,211,252,0.12);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+}
+.chat-action-drawer > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.chat-action-drawer > summary::-webkit-details-marker { display: none; }
+.chat-action-drawer > summary::after { content: '▾'; color: var(--accent); }
+.chat-action-drawer[open] > summary::after { content: '▴'; }
+.chat-action-drawer-body {
+  padding: 0 12px 10px;
+}
 @media (max-width: 760px) {
   .chat-input-row { flex-direction: column; align-items: stretch; }
   .chat-btn, .chat-sound-btn { width: 100%; text-align: center; }
@@ -576,11 +664,30 @@ h1 {
 .active-task-board .panel {
   animation: boardIdlePulse 9s ease-in-out infinite;
 }
+.active-task-board .panel,
+.idea-board-panel {
+  position: relative;
+  overflow: hidden;
+}
+.idea-board-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(192,132,252,0.05) 35%, rgba(125,211,252,0.05) 55%, transparent 80%);
+  transform: translateX(-35%);
+  animation: ideaShimmer 18s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ideaShimmer {
+  0%, 100% { transform: translateX(-35%); opacity: 0.35; }
+  50% { transform: translateX(35%); opacity: 0.7; }
+}
 @keyframes boardIdlePulse {
   0%, 100% { box-shadow: var(--shadow); }
   50% { box-shadow: var(--shadow), 0 0 28px rgba(125,211,252,0.055); }
 }
 .task-board-section { margin-top: 18px; }
+.task-board-summary { margin-top: 12px; }
 .task-board-section-title {
   font-size: 11px;
   letter-spacing: 0.2em;
@@ -617,6 +724,21 @@ h1 {
   font-weight: 700;
   color: var(--text);
   line-height: 1;
+}
+.task-motion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.task-motion-panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 176px;
+}
+.task-motion-panel h3,
+.task-motion-panel .stack {
+  position: relative;
+  z-index: 1;
 }
 .task-board-details {
   margin-top: 18px;
@@ -669,6 +791,59 @@ h1 {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+.running-task-wrapper .task-motion-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.running-task-wrapper .task-motion-layer::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border-radius: inherit;
+  border: 1px solid rgba(125,211,252,0.18);
+  box-shadow: inset 0 0 12px rgba(125,211,252,0.08);
+  animation: taskOrbitGlow 3.8s ease-in-out infinite;
+}
+.running-task-wrapper .task-motion-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.06) 38%, rgba(125,211,252,0.16) 50%, rgba(167,139,250,0.06) 62%, transparent 100%);
+  animation: taskScanLine 2.9s linear infinite;
+}
+.running-task-wrapper .task-activity-dots {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  z-index: 1;
+  display: inline-flex;
+  gap: 4px;
+}
+.running-task-wrapper .task-activity-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(125,211,252,0.9);
+  animation: taskDotPulse 1.5s ease-in-out infinite;
+}
+.running-task-wrapper .task-activity-dots span:nth-child(2) { animation-delay: 0.18s; }
+.running-task-wrapper .task-activity-dots span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes taskOrbitGlow {
+  0%, 100% { opacity: 0.55; transform: scale(0.995); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@keyframes taskScanLine {
+  from { transform: translateX(-18%); }
+  to { transform: translateX(18%); }
+}
+@keyframes taskDotPulse {
+  0%, 100% { opacity: 0.22; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-1px); }
+}
 .active-task-card {
   position: relative;
   z-index: 1;
@@ -711,7 +886,7 @@ h1 {
 .chat-btn#chat-send:hover { background: rgba(125,211,252,0.26); }
 
 /* API Cost section */
-.api-cost-outer { order: 6; }
+.api-cost-outer { order: 7; }
 
 @media (prefers-reduced-motion: reduce) {
   .stage-halo, .stage-ring, .stage-grid, .stage-scanline, .stage-glow {
@@ -731,23 +906,26 @@ h1 {
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .chat-outer { order: 1; }
-  .command-stage { order: 2; }
-  .active-task-board { order: 3; }
+  .active-task-board { order: 2; }
+  .idea-board-outer { order: 3; }
   #project-status-grid { order: 4; }
   .cb-outer { order: 5; }
   .api-cost-outer { order: 6; }
   .footer { order: 7; }
+  .command-stage { order: 8; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-quick-actions::-webkit-scrollbar { display: none; }
+  .chat-primary-actions { grid-template-columns: 1fr; }
   .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-sound-type-row::-webkit-scrollbar { display: none; }
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
-  .chat-thread { min-height: 180px; max-height: 260px; }
+  .chat-thread { min-height: 220px; max-height: 300px; }
   .chat-sound-details-body { padding-bottom: 8px; }
   .task-board-counts { gap: 8px; }
   .task-count-card { flex-basis: calc(50% - 4px); }
+  .grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -757,6 +935,9 @@ h1 {
       <div class="hero-card hero-compact-card">
         <div class="stage-visual" aria-hidden="true">
           <div class="stage-halo"></div>
+          <div class="stage-arc"></div>
+          <div class="stage-trace"></div>
+          <div class="stage-dots"></div>
           <div class="stage-ring stage-ring-a"></div>
           <div class="stage-ring stage-ring-b"></div>
           <div class="stage-grid"></div>
@@ -796,25 +977,24 @@ h1 {
     <section class="active-task-board" id="active-task-board" style="margin-top:14px">
       <article class="panel">
         <h2>ACTIVE TASK BOARD</h2>
-        <p class="lead">タスク・ウィッシュリスト・保存状態を一か所に統合して表示します。進行中タスクは発光枠で強調されます。</p>
+        <p class="lead">今やっていることを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
 
-        <!-- Count cards -->
-        <div class="task-board-counts">
+        <div class="task-board-counts task-board-summary">
           <div class="task-count-card">
             <div class="task-count-label">次にやる候補</div>
             <div class="task-count-value" id="feed-selected-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">実行中</div>
+            <div class="task-count-value" id="feed-running-count">—</div>
           </div>
           <div class="task-count-card">
             <div class="task-count-label">Human Gate待ち</div>
             <div class="task-count-value" id="feed-human-gate-count">—</div>
           </div>
           <div class="task-count-card">
-            <div class="task-count-label">blocked</div>
+            <div class="task-count-label">Blocked</div>
             <div class="task-count-value" id="feed-blocked-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">Wishlist 全件</div>
-            <div class="task-count-value" id="wishlist-total-count">—</div>
           </div>
           <div class="task-count-card">
             <div class="task-count-label">Auto Save</div>
@@ -822,54 +1002,36 @@ h1 {
           </div>
         </div>
 
-        <!-- NEXT TASK FEED subsection -->
         <div class="task-board-section">
           <h3 class="task-board-section-title">NEXT TASK FEED</h3>
           <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
-          <div class="stack" style="margin-top:10px">
-            <div class="subpanel">
-              <h3>今やる候補 1〜3件</h3>
-              <div id="feed-selected" class="stack">読み込み中...</div>
+          <div class="task-motion-grid" style="margin-top:10px">
+            <div class="subpanel task-motion-panel">
+              <h3>RUNNING</h3>
+              <div id="feed-running" class="stack">読み込み中...</div>
             </div>
-            <div class="subpanel">
-              <h3>Human Gate 候補</h3>
+            <div class="subpanel task-motion-panel">
+              <h3>WAITING FOR AI</h3>
+              <div id="feed-waiting" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel task-motion-panel">
+              <h3>HUMAN GATE READY</h3>
               <div id="feed-human-gate" class="stack">読み込み中...</div>
             </div>
-            <div class="subpanel">
+            <div class="subpanel task-motion-panel">
+              <h3>NEXT UP</h3>
+              <div id="feed-selected" class="stack">読み込み中...</div>
+            </div>
+          </div>
+        </div>
+
+        <details class="task-board-details">
+          <summary>Collapsed Details / AUTO SAVE / TASK VAULT / WARNINGS</summary>
+          <div class="task-board-details-body">
+            <div class="subpanel" style="margin-bottom:12px">
               <h3>危険ゲート / 注意</h3>
               <div id="feed-warnings" class="mono">読み込み中...</div>
             </div>
-          </div>
-        </div>
-
-        <!-- WISHLIST / LATER IDEAS subsection -->
-        <div class="task-board-section">
-          <h3 class="task-board-section-title">WISHLIST / LATER IDEAS</h3>
-          <div class="task-board-meta small">
-            保留: <span id="wishlist-pending-count">—</span> &nbsp;/&nbsp;
-            提案候補: <span id="wishlist-later-count">—</span> &nbsp;/&nbsp;
-            最終更新: <span id="wishlist-last-updated">—</span>
-          </div>
-          <div class="stack" style="margin-top:10px">
-            <div class="subpanel">
-              <h3>保留中アイデア</h3>
-              <div id="wishlist-pending" class="stack">読み込み中...</div>
-            </div>
-            <div class="subpanel">
-              <h3>そろそろ提案候補</h3>
-              <div id="wishlist-later" class="stack">読み込み中...</div>
-            </div>
-            <div class="subpanel">
-              <h3>次に提案する理由</h3>
-              <div id="wishlist-guidance" class="mono">読み込み中...</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Collapsible details: Task Vault + Auto Save + Memory Vault -->
-        <details class="task-board-details">
-          <summary>AUTO SAVE / TASK VAULT 詳細 / デバッグ情報を開く</summary>
-          <div class="task-board-details-body">
             <div class="vault-grid" style="margin-bottom:14px">
               <div class="metric">
                 <div class="label">最終保存</div>
@@ -985,7 +1147,7 @@ h1 {
     <section class="chat-outer" style="margin-top:14px">
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
-        <p class="lead">こさめに質問・相談ができます。Console の状態をコンテキストとして共有します。Codexへのキー入力は行いません。</p>
+        <p class="lead">こさめに質問・相談ができます。Console の状態をコンテキストとして共有します。必要なときだけ、チャットへ移動してください。</p>
         <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
           <div class="chat-callout-text">
             <strong>こさめが呼んでます ☂️</strong>
@@ -1034,13 +1196,20 @@ h1 {
           <span class="chat-status-badge warn" id="chat-sound-badge">Sound: OFF</span>
         </div>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
-        <div class="chat-quick-actions" aria-label="クイックアクション">
-          <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
-          <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
-          <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
-          <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
-          <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
+        <div class="chat-primary-actions" aria-label="提案アクション">
+          <button type="button" class="chat-primary-btn" data-chat-prompt="この案で進めます。Console の現在地、次の一手、危険ゲートを短く整理して。">この案で進める</button>
+          <button type="button" class="chat-primary-btn secondary" data-chat-prompt="代替案を1〜3件、危険ゲートとコスト感つきで提案して。">代替案を出す</button>
         </div>
+        <details class="chat-action-drawer">
+          <summary>クイック操作</summary>
+          <div class="chat-quick-actions chat-action-drawer-body" aria-label="クイックアクション">
+            <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
+            <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
+            <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
+            <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
+            <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
+          </div>
+        </details>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -1059,6 +1228,53 @@ h1 {
           <textarea id="chat-input" placeholder="入力してください。Enterで送信、Shift+Enterで改行。"></textarea>
           <div class="chat-btn" id="chat-send">送信</div>
           <div class="chat-btn" id="chat-summarize">確認待ちを要約</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="idea-board-outer" style="margin-top:14px">
+      <article class="panel idea-board-panel">
+        <h2>IDEA BOARD</h2>
+        <p class="lead">WISHLIST / LATER IDEAS はここでまとめます。今やることと、あとで効くことを分けて見せます。</p>
+        <div class="task-board-counts">
+          <div class="task-count-card">
+            <div class="task-count-label">保留中アイデア</div>
+            <div class="task-count-value" id="idea-wishlist-pending-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">提案候補</div>
+            <div class="task-count-value" id="idea-wishlist-later-count">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">最終更新</div>
+            <div class="task-count-value" id="idea-wishlist-last-updated">—</div>
+          </div>
+          <div class="task-count-card">
+            <div class="task-count-label">Wishlist 全件</div>
+            <div class="task-count-value" id="idea-wishlist-total-count">—</div>
+          </div>
+        </div>
+        <div class="task-board-section">
+          <h3 class="task-board-section-title">WISHLIST / LATER IDEAS</h3>
+          <div class="task-board-meta small">
+            保留: <span id="wishlist-pending-count">—</span> &nbsp;/&nbsp;
+            提案候補: <span id="wishlist-later-count">—</span> &nbsp;/&nbsp;
+            最終更新: <span id="wishlist-last-updated">—</span>
+          </div>
+          <div class="stack" style="margin-top:10px">
+            <div class="subpanel">
+              <h3>保留中アイデア</h3>
+              <div id="wishlist-pending" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>そろそろ提案候補</h3>
+              <div id="wishlist-later" class="stack">読み込み中...</div>
+            </div>
+            <div class="subpanel">
+              <h3>次に提案する理由</h3>
+              <div id="wishlist-guidance" class="mono">読み込み中...</div>
+            </div>
+          </div>
         </div>
       </article>
     </section>
@@ -1452,9 +1668,27 @@ function hideTypingIndicator() {
   if (el) el.hidden = true;
 }
 
+function normalizeTaskStatusValue(task) {
+  return String(task && task.status ? task.status : '').trim().toLowerCase();
+}
+
 function isTaskRunning(task) {
-  const s = (task.status || '').toLowerCase();
+  const s = normalizeTaskStatusValue(task);
   return s === 'in_progress' || s === 'running' || s === 'active';
+}
+
+function isTaskWaiting(task) {
+  const s = normalizeTaskStatusValue(task);
+  return s === 'waiting_ai' || s === 'waiting_for_ai' || s === 'awaiting_ai' || s === 'queued';
+}
+
+function isTaskHumanGate(task) {
+  const s = normalizeTaskStatusValue(task);
+  return task.humanGateRequired || s === 'human_gate' || s === 'approval_required' || s === 'waiting_human' || task.risk === 'high' || task.risk === 'critical';
+}
+
+function isTaskMotionCard(task) {
+  return isTaskRunning(task) || isTaskWaiting(task) || isTaskHumanGate(task);
 }
 
 function updateHeroChips(snapshot) {
@@ -1785,10 +2019,23 @@ function renderCardStack(node, items, emptyLabel, buildTitle, buildBody, isActiv
     if (running) {
       const wrapper = document.createElement('div');
       wrapper.className = 'running-task-wrapper';
+      const motion = document.createElement('div');
+      motion.className = 'task-motion-layer';
+      motion.style.zIndex = '0';
+      const dots = document.createElement('div');
+      dots.className = 'task-activity-dots';
+      dots.style.zIndex = '1';
+      dots.innerHTML = '<span></span><span></span><span></span>';
       const inner = document.createElement('div');
       inner.className = 'subpanel active-task-card running';
+      h3.style.position = 'relative';
+      h3.style.zIndex = '1';
+      body.style.position = 'relative';
+      body.style.zIndex = '1';
       inner.appendChild(h3);
       inner.appendChild(body);
+      inner.appendChild(motion);
+      inner.appendChild(dots);
       wrapper.appendChild(inner);
       node.appendChild(wrapper);
     } else {
@@ -1874,26 +2121,49 @@ function renderTaskFeeder(taskFeeder) {
   const feed = taskFeeder || {};
   text(document.getElementById('feed-last-generated'), feed.lastFeedGeneratedAt || feed.generatedAt || '—');
   const selectedCount = Number.isFinite(Number(feed.selectedCount)) ? Number(feed.selectedCount) : (feed.selectedTasks || []).length;
+  const runningTasks = (feed.selectedTasks || []).filter(isTaskRunning);
+  const waitingTasks = (feed.selectedTasks || []).filter(isTaskWaiting);
+  const humanGateTasks = (feed.humanGateTasks || []).filter(isTaskHumanGate);
+  const nextUpTasks = (feed.selectedTasks || []).filter(task => !isTaskRunning(task) && !isTaskWaiting(task) && !isTaskHumanGate(task));
   const blockedCount = Number.isFinite(Number(feed.blockedCount)) ? Number(feed.blockedCount) : (feed.blockedTasks || []).length;
   const humanGateCount = Number.isFinite(Number(feed.humanGateWaitingCount)) ? Number(feed.humanGateWaitingCount) : (feed.humanGateTasks || []).length;
   text(document.getElementById('feed-selected-count'), String(selectedCount));
+  text(document.getElementById('feed-running-count'), String(runningTasks.length));
   text(document.getElementById('feed-blocked-count'), String(blockedCount));
   text(document.getElementById('feed-human-gate-count'), String(humanGateCount));
 
   renderCardStack(
-    document.getElementById('feed-selected'),
-    feed.selectedTasks || [],
-    '今やる候補はまだありません。',
+    document.getElementById('feed-running'),
+    runningTasks,
+    '現在進行中のタスクはありません。',
     (task) => `${task.taskId || 'task'} / ${task.priority || 'P?'}`,
     formatTaskFeedItem,
     isTaskRunning,
   );
 
   renderCardStack(
+    document.getElementById('feed-waiting'),
+    waitingTasks,
+    'WAITING FOR AI のタスクはありません。',
+    (task) => `${task.taskId || 'task'} / ${task.status || 'waiting'}`,
+    formatTaskFeedItem,
+    isTaskWaiting,
+  );
+
+  renderCardStack(
     document.getElementById('feed-human-gate'),
-    feed.humanGateTasks || [],
+    humanGateTasks,
     'human gate 待ちのタスクはありません。',
     (task) => `${task.taskId || 'task'} / ${task.risk || 'risk?'}`,
+    formatTaskFeedItem,
+    isTaskHumanGate,
+  );
+
+  renderCardStack(
+    document.getElementById('feed-selected'),
+    nextUpTasks.slice(0, 3),
+    '次にやる候補はまだありません。',
+    (task) => `${task.taskId || 'task'} / ${task.priority || 'P?'}`,
     formatTaskFeedItem,
   );
 
@@ -1907,10 +2177,15 @@ function renderTaskFeeder(taskFeeder) {
 
 function renderWishlist(wishlist) {
   const list = wishlist || {};
-  text(document.getElementById('wishlist-total-count'), String(list.totalCount ?? 0));
+  const totalNode = document.getElementById('wishlist-total-count');
+  if (totalNode) text(totalNode, String(list.totalCount ?? 0));
   text(document.getElementById('wishlist-pending-count'), String(list.pendingCount ?? 0));
   text(document.getElementById('wishlist-later-count'), String(list.laterIdeas ? list.laterIdeas.length : 0));
   text(document.getElementById('wishlist-last-updated'), list.lastUpdatedAt || '—');
+  text(document.getElementById('idea-wishlist-total-count'), String(list.totalCount ?? 0));
+  text(document.getElementById('idea-wishlist-pending-count'), String(list.pendingCount ?? 0));
+  text(document.getElementById('idea-wishlist-later-count'), String(list.laterIdeas ? list.laterIdeas.length : 0));
+  text(document.getElementById('idea-wishlist-last-updated'), list.lastUpdatedAt || '—');
 
   renderCardStack(
     document.getElementById('wishlist-pending'),

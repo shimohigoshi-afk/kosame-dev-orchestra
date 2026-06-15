@@ -88,75 +88,75 @@ body {
 }
 .stage-halo {
   background:
-    radial-gradient(circle at 54% 42%, rgba(125, 211, 252, 0.08), transparent 24%),
-    radial-gradient(circle at 74% 34%, rgba(167, 139, 250, 0.07), transparent 22%),
-    radial-gradient(circle at 46% 64%, rgba(59, 130, 246, 0.06), transparent 32%);
-  filter: blur(10px);
-  animation: stagePulse 14s ease-in-out infinite;
+    radial-gradient(circle at 56% 44%, rgba(125, 211, 252, 0.05), transparent 24%),
+    radial-gradient(circle at 74% 34%, rgba(167, 139, 250, 0.045), transparent 22%),
+    radial-gradient(circle at 46% 64%, rgba(59, 130, 246, 0.035), transparent 32%);
+  filter: blur(12px);
+  animation: stagePulse 18s ease-in-out infinite;
 }
 .stage-ring {
   inset: auto;
-  left: 72%;
-  top: 46%;
+  left: 76%;
+  top: 43%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid rgba(125, 211, 252, 0.05);
-  box-shadow: 0 0 10px rgba(125, 211, 252, 0.03);
+  border: 1px solid rgba(125, 211, 252, 0.03);
+  box-shadow: 0 0 8px rgba(125, 211, 252, 0.02);
 }
 .stage-ring.stage-ring-a {
-  width: min(205px, 22vw);
-  height: min(205px, 22vw);
-  animation: stageRotate 34s linear infinite;
+  width: min(164px, 18vw);
+  height: min(164px, 18vw);
+  animation: stageRotate 42s linear infinite;
 }
 .stage-ring.stage-ring-b {
-  width: min(132px, 15vw);
-  height: min(132px, 15vw);
+  width: min(102px, 12vw);
+  height: min(102px, 12vw);
   border-style: dashed;
-  border-color: rgba(167, 139, 250, 0.07);
-  animation: stageRotateReverse 28s linear infinite;
+  border-color: rgba(167, 139, 250, 0.045);
+  animation: stageRotateReverse 34s linear infinite;
 }
 .stage-arc {
   background:
-    conic-gradient(from 210deg, transparent 0 34deg, rgba(125,211,252,0.13) 34deg 42deg, transparent 42deg 118deg, rgba(167,139,250,0.10) 118deg 128deg, transparent 128deg 304deg, rgba(59,130,246,0.08) 304deg 316deg, transparent 316deg 360deg);
+    conic-gradient(from 210deg, transparent 0 34deg, rgba(125,211,252,0.08) 34deg 42deg, transparent 42deg 118deg, rgba(167,139,250,0.06) 118deg 128deg, transparent 128deg 304deg, rgba(59,130,246,0.05) 304deg 316deg, transparent 316deg 360deg);
   mask: radial-gradient(circle at center, transparent 0 44%, rgba(0,0,0,0.95) 45% 57%, transparent 58%);
-  opacity: 0.52;
-  animation: stageArcSpin 26s linear infinite;
+  opacity: 0.36;
+  animation: stageArcSpin 32s linear infinite;
 }
 .stage-trace {
-  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.05) 45%, rgba(125,211,252,0.12) 50%, rgba(167,139,250,0.05) 55%, transparent 100%);
+  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.03) 45%, rgba(125,211,252,0.08) 50%, rgba(167,139,250,0.03) 55%, transparent 100%);
   transform: translate3d(0, 0, 0);
   mask: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 74%);
-  animation: stageTraceSweep 18s ease-in-out infinite;
+  animation: stageTraceSweep 22s ease-in-out infinite;
 }
 .stage-dots {
   background:
-    radial-gradient(circle at 22% 28%, rgba(125,211,252,0.28) 0 1.3px, transparent 1.6px),
-    radial-gradient(circle at 68% 24%, rgba(167,139,250,0.25) 0 1.4px, transparent 1.7px),
-    radial-gradient(circle at 74% 66%, rgba(59,130,246,0.24) 0 1.4px, transparent 1.7px),
-    radial-gradient(circle at 28% 76%, rgba(125,211,252,0.16) 0 1.3px, transparent 1.6px);
+    radial-gradient(circle at 22% 28%, rgba(125,211,252,0.18) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 68% 24%, rgba(167,139,250,0.16) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 74% 66%, rgba(59,130,246,0.14) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 28% 76%, rgba(125,211,252,0.1) 0 1.2px, transparent 1.5px);
   background-size: 100% 100%;
-  opacity: 0.42;
-  animation: stageDotsFlicker 11s ease-in-out infinite;
+  opacity: 0.28;
+  animation: stageDotsFlicker 14s ease-in-out infinite;
 }
 .stage-grid {
   background:
-    linear-gradient(rgba(125, 211, 252, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(125, 211, 252, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(125, 211, 252, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.028) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 80%);
-  opacity: 0.26;
+  opacity: 0.18;
   animation: stageGridFloat 30s linear infinite;
 }
 .stage-scanline {
-  background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.06) 48%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.045) 48%, transparent 100%);
   transform: translateY(-52%);
-  opacity: 0.18;
-  animation: stageScan 16s linear infinite;
+  opacity: 0.12;
+  animation: stageScan 20s linear infinite;
 }
 .stage-glow {
-  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.08) 58%, rgba(8, 19, 35, 0.30) 100%);
+  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.05) 58%, rgba(8, 19, 35, 0.26) 100%);
   mix-blend-mode: screen;
-  animation: stageGlow 10s ease-in-out infinite;
+  animation: stageGlow 14s ease-in-out infinite;
 }
 @keyframes stageRotate {
   from { transform: translate(-50%, -50%) rotate(0deg); }
@@ -211,8 +211,8 @@ body {
 .chat-outer { order: 4; }
 .support-details-outer { order: 5; }
 .footer { order: 6; }
+.project-registry-shell { order: 2; display: grid; gap: 14px; }
 .active-task-board { order: 3; }
-#project-status-grid { order: 2; }
 .chat-panel {
   scroll-margin-top: 20px;
 }
@@ -302,6 +302,208 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 14px;
+}
+.project-registry-shell {
+  display: grid;
+  gap: 14px;
+}
+.project-strip-panel .lead,
+.project-focus-panel .lead {
+  margin-bottom: 12px;
+}
+.project-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.project-strip-item {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+.project-strip-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125,211,252,0.24);
+  background: rgba(125,211,252,0.05);
+}
+.project-strip-item.selected {
+  border-color: rgba(125,211,252,0.42);
+  background: rgba(125,211,252,0.08);
+  box-shadow: 0 10px 24px rgba(7,17,31,0.18);
+}
+.project-strip-item.running::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.08) 45%, rgba(167,139,250,0.06) 55%, transparent 100%);
+  animation: stripScan 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes stripScan {
+  from { transform: translateX(-24%); }
+  to { transform: translateX(24%); }
+}
+.project-strip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.project-strip-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.project-strip-status {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.project-strip-meta {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.project-strip-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.project-strip-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+}
+.project-strip-metric strong {
+  color: var(--text);
+  font-size: 11px;
+}
+.project-focus-panel {
+  position: relative;
+  overflow: hidden;
+}
+.project-focus-panel .focus-switch {
+  animation: focusSwitch 180ms ease-out;
+}
+@keyframes focusSwitch {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.project-focus-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.project-focus-title {
+  margin: 0 0 10px;
+}
+.project-focus-shell {
+  display: grid;
+  gap: 14px;
+}
+.project-focus-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.project-focus-summary .status-badge {
+  margin-bottom: 0;
+}
+.project-focus-stack {
+  display: grid;
+  gap: 12px;
+}
+.project-focus-stack .subpanel {
+  min-height: 0;
+}
+.project-focus-stack .subpanel h3 {
+  letter-spacing: 0.14em;
+}
+.agent-event-feed {
+  display: grid;
+  gap: 8px;
+}
+.agent-event-feed-item {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.035);
+  overflow: hidden;
+  animation: agentFeedEnter 220ms ease-out;
+}
+.agent-event-feed-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.06) 46%, rgba(167,139,250,0.05) 55%, transparent 100%);
+  opacity: 0.22;
+  pointer-events: none;
+}
+.agent-event-feed-item .agent-event-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.agent-event-feed-item .agent-event-kind {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.agent-event-feed-item .agent-event-actor {
+  font-size: 11px;
+  color: #e0f2fe;
+}
+.agent-event-feed-item .agent-event-text {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.agent-event-feed-item .agent-event-meta {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.agent-event-feed-item.kind-running { border-color: rgba(125,211,252,0.14); }
+.agent-event-feed-item.kind-done { border-color: rgba(52,211,153,0.18); background: rgba(52,211,153,0.05); }
+.agent-event-feed-item.kind-verify-pass { border-color: rgba(34,197,94,0.18); background: rgba(34,197,94,0.05); }
+.agent-event-feed-item.kind-human-gate { border-color: rgba(251,191,36,0.18); background: rgba(251,191,36,0.05); }
+.agent-event-feed-item.kind-error { border-color: rgba(248,113,113,0.18); background: rgba(248,113,113,0.05); }
+.agent-event-feed-item.kind-blocked { border-color: rgba(248,113,113,0.16); background: rgba(248,113,113,0.04); }
+.agent-event-feed-item.kind-waiting { border-color: rgba(167,139,250,0.16); background: rgba(167,139,250,0.04); }
+.agent-event-feed-item.kind-start { border-color: rgba(125,211,252,0.16); background: rgba(125,211,252,0.04); }
+@keyframes agentFeedEnter {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .panel {
   padding: 18px;
@@ -656,9 +858,6 @@ h1 {
 
 /* ===== Active Task Board ===== */
 .active-task-board { order: 3; }
-.active-task-board .panel {
-  animation: boardIdlePulse 9s ease-in-out infinite;
-}
 .active-task-board .panel,
 .idea-board-panel {
   position: relative;
@@ -676,10 +875,6 @@ h1 {
 @keyframes ideaShimmer {
   0%, 100% { transform: translateX(-35%); opacity: 0.35; }
   50% { transform: translateX(35%); opacity: 0.7; }
-}
-@keyframes boardIdlePulse {
-  0%, 100% { box-shadow: var(--shadow); }
-  50% { box-shadow: var(--shadow), 0 0 28px rgba(125,211,252,0.055); }
 }
 .task-board-section { margin-top: 18px; }
 .task-board-summary { margin-top: 12px; }
@@ -925,7 +1120,7 @@ h1 {
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
-  #project-status-grid { order: 2; }
+  .project-registry-shell { order: 2; }
   .active-task-board { order: 3; }
   .chat-outer { order: 4; }
 .support-details-outer { order: 5; }
@@ -950,7 +1145,7 @@ h1 {
   <div class="shell">
     <section class="command-stage" style="margin-bottom:14px">
       <div class="hero-card hero-compact-card">
-        <div class="stage-visual" aria-hidden="true">
+        <div class="stage-visual signal-grid-hero-visual" aria-hidden="true">
           <div class="stage-halo"></div>
           <div class="stage-arc"></div>
           <div class="stage-trace"></div>
@@ -963,7 +1158,7 @@ h1 {
         </div>
         <div class="hero-compact-inner">
           <div class="hero-compact-left">
-          <div class="eyebrow">CURRENT MISSION &nbsp;/&nbsp; SIGNAL GRID HERO <span aria-hidden="true" style="display:none">LIVE COMMAND STAGE</span></div>
+          <div class="eyebrow">CURRENT MISSION &nbsp;/&nbsp; SIGNAL GRID HERO LITE <span aria-hidden="true" style="display:none">LIVE COMMAND STAGE</span></div>
             <h1>☂️ KOSAME Console</h1>
             <div class="title-copy">Dev Orchestra Command Center</div>
             <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
@@ -1044,10 +1239,30 @@ h1 {
             </div>
           </div>
         </div>
+
+        <div class="task-board-section">
+          <h3 class="task-board-section-title">AGENT EVENT FEED <span aria-hidden="true" style="display:none">LEVEL2 TEMPLATE</span></h3>
+          <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
+          <div id="agent-event-feed" class="agent-event-feed"></div>
+        </div>
       </article>
     </section>
 
-    <section class="grid" id="project-status-grid">
+    <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
+      <article class="panel project-strip-panel">
+        <h2>PROJECT STRIP</h2>
+        <p class="lead">Project Registry 由来の選択式ストリップです。増えても崩れないように、今見たいプロジェクトだけを小さく並べています。</p>
+        <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
+      </article>
+
+      <article class="panel project-focus-panel" id="project-focus-card">
+        <div class="project-focus-head">
+          <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
+          <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project / focus view</div>
+        </div>
+        <p class="lead">選択中のプロジェクトだけを大きく見せて、git status / changed files / staged files / recent commits / Actions を読む場所としてまとめています。</p>
+        <div id="project-focus" class="project-focus-shell"></div>
+      </article>
     </section>
 
     <section class="chat-outer" style="margin-top:14px">
@@ -1388,6 +1603,7 @@ const fallbackProjectRegistry = [
 const chatHistory = [];
 let latestSnapshot = null;
 let latestBridge = null;
+let selectedProjectId = '';
 let chatStatusState = {
   ai: 'missing',
   context: 'missing',
@@ -1788,74 +2004,141 @@ function repoStatusSummary(repo) {
   return `${clean} / 直近コミット ${commits} 件 / Actions ${actions} 行`;
 }
 
-function renderProjectRegistry(snapshot) {
-  const grid = document.getElementById('project-status-grid');
-  grid.innerHTML = '';
-
-  const fallbackProjects = [
-    snapshot.devOrchestra,
-    snapshot.salesDx,
-  ].filter(Boolean).map((project) => ({
-    ...project,
-    enabled: true,
-  }));
-
-  const projects = Array.isArray(snapshot.projects) && snapshot.projects.length
-    ? snapshot.projects
-    : fallbackProjects;
-
-  for (const [index, project] of projects.entries()) {
-    const article = document.createElement('article');
-    article.className = 'panel';
-
-    const title = document.createElement('h2');
-    title.textContent = project.statusTitle || `${project.shortName || project.name || `PROJECT ${index + 1}`} STATUS`;
-    article.appendChild(title);
-
-    const lead = document.createElement('div');
-    lead.className = 'lead';
-    lead.textContent = `${project.name || project.shortName || 'Project'} / ${project.type || 'unknown'} / ${project.enabled === false ? 'disabled' : 'enabled'}`;
-    article.appendChild(lead);
-
-    const repoMeta = document.createElement('div');
-    repoMeta.className = 'repo-meta';
-
-    const pathLine = document.createElement('div');
-    const code = document.createElement('code');
-    code.textContent = project.repoPath || '—';
-    pathLine.appendChild(code);
-    repoMeta.appendChild(pathLine);
-
-    const badgeLine = document.createElement('div');
-    const badge = document.createElement('span');
-    badge.className = `status-badge ${projectBadgeClass(project)}`;
-    badge.textContent = `${project.availability && project.availability !== 'available' ? `${project.availability} / ` : ''}${repoStatusSummary(project)}`;
-    badgeLine.appendChild(badge);
-    repoMeta.appendChild(badgeLine);
-    article.appendChild(repoMeta);
-
-    const stack = document.createElement('div');
-    stack.className = 'stack';
-    stack.id = `project-stack-${project.id || index}`;
-    article.appendChild(stack);
-
-    grid.appendChild(article);
-    renderRepoPanel(project, stack.id);
-  }
+function projectStatusTone(project) {
+  if (!project) return 'warn';
+  if (project.selected) return 'ok';
+  if (project.statusClass === 'danger') return 'danger';
+  if (project.statusClass === 'warn') return 'warn';
+  return project.warningCount > 0 ? 'warn' : 'ok';
 }
 
-function renderRepoPanel(repo, mountId) {
-  const mount = document.getElementById(mountId);
-  mount.innerHTML = '';
+function renderProjectRegistry(snapshot) {
+  const stripNode = document.getElementById('project-strip');
+  const focusNode = document.getElementById('project-focus');
+  const focusTitleNode = document.getElementById('project-focus-title');
+  const focusSubtitleNode = document.getElementById('project-focus-subtitle');
+  if (!stripNode || !focusNode) return;
 
+  const fallbackProjects = [snapshot.devOrchestra, snapshot.salesDx].filter(Boolean).map((project) => ({ ...project, enabled: true }));
+  const stripSource = snapshot.projectStrip && Array.isArray(snapshot.projectStrip.items)
+    ? snapshot.projectStrip.items
+    : Array.isArray(snapshot.projectStrip)
+      ? snapshot.projectStrip
+      : [];
+  const projects = stripSource.length
+    ? stripSource
+    : (Array.isArray(snapshot.projects) && snapshot.projects.length ? snapshot.projects : fallbackProjects);
+  const selectedId = selectedProjectId
+    || (snapshot.projectStrip && snapshot.projectStrip.selectedProjectId)
+    || (projects[0] && projects[0].id)
+    || 'dev-orchestra';
+  selectedProjectId = selectedId;
+  const selectedProject = projects.find((project) => project.id === selectedId) || projects[0] || null;
+
+  stripNode.innerHTML = '';
+  for (const [index, project] of projects.entries()) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `project-strip-item ${project.selected || project.id === selectedId ? 'selected' : ''} ${project.runningCount > 0 ? 'running' : ''}`;
+    button.dataset.projectId = project.id || `project-${index}`;
+
+    const head = document.createElement('div');
+    head.className = 'project-strip-head';
+    const titleWrap = document.createElement('div');
+    const title = document.createElement('div');
+    title.className = 'project-strip-title';
+    title.textContent = project.name || project.shortName || project.statusTitle || `PROJECT ${index + 1}`;
+    const status = document.createElement('div');
+    status.className = 'project-strip-status';
+    status.textContent = project.statusTitle || `${project.shortName || project.name || `PROJECT ${index + 1}`} STATUS`;
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(status);
+    const badge = document.createElement('span');
+    badge.className = `status-badge ${projectStatusTone(project)}`;
+    badge.textContent = project.selected || project.id === selectedId ? 'selected' : project.availability && project.availability !== 'available' ? project.availability : project.health || 'monitoring';
+    head.appendChild(titleWrap);
+    head.appendChild(badge);
+    button.appendChild(head);
+
+    const meta = document.createElement('div');
+    meta.className = 'project-strip-meta';
+    const line1 = document.createElement('div');
+    line1.textContent = `${project.repoPath || '—'}`;
+    const line2 = document.createElement('div');
+    line2.textContent = `${project.type || 'unknown'} / ${project.selected ? 'selected' : 'available'}`;
+    const line3 = document.createElement('div');
+    line3.textContent = project.lastUpdatedLabel || project.lastUpdatedAt || '—';
+    meta.appendChild(line1);
+    meta.appendChild(line2);
+    meta.appendChild(line3);
+    button.appendChild(meta);
+
+    const metrics = document.createElement('div');
+    metrics.className = 'project-strip-metrics';
+    const metricItems = [
+      ['RUN', project.runningCount ?? 0],
+      ['GATE', project.humanGateCount ?? 0],
+      ['WARN', project.warningCount ?? 0],
+    ];
+    for (const [label, value] of metricItems) {
+      const chip = document.createElement('span');
+      chip.className = 'project-strip-metric';
+      chip.innerHTML = `<strong>${label}</strong> ${value}`;
+      metrics.appendChild(chip);
+    }
+    button.appendChild(metrics);
+
+    button.addEventListener('click', () => {
+      selectedProjectId = project.id || selectedProjectId;
+      renderProjectRegistry(latestSnapshot || snapshot);
+    });
+    stripNode.appendChild(button);
+  }
+
+  focusNode.innerHTML = '';
+  if (focusTitleNode) {
+    focusTitleNode.textContent = selectedProject ? (selectedProject.statusTitle || `${selectedProject.shortName || selectedProject.name || 'PROJECT'} STATUS`) : 'SELECTED PROJECT FOCUS PANEL';
+  }
+  if (focusSubtitleNode) {
+    focusSubtitleNode.textContent = selectedProject ? `${selectedProject.name || selectedProject.shortName || 'Project'} / ${selectedProject.repoPath || '—'}` : 'selected project / focus view';
+  }
+
+  if (!selectedProject) {
+    const empty = document.createElement('div');
+    empty.className = 'mono';
+    empty.textContent = '選択中のプロジェクトがありません。';
+    focusNode.appendChild(empty);
+    return;
+  }
+
+  const focusShell = document.createElement('div');
+  focusShell.className = 'project-focus-shell focus-switch';
+
+  const statusRow = document.createElement('div');
+  statusRow.className = 'project-focus-summary';
+  const statusBadge = document.createElement('span');
+  statusBadge.className = `status-badge ${projectStatusTone(selectedProject)}`;
+  statusBadge.textContent = selectedProject.selected || selectedProject.id === selectedId ? 'selected project' : 'project';
+  const healthBadge = document.createElement('span');
+  healthBadge.className = `status-badge ${projectStatusTone(selectedProject)}`;
+  healthBadge.textContent = `${selectedProject.runningCount || 0} running / ${selectedProject.humanGateCount || 0} human gate / ${selectedProject.warningCount || 0} warnings`;
+  const updateBadge = document.createElement('span');
+  updateBadge.className = 'status-badge';
+  updateBadge.textContent = selectedProject.lastUpdatedLabel || selectedProject.lastUpdatedAt || '—';
+  statusRow.appendChild(statusBadge);
+  statusRow.appendChild(healthBadge);
+  statusRow.appendChild(updateBadge);
+  focusShell.appendChild(statusRow);
+
+  const focusGrid = document.createElement('div');
+  focusGrid.className = 'project-focus-shell';
   const pieces = [
-    ['git status -sb', repo.statusLines || []],
-    ['CHANGED FILES', repo.changedFiles || []],
-    ['STAGED FILES', repo.stagedFiles || []],
-    ['RECENT COMMITS', (repo.recentCommits || []).map(item => item.raw)],
-    ['GITHUB ACTIONS', repo.githubActions || []],
+    ['git status -sb', selectedProject.statusLines || []],
+    ['CHANGED FILES', selectedProject.changedFiles || []],
+    ['STAGED FILES', selectedProject.stagedFiles || []],
+    ['RECENT COMMITS', (selectedProject.recentCommits || []).map(item => item.raw)],
+    ['GITHUB ACTIONS', selectedProject.githubActions || []],
   ];
-
   for (const [title, lines] of pieces) {
     const subpanel = document.createElement('div');
     subpanel.className = 'subpanel';
@@ -1866,7 +2149,56 @@ function renderRepoPanel(repo, mountId) {
     body.textContent = lines.length ? lines.join('\n') : '—';
     subpanel.appendChild(h3);
     subpanel.appendChild(body);
-    mount.appendChild(subpanel);
+    focusGrid.appendChild(subpanel);
+  }
+  focusShell.appendChild(focusGrid);
+  focusNode.appendChild(focusShell);
+}
+
+function renderAgentEventFeed(agentEventFeed) {
+  const feed = agentEventFeed || {};
+  const mount = document.getElementById('agent-event-feed');
+  if (!mount) return;
+  mount.innerHTML = '';
+
+  const items = Array.isArray(feed.items) ? feed.items : [];
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'mono';
+    empty.textContent = 'Agent Event Feed はまだありません。';
+    mount.appendChild(empty);
+    return;
+  }
+
+  for (const [index, item] of items.entries()) {
+    const row = document.createElement('div');
+    const kindClass = String(item.kind || 'running').toLowerCase().replace(/_/g, '-');
+    row.className = `agent-event-feed-item kind-${kindClass}`;
+    const head = document.createElement('div');
+    head.className = 'agent-event-head';
+    const kind = document.createElement('span');
+    kind.className = 'agent-event-kind';
+    kind.textContent = item.kind || 'RUNNING';
+    const actor = document.createElement('span');
+    actor.className = 'agent-event-actor';
+    actor.textContent = item.actor || 'KOSAME';
+    head.appendChild(kind);
+    head.appendChild(actor);
+    const textNode = document.createElement('div');
+    textNode.className = 'agent-event-text';
+    textNode.textContent = item.text || `${item.actor || 'KOSAME'}: ${item.message || '実行中です'}`;
+    const meta = document.createElement('div');
+    meta.className = 'agent-event-meta';
+    const age = item.timestamp ? formatRelativeAge(item.timestamp) : '';
+    const parts = [];
+    if (item.project) parts.push(`project=${item.project}`);
+    if (item.taskId) parts.push(`taskId=${item.taskId}`);
+    if (age) parts.push(age);
+    meta.textContent = parts.length ? parts.join(' / ') : `template ${item.kind || 'RUNNING'} #${index + 1}`;
+    row.appendChild(head);
+    row.appendChild(textNode);
+    row.appendChild(meta);
+    mount.appendChild(row);
   }
 }
 
@@ -2421,6 +2753,7 @@ async function loadSnapshot() {
     renderMemoryVault(snapshot.memoryVault || (snapshot.taskVault && snapshot.taskVault.memoryVault) || {}, snapshot.taskVault || {});
     renderApiCost(snapshot.apiCost || {});
     renderTaskFeeder(snapshot.taskFeeder || {});
+    renderAgentEventFeed(snapshot.agentEventFeed || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderChatStatusBadges(snapshot);
     maybeNotifyFromSnapshot(snapshot);

@@ -105,6 +105,44 @@ function summarizeMemoryVault(memoryVault) {
   ].join(' / ');
 }
 
+function summarizeProjectStrip(projectStrip) {
+  const items = Array.isArray(projectStrip) ? projectStrip : [];
+  if (!items.length) return '—';
+  return items.slice(0, 6).map((project) => {
+    const title = normalizeText(project.statusTitle || project.shortName || project.name || project.id);
+    const selected = project.selected ? '*' : '';
+    const running = Number(project.runningCount || 0);
+    const humanGate = Number(project.humanGateCount || 0);
+    const warnings = Number(project.warningCount || 0);
+    const updated = normalizeText(project.lastUpdatedLabel || project.lastUpdatedAt || '');
+    return `${selected}${title}:${normalizeText(project.statusClass || project.health || 'unknown')} / run=${running} / gate=${humanGate} / warn=${warnings} / ${updated || '—'}`;
+  }).join(' | ');
+}
+
+function summarizeAgentEventFeed(feed) {
+  const eventFeed = feed && typeof feed === 'object' ? feed : {};
+  const items = Array.isArray(eventFeed.items) ? eventFeed.items : [];
+  const counts = eventFeed.counts || {};
+  const countText = [
+    `START=${counts.START || 0}`,
+    `RUNNING=${counts.RUNNING || 0}`,
+    `VERIFY=${counts.VERIFY || 0}`,
+    `VERIFY_PASS=${counts.VERIFY_PASS || 0}`,
+    `HUMAN_GATE=${counts.HUMAN_GATE || 0}`,
+    `DONE=${counts.DONE || 0}`,
+    `ERROR=${counts.ERROR || 0}`,
+    `WAITING=${counts.WAITING || 0}`,
+    `BLOCKED=${counts.BLOCKED || 0}`,
+  ].join(' / ');
+  const itemText = items.slice(0, 5).map((item) => {
+    const kind = normalizeText(item.kind || 'RUNNING');
+    const actor = normalizeText(item.actor || 'KOSAME');
+    const message = firstLine(item.text || item.message || '');
+    return `${kind}:${actor}:${message}`;
+  }).filter(Boolean);
+  return itemText.length ? `${countText}; items=[${itemText.join(' | ')}]` : countText;
+}
+
 function buildConsoleContextSummary(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') {
     return {
@@ -143,6 +181,15 @@ function buildConsoleContextSummary(snapshot) {
     }
   }
 
+  const projectStrip = Array.isArray(snapshot.projectStrip)
+    ? snapshot.projectStrip
+    : Array.isArray(snapshot.projectStrip && snapshot.projectStrip.items)
+      ? snapshot.projectStrip.items
+      : [];
+  if (projectStrip.length) {
+    lines.push(`projectStrip=${summarizeProjectStrip(projectStrip)}`);
+  }
+
   const dev = snapshot.devOrchestra || {};
   const sales = snapshot.salesDx || {};
   if (dev || sales) {
@@ -177,6 +224,11 @@ function buildConsoleContextSummary(snapshot) {
   const memoryVault = snapshot.memoryVault || {};
   if (memoryVault) {
     lines.push(`memoryVault=${summarizeMemoryVault(memoryVault)}`);
+  }
+
+  const agentEventFeed = snapshot.agentEventFeed || {};
+  if (agentEventFeed) {
+    lines.push(`agentEventFeed=${summarizeAgentEventFeed(agentEventFeed)}`);
   }
 
   const autoSave = snapshot.autoSave || {};

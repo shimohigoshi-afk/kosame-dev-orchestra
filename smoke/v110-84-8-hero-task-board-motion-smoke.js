@@ -112,7 +112,7 @@ console.log('  PASS: JST timestamp maintained');
 // Compatibility: previous features maintained
 assert.ok(html.includes('serviceWorker'), 'HTML must include PWA service worker');
 assert.ok(html.includes('MEMORY VAULT'), 'HTML must include MEMORY VAULT display');
-assert.ok(html.includes('project-status-grid'), 'HTML must include project registry section');
+assert.ok(html.includes('PROJECT STRIP'), 'HTML must include project registry section');
 assert.ok(html.includes('consoleContextSummary'), 'HTML must include console context injection');
 assert.ok(html.includes('buildChatPayload'), 'HTML must include chat payload helper');
 assert.ok(html.includes('playNotificationChime'), 'HTML must include notification chime function');

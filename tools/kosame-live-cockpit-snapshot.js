@@ -3,12 +3,14 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const DEV_ORCHESTRA_REPO = ROOT;
 const SALES_DX_REPO = '/home/lavie/repos/kosame-sales-dx';
 const DEFAULT_PROJECT_REGISTRY_PATH = path.join(ROOT, 'config', 'kosame-projects.json');
+const DEFAULT_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'activity-events.jsonl');
 const PACKAGE = require('../package.json');
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
 const { buildApiCostSnapshot } = require('./kosame-cost-meter');
@@ -72,6 +74,226 @@ function normalizeCommitLines(output) {
       raw: line,
     };
   });
+}
+
+function normalizeKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function readJsonlRecords(filePath, limit = 120) {
+  try {
+    if (!filePath || !fs.existsSync(filePath)) return [];
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const lines = raw.split(/\r?\n/).filter(Boolean);
+    const slice = typeof limit === 'number' && limit > 0 ? lines.slice(-limit) : lines;
+    const records = [];
+    for (const line of slice) {
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed && typeof parsed === 'object') records.push(parsed);
+      } catch {
+        // skip malformed activity rows
+      }
+    }
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+function formatAgo(isoString) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '';
+  const delta = Date.now() - date.getTime();
+  const abs = Math.abs(delta);
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  if (abs < minute) return `約${Math.max(1, Math.round(abs / 1000))}秒前`;
+  if (abs < hour) return `約${Math.max(1, Math.round(abs / minute))}分前`;
+  return `約${Math.max(1, Math.round(abs / hour))}時間前`;
+}
+
+function summarizeProjectName(project) {
+  return String(project && (project.statusTitle || project.shortName || project.name || project.id) || '').trim();
+}
+
+function normalizeEventKind(event) {
+  const type = String((event && event.eventType) || '').toLowerCase();
+  const status = String((event && event.status) || '').toLowerCase();
+  if (status === 'blocked' || type.includes('blocked')) return 'BLOCKED';
+  if (type.includes('human_gate')) return 'HUMAN_GATE';
+  if (type.includes('verify_passed') || type.includes('review_passed')) return 'VERIFY_PASS';
+  if (type.includes('verify_failed') || type.includes('review_failed') || type.includes('task_failed')) return 'ERROR';
+  if (type.includes('verify_started')) return 'VERIFY';
+  if (type.includes('review_started')) return 'WAITING';
+  if (type.includes('task_completed')) return 'DONE';
+  if (type.includes('task_started') || type.includes('agent_assigned')) return 'START';
+  if (type.includes('agent_started') || type.includes('repair_started') || type.includes('file_changed') || type.includes('fallback_started')) return 'RUNNING';
+  if (type.includes('file_read')) return 'RUNNING';
+  if (status === 'pass') return 'VERIFY_PASS';
+  if (status === 'fail') return 'ERROR';
+  return 'RUNNING';
+}
+
+function buildAgentEventTemplate(event) {
+  const kind = normalizeEventKind(event);
+  const actor = String((event && (event.agent || event.provider || event.project)) || 'KOSAME').trim() || 'KOSAME';
+  const project = String((event && event.project) || '').trim();
+  const taskId = String((event && event.taskId) || '').trim();
+  const timestamp = String((event && event.timestamp) || '').trim();
+  const baseMessages = {
+    START: '実装を開始しました',
+    RUNNING: '実装を進めています',
+    VERIFY: 'verifyを確認しています',
+    VERIFY_PASS: 'PASSしました',
+    HUMAN_GATE: '確認が必要です',
+    DONE: '完了しました',
+    ERROR: 'エラーが発生しました',
+    WAITING: '待機しています',
+    BLOCKED: 'ブロックされています',
+  };
+  const message = baseMessages[kind] || '実行中です';
+  const severity = {
+    START: 'running',
+    RUNNING: 'running',
+    VERIFY: 'running',
+    VERIFY_PASS: 'done',
+    HUMAN_GATE: 'human_gate',
+    DONE: 'done',
+    ERROR: 'error',
+    WAITING: 'waiting',
+    BLOCKED: 'blocked',
+  }[kind] || 'running';
+
+  return {
+    kind,
+    actor,
+    message,
+    text: `${actor}: ${message}`,
+    severity,
+    project,
+    taskId,
+    timestamp,
+  };
+}
+
+function buildAgentEventFeed(activityEvents, context = {}) {
+  const events = Array.isArray(activityEvents) ? activityEvents : [];
+  const latest = events
+    .slice(-24)
+    .map(buildAgentEventTemplate)
+    .reverse();
+  const fallbackTasks = [];
+  const taskFeeder = context.taskFeeder || {};
+  const selectedTasks = Array.isArray(taskFeeder.selectedTasks) ? taskFeeder.selectedTasks : [];
+  const humanGateTasks = Array.isArray(taskFeeder.humanGateTasks) ? taskFeeder.humanGateTasks : [];
+  const blockedTasks = Array.isArray(taskFeeder.blockedTasks) ? taskFeeder.blockedTasks : [];
+
+  if (!latest.length) {
+    const templates = [
+      ['START', 'Codex', '実装を開始しました', selectedTasks[0]],
+      ['RUNNING', 'Claude Code', '実装を進めています', selectedTasks[1] || selectedTasks[0]],
+      ['VERIFY', 'Claude Code', 'verifyを確認しています', selectedTasks[2] || selectedTasks[0]],
+      ['VERIFY_PASS', 'GitHub Actions', 'PASSしました', selectedTasks[0]],
+      ['HUMAN_GATE', 'KOSAME', '確認が必要です', humanGateTasks[0] || selectedTasks[0]],
+      ['DONE', 'KOSAME', '完了しました', selectedTasks[0]],
+      ['ERROR', 'KOSAME', 'エラーが発生しました', blockedTasks[0] || selectedTasks[0]],
+      ['WAITING', 'KOSAME', '待機しています', selectedTasks[0]],
+    ];
+    for (const [kind, actor, message, task] of templates) {
+      if (!task && kind !== 'VERIFY_PASS') continue;
+      fallbackTasks.push({
+        kind,
+        actor,
+        message,
+        text: `${actor}: ${message}`,
+        severity: ['DONE', 'VERIFY_PASS'].includes(kind) ? 'done' : kind === 'ERROR' ? 'error' : kind === 'HUMAN_GATE' ? 'human_gate' : kind === 'WAITING' ? 'waiting' : 'running',
+        project: String(task && (task.project || task.relatedProject) || '').trim(),
+        taskId: String(task && (task.taskId || task.wishlistId || task.title) || '').trim(),
+        timestamp: '',
+      });
+    }
+  }
+
+  const items = (latest.length ? latest : fallbackTasks).slice(0, 9);
+  const countSource = events.length ? events.map(buildAgentEventTemplate) : items;
+  const counts = countSource.reduce((acc, item) => {
+    acc[item.kind] = (acc[item.kind] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    status: items.length ? 'ok' : 'missing',
+    templateLevel: 'L2',
+    totalCount: events.length,
+    lastUpdatedAt: items[0] ? items[0].timestamp || null : null,
+    items,
+    counts,
+    warnings: [],
+  };
+}
+
+function buildProjectStrip(projects, context = {}) {
+  const taskFeeder = context.taskFeeder || {};
+  const agentEventFeed = context.agentEventFeed || {};
+  const rawEvents = Array.isArray(context.activityEvents) ? context.activityEvents : [];
+  const selectedProjectId = String(context.selectedProjectId || '').trim();
+  const projectEntries = Array.isArray(projects) ? projects : [];
+  const strip = projectEntries.map((project) => {
+    const projectKey = normalizeKey(project.id || project.name || project.shortName);
+    const eventsForProject = rawEvents.filter((event) => normalizeKey(event.project) === projectKey || normalizeKey(event.project || event.relatedProject) === projectKey);
+    const projectTasks = [
+      ...(Array.isArray(taskFeeder.selectedTasks) ? taskFeeder.selectedTasks : []),
+      ...(Array.isArray(taskFeeder.humanGateTasks) ? taskFeeder.humanGateTasks : []),
+      ...(Array.isArray(taskFeeder.blockedTasks) ? taskFeeder.blockedTasks : []),
+    ].filter((task) => normalizeKey(task.project || task.relatedProject) === projectKey);
+
+    const runningCount = eventsForProject.filter((event) => {
+      const kind = normalizeEventKind(event);
+      return kind === 'START' || kind === 'RUNNING';
+    }).length || projectTasks.filter((task) => ['running', 'in_progress', 'active'].includes(normalizeKey(task.status))).length;
+    const humanGateCount = eventsForProject.filter((event) => normalizeEventKind(event) === 'HUMAN_GATE').length
+      || projectTasks.filter((task) => task.humanGateRequired || ['human_gate', 'approval_required', 'waiting_human'].includes(normalizeKey(task.status))).length;
+    const warningCount = Number(project.warningCount || 0)
+      + eventsForProject.filter((event) => ['ERROR', 'BLOCKED'].includes(normalizeEventKind(event))).length;
+    const latestActivity = eventsForProject
+      .map((event) => event.timestamp || '')
+      .filter(Boolean)
+      .sort()
+      .at(-1)
+      || '';
+    const statusClass = project.availability && project.availability !== 'available'
+      ? 'warn'
+      : warningCount > 0
+        ? 'warn'
+        : project.dirty
+          ? 'warn'
+          : 'ok';
+
+    return {
+      ...project,
+      selected: project.id === selectedProjectId,
+      runningCount,
+      humanGateCount,
+      warningCount,
+      lastUpdatedAt: latestActivity || context.generatedAt || '',
+      lastUpdatedLabel: latestActivity ? formatLocalTimestamp(latestActivity) || latestActivity : context.generatedAtLocal || '—',
+      statusClass,
+      eventSummary: [
+        `running=${runningCount}`,
+        `humanGate=${humanGateCount}`,
+        `warnings=${warningCount}`,
+      ].join(' / '),
+      selectedHint: project.id === selectedProjectId ? 'selected' : '',
+    };
+  });
+
+  return {
+    status: strip.length ? 'ok' : 'missing',
+    selectedProjectId: selectedProjectId || strip[0]?.id || '',
+    generatedAt: context.generatedAt || '',
+    items: strip,
+  };
 }
 
 function runGitReadOnly(argv) {
@@ -257,6 +479,10 @@ function collectLiveCockpitSnapshot(options = {}) {
   const activeRepoPath = options.activeRepoPath || devRepoPath;
   const projectRegistry = loadProjectRegistry(options.projectRegistryPath);
   const versionContext = resolveVersionContext();
+  const activityEventLogPath = options.activityEventLogPath
+    ? path.resolve(String(options.activityEventLogPath))
+    : DEFAULT_ACTIVITY_LOG_PATH;
+  const activityEvents = readJsonlRecords(activityEventLogPath, Number(options.activityEventLimit || 96));
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -274,6 +500,22 @@ function collectLiveCockpitSnapshot(options = {}) {
     taskVaultDir,
     currentVersion: versionContext.currentVersion,
     currentMission: '☂️ KOSAME Console',
+  });
+  const generatedAt = new Date().toISOString();
+  const generatedAtLocal = formatLocalTimestamp(generatedAt);
+  const agentEventFeed = buildAgentEventFeed(activityEvents, {
+    taskFeeder,
+    currentVersion: versionContext.currentVersion,
+    generatedAt: generatedAt,
+  });
+  const selectedProjectId = (activeRepoPath === salesRepoPath ? 'sales-dx' : 'dev-orchestra');
+  const projectStrip = buildProjectStrip(projects, {
+    taskFeeder,
+    agentEventFeed,
+    activityEvents,
+    selectedProjectId,
+    generatedAt,
+    generatedAtLocal,
   });
   const devOrchestra = findProject('dev-orchestra') || buildProjectState({
     id: 'dev-orchestra',
@@ -337,6 +579,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     mode: 'Readonly',
     projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
     projects,
+    projectStrip,
     devOrchestra,
     salesDx,
     monitoredRepos: [devOrchestra, salesDx],
@@ -345,9 +588,13 @@ function collectLiveCockpitSnapshot(options = {}) {
     memoryVault,
     autoSave,
     apiCost,
+    agentEventFeed,
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
+    selectedProjectId: projectStrip.selectedProjectId,
+    generatedAt,
+    generatedAtLocal,
   });
 
   const nextAction = taskFeeder.selectedTasks.length > 0
@@ -358,7 +605,6 @@ function collectLiveCockpitSnapshot(options = {}) {
       ? 'changed files と staged files を見直し、書き込み前の人間承認を待ってください。'
       : '引き続き passive monitoring を続けてください。この Console からの書き込みはできません。';
 
-  const generatedAt = new Date().toISOString();
   return {
     version: PACKAGE.version,
     generatedAt,
@@ -372,6 +618,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     },
     projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
     projects,
+    projectStrip,
     monitoredRepos: [devOrchestra, salesDx],
     devOrchestra,
     salesDx,
@@ -381,6 +628,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     taskFeeder,
     wishlist: taskFeeder.wishlist,
     memoryVault,
+    agentEventFeed,
     chatStatus: {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',

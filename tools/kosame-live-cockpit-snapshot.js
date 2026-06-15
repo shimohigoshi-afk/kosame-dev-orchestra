@@ -142,15 +142,15 @@ function buildAgentEventTemplate(event) {
   const taskId = String((event && event.taskId) || '').trim();
   const timestamp = String((event && event.timestamp) || '').trim();
   const baseMessages = {
-    START: '実装を開始しました',
-    RUNNING: '実装を進めています',
+    START: 'これやります',
+    RUNNING: '進めています',
     VERIFY: 'verifyを確認しています',
     VERIFY_PASS: 'PASSしました',
-    HUMAN_GATE: '確認が必要です',
+    HUMAN_GATE: '確認が必要ですね',
     DONE: '完了しました',
-    ERROR: 'エラーが発生しました',
-    WAITING: '待機しています',
-    BLOCKED: 'ブロックされています',
+    ERROR: '止まりました。確認が必要です',
+    WAITING: '応答待ちです',
+    BLOCKED: 'ここで止まっています',
   };
   const message = baseMessages[kind] || '実行中です';
   const severity = {
@@ -164,12 +164,14 @@ function buildAgentEventTemplate(event) {
     WAITING: 'waiting',
     BLOCKED: 'blocked',
   }[kind] || 'running';
+  const speech = `${actor}「${message}」`;
 
   return {
     kind,
     actor,
     message,
-    text: `${actor}: ${message}`,
+    text: speech,
+    speech,
     severity,
     project,
     taskId,
@@ -189,33 +191,38 @@ function buildAgentEventFeed(activityEvents, context = {}) {
   const humanGateTasks = Array.isArray(taskFeeder.humanGateTasks) ? taskFeeder.humanGateTasks : [];
   const blockedTasks = Array.isArray(taskFeeder.blockedTasks) ? taskFeeder.blockedTasks : [];
 
-  if (!latest.length) {
-    const templates = [
-      ['START', 'Codex', '実装を開始しました', selectedTasks[0]],
-      ['RUNNING', 'Claude Code', '実装を進めています', selectedTasks[1] || selectedTasks[0]],
-      ['VERIFY', 'Claude Code', 'verifyを確認しています', selectedTasks[2] || selectedTasks[0]],
-      ['VERIFY_PASS', 'GitHub Actions', 'PASSしました', selectedTasks[0]],
-      ['HUMAN_GATE', 'KOSAME', '確認が必要です', humanGateTasks[0] || selectedTasks[0]],
-      ['DONE', 'KOSAME', '完了しました', selectedTasks[0]],
-      ['ERROR', 'KOSAME', 'エラーが発生しました', blockedTasks[0] || selectedTasks[0]],
-      ['WAITING', 'KOSAME', '待機しています', selectedTasks[0]],
-    ];
-    for (const [kind, actor, message, task] of templates) {
-      if (!task && kind !== 'VERIFY_PASS') continue;
-      fallbackTasks.push({
-        kind,
-        actor,
-        message,
-        text: `${actor}: ${message}`,
-        severity: ['DONE', 'VERIFY_PASS'].includes(kind) ? 'done' : kind === 'ERROR' ? 'error' : kind === 'HUMAN_GATE' ? 'human_gate' : kind === 'WAITING' ? 'waiting' : 'running',
-        project: String(task && (task.project || task.relatedProject) || '').trim(),
-        taskId: String(task && (task.taskId || task.wishlistId || task.title) || '').trim(),
-        timestamp: '',
-      });
-    }
+  const templates = [
+    ['START', 'Codex', 'これやります', selectedTasks[0]],
+    ['RUNNING', 'Claude Code', '進めています', selectedTasks[1] || selectedTasks[0]],
+    ['VERIFY', 'Claude Code', 'verifyを確認しています', selectedTasks[2] || selectedTasks[0]],
+    ['VERIFY_PASS', 'GitHub Actions', 'PASSしました', selectedTasks[0]],
+    ['HUMAN_GATE', 'KOSAME', '確認が必要ですね', humanGateTasks[0] || selectedTasks[0]],
+    ['DONE', 'KOSAME', '完了しました', selectedTasks[0]],
+    ['ERROR', 'KOSAME', '止まりました。確認が必要です', blockedTasks[0] || selectedTasks[0]],
+    ['WAITING', 'KOSAME', '応答待ちです', selectedTasks[0]],
+    ['BLOCKED', 'KOSAME', 'ここで止まっています', blockedTasks[0] || selectedTasks[0]],
+  ];
+
+  const items = [...latest];
+  const kindsPresent = new Set(items.map((item) => item.kind));
+  for (const [kind, actor, message, task] of templates) {
+    if (kindsPresent.has(kind)) continue;
+    if (!task && kind !== 'VERIFY_PASS') continue;
+    const item = {
+      kind,
+      actor,
+      message,
+      text: `${actor}「${message}」`,
+      speech: `${actor}「${message}」`,
+      severity: ['DONE', 'VERIFY_PASS'].includes(kind) ? 'done' : kind === 'ERROR' ? 'error' : kind === 'HUMAN_GATE' ? 'human_gate' : kind === 'WAITING' || kind === 'BLOCKED' ? 'waiting' : 'running',
+      project: String(task && (task.project || task.relatedProject) || '').trim(),
+      taskId: String(task && (task.taskId || task.wishlistId || task.title) || '').trim(),
+      timestamp: '',
+    };
+    fallbackTasks.push(item);
+    items.push(item);
   }
 
-  const items = (latest.length ? latest : fallbackTasks).slice(0, 9);
   const countSource = events.length ? events.map(buildAgentEventTemplate) : items;
   const counts = countSource.reduce((acc, item) => {
     acc[item.kind] = (acc[item.kind] || 0) + 1;

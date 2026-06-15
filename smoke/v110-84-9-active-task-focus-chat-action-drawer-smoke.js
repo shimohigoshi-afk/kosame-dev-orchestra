@@ -34,16 +34,19 @@ mustExist(HTML_PATH);
 const html = readText(HTML_PATH);
 
 assert.ok(html.includes('KOSAME Console'), 'HTML must include KOSAME Console title');
-assert.ok(html.includes('LIVE COMMAND STAGE'), 'HTML must include LIVE COMMAND STAGE eyebrow');
+assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
 assert.ok(html.includes('Command Center'), 'HTML must include Command Center subtitle');
-assert.ok(html.includes('stage-halo'), 'HTML must include stage halo animation class');
-assert.ok(html.includes('stage-arc'), 'HTML must include stage arc class');
+assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
+assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');
 assert.ok(html.includes('stage-trace'), 'HTML must include stage trace class');
 assert.ok(html.includes('stage-dots'), 'HTML must include stage dots class');
-assert.ok(html.includes('stage-ring-a'), 'HTML must include stage ring class');
-assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-blip'), 'HTML must include stage blip class');
 assert.ok(html.includes('stage-scanline'), 'HTML must include stage scanline class');
 assert.ok(html.includes('stage-glow'), 'HTML must include stage glow class');
+assert.ok(!html.includes('stage-halo'), 'HTML must not include stage halo class');
+assert.ok(!html.includes('stage-arc'), 'HTML must not include stage arc class');
+assert.ok(!html.includes('stage-ring-a'), 'HTML must not include stage ring class');
 console.log('  PASS: refined Console Hero');
 
 assert.ok(html.includes('active-task-board'), 'HTML must include active-task-board section');
@@ -54,6 +57,8 @@ assert.ok(html.includes('task-motion-panel'), 'HTML must include task motion pan
 assert.ok(html.includes('Task Vault'), 'HTML must include Task Vault in board');
 assert.ok(html.includes('Auto Save'), 'HTML must include Auto Save in board');
 assert.ok(html.includes('Collapsed Details'), 'HTML must include collapsed details');
+assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed');
+assert.ok(html.includes('priority-callout'), 'HTML must include priority callout banner');
 console.log('  PASS: active task board focus');
 
 assert.ok(html.includes('IDEA BOARD'), 'HTML must include IDEA BOARD section');

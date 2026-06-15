@@ -35,14 +35,18 @@ const html = readText(HTML_PATH);
 
 assert.ok(html.includes('☂️ KOSAME Console'), 'HTML must include KOSAME Console branding');
 assert.ok(html.includes('Dev Orchestra Command Center'), 'HTML must include subtitle');
-assert.ok(html.includes('CURRENT MISSION / SIGNAL GRID HERO') || html.includes('CURRENT MISSION'), 'HTML must include signal grid hero eyebrow');
-assert.ok(html.includes('stage-halo'), 'HTML must include stage halo animation class');
-assert.ok(html.includes('stage-arc'), 'HTML must include stage arc class');
+assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
+assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
+assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');
 assert.ok(html.includes('stage-trace'), 'HTML must include stage trace class');
 assert.ok(html.includes('stage-dots'), 'HTML must include stage dots class');
-assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-blip'), 'HTML must include stage blip class');
 assert.ok(html.includes('stage-scanline'), 'HTML must include stage scanline class');
 assert.ok(html.includes('stage-glow'), 'HTML must include stage glow class');
+assert.ok(!html.includes('stage-halo'), 'HTML must not include stage halo class');
+assert.ok(!html.includes('stage-ring-a'), 'HTML must not include stage ring class');
+assert.ok(!html.includes('stage-arc'), 'HTML must not include stage arc class');
 assert.ok(!html.includes('大きい丸中心'), 'HTML must not describe a big central circle');
 console.log('  PASS: signal grid hero');
 
@@ -53,6 +57,7 @@ assert.ok(html.includes('task-signal-stream'), 'HTML must include task-signal-st
 assert.ok(html.includes('task-motion-grid'), 'HTML must include task motion grid');
 assert.ok(html.includes('task-motion-panel'), 'HTML must include task motion panel');
 assert.ok(html.includes('現在進行中のタスクはありません。') || html.includes('running •'), 'HTML must include active task motion copy');
+assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed');
 console.log('  PASS: running task motion');
 
 assert.ok(html.includes('KOSAME CHAT'), 'HTML must include KOSAME CHAT heading');

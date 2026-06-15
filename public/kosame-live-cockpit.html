@@ -30,8 +30,9 @@ body {
   font-size: clamp(14px, 0.55vw + 11px, 16px);
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.24), transparent 28%),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 26%),
+    linear-gradient(120deg, rgba(59, 130, 246, 0.08), transparent 40%),
+    linear-gradient(240deg, rgba(167, 139, 250, 0.06), transparent 38%),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.96), rgba(9, 18, 33, 0.98) 52%, rgba(7, 14, 25, 0.98)),
     linear-gradient(180deg, #06101d, #0a1527 60%, #09101b);
   min-height: 100vh;
 }
@@ -42,6 +43,12 @@ body {
   width: min(1560px, calc(100vw - 24px));
   margin: 0 auto;
   padding: 18px 0 36px;
+}
+.chat-callout,
+.priority-callout {
+  position: fixed;
+  z-index: 90;
+  backdrop-filter: blur(16px);
 }
 .hero {
   display: grid;
@@ -59,7 +66,7 @@ body {
   backdrop-filter: blur(16px);
 }
 .hero-card {
-  padding: 22px;
+  padding: 18px;
 }
 .command-stage {
   order: 1;
@@ -75,75 +82,56 @@ body {
   overflow: hidden;
   border-radius: 22px;
 }
-.stage-halo,
-.stage-ring,
+.signal-grid-hero-lite .stage-lines,
 .stage-glow,
 .stage-grid,
 .stage-scanline,
-.stage-arc,
 .stage-trace,
-.stage-dots {
+.stage-dots,
+.stage-blip {
   position: absolute;
   inset: 0;
 }
-.stage-halo {
-  background:
-    radial-gradient(circle at 56% 44%, rgba(125, 211, 252, 0.05), transparent 24%),
-    radial-gradient(circle at 74% 34%, rgba(167, 139, 250, 0.045), transparent 22%),
-    radial-gradient(circle at 46% 64%, rgba(59, 130, 246, 0.035), transparent 32%);
-  filter: blur(12px);
-  animation: stagePulse 18s ease-in-out infinite;
-}
-.stage-ring {
-  inset: auto;
-  left: 76%;
-  top: 43%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  border: 1px solid rgba(125, 211, 252, 0.03);
-  box-shadow: 0 0 8px rgba(125, 211, 252, 0.02);
-}
-.stage-ring.stage-ring-a {
-  width: min(164px, 18vw);
-  height: min(164px, 18vw);
-  animation: stageRotate 42s linear infinite;
-}
-.stage-ring.stage-ring-b {
-  width: min(102px, 12vw);
-  height: min(102px, 12vw);
-  border-style: dashed;
-  border-color: rgba(167, 139, 250, 0.045);
-  animation: stageRotateReverse 34s linear infinite;
-}
-.stage-arc {
-  background:
-    conic-gradient(from 210deg, transparent 0 34deg, rgba(125,211,252,0.08) 34deg 42deg, transparent 42deg 118deg, rgba(167,139,250,0.06) 118deg 128deg, transparent 128deg 304deg, rgba(59,130,246,0.05) 304deg 316deg, transparent 316deg 360deg);
-  mask: radial-gradient(circle at center, transparent 0 44%, rgba(0,0,0,0.95) 45% 57%, transparent 58%);
-  opacity: 0.36;
-  animation: stageArcSpin 32s linear infinite;
-}
 .stage-trace {
-  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.03) 45%, rgba(125,211,252,0.08) 50%, rgba(167,139,250,0.03) 55%, transparent 100%);
+  background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.02) 45%, rgba(125,211,252,0.08) 50%, rgba(167,139,250,0.02) 55%, transparent 100%);
   transform: translate3d(0, 0, 0);
-  mask: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 74%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.92) 16%, rgba(0,0,0,0.92) 84%, transparent 100%);
   animation: stageTraceSweep 22s ease-in-out infinite;
 }
 .stage-dots {
   background:
-    radial-gradient(circle at 22% 28%, rgba(125,211,252,0.18) 0 1.2px, transparent 1.5px),
-    radial-gradient(circle at 68% 24%, rgba(167,139,250,0.16) 0 1.2px, transparent 1.5px),
-    radial-gradient(circle at 74% 66%, rgba(59,130,246,0.14) 0 1.2px, transparent 1.5px),
-    radial-gradient(circle at 28% 76%, rgba(125,211,252,0.1) 0 1.2px, transparent 1.5px);
+    linear-gradient(90deg, transparent 0 22%, rgba(125,211,252,0.18) 22% 22.8%, transparent 22.8% 100%),
+    linear-gradient(90deg, transparent 0 64%, rgba(167,139,250,0.15) 64% 64.7%, transparent 64.7% 100%),
+    linear-gradient(90deg, transparent 0 76%, rgba(59,130,246,0.13) 76% 76.6%, transparent 76.6% 100%);
   background-size: 100% 100%;
   opacity: 0.28;
   animation: stageDotsFlicker 14s ease-in-out infinite;
+}
+.stage-lines {
+  background:
+    linear-gradient(110deg, transparent 0 48%, rgba(125,211,252,0.06) 50%, transparent 52%),
+    linear-gradient(140deg, transparent 0 58%, rgba(167,139,250,0.05) 60%, transparent 62%),
+    linear-gradient(88deg, transparent 0 28%, rgba(125,211,252,0.06) 30%, transparent 32%);
+  opacity: 0.3;
+  animation: stageLinesFlow 24s linear infinite;
+}
+.stage-blip {
+  inset: auto;
+  left: 18%;
+  top: 22%;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #7dd3fc;
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.25);
+  animation: stageBlipMove 18s linear infinite;
 }
 .stage-grid {
   background:
     linear-gradient(rgba(125, 211, 252, 0.028) 1px, transparent 1px),
     linear-gradient(90deg, rgba(125, 211, 252, 0.028) 1px, transparent 1px);
   background-size: 42px 42px;
-  mask-image: radial-gradient(circle at center, rgba(0,0,0,0.92), transparent 80%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.92) 14%, rgba(0,0,0,0.92) 86%, transparent 100%);
   opacity: 0.18;
   animation: stageGridFloat 30s linear infinite;
 }
@@ -154,17 +142,9 @@ body {
   animation: stageScan 20s linear infinite;
 }
 .stage-glow {
-  background: radial-gradient(circle at center, transparent 0%, rgba(8, 19, 35, 0.05) 58%, rgba(8, 19, 35, 0.26) 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(8, 19, 35, 0.05) 52%, transparent 100%);
   mix-blend-mode: screen;
   animation: stageGlow 14s ease-in-out infinite;
-}
-@keyframes stageRotate {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-@keyframes stageRotateReverse {
-  from { transform: translate(-50%, -50%) rotate(360deg); }
-  to { transform: translate(-50%, -50%) rotate(0deg); }
 }
 @keyframes stagePulse {
   0%, 100% { opacity: 0.75; transform: scale(1); }
@@ -185,6 +165,16 @@ body {
 @keyframes stageDotsFlicker {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.75; }
+}
+@keyframes stageLinesFlow {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 56px 0, -72px 0, 28px 0; }
+}
+@keyframes stageBlipMove {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.35; }
+  25% { transform: translate3d(140px, 10px, 0); opacity: 0.85; }
+  50% { transform: translate3d(280px, 2px, 0); opacity: 0.55; }
+  75% { transform: translate3d(420px, 16px, 0); opacity: 0.9; }
 }
 @keyframes stageGridFloat {
   from { background-position: 0 0, 0 0; }
@@ -221,15 +211,51 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 12px 0 10px;
+  margin: 0;
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid rgba(167, 139, 250, 0.18);
   background: linear-gradient(90deg, rgba(167, 139, 250, 0.1), rgba(125, 211, 252, 0.08));
   color: #e9ddff;
   box-shadow: 0 14px 32px rgba(7, 17, 31, 0.22);
+  top: 14px;
+  left: 14px;
+  max-width: min(360px, calc(100vw - 28px));
 }
 .chat-callout[hidden] { display: none; }
+.priority-callout {
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(251,191,36,0.34);
+  background: linear-gradient(90deg, rgba(251,191,36,0.15), rgba(125,211,252,0.11));
+  color: #fff1c2;
+  box-shadow: 0 16px 34px rgba(7, 17, 31, 0.26);
+  max-width: min(420px, calc(100vw - 24px));
+}
+.priority-callout[hidden] { display: none; }
+.priority-callout strong {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+.priority-callout button {
+  cursor: pointer;
+  border: 1px solid rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.12);
+  color: #fff4cf;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.priority-callout button:hover {
+  background: rgba(251,191,36,0.2);
+}
 .chat-callout-text {
   display: inline-flex;
   flex-direction: column;
@@ -448,7 +474,7 @@ h1 {
   position: relative;
   display: grid;
   gap: 4px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.035);
@@ -902,7 +928,7 @@ h1 {
 }
 .task-count-card {
   flex: 1 1 90px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 14px;
@@ -916,7 +942,7 @@ h1 {
   margin-bottom: 7px;
 }
 .task-count-value {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -929,11 +955,11 @@ h1 {
 .task-motion-panel {
   position: relative;
   overflow: hidden;
-  min-height: 176px;
+  min-height: 152px;
 }
 .task-motion-panel.running-panel {
   grid-column: 1 / -1;
-  min-height: 228px;
+  min-height: 198px;
 }
 .task-motion-panel h3,
 .task-motion-panel .stack {
@@ -1103,7 +1129,7 @@ h1 {
 .api-cost-outer { order: 7; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage-halo, .stage-ring, .stage-grid, .stage-scanline, .stage-glow {
+  .stage-grid, .stage-scanline, .stage-glow, .stage-lines, .stage-blip {
     animation: none !important;
   }
   .hero-card, .panel, .chat-callout { transition: none !important; }
@@ -1142,23 +1168,32 @@ h1 {
 </style>
 </head>
 <body>
+  <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
+    <div class="chat-callout-text">
+      <strong>こさめが呼んでます ☂️</strong>
+      <span>必要な時だけ、チャットへ移動してください。</span>
+    </div>
+    <button type="button" id="chat-callout-jump">チャットへ</button>
+  </div>
+  <div class="priority-callout" id="priority-callout" hidden aria-live="polite">
+    <strong>確認が必要です</strong>
+    <button type="button" id="priority-callout-jump">チャットへ</button>
+  </div>
   <div class="shell">
     <section class="command-stage" style="margin-bottom:14px">
       <div class="hero-card hero-compact-card">
-        <div class="stage-visual signal-grid-hero-visual" aria-hidden="true">
-          <div class="stage-halo"></div>
-          <div class="stage-arc"></div>
+        <div class="stage-visual signal-grid-hero-visual signal-grid-hero-lite" aria-hidden="true">
+          <div class="stage-grid"></div>
+          <div class="stage-lines"></div>
           <div class="stage-trace"></div>
           <div class="stage-dots"></div>
-          <div class="stage-ring stage-ring-a"></div>
-          <div class="stage-ring stage-ring-b"></div>
-          <div class="stage-grid"></div>
+          <div class="stage-blip"></div>
           <div class="stage-scanline"></div>
           <div class="stage-glow"></div>
         </div>
         <div class="hero-compact-inner">
           <div class="hero-compact-left">
-          <div class="eyebrow">CURRENT MISSION &nbsp;/&nbsp; SIGNAL GRID HERO LITE <span aria-hidden="true" style="display:none">LIVE COMMAND STAGE</span></div>
+          <div class="eyebrow">CURRENT MISSION &nbsp;/&nbsp; SIGNAL GRID HERO LITE</div>
             <h1>☂️ KOSAME Console</h1>
             <div class="title-copy">Dev Orchestra Command Center</div>
             <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
@@ -1241,7 +1276,7 @@ h1 {
         </div>
 
         <div class="task-board-section">
-          <h3 class="task-board-section-title">AGENT EVENT FEED <span aria-hidden="true" style="display:none">LEVEL2 TEMPLATE</span></h3>
+          <h3 class="task-board-section-title">AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></h3>
           <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
           <div id="agent-event-feed" class="agent-event-feed"></div>
         </div>
@@ -1269,13 +1304,6 @@ h1 {
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
         <p class="lead">こさめに質問・相談ができます。Console の状態をコンテキストとして共有します。必要なときだけ、チャットへ移動してください。</p>
-        <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
-          <div class="chat-callout-text">
-            <strong>こさめが呼んでます ☂️</strong>
-            <span>必要な時だけ、チャットへ移動してください。</span>
-          </div>
-          <button type="button" id="chat-callout-jump">チャットへ</button>
-        </div>
         <div class="chat-meta-row" aria-label="通知音設定">
           <span class="chat-sound-chip">
             <span class="sound-label">通知音</span>
@@ -1701,6 +1729,21 @@ function hideChatCallout() {
   if (banner) banner.hidden = true;
 }
 
+function showPriorityAlert(message) {
+  const banner = document.getElementById('priority-callout');
+  if (!banner) return;
+  const textNode = banner.querySelector('strong');
+  if (textNode && message) {
+    textNode.textContent = message;
+  }
+  banner.hidden = false;
+}
+
+function hidePriorityAlert() {
+  const banner = document.getElementById('priority-callout');
+  if (banner) banner.hidden = true;
+}
+
 function scrollToChatPanel() {
   const panel = document.getElementById('chat-panel');
   if (panel && typeof panel.scrollIntoView === 'function') {
@@ -1859,19 +1902,42 @@ function feedQuestionSignature(feed) {
     .join('\n');
 }
 
+function updateAttentionBanners(snapshot, { assistantCue = '' } = {}) {
+  const bridgeDetected = !!(snapshot.confirmationBridge && snapshot.confirmationBridge.detected);
+  const humanGateCount = Array.isArray(snapshot.humanGate) ? snapshot.humanGate.length : 0;
+  const questionSignature = feedQuestionSignature(snapshot.taskFeeder || {});
+  const attentionNeeded = bridgeDetected || humanGateCount > 0 || !!questionSignature || !!assistantCue;
+  const important = bridgeDetected || humanGateCount > 0;
+
+  if (!attentionNeeded) {
+    hideChatCallout();
+    hidePriorityAlert();
+    return { bridgeDetected, humanGateCount, questionSignature, important, attentionNeeded };
+  }
+
+  if (important) {
+    showChatCallout('確認が必要です ☂️');
+    showPriorityAlert('確認が必要です');
+  } else {
+    showChatCallout('こさめが呼んでます ☂️');
+    hidePriorityAlert();
+  }
+
+  return { bridgeDetected, humanGateCount, questionSignature, important, attentionNeeded };
+}
+
 function maybeNotifyFromAssistant(reply) {
-  if (!notificationEnabled || !isQuestionCue(reply)) return;
+  if (!isQuestionCue(reply)) return;
+  updateAttentionBanners(latestSnapshot || {}, { assistantCue: reply });
   const signature = `assistant:${reply}`;
   if (signature === notificationLastAssistantCue) return;
   notificationLastAssistantCue = signature;
-  showChatCallout('こさめが呼んでます ☂️');
+  if (!notificationEnabled) return;
   maybePlayNotification();
 }
 
 function maybeNotifyFromSnapshot(snapshot) {
-  const bridgeDetected = !!(snapshot.confirmationBridge && snapshot.confirmationBridge.detected);
-  const humanGateCount = Array.isArray(snapshot.humanGate) ? snapshot.humanGate.length : 0;
-  const questionSignature = feedQuestionSignature(snapshot.taskFeeder || {});
+  const { bridgeDetected, humanGateCount, questionSignature, important } = updateAttentionBanners(snapshot || {});
 
   if (!notificationInitialized) {
     notificationInitialized = true;
@@ -1889,8 +1955,7 @@ function maybeNotifyFromSnapshot(snapshot) {
   notificationLastHumanGateCount = humanGateCount;
   notificationLastFeedQuestion = questionSignature;
 
-  if (bridgeBecamePending || humanGateIncreased || feedQuestionChanged) {
-    showChatCallout('こさめが呼んでます ☂️');
+  if (important && (bridgeBecamePending || humanGateIncreased || feedQuestionChanged)) {
     maybePlayNotification();
   }
 }
@@ -1957,6 +2022,7 @@ function updateHeroChips(snapshot) {
 }
 
 function text(node, value) {
+  if (!node) return;
   node.textContent = value == null || value === '' ? '—' : String(value);
 }
 
@@ -2221,6 +2287,7 @@ function renderConfirmationBridge(bridge) {
   const panel = document.getElementById('cb-panel');
   const badgeRow = document.getElementById('cb-badge-row');
   const body = document.getElementById('cb-body');
+  if (!panel || !badgeRow || !body) return;
 
   if (!bridge) {
     badgeRow.innerHTML = '<span class="status-badge warn">取得できませんでした</span>';
@@ -2804,6 +2871,11 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
 const chatCalloutButton = document.getElementById('chat-callout-jump');
 if (chatCalloutButton) {
   chatCalloutButton.addEventListener('click', scrollToChatPanel);
+}
+
+const priorityCalloutButton = document.getElementById('priority-callout-jump');
+if (priorityCalloutButton) {
+  priorityCalloutButton.addEventListener('click', scrollToChatPanel);
 }
 
 document.querySelectorAll('[data-chat-prompt]').forEach((button) => {

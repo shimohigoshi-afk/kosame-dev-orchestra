@@ -35,16 +35,19 @@ const html = readText(HTML_PATH);
 
 // Console Hero
 assert.ok(html.includes('KOSAME Console'), 'HTML must include KOSAME Console title');
-assert.ok(html.includes('LIVE COMMAND STAGE'), 'HTML must include LIVE COMMAND STAGE eyebrow');
+assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
 assert.ok(html.includes('Command Center'), 'HTML must include Command Center subtitle');
-assert.ok(html.includes('stage-halo'), 'HTML must include stage halo animation class');
-assert.ok(html.includes('stage-arc'), 'HTML must include stage arc class');
+assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
+assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');
 assert.ok(html.includes('stage-trace'), 'HTML must include stage trace class');
 assert.ok(html.includes('stage-dots'), 'HTML must include stage dots class');
-assert.ok(html.includes('stage-ring-a'), 'HTML must include stage ring class');
-assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
+assert.ok(html.includes('stage-blip'), 'HTML must include stage blip class');
 assert.ok(html.includes('stage-scanline'), 'HTML must include stage scanline class');
 assert.ok(html.includes('stage-glow'), 'HTML must include stage glow class');
+assert.ok(!html.includes('stage-halo'), 'HTML must not include stage halo class');
+assert.ok(!html.includes('stage-arc'), 'HTML must not include stage arc class');
+assert.ok(!html.includes('stage-ring-a'), 'HTML must not include stage ring class');
 console.log('  PASS: Console Hero elements');
 
 // Active Task Board
@@ -59,6 +62,9 @@ assert.ok(html.includes('Collapsed Details'), 'HTML must include collapsed detai
 assert.ok(html.includes('vault-details'), 'HTML must include vault-details in collapsible');
 assert.ok(html.includes('autosave-details'), 'HTML must include autosave-details in collapsible');
 assert.ok(html.includes('task-board-details'), 'HTML must include task-board-details collapsible section');
+assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed');
+assert.ok(html.includes('agent-event-feed'), 'HTML must include agent event feed class');
+assert.ok(html.includes('priority-callout'), 'HTML must include priority callout banner');
 console.log('  PASS: Active Task Board integration');
 
 // Running task animation
@@ -96,6 +102,7 @@ assert.ok(html.includes('id="sound-btn-soft"'), 'HTML must include Soft sound bu
 assert.ok(html.includes('id="sound-btn-clear"'), 'HTML must include Clear sound button');
 assert.ok(html.includes('sound-test-question'), 'HTML must keep sound-test-question button');
 assert.ok(html.includes('通知音'), 'HTML must include 通知音 label');
+assert.ok(html.includes('sound-mode-row'), 'HTML must include sound mode row');
 console.log('  PASS: notification sound UI maintained');
 
 // cockpit wording cleaned up → Console

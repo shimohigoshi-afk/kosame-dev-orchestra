@@ -89,6 +89,22 @@ function summarizeWishlist(wishlist) {
   return `${base}; laterIdeas=[${ideaTitles.join(' | ')}]`;
 }
 
+function summarizeMemoryVault(memoryVault) {
+  const memory = memoryVault && typeof memoryVault === 'object' ? memoryVault : {};
+  const work = memory.workMemory || {};
+  const state = memory.stateMemory || {};
+  const wishlist = memory.wishlistMemory || {};
+  const handoff = memory.handoff || {};
+  return [
+    `status=${normalizeText(memory.status || 'unknown')}`,
+    `work=${Number(work.count || 0)}(${normalizeText(work.status || 'unknown')})`,
+    `stateUpdated=${normalizeText(state.lastUpdatedAt || '—')}`,
+    `wishlist=${Number(wishlist.count || 0)}`,
+    `handoff=${handoff.exists ? 'exists' : 'missing'}`,
+    `warnings=${Number(memory.warningCount || 0)}`,
+  ].join(' / ');
+}
+
 function buildConsoleContextSummary(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') {
     return {
@@ -150,6 +166,11 @@ function buildConsoleContextSummary(snapshot) {
   const wishlist = snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {};
   if (wishlist) {
     lines.push(`wishlist=${summarizeWishlist(wishlist)}`);
+  }
+
+  const memoryVault = snapshot.memoryVault || {};
+  if (memoryVault) {
+    lines.push(`memoryVault=${summarizeMemoryVault(memoryVault)}`);
   }
 
   const autoSave = snapshot.autoSave || {};

@@ -135,6 +135,7 @@ assert.equal(consoleContext.status, 'ok', 'console context summary must be ok');
 assert.ok(consoleContext.summary.includes('KOSAME Console'), 'context summary must mention KOSAME Console');
 assert.ok(consoleContext.summary.includes('taskFeeder='), 'context summary must include taskFeeder');
 assert.ok(consoleContext.summary.includes('wishlist='), 'context summary must include wishlist');
+assert.ok(consoleContext.summary.includes('memoryVault='), 'context summary must include memoryVault');
 assert.ok(consoleContext.summary.includes('autoSave='), 'context summary must include autoSave');
 assert.ok(consoleContext.summary.includes('cost='), 'context summary must include cost');
 assert.ok(consoleContext.summary.includes('confirmationBridge='), 'context summary must include confirmationBridge');

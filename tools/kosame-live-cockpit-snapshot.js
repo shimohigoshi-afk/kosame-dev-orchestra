@@ -219,6 +219,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   });
   const taskVault = taskVaultSnapshot.taskVault;
   const autoSave = taskVaultSnapshot.autoSave;
+  const memoryVault = taskVault.memoryVault || taskVaultSnapshot.memoryVault || null;
   const apiCost = buildApiCostSnapshot(taskVaultDir);
   const taskFeeder = buildTaskFeederSnapshot({
     taskVaultDir,
@@ -259,6 +260,9 @@ function collectLiveCockpitSnapshot(options = {}) {
     taskFeeder.warnings.length > 0
       ? `Task Feeder に ${taskFeeder.warnings.length} 件の警告があります。`
       : null,
+    memoryVault && memoryVault.status && memoryVault.status !== 'ready'
+      ? `Memory Vault は ${String(memoryVault.status).toUpperCase()} 状態です。`
+      : null,
     ...devOrchestra.warnings,
     ...salesDx.warnings,
   ].filter(Boolean);
@@ -284,6 +288,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     monitoredRepos: [devOrchestra, salesDx],
     taskFeeder,
     wishlist: taskFeeder.wishlist,
+    memoryVault,
     autoSave,
     apiCost,
     confirmationBridge: options.confirmationBridge || null,
@@ -319,6 +324,12 @@ function collectLiveCockpitSnapshot(options = {}) {
     apiCost,
     taskFeeder,
     wishlist: taskFeeder.wishlist,
+    memoryVault,
+    chatStatus: {
+      ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
+      context: consoleContext.status === 'ok' ? 'loaded' : 'missing',
+      memory: memoryVault?.status || 'missing',
+    },
     confirmationBridge: options.confirmationBridge || null,
     consoleContextSummary: consoleContext.summary,
     consoleContextStatus: consoleContext.status,

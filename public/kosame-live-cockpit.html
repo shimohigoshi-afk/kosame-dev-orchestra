@@ -263,13 +263,27 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 160px; max-height: 230px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chat-thread { min-height: 144px; max-height: 260px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
-.chat-bubble-user { background: rgba(125,211,252,0.15); border: 1px solid rgba(125,211,252,0.25); padding: 8px 12px; border-radius: 14px 14px 4px 14px; max-width: 82%; font-size: 14px; line-height: 1.6; }
-.chat-bubble-ai { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 14px 14px 14px 4px; max-width: 84%; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
+.chat-bubble-ai { background: rgba(216, 234, 255, 0.08); border: 1px solid rgba(216, 234, 255, 0.16); border-radius: 16px 16px 16px 6px; max-width: min(84%, 760px); padding: 10px 12px; }
+.chat-bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #dbeafe; }
+.chat-bubble-header .chat-bubble-role { color: var(--accent); }
+.chat-bubble-text { font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+.chat-bubble-user .chat-bubble-header { justify-content: flex-end; color: #cffafe; }
+.chat-bubble-user .chat-bubble-role { color: #e0f2fe; }
+.chat-bubble-ai .chat-bubble-role { color: #7dd3fc; }
+.chat-status-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+.chat-status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
+.chat-status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.18); }
+.chat-status-badge.warn { color: #fbbf24; background: rgba(251, 191, 36, 0.09); border-color: rgba(251, 191, 36, 0.18); }
+.chat-status-badge.danger { color: var(--danger); background: rgba(248, 113, 113, 0.09); border-color: rgba(248, 113, 113, 0.18); }
+.chat-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.chat-quick-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.26); background: rgba(125,211,252,0.08); color: var(--accent); border-radius: 999px; padding: 7px 11px; font-size: 12px; }
+.chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
 .chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 48px; max-height: 120px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: var(--text); padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 42px; max-height: 96px; outline: none; }
 .chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
 .chat-btn { cursor: pointer; padding: 10px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
@@ -353,10 +367,23 @@ h1 {
           <button type="button" class="chat-sound-btn" id="sound-test">テスト音</button>
           <span class="small" id="sound-hint" style="color:var(--muted)">ブラウザ操作後に有効化してください</span>
         </div>
+        <div class="chat-status-badges" id="chat-status-badges" aria-label="チャット状態">
+          <span class="chat-status-badge warn" id="chat-ai-badge">AI: 未確認</span>
+          <span class="chat-status-badge warn" id="chat-context-badge">Context: 未確認</span>
+          <span class="chat-status-badge warn" id="chat-memory-badge">Memory: 未確認</span>
+          <span class="chat-status-badge warn" id="chat-sound-badge">Sound: OFF</span>
+        </div>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
+        <div class="chat-quick-actions" aria-label="クイックアクション">
+          <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
+          <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
+          <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
+          <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
+          <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
+        </div>
         <div id="chat-thread" class="chat-thread"></div>
         <div class="chat-input-row">
-          <textarea id="chat-input" placeholder="こさめへのメッセージ... (Ctrl+Enter で送信)"></textarea>
+          <textarea id="chat-input" placeholder="こさめに相談する内容を入力してください。Enterで送信、Shift+Enterで改行。"></textarea>
           <div class="chat-btn" id="chat-send">送信</div>
           <div class="chat-btn" id="chat-summarize">確認待ちを要約</div>
         </div>
@@ -402,6 +429,36 @@ h1 {
           </div>
         </div>
         <div class="stack">
+          <div class="subpanel">
+            <h3>MEMORY VAULT</h3>
+            <div class="vault-grid memory-grid">
+              <div class="metric">
+                <div class="label">Memory Vault</div>
+                <div class="value" id="memory-vault-status">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">作業記憶</div>
+                <div class="value" id="memory-work-status">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">状態記憶</div>
+                <div class="value" id="memory-state-updated">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">やりたいこと記憶</div>
+                <div class="value" id="memory-wishlist-count">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">handoff</div>
+                <div class="value" id="memory-handoff">読み込み中...</div>
+              </div>
+              <div class="metric">
+                <div class="label">保存禁止データ検出</div>
+                <div class="value" id="memory-warning-count">読み込み中...</div>
+              </div>
+            </div>
+            <div id="memory-vault-details" class="mono">読み込み中...</div>
+          </div>
           <div class="subpanel">
             <h3>Task Vault 詳細</h3>
             <div id="vault-details" class="mono">読み込み中...</div>
@@ -573,6 +630,11 @@ const fallbackProjectRegistry = [
 const chatHistory = [];
 let latestSnapshot = null;
 let latestBridge = null;
+let chatStatusState = {
+  ai: 'missing',
+  context: 'missing',
+  memory: 'missing',
+};
 let notificationAudioContext = null;
 let notificationEnabled = false;
 let notificationUnlocked = false;
@@ -614,12 +676,17 @@ function updateNotificationUI() {
   const stateNode = document.getElementById('sound-state');
   const toggleNode = document.getElementById('sound-toggle');
   const hintNode = document.getElementById('sound-hint');
+  const soundBadge = document.getElementById('chat-sound-badge');
   if (stateNode) stateNode.textContent = notificationEnabled ? 'ON' : 'OFF';
   if (toggleNode) toggleNode.textContent = notificationEnabled ? 'OFF' : 'ON';
   if (hintNode) {
     hintNode.textContent = notificationEnabled
       ? (notificationUnlocked ? '通知音は有効です' : 'ブラウザ操作後に有効化してください')
       : '通知音はOFFです';
+  }
+  if (soundBadge) {
+    soundBadge.textContent = `Sound: ${notificationEnabled ? 'ON' : 'OFF'}`;
+    soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
   }
 }
 
@@ -752,6 +819,26 @@ function maybeNotifyFromSnapshot(snapshot) {
 
 function text(node, value) {
   node.textContent = value == null || value === '' ? '—' : String(value);
+}
+
+function setStatusBadge(id, label, value, state) {
+  const node = document.getElementById(id);
+  if (!node) return;
+  node.textContent = `${label}: ${value}`;
+  node.className = `chat-status-badge ${state || 'warn'}`;
+}
+
+function renderChatStatusBadges(snapshot = {}) {
+  const chat = snapshot.chatStatus || {};
+  chatStatusState = {
+    ai: chat.ai || chatStatusState.ai || 'missing',
+    context: chat.context || chatStatusState.context || 'missing',
+    memory: chat.memory || (snapshot.memoryVault && snapshot.memoryVault.status) || chatStatusState.memory || 'missing',
+  };
+  setStatusBadge('chat-ai-badge', 'AI', chatStatusState.ai === 'connected' ? 'connected' : 'missing', chatStatusState.ai === 'connected' ? 'ok' : 'warn');
+  setStatusBadge('chat-context-badge', 'Context', chatStatusState.context === 'loaded' ? 'loaded' : 'missing', chatStatusState.context === 'loaded' ? 'ok' : 'warn');
+  setStatusBadge('chat-memory-badge', 'Memory', chatStatusState.memory === 'ready' ? 'ready' : chatStatusState.memory === 'warning' ? 'warning' : 'missing', chatStatusState.memory === 'ready' ? 'ok' : chatStatusState.memory === 'warning' ? 'warn' : 'warn');
+  updateNotificationUI();
 }
 
 function badgeClass(repo) {
@@ -949,6 +1036,7 @@ function renderTaskVault(taskVault, autoSave) {
     `targetRepo: ${vault.targetRepo || '—'}`,
     `assignedAI: ${vault.assignedAI || '—'}`,
     `currentState: ${vault.currentStatePath || '—'}`,
+    `memorySummary: ${vault.memorySummaryPath || '—'}`,
     `tasks.jsonl: ${vault.tasksJsonlPath || '—'}`,
     `decisions.jsonl: ${vault.decisionsJsonlPath || '—'}`,
     `wishlist.jsonl: ${vault.wishlistJsonlPath || '—'}`,
@@ -970,6 +1058,41 @@ function renderTaskVault(taskVault, autoSave) {
     `handoffExists: ${save.handoffExists ? 'yes' : 'no'}`,
   ];
   text(document.getElementById('autosave-details'), autosaveDetails.join('\n'));
+}
+
+function renderMemoryVault(memoryVault, taskVault) {
+  const memory = memoryVault || (taskVault && taskVault.memoryVault) || {};
+  const [badgeClassName, badgeText] = statusLabel(memory.status || 'warning');
+  const badge = document.getElementById('memory-vault-status');
+  if (badge) {
+    badge.innerHTML = '';
+    const span = document.createElement('span');
+    span.className = `status-badge ${badgeClassName}`;
+    span.textContent = `Memory Vault ${badgeText}`;
+    badge.appendChild(span);
+  }
+
+  const work = memory.workMemory || {};
+  const state = memory.stateMemory || {};
+  const wishlist = memory.wishlistMemory || {};
+  const handoff = memory.handoff || {};
+
+  text(document.getElementById('memory-work-status'), `${work.status || '—'} / count=${work.count ?? '—'}`);
+  text(document.getElementById('memory-state-updated'), state.lastUpdatedAt || '—');
+  text(document.getElementById('memory-wishlist-count'), String(wishlist.count ?? 0));
+  text(document.getElementById('memory-handoff'), handoff.exists ? 'あり' : 'なし');
+  text(document.getElementById('memory-warning-count'), memory.warningCount > 0 ? `${memory.warningCount}件` : 'なし');
+
+  const details = [
+    `status: ${memory.status || 'missing'}`,
+    `workMemory: count=${work.count ?? 0} / status=${work.status || '—'}`,
+    `stateMemory: lastUpdatedAt=${state.lastUpdatedAt || '—'} / version=${state.version || '—'} / gitStatus=${state.gitStatus || '—'} / verifyResult=${state.verifyResult || '—'}`,
+    `wishlistMemory: count=${wishlist.count ?? 0} / status=${wishlist.status || '—'}`,
+    `handoff: ${handoff.exists ? 'exists' : 'missing'} / ${handoff.path || '—'}`,
+    `warningCount: ${memory.warningCount ?? 0}`,
+    memory.safetyWarnings && memory.safetyWarnings.length ? `safetyWarnings: ${memory.safetyWarnings.join(' / ')}` : '',
+  ].filter(Boolean);
+  text(document.getElementById('memory-vault-details'), details.join('\n'));
 }
 
 function renderCardStack(node, items, emptyLabel, buildTitle, buildBody) {
@@ -1152,7 +1275,17 @@ function renderChatThread() {
     div.className = msg.role === 'user' ? 'chat-msg-user' : 'chat-msg-ai';
     const bubble = document.createElement('div');
     bubble.className = msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai';
-    bubble.textContent = msg.content;
+    const header = document.createElement('div');
+    header.className = 'chat-bubble-header';
+    const role = document.createElement('span');
+    role.className = 'chat-bubble-role';
+    role.textContent = msg.role === 'user' ? 'じゅんやさん' : 'こさめ ☂️';
+    header.appendChild(role);
+    const body = document.createElement('div');
+    body.className = 'chat-bubble-text';
+    body.textContent = msg.content;
+    bubble.appendChild(header);
+    bubble.appendChild(body);
     div.appendChild(bubble);
     thread.appendChild(div);
   }
@@ -1203,6 +1336,7 @@ async function sendChatMessage(userText, confirmationContext) {
   }
   renderChatThread();
   sendBtn.textContent = '送信中...';
+  statusEl.textContent = 'こさめ考え中…☂️';
 
   try {
     const payload = {
@@ -1223,14 +1357,20 @@ async function sendChatMessage(userText, confirmationContext) {
 
     if (data.noKey) {
       statusEl.textContent = 'AI相談は未接続（APIキー未設定）';
+      chatStatusState.ai = 'missing';
     } else if (data.noContext) {
       statusEl.textContent = '状態コンテキスト未取得です。';
+      chatStatusState.context = 'missing';
     } else if (!statusEl.textContent.includes('接続済')) {
       statusEl.textContent = 'こさめ相談AI: 接続済';
+      chatStatusState.ai = 'connected';
+      chatStatusState.context = 'loaded';
     }
+    renderChatStatusBadges(latestSnapshot || {});
   } catch {
     chatHistory.push({ role: 'assistant', content: 'エラーが発生しました。サーバーに接続できません。' });
     renderChatThread();
+    statusEl.textContent = 'エラーが発生しました。サーバーに接続できません。';
   } finally {
     sendBtn.textContent = '送信';
   }
@@ -1260,9 +1400,11 @@ async function loadSnapshot() {
     const sales = snapshot.salesDx || {};
     renderProjectRegistry(snapshot);
     renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
+    renderMemoryVault(snapshot.memoryVault || (snapshot.taskVault && snapshot.taskVault.memoryVault) || {}, snapshot.taskVault || {});
     renderApiCost(snapshot.apiCost || {});
     renderTaskFeeder(snapshot.taskFeeder || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
+    renderChatStatusBadges(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
@@ -1291,7 +1433,7 @@ document.getElementById('chat-send').addEventListener('click', () => {
 });
 
 document.getElementById('chat-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     const t = document.getElementById('chat-input').value.trim();
     sendChatMessage(t, null);
@@ -1306,6 +1448,18 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
   }
   const ctx = buildConfirmationContext(latestBridge);
   sendChatMessage(null, ctx);
+});
+
+document.querySelectorAll('[data-chat-prompt]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const prompt = button.getAttribute('data-chat-prompt') || '';
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = prompt;
+      input.focus();
+    }
+    sendChatMessage(prompt.trim(), null);
+  });
 });
 
 document.getElementById('sound-toggle').addEventListener('click', async () => {

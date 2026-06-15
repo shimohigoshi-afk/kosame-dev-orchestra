@@ -41,6 +41,7 @@ function getTaskVaultPaths(taskVaultDir = resolveTaskVaultDir()) {
     wishlistJsonl: path.join(root, JSONL_NAMES.wishlist),
     costLedgerJsonl: path.join(root, 'cost-ledger.jsonl'),
     costSummaryJson: path.join(root, 'cost-summary.json'),
+    memorySummaryJson: path.join(root, 'memory-summary.json'),
     autosavesDir: path.join(root, 'autosaves'),
     checkpointsDir: path.join(root, 'checkpoints'),
     handoffDir: path.join(root, 'handoff'),
@@ -55,6 +56,216 @@ function ensureTaskVaultLayout(taskVaultDir = resolveTaskVaultDir()) {
   fs.mkdirSync(paths.checkpointsDir, { recursive: true });
   fs.mkdirSync(paths.handoffDir, { recursive: true });
   return paths;
+}
+
+function touchTextFile(filePath, content = '') {
+  if (fs.existsSync(filePath)) return false;
+  fs.writeFileSync(filePath, `${String(content)}\n`, 'utf8');
+  return true;
+}
+
+function normalizeMemoryVaultStatus(value) {
+  const text = String(value || '').trim().toLowerCase();
+  if (!text) return 'missing';
+  if (['ok', 'ready', 'success', 'available'].includes(text)) return 'ready';
+  if (['warning', 'warn'].includes(text)) return 'warning';
+  if (['missing', 'unavailable', 'not_found'].includes(text)) return 'missing';
+  return text;
+}
+
+function buildMemoryVaultRecord(input = {}, overview = {}) {
+  const now = new Date().toISOString();
+  const currentState = input.currentState || overview.currentState || null;
+  const taskLists = input.taskLists || overview.taskLists || createTaskLists(currentState || {});
+  const currentTaskCount = Number.isFinite(Number(input.currentTaskCount))
+    ? Number(input.currentTaskCount)
+    : countCurrentTasks(taskLists);
+  const wishlistCount = Number.isFinite(Number(input.wishlistCount))
+    ? Number(input.wishlistCount)
+    : Number(overview.wishlistCount || currentState?.wishlistCount || 0);
+  const status = normalizeMemoryVaultStatus(
+    input.status
+    || overview.status
+    || (!overview.exists ? 'missing' : overview.warningCount > 0 ? 'warning' : 'ready')
+  );
+  const stateMemoryLastUpdatedAt = input.stateMemoryLastUpdatedAt
+    || currentState?.lastSavedAt
+    || currentState?.latestAutosaveAt
+    || currentState?.savedAt
+    || overview.latestAutosaveAt
+    || overview.latestCheckpointAt
+    || now;
+
+  const record = {
+    version: input.version || PACKAGE.version,
+    recordType: 'memory_summary',
+    savedAt: input.savedAt || now,
+    taskVaultDir: resolveTaskVaultDir(input.taskVaultDir || overview.root || currentState?.taskVaultDir || DEFAULT_TASK_VAULT_DIR),
+    status,
+    workMemory: {
+      count: currentTaskCount,
+      status: currentTaskCount > 0 ? 'active' : 'idle',
+    },
+    stateMemory: {
+      lastUpdatedAt: stateMemoryLastUpdatedAt,
+      version: currentState?.version || input.stateMemoryVersion || PACKAGE.version,
+      gitStatus: currentState?.lastGitStatus || input.stateMemoryGitStatus || null,
+      verifyResult: currentState?.lastVerifyResult || input.stateMemoryVerifyResult || currentState?.verifyResult || null,
+    },
+    wishlistMemory: {
+      count: wishlistCount,
+      status: wishlistCount > 0 ? 'active' : 'empty',
+    },
+    handoff: {
+      exists: !!(overview.handoffExists || input.handoffExists),
+      path: overview.handoffPath || input.handoffPath || null,
+    },
+    warningCount: Number.isFinite(Number(overview.warningCount)) ? Number(overview.warningCount) : Number(input.warningCount || 0),
+    safetyWarnings: Array.isArray(input.safetyWarnings) ? input.safetyWarnings : Array.isArray(overview.safetyWarnings) ? overview.safetyWarnings : [],
+    note: input.note || 'local memory vault bootstrap',
+  };
+
+  const sanitized = sanitizeRecord(record);
+  return {
+    ...sanitized.value,
+    safetyWarnings: [
+      ...(Array.isArray(sanitized.value.safetyWarnings) ? sanitized.value.safetyWarnings : []),
+      ...sanitized.warnings.map(w => `redacted ${w.path || 'value'} (${w.categories.join(', ')})`),
+    ],
+    warningCount: sanitized.warnings.length + (Array.isArray(sanitized.value.safetyWarnings) ? sanitized.value.safetyWarnings.length : 0),
+  };
+}
+
+function buildMemoryVaultOverview(input = {}) {
+  const currentState = input.currentState || null;
+  const taskLists = input.taskLists || createTaskLists(currentState || {});
+  const currentTaskCount = Number.isFinite(Number(input.currentTaskCount))
+    ? Number(input.currentTaskCount)
+    : countCurrentTasks(taskLists);
+  const wishlistCount = Number.isFinite(Number(input.wishlistCount))
+    ? Number(input.wishlistCount)
+    : Number(currentState?.wishlistCount || 0);
+  const status = normalizeMemoryVaultStatus(
+    input.status
+    || (!input.exists
+      ? 'missing'
+      : input.warningCount > 0
+        ? 'warning'
+        : input.memorySummary
+          ? input.memorySummary.status || 'ready'
+          : 'warning')
+  );
+  const lastUpdatedAt = input.stateMemoryLastUpdatedAt
+    || currentState?.lastSavedAt
+    || currentState?.latestAutosaveAt
+    || currentState?.savedAt
+    || input.latestAutosaveAt
+    || input.latestCheckpointAt
+    || null;
+
+  return {
+    status,
+    currentTaskCount,
+    workMemory: {
+      count: currentTaskCount,
+      status: currentTaskCount > 0 ? 'active' : 'idle',
+    },
+    stateMemory: {
+      lastUpdatedAt,
+      version: currentState?.version || PACKAGE.version,
+      gitStatus: currentState?.lastGitStatus || null,
+      verifyResult: currentState?.lastVerifyResult || currentState?.verifyResult || null,
+    },
+    wishlistMemory: {
+      count: wishlistCount,
+      status: wishlistCount > 0 ? 'active' : 'empty',
+    },
+    handoff: {
+      exists: !!input.handoffExists,
+      path: input.handoffPath || null,
+    },
+    warningCount: Number.isFinite(Number(input.warningCount)) ? Number(input.warningCount) : 0,
+    safetyWarnings: Array.isArray(input.safetyWarnings) ? input.safetyWarnings : [],
+    lastUpdatedAt,
+  };
+}
+
+function saveMemorySummary(taskVaultDir, summaryInput = {}) {
+  const paths = ensureTaskVaultLayout(taskVaultDir);
+  const overview = readTaskVaultOverview(paths.root);
+  const filteredOverview = {
+    ...overview,
+    warningCount: Math.max(0, Number(overview.warningCount || 0) - (overview.memorySummary ? 0 : 1)),
+    safetyWarnings: Array.isArray(overview.safetyWarnings)
+      ? overview.safetyWarnings.filter((warning) => String(warning || '').trim() !== 'memory-summary.json is missing')
+      : [],
+  };
+  const record = buildMemoryVaultRecord({
+    ...summaryInput,
+    taskVaultDir: paths.root,
+  }, filteredOverview);
+  writeJson(paths.memorySummaryJson, record);
+  return { path: paths.memorySummaryJson, record };
+}
+
+function bootstrapTaskVault(taskVaultDir = resolveTaskVaultDir(), input = {}) {
+  const paths = ensureTaskVaultLayout(taskVaultDir);
+  const now = input.savedAt || new Date().toISOString();
+  const createdFiles = [];
+
+  for (const filePath of [paths.tasksJsonl, paths.decisionsJsonl, paths.wishlistJsonl, paths.costLedgerJsonl]) {
+    if (touchTextFile(filePath)) createdFiles.push(filePath);
+  }
+
+  if (touchTextFile(paths.latestHandoff, '# KOSAME Memory Vault Handoff\n\n- local only\n')) {
+    createdFiles.push(paths.latestHandoff);
+  }
+
+  if (!fs.existsSync(paths.currentState)) {
+    const currentState = buildCurrentStateRecord({
+      ...input.currentState,
+      taskVaultDir: paths.root,
+      currentMission: input.currentMission || input.currentState?.currentMission || '☂️ KOSAME Console',
+      targetRepo: input.targetRepo || input.currentState?.targetRepo || 'unknown',
+      assignedAI: input.assignedAI || input.currentState?.assignedAI || 'unknown',
+      nextAction: input.nextAction || input.currentState?.nextAction || 'Task Vault を初期化しました。',
+      taskLists: input.taskLists || input.currentState?.taskLists || createTaskLists({}),
+      wishlistCount: Number.isFinite(Number(input.wishlistCount)) ? Number(input.wishlistCount) : Number(input.currentState?.wishlistCount || 0),
+      lastSavedAt: now,
+      latestAutosaveAt: now,
+      safetyWarnings: Array.isArray(input.currentState?.safetyWarnings) ? input.currentState.safetyWarnings : [],
+    });
+    writeJson(paths.currentState, currentState);
+    createdFiles.push(paths.currentState);
+  }
+
+  if (!fs.existsSync(paths.memorySummaryJson)) {
+    const currentState = readJson(paths.currentState);
+    const overview = readTaskVaultOverview(paths.root);
+    const filteredOverview = {
+      ...overview,
+      warningCount: Math.max(0, Number(overview.warningCount || 0) - (overview.memorySummary ? 0 : 1)),
+      safetyWarnings: Array.isArray(overview.safetyWarnings)
+        ? overview.safetyWarnings.filter((warning) => String(warning || '').trim() !== 'memory-summary.json is missing')
+        : [],
+    };
+    const memorySummary = buildMemoryVaultRecord({
+      ...input.memorySummary,
+      taskVaultDir: paths.root,
+      savedAt: now,
+      currentState,
+      warningCount: filteredOverview.warningCount,
+      safetyWarnings: filteredOverview.safetyWarnings,
+    }, filteredOverview);
+    writeJson(paths.memorySummaryJson, memorySummary);
+    createdFiles.push(paths.memorySummaryJson);
+  }
+
+  return {
+    paths,
+    createdFiles,
+    overview: readTaskVaultOverview(paths.root),
+  };
 }
 
 function timestampStamp(date = new Date()) {
@@ -253,6 +464,19 @@ function saveCurrentState(taskVaultDir, state) {
   const paths = ensureTaskVaultLayout(taskVaultDir);
   const record = buildCurrentStateRecord({ ...state, taskVaultDir: paths.root });
   writeJson(paths.currentState, record);
+  saveMemorySummary(paths.root, {
+    currentState: record,
+    savedAt: record.savedAt,
+    currentTaskCount: record.currentTaskCount,
+    wishlistCount: record.wishlistCount,
+    handoffExists: fs.existsSync(paths.latestHandoff),
+    handoffPath: paths.latestHandoff,
+    warningCount: record.warningCount,
+    safetyWarnings: record.safetyWarnings,
+    stateMemoryLastUpdatedAt: record.lastSavedAt,
+    stateMemoryGitStatus: record.lastGitStatus,
+    stateMemoryVerifyResult: record.lastVerifyResult,
+  });
   return { path: paths.currentState, record };
 }
 
@@ -327,12 +551,14 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
   const currentState = readJson(paths.currentState);
   const taskLists = currentState?.taskLists || createTaskLists(currentState || {});
   const wishlistRecords = readJsonlRecords(paths.wishlistJsonl);
+  const memorySummary = readJson(paths.memorySummaryJson);
   const warnings = [
     ...(Array.isArray(currentState?.safetyWarnings) ? currentState.safetyWarnings : []),
   ];
 
   if (!fs.existsSync(root)) warnings.push('task vault directory is missing');
   if (!currentState) warnings.push('current-state.json is missing');
+  if (!memorySummary) warnings.push('memory-summary.json is missing');
 
   const latestAutosaveAt = currentState?.latestAutosaveAt || newestEntryTime(paths.autosavesDir);
   const latestCheckpointAt = currentState?.latestCheckpointAt || newestEntryTime(paths.checkpointsDir);
@@ -340,6 +566,20 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
   const currentTaskCount = countCurrentTasks(taskLists);
   const wishlistCount = currentState?.wishlistCount || wishlistRecords.length;
   const warningCount = warnings.length;
+  const memoryVault = buildMemoryVaultOverview({
+    exists: fs.existsSync(root),
+    warningCount,
+    safetyWarnings: warnings,
+    currentState,
+    taskLists,
+    wishlistCount,
+    currentTaskCount,
+    latestAutosaveAt,
+    latestCheckpointAt,
+    handoffExists,
+    handoffPath: paths.latestHandoff,
+    memorySummary,
+  });
 
   const status = !fs.existsSync(root)
     ? 'warning'
@@ -354,6 +594,8 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
     status,
     warningCount,
     safetyWarnings: warnings,
+    memorySummary,
+    memoryVault,
     currentTaskCount,
     taskLists,
     wishlistCount,
@@ -370,6 +612,7 @@ function readTaskVaultOverview(taskVaultDir = resolveTaskVaultDir()) {
     handoffExists,
     handoffPath: paths.latestHandoff,
     currentStatePath: paths.currentState,
+    memorySummaryPath: paths.memorySummaryJson,
     tasksJsonlPath: paths.tasksJsonl,
     decisionsJsonlPath: paths.decisionsJsonl,
     wishlistJsonlPath: paths.wishlistJsonl,
@@ -441,10 +684,12 @@ function createTaskVault(taskVaultDir = resolveTaskVaultDir()) {
   const paths = ensureTaskVaultLayout(taskVaultDir);
   return {
     paths,
+    bootstrap: (input) => bootstrapTaskVault(paths.root, input || {}),
     saveCurrentState: (state) => saveCurrentState(paths.root, state),
     appendTaskRecord: (taskRecord) => appendTaskRecord(paths.root, taskRecord),
     appendDecisionRecord: (decisionRecord) => appendDecisionRecord(paths.root, decisionRecord),
     appendWishlistRecord: (wishlistRecord) => appendWishlistRecord(paths.root, wishlistRecord),
+    saveMemorySummary: (summary) => saveMemorySummary(paths.root, summary),
     saveAutoSaveSnapshot: (snapshot) => saveAutoSaveSnapshot(paths.root, snapshot),
     saveCheckpointSnapshot: (snapshot) => saveCheckpointSnapshot(paths.root, snapshot),
     writeHandoffMarkdown: (text) => writeHandoffMarkdown(paths.root, text),
@@ -466,6 +711,7 @@ module.exports = {
   countCurrentTasks,
   buildCurrentStateRecord,
   saveCurrentState,
+  saveMemorySummary,
   appendTaskRecord,
   appendDecisionRecord,
   appendWishlistRecord,
@@ -473,6 +719,9 @@ module.exports = {
   saveCheckpointSnapshot,
   writeHandoffMarkdown,
   sanitizePlainText,
+  buildMemoryVaultRecord,
+  buildMemoryVaultOverview,
+  bootstrapTaskVault,
   readTaskVaultOverview,
   readJsonlRecords,
   readTaskRecords,

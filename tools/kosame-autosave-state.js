@@ -79,6 +79,7 @@ function buildAutoSaveSnapshot(options = {}) {
     status: deriveStatus(overview, options.taskVault || {}),
     warningCount: overview.warningCount,
     safetyWarnings: overview.safetyWarnings,
+    memoryVault: overview.memoryVault,
     currentTaskCount: overview.currentTaskCount,
     currentMission: overview.currentMission,
     targetRepo: overview.targetRepo,
@@ -94,6 +95,7 @@ function buildAutoSaveSnapshot(options = {}) {
     latestAutosaveAt,
     latestCheckpointAt,
   };
+  const memoryVault = taskVault.memoryVault || overview.memoryVault || null;
 
   const autoSave = {
     version: PACKAGE.version,
@@ -112,6 +114,7 @@ function buildAutoSaveSnapshot(options = {}) {
     warningCount: overview.warningCount,
     handoffExists: overview.handoffExists,
     safetyWarnings: overview.safetyWarnings,
+    memoryVault,
   };
 
   return {
@@ -119,6 +122,7 @@ function buildAutoSaveSnapshot(options = {}) {
     generatedAt: now,
     taskVault,
     autoSave,
+    memoryVault,
   };
 }
 

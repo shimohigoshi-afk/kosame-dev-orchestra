@@ -86,11 +86,11 @@ console.log('  PASS: typing indicator');
 
 assert.ok(html.includes('chat-sound-details-compact'), 'HTML must keep collapsed sound UI');
 assert.ok(html.includes('Sound: Clear') || html.includes('Sound: OFF'), 'HTML must keep compact sound label');
-assert.ok(html.includes('id="sound-btn-off"'), 'HTML must include OFF sound button');
-assert.ok(html.includes('id="sound-btn-soft"'), 'HTML must include Soft sound button');
-assert.ok(html.includes('id="sound-btn-clear"'), 'HTML must include Clear sound button');
-assert.ok(html.includes('sound-test-question'), 'HTML must keep sound-test-question button');
-assert.ok(html.includes('通知音'), 'HTML must include 通知音 label');
+assert.ok(html.includes('sound-mode-row'), 'HTML must include sound mode row in drawer');
+assert.ok(html.includes('sound-btn-'), 'HTML must include sound mode button source');
+assert.ok(html.includes('sound-test-'), 'HTML must include sound test buttons source');
+assert.ok(html.includes('通知設定'), 'HTML must include notification settings drawer entry');
+assert.ok(html.includes('診断情報'), 'HTML must include diagnostics drawer entry');
 console.log('  PASS: notification sound UI maintained');
 
 assert.ok(!html.includes('この cockpit'), 'HTML must not use cockpit wording');

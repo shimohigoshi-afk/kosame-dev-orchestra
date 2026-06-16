@@ -72,11 +72,11 @@ assert.ok(html.includes('危険ゲート'), 'HTML must include danger gate actio
 assert.ok(html.includes('代替案を出す'), 'HTML must include alternative proposal action');
 assert.ok(html.includes('Wishlistに保存'), 'HTML must include wishlist action');
 assert.ok(html.includes('今日はここで終了'), 'HTML must include finish action');
-assert.ok(html.includes('通知音: Clear') || html.includes('Sound: Clear') || html.includes('Sound: OFF'), 'HTML must include compact sound label');
-assert.ok(html.includes('sound-test'), 'HTML must include test sound button');
-assert.ok(html.includes('sound-btn-off'), 'HTML must include off sound button');
-assert.ok(html.includes('sound-btn-soft'), 'HTML must include soft sound button');
-assert.ok(html.includes('sound-btn-clear'), 'HTML must include clear sound button');
+assert.ok(html.includes('通知設定'), 'HTML must include notification settings drawer');
+assert.ok(html.includes('診断情報'), 'HTML must include diagnostics drawer');
+assert.ok(html.includes('sound-mode-row'), 'HTML must include sound mode row source');
+assert.ok(html.includes('sound-btn-'), 'HTML must include sound mode button source');
+assert.ok(html.includes('sound-test-'), 'HTML must include sound test source');
 console.log('  PASS: chat action drawer');
 
 assert.ok(html.includes('COLLAPSED DETAILS'), 'HTML must include collapsed details section');

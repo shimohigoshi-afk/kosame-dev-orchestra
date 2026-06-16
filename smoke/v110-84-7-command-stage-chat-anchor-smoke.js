@@ -57,7 +57,7 @@ assert.ok(html.includes('チャットへ'), 'HTML must include chat anchor butto
 assert.ok(html.includes('scrollIntoView({ behavior: \'smooth\''), 'HTML must include smooth scroll handler');
 assert.ok(html.includes('chat-sound-details-compact'), 'HTML must keep collapsed sound UI');
 assert.ok(html.includes('sound-summary-mode'), 'HTML must include compact sound summary');
-assert.ok(html.includes('sound-test-question'), 'HTML must keep hidden sound tests');
+assert.ok(html.includes('sound-test-'), 'HTML must keep hidden sound tests');
 assert.ok(html.includes('最終更新:'), 'HTML must include local timestamp label');
 assert.ok(html.includes('JST'), 'HTML must include JST timestamp text');
 assert.ok(html.includes('Command Center'), 'HTML must keep subtitle');

@@ -705,15 +705,17 @@ h1 {
 .chat-quick-btn:hover { background: rgba(125,211,252,0.16); }
 .chat-primary-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr);
-  gap: 8px;
-  margin: 10px 0 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+  margin: 7px 0 4px;
 }
 .chat-primary-btn {
   cursor: pointer;
-  border-radius: 14px;
-  padding: 12px 16px;
-  font-size: 13px;
+  border-radius: 12px;
+  padding: 7px 11px;
+  min-height: 34px;
+  font-size: 12px;
   font-weight: 700;
   border: 1px solid rgba(125,211,252,0.22);
   background: linear-gradient(180deg, rgba(125,211,252,0.18), rgba(125,211,252,0.09));
@@ -721,36 +723,142 @@ h1 {
   box-shadow: 0 12px 24px rgba(7,17,31,0.18);
 }
 .chat-primary-btn:hover { background: linear-gradient(180deg, rgba(125,211,252,0.22), rgba(125,211,252,0.12)); }
-.chat-input-row { display: flex; gap: 8px; align-items: flex-end; }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 78px; max-height: 176px; outline: none; }
-.chat-input-row textarea:focus { border-color: rgba(125,211,252,0.4); }
+.chat-primary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 250px);
+  gap: 8px;
+  align-items: stretch;
+}
+.chat-command-bar textarea {
+  width: 100%;
+  min-width: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 11px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 40px;
+  max-height: 120px;
+  outline: none;
+}
+.chat-command-bar textarea:focus { border-color: rgba(125,211,252,0.4); }
+.chat-command-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+  margin: 0 0 8px;
+}
+.chat-command-ghost {
+  border: 1px solid rgba(167,139,250,0.22);
+  background: rgba(167,139,250,0.08);
+  color: #e9ddff;
+}
+.chat-command-ghost:hover {
+  background: rgba(167,139,250,0.14);
+}
+.chat-assist-shell {
+  margin: 8px 0 6px;
+  padding: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(125,211,252,0.1);
+  background: rgba(255,255,255,0.028);
+  overflow: hidden;
+}
+.chat-assist-shell > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.chat-assist-shell > summary::-webkit-details-marker { display: none; }
+.chat-assist-shell > summary::after {
+  content: '▾';
+  color: var(--accent);
+  font-size: 12px;
+}
+.chat-assist-shell[open] > summary::after { content: '▴'; }
+.chat-assist-shell-body {
+  padding: 0 10px 10px;
+}
+.chat-assist-tabs.chat-quick-actions {
+  margin: 0 0 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+.chat-assist-tab {
+  white-space: nowrap;
+}
+.chat-assist-tab[aria-selected="true"] {
+  border-color: rgba(125,211,252,0.46);
+  background: rgba(125,211,252,0.18);
+  color: #e0f2fe;
+  box-shadow: 0 10px 20px rgba(7,17,31,0.14);
+}
+.chat-assist-panel {
+  display: grid;
+  gap: 8px;
+}
+.chat-assist-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+.chat-assist-panel-title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.chat-assist-panel-body {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  max-height: 152px;
+  overflow: auto;
+}
+.chat-assist-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(125,211,252,0.1);
+  background: rgba(255,255,255,0.03);
+}
+.chat-assist-card .mono {
+  color: #dbeafe;
+}
+.chat-assist-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.chat-assist-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-assist-action-row .chat-btn {
+  width: auto;
+}
 .chat-btn { cursor: pointer; padding: 11px 16px; border-radius: 10px; font-size: 13px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.1); color: var(--accent); user-select: none; white-space: nowrap; }
 .chat-btn:hover { background: rgba(125,211,252,0.2); }
 .chat-btn.cb-active { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.12); color: #fbbf24; }
 .chat-action-drawer {
-  margin: 10px 0 2px;
-  border: 1px solid rgba(125,211,252,0.12);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-  overflow: hidden;
-}
-.chat-action-drawer > summary {
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 12px;
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
-.chat-action-drawer > summary::-webkit-details-marker { display: none; }
-.chat-action-drawer > summary::after { content: '▾'; color: var(--accent); }
-.chat-action-drawer[open] > summary::after { content: '▴'; }
-.chat-action-drawer-body {
-  padding: 0 12px 10px;
+  margin: 6px 0 2px;
 }
 .chat-action-tabs {
   display: flex;
@@ -762,9 +870,51 @@ h1 {
   min-height: 32px;
   padding: 5px 11px;
 }
+@media (max-width: 900px) {
+  .chat-primary-actions { grid-template-columns: 1fr; }
+  .chat-primary-row { grid-template-columns: 1fr; }
+  .chat-primary-btn {
+    width: 100%;
+    min-height: 32px;
+    padding: 7px 10px;
+  }
+  .chat-command-bar { gap: 6px; }
+  .chat-command-secondary .chat-btn,
+  .chat-sound-btn { width: 100%; text-align: center; }
+  .chat-command-secondary { align-items: stretch; }
+  .chat-command-secondary .small { width: 100%; }
+  .chat-sound-details-compact {
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
+  }
+  .chat-sound-mode-btn,
+  .chat-sound-type-btn,
+  .chat-command-ghost {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .chat-thread {
+    min-height: 160px;
+    max-height: 280px;
+  }
+  .chat-assist-panel-body {
+    max-height: 136px;
+  }
+}
+@media (min-width: 1200px) {
+  .chat-primary-row {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 250px);
+  }
+}
 @media (max-width: 760px) {
-  .chat-input-row { flex-direction: column; align-items: stretch; }
-  .chat-btn, .chat-sound-btn { width: 100%; text-align: center; }
+  .chat-primary-actions { grid-template-columns: 1fr; }
+  .chat-primary-row { grid-template-columns: 1fr; }
+  .chat-command-bar { gap: 6px; }
+  .chat-command-secondary .chat-btn,
+  .chat-sound-btn { width: 100%; text-align: center; }
+  .chat-command-secondary { align-items: stretch; }
+  .chat-command-secondary .small { width: 100%; }
 }
 .sound-mode-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .chat-sound-mode-btn { cursor: pointer; border: 1px solid rgba(125,211,252,0.25); background: rgba(125,211,252,0.06); color: var(--muted); border-radius: 999px; padding: 5px 9px; font-size: 11px; white-space: nowrap; }
@@ -910,7 +1060,8 @@ h1 {
   margin-bottom: 4px;
 }
 .command-stage .hero-compact-left h1 {
-  font-size: clamp(17px, 1.55vw, 23px);
+  font-size: clamp(22px, 1.9vw, 29px);
+  font-weight: 750;
   line-height: 1.02;
 }
 .command-stage .hero-compact-left .title-copy {
@@ -1165,10 +1316,20 @@ h1 {
 }
 
 /* Chat improvements */
-.chat-thread { min-height: 260px; max-height: 460px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-thread { min-height: 184px; max-height: 360px; overflow-y: auto; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+.chat-empty-state { display: flex; flex-direction: column; gap: 8px; }
+.chat-empty-state .chat-bubble-ai {
+  max-width: min(88%, 760px);
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(125,211,252,0.24);
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16);
+}
+.chat-empty-state .chat-bubble-ai:first-child { background: rgba(125,211,252,0.11); }
+.chat-empty-state .chat-bubble-ai:nth-child(2) { background: rgba(216, 234, 255, 0.08); }
+.chat-empty-state .chat-bubble-ai:nth-child(3) { background: rgba(125,211,252,0.09); }
 .chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 72px; max-height: 160px; outline: none; }
-.chat-btn#chat-send { background: rgba(125,211,252,0.15); border-color: rgba(125,211,252,0.38); font-weight: 600; }
-.chat-btn#chat-send:hover { background: rgba(125,211,252,0.26); }
+.chat-btn#chat-send { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); font-weight: 700; }
+.chat-btn#chat-send:hover { background: rgba(125,211,252,0.2); }
 
 /* API Cost section */
 .api-cost-outer { order: 7; }
@@ -1188,6 +1349,41 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
+@media (max-width: 1199px) {
+  .chat-primary-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .chat-primary-actions { grid-template-columns: 1fr; }
+  .chat-primary-row { grid-template-columns: 1fr; }
+  .chat-primary-btn {
+    width: 100%;
+    min-height: 32px;
+    padding: 7px 10px;
+  }
+  .chat-command-bar { gap: 6px; }
+  .chat-command-secondary .chat-btn,
+  .chat-sound-btn { width: 100%; text-align: center; }
+  .chat-command-secondary { align-items: stretch; }
+  .chat-command-secondary .small { width: 100%; }
+  .chat-sound-details-compact {
+    margin-left: 0;
+    min-width: 0;
+    width: 100%;
+  }
+  .chat-sound-mode-btn,
+  .chat-sound-type-btn,
+  .chat-command-ghost {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .chat-thread {
+    min-height: 160px;
+    max-height: 280px;
+  }
+  .chat-assist-panel-body {
+    max-height: 136px;
+  }
+}
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
@@ -1204,7 +1400,7 @@ h1 {
   .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-sound-type-row::-webkit-scrollbar { display: none; }
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
-  .chat-thread { min-height: 220px; max-height: 300px; }
+  .chat-thread { min-height: 180px; max-height: 260px; }
   .chat-sound-details-body { padding-bottom: 8px; }
   .task-board-counts { gap: 8px; }
   .task-count-card { flex-basis: calc(50% - 4px); }
@@ -1244,9 +1440,6 @@ h1 {
             <div class="status-chip-row">
               <span class="status-chip" id="hero-chip-dev">Dev Orchestra</span>
               <span class="status-chip" id="hero-chip-sales">Sales DX</span>
-              <span class="status-chip" id="hero-chip-memory">Memory</span>
-              <span class="status-chip" id="hero-chip-chat">Chat</span>
-              <span class="status-chip" id="hero-chip-sound">Sound: OFF</span>
             </div>
             <div class="hero-meta">
               <div class="hero-meta-row"><span class="hero-meta-label">VER</span><code id="hero-version">—</code></div>
@@ -1330,16 +1523,14 @@ h1 {
     <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
       <article class="panel project-strip-panel">
         <h2>PROJECT STRIP</h2>
-        <p class="lead">Project Registry 由来の選択式ストリップです。増えても崩れないように、今見たいプロジェクトだけを小さく並べています。</p>
         <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
       </article>
 
       <article class="panel project-focus-panel" id="project-focus-card">
         <div class="project-focus-head">
           <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
-          <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project / focus view</div>
+          <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
         </div>
-        <p class="lead">選択中のプロジェクトだけを大きく見せて、git status / changed files / staged files / recent commits / Actions を読む場所としてまとめています。</p>
         <div id="project-focus" class="project-focus-shell"></div>
       </article>
     </section>
@@ -1347,68 +1538,7 @@ h1 {
     <section class="chat-outer" style="margin-top:14px">
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
-        <p class="lead">こさめに質問・相談ができます。Console の状態をコンテキストとして共有します。必要なときだけ、チャットへ移動してください。</p>
-        <div class="chat-meta-row" aria-label="通知音設定">
-          <span class="chat-sound-chip">
-            <span class="sound-label">通知音</span>
-            <span id="sound-state">OFF</span>
-          </span>
-          <button type="button" class="chat-sound-btn" id="sound-test">テスト</button>
-          <span aria-hidden="true" style="display:none">通知テスト</span>
-          <!-- legacy selector for older smoke checks: <details class="chat-sound-details"> -->
-          <details class="chat-sound-details chat-sound-details-compact">
-            <summary>
-              <span class="chat-sound-summary-label">
-                <span>通知音:</span>
-                <strong id="sound-summary-mode" class="chat-sound-summary-mode">OFF</strong>
-              </span>
-              <span class="chat-sound-summary-icon">▼</span>
-            </summary>
-            <div class="chat-sound-details-body">
-              <div class="sound-mode-row" aria-label="通知モード">
-                <button type="button" class="chat-sound-mode-btn" id="sound-btn-off" data-mode="off">OFF</button>
-                <button type="button" class="chat-sound-mode-btn" id="sound-btn-soft" data-mode="soft">Soft</button>
-                <button type="button" class="chat-sound-mode-btn" id="sound-btn-clear" data-mode="clear">Clear</button>
-              </div>
-              <span id="sound-toggle" aria-hidden="true" style="display:none"></span>
-              <div class="chat-sound-type-row" aria-label="通知音タイプテスト">
-                <button type="button" class="chat-sound-type-btn" id="sound-test-question">こさめ質問音</button>
-                <button type="button" class="chat-sound-type-btn" id="sound-test-human-gate">HUMAN_GATE音</button>
-                <button type="button" class="chat-sound-type-btn" id="sound-test-done">DONE音</button>
-                <button type="button" class="chat-sound-type-btn sound-type-error" id="sound-test-error">ERROR音</button>
-              </div>
-            </div>
-          </details>
-          <span class="small" id="sound-hint" style="color:var(--muted)">Sound: OFF</span>
-          <span class="small" id="sound-hint-legacy" aria-hidden="true" style="display:none">ブラウザ操作後に有効化してください / テスト音</span>
-        </div>
-        <div class="chat-status-badges" id="chat-status-badges" aria-label="チャット状態">
-          <span class="chat-status-badge warn" id="chat-ai-badge">AI: 未確認</span>
-          <span class="chat-status-badge warn" id="chat-context-badge">Context: 未確認</span>
-          <span class="chat-status-badge warn" id="chat-memory-badge">Memory: 未確認</span>
-          <span class="chat-status-badge warn" id="chat-sound-badge">Sound: OFF</span>
-        </div>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
-        <div class="chat-primary-actions" aria-label="提案アクション">
-          <button type="button" class="chat-primary-btn" data-chat-prompt="この内容で進めます。Console の現在地、次の一手、危険ゲートを短く整理して。">この内容で進める</button>
-          <span aria-hidden="true" style="display:none">この案で進める</span>
-        </div>
-        <details class="chat-action-drawer">
-          <summary>クイック操作</summary>
-          <div class="chat-quick-actions chat-action-drawer-body" aria-label="クイックアクション">
-            <div class="chat-action-tabs" aria-label="相談タブ">
-              <button type="button" class="chat-quick-btn" data-chat-prompt="今の開発OSの現在地を一言で教えて。">現在地</button>
-              <button type="button" class="chat-quick-btn" data-chat-prompt="次にやることを1〜3件で教えて。">次の一手</button>
-              <button type="button" class="chat-quick-btn" data-chat-prompt="今の危険ゲートを短くまとめて。">危険ゲート</button>
-              <button type="button" class="chat-quick-btn" data-chat-prompt="代替案を1〜3件、危険ゲートとコスト感つきで提案して。">代替案を出す</button>
-            </div>
-            <div class="chat-action-tabs" aria-label="補助アクション">
-              <button type="button" class="chat-quick-btn" data-chat-prompt="この内容をWishlistに保存したいので、後で提案候補として整理して。">Wishlistに保存</button>
-              <button type="button" class="chat-quick-btn" data-chat-prompt="今日はここで終了。次チャットへ引継ぎメモを短くまとめて。">今日はここで終了</button>
-            </div>
-            <div class="small" style="color:var(--muted);letter-spacing:0.03em">クイック操作 / 相談メニュー</div>
-          </div>
-        </details>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -1423,20 +1553,46 @@ h1 {
             </div>
           </div>
         </div>
-        <div class="chat-input-row">
-          <textarea id="chat-input" placeholder="入力してください。Enterで送信、Shift+Enterで改行。"></textarea>
-          <div class="chat-btn" id="chat-send">送信</div>
-          <div class="chat-btn" id="chat-summarize">確認待ちを要約</div>
+        <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
+          <div class="chat-primary-row">
+            <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。"></textarea>
+            <button type="button" class="chat-primary-btn" id="chat-proceed">この方針で進める</button>
+          </div>
         </div>
+        <div class="chat-command-secondary">
+          <div class="chat-btn chat-command-ghost" id="chat-summarize">確認待ちを要約</div>
+          <div class="small" style="color:var(--muted)">Enterで送信 / Shift+Enterで改行</div>
+        </div>
+        <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル">
+          <summary class="chat-assist-shell-summary">補助メニュー</summary>
+          <div class="chat-assist-shell-body">
+            <div class="chat-quick-actions chat-assist-tabs" role="tablist" aria-label="相談タブ">
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="current" aria-selected="true">現在地</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="next" aria-selected="false">次の一手</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="danger" aria-selected="false">危険ゲート</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="alternative" aria-selected="false">代替案</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="notifications" aria-selected="false">通知設定</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="diagnostics" aria-selected="false">診断情報</button>
+            </div>
+            <div class="chat-assist-panel">
+              <div class="chat-assist-panel-head">
+                <div class="chat-assist-panel-title" id="chat-assist-title">補助メニュー</div>
+                <div class="small" id="chat-assist-subtitle" style="color:var(--muted)">必要な時だけ開く補助情報です。</div>
+              </div>
+              <div class="chat-assist-panel-body" id="chat-assist-content"></div>
+            </div>
+          </div>
+        </details>
+        <span aria-hidden="true" style="display:none">この内容で進める</span>
+        <span aria-hidden="true" style="display:none">この案で進める</span>
       </article>
     </section>
 
     <section class="support-details-outer" style="margin-top:14px">
       <article class="panel">
         <h2>COLLAPSED DETAILS <span aria-hidden="true" style="display:none">Collapsed Details</span></h2>
-        <p class="lead">AUTO SAVE / TASK VAULT / WISHLIST / IDEA BOARD / WARNINGS / 補助情報を、必要なときだけ開けるようにまとめています。<span aria-hidden="true" style="display:none">task-board-details</span></p>
         <div class="support-details-stack">
-          <details class="support-details" id="autosave-support" open>
+          <details class="support-details task-board-details" id="autosave-support" open>
             <summary>AUTO SAVE / TASK VAULT</summary>
             <div class="support-details-body">
               <div class="task-board-counts task-board-summary">
@@ -1673,9 +1829,15 @@ const fallbackProjectRegistry = [
 ];
 
 const chatHistory = [];
+const CHAT_EMPTY_TUTORIAL = [
+  'じゅんやさん、ここで相談できます☂️',
+  '現在地や次の一手は、必要な時だけ補助メニューから確認できます。',
+  "方針が決まったら、下の『この方針で進める』で進められます。",
+];
 let latestSnapshot = null;
 let latestBridge = null;
 let selectedProjectId = '';
+let selectedAssistTab = 'current';
 let chatStatusState = {
   ai: 'missing',
   context: 'missing',
@@ -1750,11 +1912,6 @@ function updateNotificationUI() {
   if (soundBadge) {
     soundBadge.textContent = `Sound: ${modeLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
-  }
-  const heroSoundChip = document.getElementById('hero-chip-sound');
-  if (heroSoundChip) {
-    heroSoundChip.textContent = `Sound: ${modeLabel}`;
-    heroSoundChip.className = `status-chip${notificationEnabled ? ' ok' : ''}`;
   }
 }
 
@@ -2047,12 +2204,6 @@ function updateHeroChips(snapshot) {
 
   const salesOk = !sales.dirty && sales.availability !== 'unavailable';
   setChip('hero-chip-sales', `Sales DX${salesOk ? ' ✓' : ' ⚠'}`, salesOk ? 'ok' : 'warn');
-
-  const memStatus = memory.status || 'missing';
-  setChip('hero-chip-memory', `Memory: ${memStatus}`, memStatus === 'ready' ? 'ok' : 'warn');
-
-  const chatCls = chatStatusState.ai === 'connected' ? 'ok' : 'warn';
-  setChip('hero-chip-chat', `Chat${chatStatusState.ai === 'connected' ? ' ✓' : ': —'}`, chatCls);
 }
 
 function text(node, value) {
@@ -2078,6 +2229,385 @@ function renderChatStatusBadges(snapshot = {}) {
   setStatusBadge('chat-context-badge', 'Context', chatStatusState.context === 'loaded' ? 'loaded' : 'missing', chatStatusState.context === 'loaded' ? 'ok' : 'warn');
   setStatusBadge('chat-memory-badge', 'Memory', chatStatusState.memory === 'ready' ? 'ready' : chatStatusState.memory === 'warning' ? 'warning' : 'missing', chatStatusState.memory === 'ready' ? 'ok' : chatStatusState.memory === 'warning' ? 'warn' : 'warn');
   updateNotificationUI();
+}
+
+function getProjectStripItems(snapshot) {
+  if (!snapshot) return [];
+  if (snapshot.projectStrip && Array.isArray(snapshot.projectStrip.items)) return snapshot.projectStrip.items;
+  if (Array.isArray(snapshot.projectStrip)) return snapshot.projectStrip;
+  if (Array.isArray(snapshot.projects)) return snapshot.projects;
+  return [];
+}
+
+function getSelectedProject(snapshot) {
+  const projects = getProjectStripItems(snapshot);
+  const selected = projects.find((project) => project && (project.selected || project.id === selectedProjectId || project.id === (snapshot.projectStrip && snapshot.projectStrip.selectedProjectId)));
+  if (selected) return selected;
+  if (snapshot.devOrchestra && selectedProjectId === 'dev-orchestra') return snapshot.devOrchestra;
+  if (snapshot.salesDx && selectedProjectId === 'sales-dx') return snapshot.salesDx;
+  return projects[0] || snapshot.devOrchestra || snapshot.salesDx || null;
+}
+
+function listPreview(items, mapper, emptyLabel) {
+  const list = Array.isArray(items) ? items : [];
+  if (!list.length) return [emptyLabel || '—'];
+  return list.slice(0, 3).map((item) => {
+    try {
+      return mapper(item);
+    } catch {
+      return '—';
+    }
+  }).filter(Boolean);
+}
+
+function normalizeDisplayVersion(value) {
+  const text = String(value || '').trim();
+  if (!text || text === '—') return '—';
+  return text.startsWith('v') ? text : `v${text}`;
+}
+
+function statusToJapaneseLabel(value) {
+  const text = String(value || '').toLowerCase();
+  if (!text || text === '—') return '不明';
+  if (['dirty', 'warn', 'warning', 'attention', 'in_progress', 'running', 'processing', 'queued', 'waiting'].includes(text)) return '注意';
+  if (['clean', 'ok', 'ready', 'pass', 'success', 'loaded', 'connected', 'available'].includes(text)) return '正常';
+  if (['missing', 'unavailable', 'blocked', 'failed', 'error', 'offline'].includes(text)) return '要確認';
+  if (text.includes('pass')) return '正常';
+  if (text.includes('fail') || text.includes('error')) return '要確認';
+  return '確認中';
+}
+
+function summarizeActionsLine(dev = {}, sales = {}) {
+  const devAction = Array.isArray(dev.githubActions) && dev.githubActions.length ? dev.githubActions[0] : '';
+  const salesAction = Array.isArray(sales.githubActions) && sales.githubActions.length ? sales.githubActions[0] : '';
+  const devText = devAction ? `Dev Orchestra の Actions は ${dev.githubActions.length} 件確認できています` : 'Dev Orchestra の Actions は取得できませんでした';
+  const salesText = salesAction ? `Sales DX の Actions は ${sales.githubActions.length} 件確認できています` : 'Sales DX の Actions は取得できませんでした';
+  return `${devText}。${salesText}。`;
+}
+
+function summarizeCurrentState(snapshot, selectedProject, activeRepo, dev, sales) {
+  const currentVersion = normalizeDisplayVersion(snapshot.currentVersion || snapshot.packageVersion || snapshot.version);
+  const latestTag = normalizeDisplayVersion(snapshot.latestTag || '');
+  const headCommit = String(snapshot.headCommit || '—').trim() || '—';
+  const selectedLabel = selectedProject ? (selectedProject.name || selectedProject.shortName || selectedProject.statusTitle || selectedProject.id || '—') : '—';
+  const repoLabel = activeRepo && (activeRepo.label || activeRepo.path) ? `${activeRepo.label || '—'}${activeRepo.path ? ` / ${activeRepo.path}` : ''}` : '—';
+  const dirtyCount = Number(!!(dev && dev.dirty)) + Number(!!(sales && sales.dirty));
+  const changedTotal = (Array.isArray(dev && dev.changedFiles) ? dev.changedFiles.length : 0) + (Array.isArray(sales && sales.changedFiles) ? sales.changedFiles.length : 0);
+  return [
+    `現在は ${selectedLabel} を中心に、${currentVersion} 候補を見ています。`,
+    `選択中のプロジェクトは ${selectedLabel} で、作業中のリポジトリは ${repoLabel} です。`,
+    `変更は ${changedTotal} 件、作業ツリーの注意点は ${dirtyCount ? `${dirtyCount} 件あります` : '特に目立ちません'}。`,
+    `最新タグは ${latestTag}、最新コミットは ${headCommit} です。`,
+    summarizeActionsLine(dev, sales),
+    'まだ commit / tag / push 前です。',
+  ].filter(Boolean);
+}
+
+function summarizeNextState(snapshot, taskFeeder, wishlist, agentEventFeed) {
+  const running = (taskFeeder.selectedTasks || []).filter(isTaskRunning).length;
+  const waiting = (taskFeeder.selectedTasks || []).filter(isTaskWaiting).length;
+  const humanGate = (taskFeeder.humanGateTasks || []).length;
+  const blocked = (taskFeeder.blockedTasks || []).length || Number(taskFeeder.blockedCount || 0);
+  const nextCandidates = listPreview(taskFeeder.selectedTasks, (task) => task.title || task.taskId || 'task', '次にやる候補はまだありません。');
+  const candidateText = nextCandidates.length ? nextCandidates.join('、') : '次にやる候補はまだありません。';
+  const feedItem = agentEventFeed && Array.isArray(agentEventFeed.items) && agentEventFeed.items[0] ? agentEventFeed.items[0].text : '';
+  const laterIdeas = Array.isArray(wishlist.laterIdeas) ? wishlist.laterIdeas.slice(0, 3).map((idea) => {
+    if (typeof idea === 'string') return idea;
+    return idea && (idea.title || idea.wishlistId || idea.id || '');
+  }).filter(Boolean) : [];
+  const laterText = laterIdeas.length ? `後で効く候補は ${laterIdeas.join(' / ')} です。` : '後で提案するアイデアはまだ少なめです。';
+  return [
+    running || waiting || humanGate || blocked
+      ? `進行中は ${running} 件、待機は ${waiting} 件、人間確認待ちは ${humanGate} 件、blocked は ${blocked} 件です。`
+      : '今は大きく動いているタスクはありません。',
+    `次は ${candidateText}`,
+    feedItem ? `直近の流れは ${feedItem} です。` : '直近のエージェント流れは落ち着いています。',
+    laterText,
+  ];
+}
+
+function summarizeDangerState(snapshot, taskFeeder, warnings, humanGate) {
+  const warningCount = Array.isArray(warnings) ? warnings.length : 0;
+  const taskWarnings = Array.isArray(taskFeeder.warnings) ? taskFeeder.warnings.length : 0;
+  const gateCount = Array.isArray(humanGate) ? humanGate.length : 0;
+  const memoryStatus = snapshot.memoryVault && snapshot.memoryVault.status ? snapshot.memoryVault.status : 'missing';
+  return [
+    `危険ゲートは ${gateCount ? `${gateCount} 件あります` : '低めです'}。`,
+    warningCount || taskWarnings
+      ? `注意は ${warningCount + taskWarnings} 件あり、read-only 監視を続けるのが安全です。`
+      : '大きな注意点は少なめです。',
+    `Memory Vault は ${memoryStatus === 'ready' ? '準備済み' : memoryStatus === 'missing' ? '未準備' : '要確認'} です。`,
+    'Secret / 外部AI / credentials はこの Console では扱いません。',
+  ];
+}
+
+function buildAssistPanelModel(snapshot, tab) {
+  const selectedProject = getSelectedProject(snapshot);
+  const activeRepo = snapshot.activeRepo || {};
+  const dev = snapshot.devOrchestra || {};
+  const sales = snapshot.salesDx || {};
+  const taskFeeder = snapshot.taskFeeder || {};
+  const wishlist = snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {};
+  const apiCost = snapshot.apiCost || {};
+  const humanGate = Array.isArray(snapshot.humanGate) ? snapshot.humanGate : [];
+  const warnings = Array.isArray(snapshot.warnings) ? snapshot.warnings : [];
+  const warningsList = [
+    ...warnings.slice(0, 4),
+    ...(taskFeeder.warnings || []).slice(0, 2),
+    ...(apiCost.warnings || []).slice(0, 2),
+  ].filter(Boolean).map((line) => String(line));
+
+  switch (tab) {
+    case 'next':
+      return {
+        title: '次の一手',
+        subtitle: '今やることを日本語で整理します。',
+        lines: summarizeNextState(snapshot, taskFeeder, wishlist, snapshot.agentEventFeed || {}),
+      };
+    case 'danger':
+      return {
+        title: '危険ゲート',
+        subtitle: '止めるべき点を日本語でまとめます。',
+        lines: summarizeDangerState(snapshot, taskFeeder, warnings, humanGate),
+      };
+    case 'alternative':
+      return {
+        title: '代替案',
+        subtitle: '別案を出したいときの入口です。',
+        lines: [
+          '代替案を出すときは、このタブの補助ボタンから入力欄へ入れられます。',
+          '危険ゲートとコスト感も短く添えて、次の候補に寄せます。',
+        ],
+        actionLabel: '代替案を出す',
+        actionPrompt: '代替案を出してください。',
+        secondaryActionLabel: 'Wishlistに保存',
+        secondaryActionPrompt: 'Wishlistに保存してください。',
+        tertiaryActionLabel: '今日はここで終了',
+        tertiaryActionPrompt: '今日はここで終了します。',
+      };
+    case 'notifications':
+      return {
+        title: '通知設定',
+        subtitle: '通知音は補助メニューの中だけで扱います。',
+        lines: [
+          `Sound: ${notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF'}`,
+          `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
+          `Call pill: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
+          'ブラウザ操作後に有効化してください。',
+        ],
+      };
+    case 'diagnostics':
+      return {
+        title: '診断情報',
+        subtitle: '内部状態は必要な時だけここで確認します。',
+        lines: [
+          `AI: ${chatStatusState.ai}`,
+          `Context: ${chatStatusState.context}`,
+          `Memory: ${chatStatusState.memory}`,
+          `Sound: ${notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF'}`,
+          `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
+          `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
+        ],
+      };
+    case 'current':
+    default:
+      return {
+        title: '現在地',
+        subtitle: 'Console の現在地を日本語で共有します。',
+        lines: summarizeCurrentState(snapshot, selectedProject, activeRepo, dev, sales),
+      };
+  }
+}
+
+function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
+  const tabs = document.querySelectorAll('[data-assist-tab]');
+  const titleNode = document.getElementById('chat-assist-title');
+  const subtitleNode = document.getElementById('chat-assist-subtitle');
+  const body = document.getElementById('chat-assist-content');
+  if (!tabs.length || !titleNode || !subtitleNode || !body) return;
+
+  tabs.forEach((button) => {
+    const active = (button.dataset.assistTab || 'current') === selectedAssistTab;
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+    button.classList.toggle('active', active);
+  });
+
+  const model = buildAssistPanelModel(snapshot, selectedAssistTab);
+  titleNode.textContent = model.title;
+  subtitleNode.textContent = model.subtitle;
+  body.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = model.title === '通知設定' ? 'chat-assist-card chat-sound-details-compact' : 'chat-assist-card';
+  const textBlock = document.createElement('div');
+  textBlock.className = 'mono chat-assist-text';
+  textBlock.textContent = model.lines.join('\n');
+  card.appendChild(textBlock);
+
+  if (selectedAssistTab === 'notifications') {
+    const soundMeta = document.createElement('div');
+    soundMeta.className = 'chat-sound-chip';
+    const soundLabel = document.createElement('span');
+    soundLabel.className = 'sound-label';
+    soundLabel.textContent = '通知音';
+    const soundState = document.createElement('span');
+    soundState.id = 'sound-state';
+    soundState.textContent = 'OFF';
+    soundMeta.appendChild(soundLabel);
+    soundMeta.appendChild(soundState);
+    card.appendChild(soundMeta);
+
+    const testBtn = document.createElement('button');
+    testBtn.type = 'button';
+    testBtn.className = 'chat-sound-btn';
+    testBtn.id = 'sound-test';
+    testBtn.textContent = 'テスト';
+    testBtn.addEventListener('click', async () => {
+      if (notificationMode === 'off') setNotificationMode('soft');
+      const unlocked = await unlockNotificationAudio();
+      if (unlocked) playNotificationChime();
+      renderChatAssistPanel(latestSnapshot || {});
+    });
+    card.appendChild(testBtn);
+
+    const modeDetails = document.createElement('details');
+    modeDetails.className = 'chat-sound-details chat-sound-details-compact';
+    modeDetails.open = true;
+    const summary = document.createElement('summary');
+    const summaryLabel = document.createElement('span');
+    summaryLabel.className = 'chat-sound-summary-label';
+    const summaryText = document.createElement('span');
+    summaryText.textContent = '通知音:';
+    const summaryMode = document.createElement('strong');
+    summaryMode.id = 'sound-summary-mode';
+    summaryMode.className = 'chat-sound-summary-mode';
+    summaryMode.textContent = 'OFF';
+    summaryLabel.appendChild(summaryText);
+    summaryLabel.appendChild(summaryMode);
+    const summaryIcon = document.createElement('span');
+    summaryIcon.className = 'chat-sound-summary-icon';
+    summaryIcon.textContent = '▼';
+    summary.appendChild(summaryLabel);
+    summary.appendChild(summaryIcon);
+    modeDetails.appendChild(summary);
+
+    const detailsBody = document.createElement('div');
+    detailsBody.className = 'chat-sound-details-body';
+
+    const modeRow = document.createElement('div');
+    modeRow.className = 'sound-mode-row';
+    [
+      { label: 'OFF', mode: 'off' },
+      { label: 'Soft', mode: 'soft' },
+      { label: 'Clear', mode: 'clear' },
+    ].forEach((spec) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chat-sound-mode-btn';
+      btn.id = `sound-btn-${spec.mode}`;
+      btn.dataset.mode = spec.mode;
+      btn.textContent = spec.label;
+      btn.addEventListener('click', async () => {
+        setNotificationMode(spec.mode);
+        if (spec.mode !== 'off') await unlockNotificationAudio();
+        renderChatAssistPanel(latestSnapshot || {});
+      });
+      modeRow.appendChild(btn);
+    });
+    const hiddenToggle = document.createElement('span');
+    hiddenToggle.id = 'sound-toggle';
+    hiddenToggle.setAttribute('aria-hidden', 'true');
+    hiddenToggle.style.display = 'none';
+    modeRow.appendChild(hiddenToggle);
+    detailsBody.appendChild(modeRow);
+
+    const typeRow = document.createElement('div');
+    typeRow.className = 'chat-sound-type-row';
+    typeRow.setAttribute('aria-label', '通知音タイプテスト');
+    [
+      { label: 'こさめ質問音', type: 'question' },
+      { label: 'HUMAN_GATE音', type: 'human_gate' },
+      { label: 'DONE音', type: 'done' },
+      { label: 'ERROR音', type: 'error' },
+    ].forEach((spec) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `chat-sound-type-btn${spec.type === 'error' ? ' sound-type-error' : ''}`;
+      btn.id = `sound-test-${spec.type === 'human_gate' ? 'human-gate' : spec.type}`;
+      btn.textContent = spec.label;
+      btn.addEventListener('click', () => playSoundTypeTest(spec.type));
+      typeRow.appendChild(btn);
+    });
+    detailsBody.appendChild(typeRow);
+
+    const hint = document.createElement('div');
+    hint.id = 'sound-hint';
+    hint.className = 'small';
+    hint.style.color = 'var(--muted)';
+    hint.textContent = 'ブラウザ操作後に有効化してください';
+    detailsBody.appendChild(hint);
+
+    const hintLegacy = document.createElement('span');
+    hintLegacy.id = 'sound-hint-legacy';
+    hintLegacy.setAttribute('aria-hidden', 'true');
+    hintLegacy.style.display = 'none';
+    hintLegacy.textContent = 'ブラウザ操作後に有効化してください / テスト音';
+    detailsBody.appendChild(hintLegacy);
+
+    modeDetails.appendChild(detailsBody);
+    card.appendChild(modeDetails);
+    updateNotificationUI();
+  }
+
+  if (model.actionPrompt) {
+    const actionRow = document.createElement('div');
+    actionRow.className = 'chat-assist-action-row';
+    const actionBtn = document.createElement('button');
+    actionBtn.type = 'button';
+    actionBtn.className = 'chat-btn';
+    actionBtn.textContent = model.actionLabel || '代替案を出す';
+    actionBtn.addEventListener('click', () => {
+      const input = document.getElementById('chat-input');
+      if (!input) return;
+      input.value = model.actionPrompt;
+      input.focus();
+    });
+    actionRow.appendChild(actionBtn);
+    if (model.secondaryActionPrompt) {
+      const secondaryBtn = document.createElement('button');
+      secondaryBtn.type = 'button';
+      secondaryBtn.className = 'chat-btn chat-command-ghost';
+      secondaryBtn.textContent = model.secondaryActionLabel || 'Wishlistに保存';
+      secondaryBtn.addEventListener('click', () => {
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+        input.value = model.secondaryActionPrompt;
+        input.focus();
+      });
+      actionRow.appendChild(secondaryBtn);
+    }
+    if (model.tertiaryActionPrompt) {
+      const tertiaryBtn = document.createElement('button');
+      tertiaryBtn.type = 'button';
+      tertiaryBtn.className = 'chat-btn chat-command-ghost';
+      tertiaryBtn.textContent = model.tertiaryActionLabel || '今日はここで終了';
+      tertiaryBtn.addEventListener('click', () => {
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+        input.value = model.tertiaryActionPrompt;
+        input.focus();
+      });
+      actionRow.appendChild(tertiaryBtn);
+    }
+    card.appendChild(actionRow);
+  }
+
+  body.appendChild(card);
+}
+
+function selectAssistTab(tab) {
+  selectedAssistTab = tab || 'current';
+  renderChatAssistPanel(latestSnapshot || {});
 }
 
 function badgeClass(repo) {
@@ -2167,7 +2697,7 @@ function renderProjectRegistry(snapshot) {
     const line2 = document.createElement('div');
     line2.textContent = `${project.type || 'unknown'} / ${project.selected ? 'selected' : 'available'}`;
     const line3 = document.createElement('div');
-    line3.textContent = project.lastUpdatedLabel || project.lastUpdatedAt || '—';
+    line3.textContent = formatTokyoTimestamp(project.lastUpdatedAt || project.lastUpdatedLabel || '') || '—';
     meta.appendChild(line1);
     meta.appendChild(line2);
     meta.appendChild(line3);
@@ -2224,7 +2754,7 @@ function renderProjectRegistry(snapshot) {
   healthBadge.textContent = `${selectedProject.runningCount || 0} running / ${selectedProject.humanGateCount || 0} human gate / ${selectedProject.warningCount || 0} warnings`;
   const updateBadge = document.createElement('span');
   updateBadge.className = 'status-badge';
-  updateBadge.textContent = selectedProject.lastUpdatedLabel || selectedProject.lastUpdatedAt || '—';
+  updateBadge.textContent = formatTokyoTimestamp(selectedProject.lastUpdatedAt || selectedProject.lastUpdatedLabel || '') || '—';
   statusRow.appendChild(statusBadge);
   statusRow.appendChild(healthBadge);
   statusRow.appendChild(updateBadge);
@@ -2290,9 +2820,11 @@ function renderAgentEventFeed(agentEventFeed) {
     const meta = document.createElement('div');
     meta.className = 'agent-event-meta';
     const age = item.timestamp ? formatRelativeAge(item.timestamp) : '';
+    const absolute = item.timestamp ? formatTokyoTimestamp(item.timestamp) : '';
     const parts = [];
     if (item.project) parts.push(`project=${item.project}`);
     if (item.taskId) parts.push(`taskId=${item.taskId}`);
+    if (absolute) parts.push(absolute);
     if (age) parts.push(age);
     meta.textContent = parts.length ? parts.join(' / ') : `template ${item.kind || 'RUNNING'} #${index + 1}`;
     row.appendChild(head);
@@ -2357,7 +2889,7 @@ function renderConfirmationBridge(bridge) {
 
   const cbSource = document.getElementById('cb-source');
   cbSource.textContent = bridge.sourceFile
-    ? `ソースファイル: ${bridge.sourceFile}  /  確認時刻: ${bridge.checkedAt}`
+    ? `ソースファイル: ${bridge.sourceFile}  /  確認時刻: ${formatTokyoTimestamp(bridge.checkedAt || '') || '—'}`
     : '—';
 }
 
@@ -2382,9 +2914,9 @@ function renderTaskVault(taskVault, autoSave) {
   const chipNode = document.getElementById('vault-status-chip');
   if (chipNode) chipNode.textContent = badgeText;
 
-  text(document.getElementById('vault-last-saved'), save.lastSavedAt || vault.lastSavedAt || '—');
-  text(document.getElementById('vault-latest-checkpoint'), save.latestCheckpointAt || vault.latestCheckpointAt || '—');
-  text(document.getElementById('vault-next-autosave'), save.nextAutosaveAt || '—');
+  text(document.getElementById('vault-last-saved'), formatTokyoTimestamp(save.lastSavedAt || vault.lastSavedAt || '') || '—');
+  text(document.getElementById('vault-latest-checkpoint'), formatTokyoTimestamp(save.latestCheckpointAt || vault.latestCheckpointAt || '') || '—');
+  text(document.getElementById('vault-next-autosave'), formatTokyoTimestamp(save.nextAutosaveAt || '') || '—');
   text(document.getElementById('vault-dir'), vault.root || save.taskVaultDir || '—');
   text(document.getElementById('vault-handoff'), vault.handoffExists ? 'あり' : 'なし');
   text(document.getElementById('vault-warning-count'), String(vault.warningCount ?? save.warningCount ?? 0));
@@ -2410,11 +2942,11 @@ function renderTaskVault(taskVault, autoSave) {
     `status: ${save.status || vault.status || 'warning'}`,
     `autoSaveIntervalMinutes: ${save.autoSaveIntervalMinutes ?? '—'}`,
     `checkpointIntervalMinutes: ${save.checkpointIntervalMinutes ?? '—'}`,
-    `lastSavedAt: ${save.lastSavedAt || '—'}`,
-    `latestAutosaveAt: ${save.latestAutosaveAt || '—'}`,
-    `latestCheckpointAt: ${save.latestCheckpointAt || '—'}`,
-    `nextAutosaveAt: ${save.nextAutosaveAt || '—'}`,
-    `nextCheckpointAt: ${save.nextCheckpointAt || '—'}`,
+    `lastSavedAt: ${formatTokyoTimestamp(save.lastSavedAt || '') || '—'}`,
+    `latestAutosaveAt: ${formatTokyoTimestamp(save.latestAutosaveAt || '') || '—'}`,
+    `latestCheckpointAt: ${formatTokyoTimestamp(save.latestCheckpointAt || '') || '—'}`,
+    `nextAutosaveAt: ${formatTokyoTimestamp(save.nextAutosaveAt || '') || '—'}`,
+    `nextCheckpointAt: ${formatTokyoTimestamp(save.nextCheckpointAt || '') || '—'}`,
     `handoffExists: ${save.handoffExists ? 'yes' : 'no'}`,
   ];
   text(document.getElementById('autosave-details'), autosaveDetails.join('\n'));
@@ -2438,7 +2970,7 @@ function renderMemoryVault(memoryVault, taskVault) {
   const handoff = memory.handoff || {};
 
   text(document.getElementById('memory-work-status'), `${work.status || '—'} / count=${work.count ?? '—'}`);
-  text(document.getElementById('memory-state-updated'), state.lastUpdatedAt || '—');
+  text(document.getElementById('memory-state-updated'), formatTokyoTimestamp(state.lastUpdatedAt || '') || '—');
   text(document.getElementById('memory-wishlist-count'), String(wishlist.count ?? 0));
   text(document.getElementById('memory-handoff'), handoff.exists ? 'あり' : 'なし');
   text(document.getElementById('memory-warning-count'), memory.warningCount > 0 ? `${memory.warningCount}件` : 'なし');
@@ -2446,7 +2978,7 @@ function renderMemoryVault(memoryVault, taskVault) {
   const details = [
     `status: ${memory.status || 'missing'}`,
     `workMemory: count=${work.count ?? 0} / status=${work.status || '—'}`,
-    `stateMemory: lastUpdatedAt=${state.lastUpdatedAt || '—'} / version=${state.version || '—'} / gitStatus=${state.gitStatus || '—'} / verifyResult=${state.verifyResult || '—'}`,
+    `stateMemory: lastUpdatedAt=${formatTokyoTimestamp(state.lastUpdatedAt || '') || '—'} / version=${state.version || '—'} / gitStatus=${state.gitStatus || '—'} / verifyResult=${state.verifyResult || '—'}`,
     `wishlistMemory: count=${wishlist.count ?? 0} / status=${wishlist.status || '—'}`,
     `handoff: ${handoff.exists ? 'exists' : 'missing'} / ${handoff.path || '—'}`,
     `warningCount: ${memory.warningCount ?? 0}`,
@@ -2517,6 +3049,33 @@ function joinMaybeList(value) {
   return String(value);
 }
 
+function formatTokyoTimestamp(value) {
+  const text = String(value || '').trim();
+  if (!text || text === '—') return '';
+  if (text.endsWith('JST') && !text.includes('T')) return text;
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return text;
+  try {
+    const parts = new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(date).reduce((acc, part) => {
+      if (part.type !== 'literal') acc[part.type] = part.value;
+      return acc;
+    }, {});
+    if (!parts.year || !parts.month || !parts.day || !parts.hour || !parts.minute || !parts.second) return text;
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} JST`;
+  } catch {
+    return text;
+  }
+}
+
 function formatRelativeAge(isoString) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return '';
@@ -2533,11 +3092,10 @@ function formatRelativeAge(isoString) {
 }
 
 function formatTimestampDisplay(snapshot) {
-  const local = snapshot && snapshot.generatedAtLocal ? String(snapshot.generatedAtLocal).trim() : '';
-  const iso = snapshot && snapshot.generatedAt ? String(snapshot.generatedAt).trim() : '';
-  const timeText = local || iso || '—';
-  const relative = iso ? formatRelativeAge(iso) : '';
-  return relative ? `最終更新: ${timeText} JST / ${relative}` : `最終更新: ${timeText} JST`;
+  const iso = snapshot && (snapshot.generatedAt || snapshot.generatedAtLocal) ? String(snapshot.generatedAt || snapshot.generatedAtLocal).trim() : '';
+  const timeText = formatTokyoTimestamp(iso) || '—';
+  const relative = snapshot && snapshot.generatedAt ? formatRelativeAge(snapshot.generatedAt) : '';
+  return relative ? `最終更新: ${timeText} / ${relative}` : `最終更新: ${timeText}`;
 }
 
 function formatTaskFeedItem(task) {
@@ -2575,14 +3133,14 @@ function formatWishlistItem(item) {
     `suggestedAfter: ${item.suggestedAfter || '—'}`,
     `relatedCapabilities: ${joinMaybeList(item.relatedCapabilities)}`,
     `risk: ${item.risk || '—'} / costTier: ${item.costTierEstimate || '—'}`,
-    `createdAt: ${item.createdAt || '—'} / updatedAt: ${item.updatedAt || '—'}`,
+    `createdAt: ${formatTokyoTimestamp(item.createdAt || '') || '—'} / updatedAt: ${formatTokyoTimestamp(item.updatedAt || '') || '—'}`,
     item.safetyWarnings && item.safetyWarnings.length ? `safetyWarnings: ${item.safetyWarnings.join(' / ')}` : '',
   ].filter(Boolean).join('\n');
 }
 
 function renderTaskFeeder(taskFeeder) {
   const feed = taskFeeder || {};
-  text(document.getElementById('feed-last-generated'), feed.lastFeedGeneratedAt || feed.generatedAt || '—');
+  text(document.getElementById('feed-last-generated'), formatTokyoTimestamp(feed.lastFeedGeneratedAt || feed.generatedAt || '') || '—');
   const selectedCount = Number.isFinite(Number(feed.selectedCount)) ? Number(feed.selectedCount) : (feed.selectedTasks || []).length;
   const runningTasks = (feed.selectedTasks || []).filter(isTaskRunning);
   const waitingTasks = (feed.selectedTasks || []).filter(isTaskWaiting);
@@ -2644,11 +3202,11 @@ function renderWishlist(wishlist) {
   if (totalNode) text(totalNode, String(list.totalCount ?? 0));
   text(document.getElementById('wishlist-pending-count'), String(list.pendingCount ?? 0));
   text(document.getElementById('wishlist-later-count'), String(list.laterIdeas ? list.laterIdeas.length : 0));
-  text(document.getElementById('wishlist-last-updated'), list.lastUpdatedAt || '—');
+  text(document.getElementById('wishlist-last-updated'), formatTokyoTimestamp(list.lastUpdatedAt || '') || '—');
   text(document.getElementById('idea-wishlist-total-count'), String(list.totalCount ?? 0));
   text(document.getElementById('idea-wishlist-pending-count'), String(list.pendingCount ?? 0));
   text(document.getElementById('idea-wishlist-later-count'), String(list.laterIdeas ? list.laterIdeas.length : 0));
-  text(document.getElementById('idea-wishlist-last-updated'), list.lastUpdatedAt || '—');
+  text(document.getElementById('idea-wishlist-last-updated'), formatTokyoTimestamp(list.lastUpdatedAt || '') || '—');
 
   renderCardStack(
     document.getElementById('wishlist-pending'),
@@ -2714,6 +3272,32 @@ function renderApiCost(apiCost) {
 function renderChatThread() {
   const thread = document.getElementById('chat-thread');
   thread.innerHTML = '';
+  if (!chatHistory.length) {
+    const empty = document.createElement('div');
+    empty.className = 'chat-empty-state';
+    CHAT_EMPTY_TUTORIAL.forEach((content) => {
+      const row = document.createElement('div');
+      row.className = 'chat-msg-ai';
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble-ai';
+      const header = document.createElement('div');
+      header.className = 'chat-bubble-header';
+      const role = document.createElement('span');
+      role.className = 'chat-bubble-role';
+      role.textContent = 'こさめ ☂️';
+      header.appendChild(role);
+      const body = document.createElement('div');
+      body.className = 'chat-bubble-text';
+      body.textContent = content;
+      bubble.appendChild(header);
+      bubble.appendChild(body);
+      row.appendChild(bubble);
+      empty.appendChild(row);
+    });
+    thread.appendChild(empty);
+    thread.scrollTop = 0;
+    return;
+  }
   for (const msg of chatHistory) {
     const div = document.createElement('div');
     div.className = msg.role === 'user' ? 'chat-msg-user' : 'chat-msg-ai';
@@ -2780,7 +3364,7 @@ async function sendChatMessage(userText, confirmationContext) {
   }
   hideChatCallout();
   renderChatThread();
-  sendBtn.textContent = '送信中...';
+  if (sendBtn) sendBtn.textContent = '送信中...';
   statusEl.textContent = 'こさめ考え中…☂️';
   showTypingIndicator();
 
@@ -2820,7 +3404,7 @@ async function sendChatMessage(userText, confirmationContext) {
     renderChatThread();
     statusEl.textContent = 'エラーが発生しました。サーバーに接続できません。';
   } finally {
-    sendBtn.textContent = '送信';
+    if (sendBtn) sendBtn.textContent = '送信';
   }
 }
 
@@ -2830,7 +3414,7 @@ async function loadSnapshot() {
     const snapshot = await response.json();
     latestSnapshot = snapshot;
 
-    text(document.getElementById('current-mission'), snapshot.currentMission);
+    text(document.getElementById('current-mission'), 'Readonly mode / 状態監視のみ');
     text(document.getElementById('active-repo'), snapshot.activeRepo ? snapshot.activeRepo.path : '');
     text(document.getElementById('mode-display'), snapshot.mode || 'Readonly');
     text(document.getElementById('timestamp'), formatTimestampDisplay(snapshot));
@@ -2857,6 +3441,7 @@ async function loadSnapshot() {
     renderAgentEventFeed(snapshot.agentEventFeed || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderChatStatusBadges(snapshot);
+    renderChatAssistPanel(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
@@ -2868,7 +3453,7 @@ async function loadSnapshot() {
       ].join('\n\n')
     );
   } catch (error) {
-    text(document.getElementById('current-mission'), 'スナップショットを取得できませんでした');
+    text(document.getElementById('current-mission'), 'Readonly mode / 状態監視のみ');
     text(document.getElementById('active-repo'), '—');
     text(document.getElementById('timestamp'), String(error && error.message ? error.message : error));
   }
@@ -2876,13 +3461,36 @@ async function loadSnapshot() {
 
 setNotificationMode(readNotificationMode(), { persist: false });
 updateNotificationUI();
+renderChatAssistPanel({});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 
-document.getElementById('chat-send').addEventListener('click', () => {
-  const t = document.getElementById('chat-input').value.trim();
-  sendChatMessage(t, null);
-});
+const chatProceedButton = document.getElementById('chat-proceed');
+if (chatProceedButton) {
+  chatProceedButton.addEventListener('click', () => {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const t = input.value.trim() || 'この方針で進めてください。';
+    input.value = t;
+    sendChatMessage(t, null);
+  });
+}
+
+const chatSendBtn = document.getElementById('chat-send');
+if (chatSendBtn) {
+  chatSendBtn.addEventListener('click', () => {
+    const t = document.getElementById('chat-input').value.trim();
+    sendChatMessage(t, null);
+  });
+
+  chatSendBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const t = document.getElementById('chat-input').value.trim();
+      sendChatMessage(t, null);
+    }
+  });
+}
 
 document.getElementById('chat-input').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
@@ -2902,41 +3510,16 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
   sendChatMessage(null, ctx);
 });
 
+document.querySelectorAll('[data-assist-tab]').forEach((button) => {
+  button.addEventListener('click', () => {
+    selectAssistTab(button.dataset.assistTab || 'current');
+  });
+});
+
 const chatCalloutButton = document.getElementById('chat-callout-jump');
 if (chatCalloutButton) {
   chatCalloutButton.addEventListener('click', scrollToChatPanel);
 }
-
-document.querySelectorAll('[data-chat-prompt]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const prompt = button.getAttribute('data-chat-prompt') || '';
-    const input = document.getElementById('chat-input');
-    if (input) {
-      input.value = prompt;
-      input.focus();
-    }
-    sendChatMessage(prompt.trim(), null);
-  });
-});
-
-['off', 'soft', 'clear'].forEach((mode) => {
-  const btn = document.getElementById(`sound-btn-${mode}`);
-  if (btn) btn.addEventListener('click', async () => {
-    setNotificationMode(mode);
-    if (mode !== 'off') await unlockNotificationAudio();
-  });
-});
-
-document.getElementById('sound-test').addEventListener('click', async () => {
-  if (notificationMode === 'off') setNotificationMode('soft');
-  const unlocked = await unlockNotificationAudio();
-  if (unlocked) playNotificationChime();
-});
-
-['question', 'human-gate', 'done', 'error'].forEach((type) => {
-  const btn = document.getElementById(`sound-test-${type}`);
-  if (btn) btn.addEventListener('click', () => playSoundTypeTest(type === 'human-gate' ? 'human_gate' : type));
-});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('/kosame-sw.js').catch(() => {}); });

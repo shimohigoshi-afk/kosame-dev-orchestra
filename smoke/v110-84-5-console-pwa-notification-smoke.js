@@ -47,19 +47,18 @@ include(html, 'theme-color', 'HTML');
 include(html, 'viewport-fit=cover', 'HTML');
 console.log('  PASS: HTML contains PWA meta tags');
 
-include(html, 'sound-btn-off', 'HTML');
-include(html, 'sound-btn-soft', 'HTML');
-include(html, 'sound-btn-clear', 'HTML');
+include(html, 'sound-mode-row', 'HTML');
+include(html, 'sound-btn-${spec.mode}', 'HTML');
 include(html, 'notificationMode', 'HTML');
 include(html, 'NOTIFICATION_MODE_KEY', 'HTML');
 include(html, 'setNotificationMode', 'HTML');
 include(html, 'readNotificationMode', 'HTML');
 console.log('  PASS: HTML contains 3-mode notification selector');
 
-include(html, 'sound-test-question', 'HTML');
-include(html, 'sound-test-human-gate', 'HTML');
-include(html, 'sound-test-done', 'HTML');
-include(html, 'sound-test-error', 'HTML');
+include(html, 'こさめ質問音', 'HTML');
+include(html, 'HUMAN_GATE音', 'HTML');
+include(html, 'DONE音', 'HTML');
+include(html, 'ERROR音', 'HTML');
 include(html, 'playSoundTypeTest', 'HTML');
 console.log('  PASS: HTML contains sound type test buttons');
 
@@ -69,8 +68,8 @@ include(html, 'playClearTypeSoundCtx', 'HTML');
 include(html, '1109', 'HTML');
 console.log('  PASS: HTML contains Clear mode chime implementation');
 
-include(html, 'id="sound-toggle"', 'HTML');
-include(html, 'id="sound-test"', 'HTML');
+include(html, 'sound-toggle', 'HTML');
+include(html, 'sound-test', 'HTML');
 include(html, 'playNotificationChime', 'HTML');
 include(html, 'playNotificationTone', 'HTML');
 console.log('  PASS: backward compat IDs and functions remain');

@@ -97,8 +97,8 @@ assert.ok(html.includes('SALES DX STATUS'), 'HTML must include sales-dx status t
 assert.ok(html.includes('NEXT TASK FEED'), 'HTML must keep task feeder section');
 assert.ok(html.includes('WISHLIST / LATER IDEAS'), 'HTML must keep wishlist section');
 assert.ok(html.includes('API COST METER'), 'HTML must keep cost meter section');
-assert.ok(html.includes('id="sound-toggle"'), 'HTML must keep notification sound toggle');
-assert.ok(html.includes('id="sound-test"'), 'HTML must keep notification sound test');
+assert.ok(html.includes('sound-toggle'), 'HTML must keep notification sound toggle');
+assert.ok(html.includes('sound-test'), 'HTML must keep notification sound test');
 assert.ok(html.includes('buildChatPayload'), 'HTML must include chat payload helper');
 assert.ok(html.includes('playNotificationChime'), 'HTML must include improved chime helper');
 assert.ok(html.includes('payload.contextSummary = latestSnapshot.consoleContextSummary;'), 'HTML must send console context summary');

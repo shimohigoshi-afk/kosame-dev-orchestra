@@ -335,7 +335,7 @@ function formatLocalTimestamp(isoString) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return '';
   try {
-    const formatted = new Intl.DateTimeFormat('ja-JP', {
+    const parts = new Intl.DateTimeFormat('ja-JP', {
       timeZone: 'Asia/Tokyo',
       year: 'numeric',
       month: '2-digit',
@@ -344,8 +344,12 @@ function formatLocalTimestamp(isoString) {
       minute: '2-digit',
       second: '2-digit',
       hour12: false,
-    }).format(date);
-    return `${formatted.replace(/\//g, '-')} JST`;
+    }).formatToParts(date).reduce((acc, part) => {
+      if (part.type !== 'literal') acc[part.type] = part.value;
+      return acc;
+    }, {});
+    if (!parts.year || !parts.month || !parts.day || !parts.hour || !parts.minute || !parts.second) return '';
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} JST`;
   } catch {
     return date.toISOString();
   }

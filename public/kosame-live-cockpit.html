@@ -39,22 +39,22 @@ body {
 .shell {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   width: min(1560px, calc(100vw - 24px));
   margin: 0 auto;
-  padding: 18px 0 36px;
+  padding: 8px 0 36px;
 }
 .chat-callout {
-  position: fixed;
-  z-index: 90;
+  position: static;
+  z-index: 1;
   backdrop-filter: blur(16px);
 }
 .hero {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.8fr);
+  grid-template-columns: minmax(0, 1.58fr) minmax(260px, 0.52fr);
   align-items: stretch;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 .idea-board-outer { order: 4; }
 .hero-card, .panel {
@@ -65,7 +65,7 @@ body {
   backdrop-filter: blur(16px);
 }
 .hero-card {
-  padding: 14px;
+  padding: 7px 10px 8px;
 }
 .command-stage {
   order: 1;
@@ -73,13 +73,10 @@ body {
 .command-stage .hero-card {
   position: relative;
   overflow: hidden;
+  min-height: 100px;
 }
 .stage-visual {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: 22px;
+  display: none;
 }
 .signal-grid-hero-lite .stage-lines,
 .stage-glow,
@@ -94,8 +91,8 @@ body {
 .stage-trace {
   background: linear-gradient(135deg, transparent 0%, rgba(125,211,252,0.015) 45%, rgba(125,211,252,0.055) 50%, rgba(167,139,250,0.015) 55%, transparent 100%);
   transform: translate3d(0, 0, 0);
-  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.92) 16%, rgba(0,0,0,0.92) 84%, transparent 100%);
-  animation: stageTraceSweep 28s ease-in-out infinite;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.92) 22%, rgba(0,0,0,0.92) 72%, transparent 100%);
+  animation: stageTraceSweep 34s ease-in-out infinite;
 }
 .stage-dots {
   background:
@@ -103,47 +100,47 @@ body {
     linear-gradient(90deg, transparent 0 64%, rgba(167,139,250,0.1) 64% 64.5%, transparent 64.5% 100%),
     linear-gradient(90deg, transparent 0 76%, rgba(59,130,246,0.09) 76% 76.5%, transparent 76.5% 100%);
   background-size: 100% 100%;
-  opacity: 0.2;
-  animation: stageDotsFlicker 18s ease-in-out infinite;
+  opacity: 0.12;
+  animation: stageDotsFlicker 24s ease-in-out infinite;
 }
 .stage-lines {
   background:
     linear-gradient(110deg, transparent 0 48%, rgba(125,211,252,0.045) 50%, transparent 52%),
     linear-gradient(140deg, transparent 0 58%, rgba(167,139,250,0.04) 60%, transparent 62%),
     linear-gradient(88deg, transparent 0 28%, rgba(125,211,252,0.04) 30%, transparent 32%);
-  opacity: 0.22;
-  animation: stageLinesFlow 30s linear infinite;
+  opacity: 0.08;
+  animation: stageLinesFlow 40s linear infinite;
 }
 .stage-blip {
   inset: auto;
-  left: 18%;
-  top: 22%;
+  left: 16%;
+  top: 18%;
   width: 4px;
   height: 4px;
   border-radius: 2px;
   background: #7dd3fc;
   box-shadow: 0 0 8px rgba(125, 211, 252, 0.18);
-  animation: stageBlipMove 22s linear infinite;
+  animation: stageBlipMove 28s linear infinite;
 }
 .stage-grid {
   background:
     linear-gradient(rgba(125, 211, 252, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(125, 211, 252, 0.02) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.92) 14%, rgba(0,0,0,0.92) 86%, transparent 100%);
-  opacity: 0.12;
-  animation: stageGridFloat 36s linear infinite;
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.94) 24%, rgba(0,0,0,0.94) 70%, transparent 100%);
+  opacity: 0.06;
+  animation: stageGridFloat 48s linear infinite;
 }
 .stage-scanline {
   background: linear-gradient(180deg, transparent 0%, rgba(125, 211, 252, 0.03) 48%, transparent 100%);
   transform: translateY(-52%);
-  opacity: 0.08;
-  animation: stageScan 28s linear infinite;
+  opacity: 0.045;
+  animation: stageScan 36s linear infinite;
 }
 .stage-glow {
   background: linear-gradient(90deg, transparent 0%, rgba(8, 19, 35, 0.03) 52%, transparent 100%);
   mix-blend-mode: screen;
-  animation: stageGlow 20s ease-in-out infinite;
+  animation: stageGlow 30s ease-in-out infinite;
 }
 @keyframes stagePulse {
   0%, 100% { opacity: 0.75; transform: scale(1); }
@@ -191,7 +188,7 @@ body {
   z-index: 1;
 }
 .command-stage .timestamp {
-  margin-top: 10px;
+  margin-top: 2px;
 }
 .command-stage .hero-aside {
   position: relative;
@@ -206,20 +203,19 @@ body {
   scroll-margin-top: 20px;
 }
 .chat-callout {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 8px;
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 14px;
+  padding: 5px 8px;
+  border-radius: 11px;
   border: 1px solid rgba(167, 139, 250, 0.18);
   background: linear-gradient(90deg, rgba(167, 139, 250, 0.1), rgba(125, 211, 252, 0.08));
   color: #e9ddff;
   box-shadow: 0 14px 32px rgba(7, 17, 31, 0.22);
-  top: 14px;
-  left: 14px;
-  max-width: min(360px, calc(100vw - 28px));
+  max-width: 194px;
+  white-space: nowrap;
 }
 .chat-callout[hidden] { display: none; }
 .chat-callout.important {
@@ -227,14 +223,10 @@ body {
   background: linear-gradient(90deg, rgba(125, 211, 252, 0.12), rgba(167, 139, 250, 0.1));
   box-shadow: 0 16px 34px rgba(7, 17, 31, 0.28), 0 0 22px rgba(125, 211, 252, 0.12);
 }
-.chat-callout-text {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.chat-callout-text strong {
-  font-size: 13px;
-  letter-spacing: 0.06em;
+.chat-callout strong {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .chat-callout button {
   cursor: pointer;
@@ -242,9 +234,10 @@ body {
   background: rgba(192, 132, 252, 0.12);
   color: #f3e8ff;
   border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 10px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .chat-callout button:hover {
   background: rgba(192, 132, 252, 0.18);
@@ -811,24 +804,62 @@ h1 {
 .hero-compact-card { position: relative; overflow: hidden; }
 .hero-compact-inner {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  gap: 5px;
   position: relative;
   z-index: 1;
 }
-.hero-compact-left { flex: 1 1 0; min-width: 0; }
+.hero-top-row,
+.hero-bottom-row {
+  display: grid;
+  gap: 5px 10px;
+}
+.hero-top-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+.hero-bottom-row {
+  grid-template-columns: minmax(0, 1.25fr) minmax(190px, 0.85fr);
+  align-items: end;
+}
+.hero-call-slot {
+  min-width: 0;
+  align-self: start;
+  justify-self: end;
+}
+.hero-compact-left {
+  min-width: 0;
+  max-width: 100%;
+}
 .hero-meta {
-  flex-shrink: 0;
   text-align: right;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
   position: relative;
   z-index: 1;
+  min-width: 0;
+  max-width: 100%;
 }
-.hero-meta-row { font-size: 11px; color: var(--muted); line-height: 1.5; }
-.hero-meta-row code { font-size: 11px; }
+.hero-meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.hero-meta-row code,
+.hero-meta-row span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hero-meta-row code { font-size: 9px; }
 .hero-meta-label {
   font-size: 10px;
   letter-spacing: 0.12em;
@@ -836,18 +867,61 @@ h1 {
   color: rgba(125,211,252,0.55);
   margin-right: 4px;
 }
-.status-chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; position: relative; z-index: 1; }
+.status-chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  justify-content: flex-start;
+}
 .status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 4px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 9px;
   color: var(--muted);
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   transition: background 0.2s;
+}
+.hero-top-row .hero-meta {
+  justify-self: end;
+}
+.hero-top-row .hero-meta-row {
+  justify-content: flex-end;
+}
+.hero-bottom-row .hero-compact-left {
+  min-width: 0;
+}
+.hero-bottom-row .status-chip-row {
+  justify-content: flex-end;
+  align-self: end;
+}
+.hero-bottom-row .hero-meta {
+  justify-self: end;
+  align-self: end;
+}
+.command-stage .hero-compact-left .eyebrow {
+  margin-bottom: 4px;
+}
+.command-stage .hero-compact-left h1 {
+  font-size: clamp(17px, 1.55vw, 23px);
+  line-height: 1.02;
+}
+.command-stage .hero-compact-left .title-copy {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.command-stage .hero-compact-left .mission-copy {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.35;
 }
 .status-chip.ok { color: var(--ok); border-color: rgba(52,211,153,0.22); background: rgba(52,211,153,0.07); }
 .status-chip.warn { color: #fbbf24; border-color: rgba(251,191,36,0.22); background: rgba(251,191,36,0.07); }
@@ -1139,15 +1213,8 @@ h1 {
 </style>
 </head>
 <body>
-  <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
-    <div class="chat-callout-text">
-      <strong>こさめが呼んでます ☂️</strong>
-      <span>必要な時だけ、チャットへ移動してください。</span>
-    </div>
-    <button type="button" id="chat-callout-jump">チャットへ</button>
-  </div>
   <div class="shell">
-    <section class="command-stage" style="margin-bottom:14px">
+    <section class="command-stage" style="margin-bottom:8px">
       <div class="hero-card hero-compact-card">
         <div class="stage-visual signal-grid-hero-visual signal-grid-hero-lite" aria-hidden="true">
           <div class="stage-grid"></div>
@@ -1159,25 +1226,35 @@ h1 {
           <div class="stage-glow"></div>
         </div>
         <div class="hero-compact-inner">
-          <div class="hero-compact-left">
-          <div class="eyebrow">CURRENT MISSION</div>
-            <h1>☂️ KOSAME Console</h1>
-            <div class="title-copy">Dev Orchestra Command Center</div>
-            <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
+          <div class="hero-top-row">
+            <div class="hero-compact-left">
+              <div class="eyebrow">CURRENT MISSION</div>
+              <h1>☂️ KOSAME Console</h1>
+              <div class="title-copy">Dev Orchestra Command Center</div>
+              <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
+            </div>
+            <div class="hero-call-slot">
+              <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
+                <strong>☂️ こさめが呼んでます</strong>
+                <button type="button" id="chat-callout-jump">チャットへ</button>
+              </div>
+            </div>
           </div>
-          <div class="hero-meta">
-            <div class="hero-meta-row"><span class="hero-meta-label">VER</span><code id="hero-version">—</code></div>
-            <div class="hero-meta-row timestamp" id="timestamp">—</div>
-            <div class="hero-meta-row"><span class="hero-meta-label">ACTIVE REPO</span><span id="active-repo">—</span></div>
-            <div class="hero-meta-row"><span class="hero-meta-label">MODE</span><span id="mode-display">Readonly</span></div>
+          <div class="hero-bottom-row">
+            <div class="status-chip-row">
+              <span class="status-chip" id="hero-chip-dev">Dev Orchestra</span>
+              <span class="status-chip" id="hero-chip-sales">Sales DX</span>
+              <span class="status-chip" id="hero-chip-memory">Memory</span>
+              <span class="status-chip" id="hero-chip-chat">Chat</span>
+              <span class="status-chip" id="hero-chip-sound">Sound: OFF</span>
+            </div>
+            <div class="hero-meta">
+              <div class="hero-meta-row"><span class="hero-meta-label">VER</span><code id="hero-version">—</code></div>
+              <div class="hero-meta-row timestamp" id="timestamp">—</div>
+              <div class="hero-meta-row"><span class="hero-meta-label">ACTIVE REPO</span><span id="active-repo">—</span></div>
+              <div class="hero-meta-row"><span class="hero-meta-label">MODE</span><span id="mode-display">Readonly</span></div>
+            </div>
           </div>
-        </div>
-        <div class="status-chip-row">
-          <span class="status-chip" id="hero-chip-dev">Dev Orchestra</span>
-          <span class="status-chip" id="hero-chip-sales">Sales DX</span>
-          <span class="status-chip" id="hero-chip-memory">Memory</span>
-          <span class="status-chip" id="hero-chip-chat">Chat</span>
-          <span class="status-chip" id="hero-chip-sound">Sound: OFF</span>
         </div>
         <span aria-hidden="true" style="display:none">Console からの書き込みはできません</span>
         <span aria-hidden="true" style="display:none">危険ゲート</span>
@@ -1684,11 +1761,13 @@ function updateNotificationUI() {
 function showChatCallout(message) {
   const banner = document.getElementById('chat-callout');
   if (!banner) return;
-  const textNode = banner.querySelector('.chat-callout-text span');
-  if (textNode && message) {
-    textNode.textContent = message;
-  }
   banner.hidden = false;
+  if (message && typeof message === 'string') {
+    const titleNode = banner.querySelector('strong');
+    if (titleNode) {
+      titleNode.textContent = message;
+    }
+  }
 }
 
 function hideChatCallout() {
@@ -1871,10 +1950,10 @@ function updateAttentionBanners(snapshot, { assistantCue = '' } = {}) {
 
   const banner = document.getElementById('chat-callout');
   if (important) {
-    showChatCallout('確認が必要です ☂️');
+    showChatCallout('☂️ こさめが呼んでます');
     if (banner) banner.classList.add('important');
   } else {
-    showChatCallout('こさめが呼んでます ☂️');
+    showChatCallout('☂️ こさめが呼んでます');
     if (banner) banner.classList.remove('important');
   }
 

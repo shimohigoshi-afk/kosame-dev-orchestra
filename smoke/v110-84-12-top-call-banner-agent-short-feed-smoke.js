@@ -30,7 +30,7 @@ function writeActivityLog(entries) {
 
 console.log('=== v110.84.12 top call banner / agent short feed smoke ===');
 
-assert.equal(pkg.version, '110.84.12', `package version must be 110.84.12 (got ${pkg.version})`);
+assert.ok(pkg.version === '110.84.12' || pkg.version === '110.84.13', `package version must be 110.84.12+ compatible (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-12'], 'smoke:v110-84-12 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-12'), 'verify must include smoke:v110-84-12');
 console.log('  PASS: package wiring for v110.84.12');
@@ -40,7 +40,7 @@ const html = readText(HTML_PATH);
 
 assert.ok(html.includes('☂️ KOSAME Console'), 'HTML must include KOSAME Console branding');
 assert.ok(html.includes('Dev Orchestra Command Center'), 'HTML must include subtitle');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero lite eyebrow');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
 assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
 assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');
@@ -57,9 +57,8 @@ assert.ok(!html.includes('Cannot set properties of null'), 'HTML must not expose
 console.log('  PASS: signal grid hero and null guard');
 
 assert.ok(html.includes('chat-callout'), 'HTML must include floating chat callout pill');
-assert.ok(html.includes('priority-callout'), 'HTML must include top-center priority alert');
 assert.ok(html.includes('chat-callout-jump'), 'HTML must include chat jump button');
-assert.ok(html.includes('priority-callout-jump'), 'HTML must include priority jump button');
+assert.ok(!html.includes('priority-callout'), 'HTML must not include top-center priority alert');
 console.log('  PASS: top call banner');
 
 assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed heading');

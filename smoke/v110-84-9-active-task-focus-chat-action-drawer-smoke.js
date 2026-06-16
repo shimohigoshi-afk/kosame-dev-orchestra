@@ -34,7 +34,7 @@ mustExist(HTML_PATH);
 const html = readText(HTML_PATH);
 
 assert.ok(html.includes('KOSAME Console'), 'HTML must include KOSAME Console title');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('Command Center'), 'HTML must include Command Center subtitle');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
 assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
@@ -58,7 +58,7 @@ assert.ok(html.includes('Task Vault'), 'HTML must include Task Vault in board');
 assert.ok(html.includes('Auto Save'), 'HTML must include Auto Save in board');
 assert.ok(html.includes('Collapsed Details'), 'HTML must include collapsed details');
 assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed');
-assert.ok(html.includes('priority-callout'), 'HTML must include priority callout banner');
+assert.ok(!html.includes('priority-callout'), 'HTML must not include priority callout banner');
 console.log('  PASS: active task board focus');
 
 assert.ok(html.includes('IDEA BOARD'), 'HTML must include IDEA BOARD section');

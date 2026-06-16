@@ -34,7 +34,7 @@ mustExist(HTML_PATH);
 
 const html = readText(HTML_PATH);
 assert.ok(html.includes('KOSAME Console'), 'HTML must include KOSAME Console');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include Signal Grid Hero Lite');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include signal-grid-hero-lite class');
 assert.ok(html.includes('stage-grid'), 'HTML must include grid class');
 assert.ok(html.includes('stage-lines'), 'HTML must include line class');
@@ -51,9 +51,8 @@ assert.ok(html.includes('prefers-reduced-motion'), 'HTML must include prefers-re
 assert.ok(html.includes('KOSAME CHAT'), 'HTML must include KOSAME CHAT');
 assert.ok(!html.includes('KOSAME CHAT — こさめ相談'), 'HTML must not keep old chat title');
 assert.ok(html.includes('chat-callout'), 'HTML must include chat callout banner');
-assert.ok(html.includes('priority-callout'), 'HTML must include priority callout banner');
+assert.ok(!html.includes('priority-callout'), 'HTML must not include priority callout banner');
 assert.ok(html.includes('chat-callout-jump'), 'HTML must include chat callout jump button');
-assert.ok(html.includes('priority-callout-jump'), 'HTML must include priority callout jump button');
 assert.ok(html.includes('チャットへ'), 'HTML must include chat anchor button');
 assert.ok(html.includes('scrollIntoView({ behavior: \'smooth\''), 'HTML must include smooth scroll handler');
 assert.ok(html.includes('chat-sound-details-compact'), 'HTML must keep collapsed sound UI');

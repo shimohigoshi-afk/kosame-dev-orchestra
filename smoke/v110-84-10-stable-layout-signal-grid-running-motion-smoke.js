@@ -35,7 +35,7 @@ const html = readText(HTML_PATH);
 
 assert.ok(html.includes('☂️ KOSAME Console'), 'HTML must include KOSAME Console branding');
 assert.ok(html.includes('Dev Orchestra Command Center'), 'HTML must include subtitle');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
 assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
 assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');

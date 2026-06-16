@@ -35,7 +35,7 @@ const html = readText(HTML_PATH);
 
 // Console Hero
 assert.ok(html.includes('KOSAME Console'), 'HTML must include KOSAME Console title');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero eyebrow');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('Command Center'), 'HTML must include Command Center subtitle');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include compact hero class');
 assert.ok(html.includes('stage-grid'), 'HTML must include stage grid class');
@@ -64,7 +64,7 @@ assert.ok(html.includes('autosave-details'), 'HTML must include autosave-details
 assert.ok(html.includes('task-board-details'), 'HTML must include task-board-details collapsible section');
 assert.ok(html.includes('AGENT SHORT CONVERSATION FEED'), 'HTML must include agent short conversation feed');
 assert.ok(html.includes('agent-event-feed'), 'HTML must include agent event feed class');
-assert.ok(html.includes('priority-callout'), 'HTML must include priority callout banner');
+assert.ok(!html.includes('priority-callout'), 'HTML must not include priority callout banner');
 console.log('  PASS: Active Task Board integration');
 
 // Running task animation

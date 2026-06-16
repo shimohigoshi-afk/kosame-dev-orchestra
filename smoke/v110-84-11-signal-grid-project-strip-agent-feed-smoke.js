@@ -9,6 +9,7 @@ const path = require('node:path');
 const pkg = require('../package.json');
 const { collectLiveCockpitSnapshot } = require('../tools/kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('../tools/kosame-cockpit-context');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -30,7 +31,7 @@ function writeActivityLog(entries) {
 
 console.log('=== v110.84.11 signal grid project strip agent feed smoke ===');
 
-assert.ok(pkg.version === '110.84.11' || pkg.version === '110.84.12', `package version must be 110.84.11+ compatible (got ${pkg.version})`);
+assert.ok(isVersionAtLeast(pkg.version, '110.84.11'), `package version must be 110.84.11+ compatible (got ${pkg.version})`);
 assert.ok(pkg.scripts['smoke:v110-84-11'], 'smoke:v110-84-11 must exist in scripts');
 assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-11'), 'verify must include smoke:v110-84-11');
 console.log('  PASS: package wiring for v110.84.11');
@@ -40,7 +41,7 @@ const html = readText(HTML_PATH);
 
 assert.ok(html.includes('☂️ KOSAME Console'), 'HTML must include KOSAME Console branding');
 assert.ok(html.includes('Dev Orchestra Command Center'), 'HTML must include subtitle');
-assert.ok(html.includes('SIGNAL GRID HERO LITE'), 'HTML must include signal grid hero lite eyebrow');
+assert.ok(html.includes('CURRENT MISSION'), 'HTML must include current mission eyebrow');
 assert.ok(html.includes('signal-grid-hero-visual'), 'HTML must include signal grid hero visual class');
 assert.ok(html.includes('signal-grid-hero-lite'), 'HTML must include signal grid hero lite class');
 assert.ok(html.includes('stage-lines'), 'HTML must include stage lines class');
@@ -73,7 +74,7 @@ assert.ok(html.includes('KOSAME CHAT'), 'HTML must include KOSAME CHAT heading')
 assert.ok(!html.includes('KOSAME CHAT — こさめ相談'), 'HTML must not include old chat subtitle');
 assert.ok(html.includes('この内容で進める'), 'HTML must include the main proceed button');
 assert.ok(html.includes('chat-callout'), 'HTML must include chat callout pill');
-assert.ok(html.includes('priority-callout'), 'HTML must include priority alert');
+assert.ok(!html.includes('priority-callout'), 'HTML must not include priority alert');
 assert.ok(html.includes('chat-action-drawer'), 'HTML must include chat action drawer');
 assert.ok(html.includes('chat-action-tabs'), 'HTML must include chat action tabs');
 assert.ok(html.includes('通知音: Clear') || html.includes('Sound: Clear') || html.includes('Sound: OFF'), 'HTML must include compact sound label');

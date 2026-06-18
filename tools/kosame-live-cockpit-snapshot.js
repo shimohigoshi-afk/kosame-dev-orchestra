@@ -15,6 +15,7 @@ const PACKAGE = require('../package.json');
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
 const { buildApiCostSnapshot } = require('./kosame-cost-meter');
 const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
+const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 
 const READ_ONLY_COMMANDS = new Set([
@@ -494,6 +495,10 @@ function collectLiveCockpitSnapshot(options = {}) {
     ? path.resolve(String(options.activityEventLogPath))
     : DEFAULT_ACTIVITY_LOG_PATH;
   const activityEvents = readJsonlRecords(activityEventLogPath, Number(options.activityEventLimit || 96));
+  const shellAgentActivity = readShellAgentActivity({
+    shellAgentActivityLogPath: options.shellAgentActivityLogPath,
+    shellAgentActivityLimit: options.shellAgentActivityLimit,
+  });
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -600,6 +605,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     autoSave,
     apiCost,
     agentEventFeed,
+    shellAgentActivity,
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
@@ -640,6 +646,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     wishlist: taskFeeder.wishlist,
     memoryVault,
     agentEventFeed,
+    shellAgentActivity,
     chatStatus: {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',

@@ -495,6 +495,33 @@ h1 {
   from { opacity: 0.6; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.shell-agent-activity-feed {
+  display: grid;
+  gap: 6px;
+}
+.shell-agent-activity-feed .agent-event-feed-item {
+  padding: 7px 9px;
+}
+.shell-agent-activity-feed .agent-event-feed-item .agent-event-text {
+  font-size: 11px;
+  line-height: 1.45;
+}
+.shell-agent-activity-feed .agent-event-feed-item .agent-event-meta {
+  font-size: 9px;
+}
+.shell-agent-activity-feed .agent-event-feed-item.is-live::after {
+  content: '';
+  position: absolute;
+  inset: auto 10px 9px 10px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.65) 50%, transparent 100%);
+  animation: shellActivityPulse 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shellActivityPulse {
+  0%, 100% { opacity: 0.2; transform: translateX(-5%); }
+  50% { opacity: 0.9; transform: translateX(5%); }
+}
 .panel {
   padding: 18px;
 }
@@ -1466,9 +1493,9 @@ h1 {
         </div>
         <p class="lead">今ほんとうに動いているものを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
 
-        <div class="task-board-counts task-board-summary">
-          <div class="task-count-card">
-            <div class="task-count-label">次にやる候補</div>
+            <div class="task-board-counts task-board-summary">
+              <div class="task-count-card">
+                <div class="task-count-label">次にやる候補</div>
             <div class="task-count-value" id="feed-selected-count">—</div>
           </div>
           <div class="task-count-card">
@@ -1483,10 +1510,16 @@ h1 {
             <div class="task-count-label">Blocked</div>
             <div class="task-count-value" id="feed-blocked-count">—</div>
           </div>
-          <div class="task-count-card">
-            <div class="task-count-label">Auto Save</div>
-            <div class="task-count-value" id="vault-status-chip">—</div>
-          </div>
+              <div class="task-count-card">
+                <div class="task-count-label">Auto Save</div>
+                <div class="task-count-value" id="vault-status-chip">—</div>
+              </div>
+            </div>
+
+        <div class="task-board-section">
+          <h3 class="task-board-section-title">SHELL AGENT ACTIVITY <span aria-hidden="true" style="display:none">実行状況</span></h3>
+          <div class="task-board-meta small">ローカル activity log 由来 / 読み取り専用</div>
+          <div id="shell-agent-activity" class="shell-agent-activity-feed"></div>
         </div>
 
         <div class="task-board-section">
@@ -1571,6 +1604,7 @@ h1 {
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="next" aria-selected="false">次の一手</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="danger" aria-selected="false">危険ゲート</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="alternative" aria-selected="false">代替案</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="activity" aria-selected="false">実行状況</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="notifications" aria-selected="false">通知設定</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="diagnostics" aria-selected="false">診断情報</button>
             </div>
@@ -2341,6 +2375,26 @@ function summarizeDangerState(snapshot, taskFeeder, warnings, humanGate) {
   ];
 }
 
+function summarizeShellAgentActivityPanel(shellAgentActivity) {
+  const activity = shellAgentActivity || {};
+  const items = Array.isArray(activity.items) ? activity.items : [];
+  if (!items.length) {
+    return [
+      'Shell Agent Activity はまだありません。',
+      'Shell 上の作業状態は、必要になった時だけここで確認できます。',
+    ];
+  }
+  return items.slice(0, 5).map((item) => {
+    const agent = item.agent || 'Shell';
+    const label = item.label || item.status || 'running';
+    const message = item.message || item.task || '';
+    const parts = [`${agent}：${label}`];
+    if (message) parts.push(message);
+    if (item.project) parts.push(`project ${item.project}`);
+    return parts.join(' / ');
+  });
+}
+
 function buildAssistPanelModel(snapshot, tab) {
   const selectedProject = getSelectedProject(snapshot);
   const activeRepo = snapshot.activeRepo || {};
@@ -2349,6 +2403,7 @@ function buildAssistPanelModel(snapshot, tab) {
   const taskFeeder = snapshot.taskFeeder || {};
   const wishlist = snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {};
   const apiCost = snapshot.apiCost || {};
+  const shellAgentActivity = snapshot.shellAgentActivity || {};
   const humanGate = Array.isArray(snapshot.humanGate) ? snapshot.humanGate : [];
   const warnings = Array.isArray(snapshot.warnings) ? snapshot.warnings : [];
   const warningsList = [
@@ -2384,6 +2439,12 @@ function buildAssistPanelModel(snapshot, tab) {
         secondaryActionPrompt: 'Wishlistに保存してください。',
         tertiaryActionLabel: '今日はここで終了',
         tertiaryActionPrompt: '今日はここで終了します。',
+      };
+    case 'activity':
+      return {
+        title: '実行状況',
+        subtitle: 'Shell 上の作業状態を軽く確認します。',
+        lines: summarizeShellAgentActivityPanel(shellAgentActivity),
       };
     case 'notifications':
       return {
@@ -2827,6 +2888,70 @@ function renderAgentEventFeed(agentEventFeed) {
     if (absolute) parts.push(absolute);
     if (age) parts.push(age);
     meta.textContent = parts.length ? parts.join(' / ') : `template ${item.kind || 'RUNNING'} #${index + 1}`;
+    row.appendChild(head);
+    row.appendChild(textNode);
+    row.appendChild(meta);
+    mount.appendChild(row);
+  }
+}
+
+function renderShellAgentActivity(shellAgentActivity) {
+  const feed = shellAgentActivity || {};
+  const mount = document.getElementById('shell-agent-activity');
+  if (!mount) return;
+  mount.innerHTML = '';
+
+  const items = Array.isArray(feed.items) ? feed.items : [];
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'mono';
+    empty.textContent = 'Shell Agent Activity はまだありません。';
+    mount.appendChild(empty);
+    return;
+  }
+
+  for (const [index, item] of items.slice(0, 5).entries()) {
+    const row = document.createElement('div');
+    const rawStatus = String(item.status || item.severity || 'running').toLowerCase().replace(/_/g, '-');
+    const kindClass = ({
+      queued: 'waiting',
+      waiting: 'waiting',
+      running: 'running',
+      editing: 'running',
+      verifying: 'waiting',
+      success: 'done',
+      failed: 'error',
+      'human-gate': 'human-gate',
+      human_gate: 'human-gate',
+      blocked: 'blocked',
+    })[rawStatus] || rawStatus;
+    row.className = `agent-event-feed-item shell-agent-activity-item kind-${kindClass}`;
+    if (item.status === 'running' || item.status === 'editing' || item.status === 'verifying') {
+      row.classList.add('is-live');
+    }
+    const head = document.createElement('div');
+    head.className = 'agent-event-head';
+    const kind = document.createElement('span');
+    kind.className = 'agent-event-kind';
+    kind.textContent = item.label || item.status || 'RUNNING';
+    const actor = document.createElement('span');
+    actor.className = 'agent-event-actor';
+    actor.textContent = item.agent || 'Shell';
+    head.appendChild(kind);
+    head.appendChild(actor);
+    const textNode = document.createElement('div');
+    textNode.className = 'agent-event-text';
+    textNode.textContent = item.text || `${item.agent || 'Shell'}：${item.label || item.status || 'running'}`;
+    const meta = document.createElement('div');
+    meta.className = 'agent-event-meta';
+    const absolute = item.timestamp ? formatTokyoTimestamp(item.timestamp) : '';
+    const age = item.timestamp ? formatRelativeAge(item.timestamp) : '';
+    const parts = [];
+    if (item.project) parts.push(`project=${item.project}`);
+    if (item.task) parts.push(`task=${item.task}`);
+    if (absolute) parts.push(absolute);
+    if (age) parts.push(age);
+    meta.textContent = parts.length ? parts.join(' / ') : `template ${item.status || 'running'} #${index + 1}`;
     row.appendChild(head);
     row.appendChild(textNode);
     row.appendChild(meta);
@@ -3437,6 +3562,7 @@ async function loadSnapshot() {
     renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
     renderMemoryVault(snapshot.memoryVault || (snapshot.taskVault && snapshot.taskVault.memoryVault) || {}, snapshot.taskVault || {});
     renderApiCost(snapshot.apiCost || {});
+    renderShellAgentActivity(snapshot.shellAgentActivity || {});
     renderTaskFeeder(snapshot.taskFeeder || {});
     renderAgentEventFeed(snapshot.agentEventFeed || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});

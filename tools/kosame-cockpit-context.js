@@ -143,6 +143,30 @@ function summarizeAgentEventFeed(feed) {
   return itemText.length ? `${countText}; items=[${itemText.join(' | ')}]` : countText;
 }
 
+function summarizeShellActivity(activity) {
+  const shell = activity && typeof activity === 'object' ? activity : {};
+  const items = Array.isArray(shell.items) ? shell.items : [];
+  const counts = shell.counts || {};
+  const countText = [
+    `queued=${counts.queued || 0}`,
+    `running=${counts.running || 0}`,
+    `editing=${counts.editing || 0}`,
+    `verifying=${counts.verifying || 0}`,
+    `success=${counts.success || 0}`,
+    `failed=${counts.failed || 0}`,
+    `human_gate=${counts.human_gate || 0}`,
+    `blocked=${counts.blocked || 0}`,
+    `waiting=${counts.waiting || 0}`,
+  ].join(' / ');
+  const itemText = items.slice(0, 5).map((item) => {
+    const agent = normalizeText(item.agent || 'Shell');
+    const label = normalizeText(item.label || item.status || 'running');
+    const message = firstLine(item.message || item.text || '');
+    return `${agent}:${label}:${message}`;
+  }).filter(Boolean);
+  return itemText.length ? `${countText}; items=[${itemText.join(' | ')}]` : countText;
+}
+
 function buildConsoleContextSummary(snapshot) {
   if (!snapshot || typeof snapshot !== 'object') {
     return {
@@ -231,6 +255,11 @@ function buildConsoleContextSummary(snapshot) {
     lines.push(`agentEventFeed=${summarizeAgentEventFeed(agentEventFeed)}`);
   }
 
+  const shellAgentActivity = snapshot.shellAgentActivity || {};
+  if (shellAgentActivity) {
+    lines.push(`shellActivity=${summarizeShellActivity(shellAgentActivity)}`);
+  }
+
   const autoSave = snapshot.autoSave || {};
   if (autoSave && typeof autoSave === 'object') {
     lines.push(
@@ -277,4 +306,5 @@ function buildConsoleContextSummary(snapshot) {
 
 module.exports = {
   buildConsoleContextSummary,
+  summarizeShellActivity,
 };

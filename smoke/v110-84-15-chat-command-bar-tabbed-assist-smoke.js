@@ -8,12 +8,14 @@ const ROOT = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(ROOT, 'public', 'kosame-live-cockpit.html'), 'utf8');
 const pkg = require('../package.json');
 const { collectLiveCockpitSnapshot } = require('../tools/kosame-live-cockpit-snapshot');
+const { isVersionAtLeast } = require('./version-compare');
 
 const snap = collectLiveCockpitSnapshot();
+const expectedVersion = pkg.version;
 
-assert.equal(pkg.version, '110.84.15', 'package.json version must be 110.84.15');
-assert.equal(snap.currentVersion, '110.84.15', 'snapshot must expose the new current version');
-assert.ok(String(snap.consoleContextSummary || '').includes('versionContext=package=110.84.15'), 'console context summary must include the package version');
+assert.ok(isVersionAtLeast(pkg.version, '110.84.15'), `package.json version must be 110.84.15+ compatible (got ${pkg.version})`);
+assert.equal(snap.currentVersion, expectedVersion, 'snapshot must expose the current version');
+assert.ok(String(snap.consoleContextSummary || '').includes(`versionContext=package=${expectedVersion}`), 'console context summary must include the package version');
 
 assert.ok(html.includes('chat-primary-actions'), 'HTML must keep the main chat command bar class');
 assert.ok(html.includes('chat-command-bar'), 'HTML must include the chat command bar');
@@ -41,6 +43,7 @@ assert.ok(html.includes('data-assist-tab="current"'), 'HTML must include the cur
 assert.ok(html.includes('data-assist-tab="next"'), 'HTML must include the next tab');
 assert.ok(html.includes('data-assist-tab="danger"'), 'HTML must include the danger tab');
 assert.ok(html.includes('data-assist-tab="alternative"'), 'HTML must include the alternative tab');
+assert.ok(html.includes('data-assist-tab="activity"'), 'HTML must include the activity tab');
 assert.ok(html.includes('data-assist-tab="notifications"'), 'HTML must include the notifications tab');
 assert.ok(html.includes('data-assist-tab="diagnostics"'), 'HTML must include the diagnostics tab');
 assert.ok(html.includes('chat-assist-panel'), 'HTML must include the assist panel');
@@ -70,7 +73,7 @@ assert.ok(html.indexOf('chat-thread') < html.indexOf('chat-primary-actions'), 'H
 assert.ok(html.includes("e.key === 'Enter' && !e.shiftKey"), 'HTML must keep Enter-to-send handling');
 assert.ok(html.includes('Shift+Enterで改行'), 'HTML must keep the compact hint text');
 
-assert.ok(snap.consoleContextSummary.includes('currentVersion=110.84.15'), 'console context summary must include currentVersion');
+assert.ok(snap.consoleContextSummary.includes(`currentVersion=${expectedVersion}`), 'console context summary must include currentVersion');
 assert.ok(snap.consoleContextSummary.includes('taskFeeder='), 'console context summary must include task feeder data');
 assert.ok(snap.consoleContextSummary.includes('wishlist='), 'console context summary must include wishlist data');
 

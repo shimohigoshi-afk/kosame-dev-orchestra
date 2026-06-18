@@ -802,7 +802,7 @@
     "smoke:v110-84-18": "node smoke/v110-84-18-shell-agent-activity-runner-smoke.js",
     "smoke:v110-84-19": "node smoke/v110-84-19-kosame-chat-api-bridge-lite-smoke.js",
     "smoke:v110-84-20": "node smoke/v110-84-20-kosame-chat-work-order-draft-lite-smoke.js",
-    "verify": "npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16",
+    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16",
     "activity:append": "node tools/kosame-shell-agent-activity.js append"
   },
   "dependencies": {

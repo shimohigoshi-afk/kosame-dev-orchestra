@@ -758,6 +758,108 @@ h1 {
 .chat-bubble-user .chat-bubble-header { justify-content: flex-end; color: #cffafe; }
 .chat-bubble-user .chat-bubble-role { color: #e0f2fe; }
 .chat-bubble-ai .chat-bubble-role { color: #7dd3fc; }
+.chat-work-order-card {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 10px 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(125,211,252,0.18);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(8, 15, 28, 0.88));
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
+}
+.chat-work-order-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 10px;
+}
+.chat-work-order-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #e0f2fe;
+}
+.chat-work-order-badge {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  border: 1px solid rgba(125,211,252,0.18);
+  background: rgba(125,211,252,0.08);
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+.chat-work-order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.chat-work-order-meta span {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+.chat-work-order-flag {
+  color: #fbbf24;
+  border-color: rgba(251,191,36,0.18) !important;
+  background: rgba(251,191,36,0.08) !important;
+}
+.chat-work-order-section {
+  display: grid;
+  gap: 6px;
+}
+.chat-work-order-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chat-work-order-prompt {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid rgba(125,211,252,0.12);
+  background: rgba(255,255,255,0.035);
+  color: #dbeafe;
+  padding: 10px 11px;
+  font-size: 12px;
+  line-height: 1.6;
+  font-family: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.chat-work-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-work-order-copy {
+  cursor: pointer;
+  border: 1px solid rgba(125,211,252,0.24);
+  background: rgba(125,211,252,0.08);
+  color: #e0f2fe;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.chat-work-order-copy:hover {
+  background: rgba(125,211,252,0.16);
+}
+.chat-work-order-note {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+}
 .chat-status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 9px; }
 .chat-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
 .chat-status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.18); }
@@ -3508,10 +3610,100 @@ function renderChatThread() {
     body.textContent = msg.content;
     bubble.appendChild(header);
     bubble.appendChild(body);
+    if (msg.role === 'assistant' && msg.work_order) {
+      bubble.appendChild(renderWorkOrderCard(msg.work_order));
+    }
     div.appendChild(bubble);
     thread.appendChild(div);
   }
   thread.scrollTop = thread.scrollHeight;
+}
+
+function renderWorkOrderCard(workOrder) {
+  const card = document.createElement('div');
+  card.className = 'chat-work-order-card';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = workOrder.title || '作業票ドラフト';
+  head.appendChild(title);
+
+  const badge = document.createElement('span');
+  badge.className = 'chat-work-order-badge';
+  badge.textContent = 'Work Order Draft';
+  head.appendChild(badge);
+
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['agent', workOrder.agent || '—'],
+    ['target', workOrder.target_repo || '—'],
+    ['risk', workOrder.risk_level || '—'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+
+  const gate = document.createElement('span');
+  gate.className = 'chat-work-order-flag';
+  gate.textContent = workOrder.requires_human_confirmation ? 'human gate required' : 'human gate optional';
+  meta.appendChild(gate);
+  card.appendChild(meta);
+
+  const promptSection = document.createElement('div');
+  promptSection.className = 'chat-work-order-section';
+
+  const promptLabel = document.createElement('div');
+  promptLabel.className = 'chat-work-order-label';
+  promptLabel.textContent = 'コピー用';
+  promptSection.appendChild(promptLabel);
+
+  const prompt = document.createElement('textarea');
+  prompt.className = 'chat-work-order-prompt';
+  prompt.readOnly = true;
+  prompt.value = workOrder.prompt || '';
+  promptSection.appendChild(prompt);
+
+  const actions = document.createElement('div');
+  actions.className = 'chat-work-order-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'chat-work-order-copy';
+  copyBtn.textContent = 'コピー';
+  copyBtn.addEventListener('click', async () => {
+    const text = prompt.value || '';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        prompt.focus();
+        prompt.select();
+        document.execCommand('copy');
+      }
+      copyBtn.textContent = 'コピー済み';
+      setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+    } catch {
+      copyBtn.textContent = 'コピー失敗';
+      setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+    }
+  });
+  actions.appendChild(copyBtn);
+  promptSection.appendChild(actions);
+
+  const note = document.createElement('div');
+  note.className = 'chat-work-order-note';
+  note.textContent = '内容を確認してから Codex に貼ってください。';
+  promptSection.appendChild(note);
+
+  card.appendChild(promptSection);
+
+  return card;
 }
 
 function buildChatPayload(userText, confirmationContext) {
@@ -3586,7 +3778,12 @@ async function sendChatMessage(userText, confirmationContext) {
     }
 
     const reply = data.reply || '応答なし';
-    chatHistory.push({ role: 'assistant', content: reply });
+    chatHistory.push({
+      role: 'assistant',
+      content: reply,
+      work_order: data.work_order || null,
+      human_gate_required: !!data.human_gate_required,
+    });
     hideTypingIndicator();
     renderChatThread();
     maybeNotifyFromAssistant(reply);

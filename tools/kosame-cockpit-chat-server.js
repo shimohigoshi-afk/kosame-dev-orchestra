@@ -30,6 +30,33 @@ const SECRET_PATTERNS = [
   /\bBEARER\b/i,
   /\.env\b/i,
 ];
+const WORK_ORDER_TARGETS = [
+  {
+    label: 'Sales DX',
+    repo: '/home/lavie/repos/transcriber',
+    riskLevel: 'medium',
+    hints: /sales dx|transcriber|営業dx/i,
+  },
+  {
+    label: 'KOSAME Console',
+    repo: '/home/lavie/kosame-dev-orchestra',
+    riskLevel: 'low',
+    hints: /kosame console|dev orchestra|kosame dev orchestra/i,
+  },
+];
+const WORK_ORDER_REQUEST_PATTERNS = [
+  /作業票.*(作って|作成|生成)/i,
+  /work order/i,
+  /codex.*(投げ|渡).*指示/i,
+  /投げる指示を?作って/i,
+  /次の作業票/i,
+  /次の作業/i,
+  /進めたい/i,
+  /進めてください/i,
+  /進めて/i,
+  /この方針で進める/i,
+  /この案で進める/i,
+];
 
 function loadPersona() {
   try {
@@ -325,6 +352,114 @@ function buildGeneralReply(input) {
   };
 }
 
+function detectWorkOrderIntent(message) {
+  const text = normalizeContent(message);
+  if (!text) return false;
+  return WORK_ORDER_REQUEST_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function resolveWorkOrderTarget(input, snapshotSummary) {
+  const haystack = [
+    normalizeContent(input.project),
+    normalizeContent(input.message),
+    normalizeContent(input.context),
+  ].filter(Boolean).join(' ');
+
+  for (const target of WORK_ORDER_TARGETS) {
+    if (target.hints.test(haystack)) {
+      return target;
+    }
+  }
+
+  return null;
+}
+
+function stripWorkOrderLead(text) {
+  const value = normalizeContent(text);
+  if (!value) return '';
+  return value
+    .replace(/^(Sales DX|KOSAME Console|Dev Orchestra|営業DX|transcriber)\s*/i, '')
+    .replace(/^(の)?(作業票|次の作業票|次の作業)\s*(を|の)?\s*(作って|作成して|生成して|ください|お願い|お願いします)?$/i, '')
+    .trim();
+}
+
+function buildWorkOrderTitle(input, target) {
+  const message = normalizeContent(input.message);
+  const lead = stripWorkOrderLead(message);
+  const versionMatch = message.match(/v\d+\.\d+\.\d+(?:[-_A-Za-z0-9.]+)?/i);
+  const parts = [];
+
+  if (lead && !/^(作業票|次の作業票|次の作業|進めたい|進めてください|進めて)$/i.test(lead)) {
+    parts.push(lead);
+  }
+
+  if (versionMatch) {
+    parts.push(versionMatch[0]);
+  } else if (target && target.label) {
+    parts.push(target.label);
+  }
+
+  const title = parts.join(' ').trim() || `${target ? target.label : '作業票'}`
+  return truncate(title.replace(/\s+/g, ' '), 80);
+}
+
+function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
+  const projectLabel = target ? target.label : truncate(input.project || '対象未指定', 40);
+  const contextLines = [];
+  if (normalizeContent(input.message)) contextLines.push(`ユーザー要望: ${normalizeContent(input.message)}`);
+  if (normalizeContent(snapshotSummary)) contextLines.push(`参考コンテキスト: ${normalizeContent(snapshotSummary)}`);
+
+  return [
+    `cd ${target.repo}`,
+    '',
+    `${title} の作業票ドラフトです。`,
+    `対象: ${projectLabel}`,
+    contextLines.length ? contextLines.join('\n') : '',
+    '',
+    '安全条件:',
+    '- commit/tag/pushは未実行で止める',
+    '- git add . / git add -Aは禁止',
+    '- Secret/.env/credentials/API keyを読まない',
+    '- 外部APIを呼ばない',
+    '- 対象repo以外を触らない',
+    '',
+    '報告項目:',
+    '- 変更ファイル一覧',
+    '- /api/chat の仕様',
+    '- UI上の動き',
+    '- work_order の内容',
+    '- git status -sb',
+  ].filter((line, index, array) => !(line === '' && array[index - 1] === '')).join('\n');
+}
+
+function buildWorkOrderReply(input, snapshotSummary) {
+  const target = resolveWorkOrderTarget(input, snapshotSummary);
+  if (!target) {
+    return {
+      reply: '対象repoが特定できませんでした。Sales DX か KOSAME Console のどちらかを教えてください。',
+      suggested_action: '対象プロジェクトを1つ指定する。',
+      human_gate_required: true,
+    };
+  }
+
+  const title = buildWorkOrderTitle(input, target);
+  const prompt = buildWorkOrderPrompt(input, target, title, snapshotSummary);
+
+  return {
+    reply: `${title} の作業票ドラフトを作りました。確認してから Codex に貼ってください☂️`,
+    suggested_action: '内容を確認して、問題なければ Codexへ貼る',
+    human_gate_required: true,
+    work_order: {
+      title,
+      agent: 'Codex',
+      target_repo: target.repo,
+      risk_level: target.riskLevel,
+      requires_human_confirmation: true,
+      prompt,
+    },
+  };
+}
+
 function detectIntent(message) {
   const text = normalizeContent(message);
   if (!text) return 'empty';
@@ -339,6 +474,10 @@ function buildLocalReply(input, snapshotSummary) {
   const intent = detectIntent(input.message);
   const message = truncate(input.message, 80);
 
+  if (detectWorkOrderIntent(message) || (intent === 'proceed' && resolveWorkOrderTarget(input, snapshotSummary))) {
+    return buildWorkOrderReply(input, snapshotSummary);
+  }
+
   if (intent === 'status') {
     return buildStatusReply(input, snapshotSummary);
   }
@@ -348,10 +487,7 @@ function buildLocalReply(input, snapshotSummary) {
   }
 
   if (intent === 'proceed') {
-    return {
-      reply: '了解です。ではこの方針で進めます。',
-      suggested_action: '必要なら確認待ちや危険ゲートを先に整理する。',
-    };
+    return buildWorkOrderReply(input, snapshotSummary);
   }
 
   if (intent === 'summary') {
@@ -448,9 +584,13 @@ async function handleChatRequest(body) {
     ok: true,
     reply: replyPacket.reply,
     suggested_action: replyPacket.suggested_action,
-    human_gate_required: false,
+    human_gate_required: !!replyPacket.human_gate_required,
     created_at: requestAt,
   };
+
+  if (replyPacket.work_order) {
+    result.work_order = replyPacket.work_order;
+  }
 
   appendChatEvent({
     project,
@@ -472,5 +612,7 @@ module.exports = {
   normalizeContent,
   buildLocalReply,
   detectIntent,
+  detectWorkOrderIntent,
+  resolveWorkOrderTarget,
   appendChatEvent,
 };

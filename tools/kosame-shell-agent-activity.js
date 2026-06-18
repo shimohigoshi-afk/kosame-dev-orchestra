@@ -6,10 +6,49 @@ const os = require('node:os');
 const path = require('node:path');
 
 const DEFAULT_SHELL_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'shell-agent-activity.jsonl');
+const SHELL_ACTIVITY_LOG_PATH_ENV = 'KOSAME_SHELL_AGENT_ACTIVITY_LOG_PATH';
 const DEFAULT_LIMIT = 8;
+const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting']);
+const DANGEROUS_PATTERNS = [
+  /sk-[A-Za-z0-9_-]{8,}/i,
+  /\bapi[_-]?key\b/i,
+  /\bsecret\b/i,
+  /\btoken\b/i,
+  /\.env\b/i,
+  /\bcredentials?\b/i,
+  /\bpassword\b/i,
+  /\bauthorization\b/i,
+  /\bbearer\b/i,
+];
+const CLI_USAGE = `Usage:
+  node tools/kosame-shell-agent-activity.js append --agent Codex --project "KOSAME Dev Orchestra" --status running --task "..." --message "..."
+
+Options:
+  --log-path <path>   Override the activity JSONL file path
+  --agent <name>
+  --project <name>
+  --status <status>
+  --task <text>
+  --message <text>`;
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function compactText(value, maxLength = 160) {
+  const text = normalizeText(value)
+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '';
+  if (!Number.isFinite(maxLength) || maxLength <= 0) return text;
+  return text.length > maxLength ? text.slice(0, maxLength).trim() : text;
+}
+
+function hasDangerousActivityText(value) {
+  const text = normalizeText(value);
+  if (!text) return false;
+  return DANGEROUS_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 function readJsonlRecords(filePath, limit = DEFAULT_LIMIT) {
@@ -31,6 +70,49 @@ function readJsonlRecords(filePath, limit = DEFAULT_LIMIT) {
   } catch {
     return [];
   }
+}
+
+function ensureSafeActivityField(fieldName, value, options = {}) {
+  const raw = normalizeText(value);
+  const fallback = normalizeText(options.fallback || '');
+  const maxLength = Number.isFinite(options.maxLength) && options.maxLength > 0 ? options.maxLength : 160;
+  const safeValue = compactText(raw || fallback, maxLength);
+  if (safeValue && hasDangerousActivityText(safeValue)) {
+    throw new Error(`Blocked dangerous shell activity ${fieldName}`);
+  }
+  return safeValue;
+}
+
+function normalizeActivityStatus(value) {
+  const status = normalizeText(value).toLowerCase();
+  if (!ALLOWED_STATUSES.has(status)) {
+    throw new Error(`Invalid shell activity status: ${status || '(empty)'}`);
+  }
+  return status;
+}
+
+function appendShellAgentActivityEvent(input = {}) {
+  const logPath = path.resolve(String(
+    input.shellAgentActivityLogPath
+    || process.env[SHELL_ACTIVITY_LOG_PATH_ENV]
+    || DEFAULT_SHELL_ACTIVITY_LOG_PATH,
+  ));
+  const event = {
+    timestamp: new Date().toISOString(),
+    agent: ensureSafeActivityField('agent', input.agent, { fallback: 'Shell', maxLength: 80 }) || 'Shell',
+    project: ensureSafeActivityField('project', input.project, { maxLength: 120 }),
+    status: normalizeActivityStatus(input.status),
+    task: ensureSafeActivityField('task', input.task, { maxLength: 120 }),
+    message: ensureSafeActivityField('message', input.message, { maxLength: 240 }),
+  };
+
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  fs.appendFileSync(logPath, `${JSON.stringify(event)}\n`, 'utf8');
+  return {
+    ok: true,
+    logPath,
+    event,
+  };
 }
 
 function normalizeShellActivityStatus(record) {
@@ -104,9 +186,11 @@ function normalizeShellActivityRecord(record) {
 }
 
 function readShellAgentActivity(options = {}) {
-  const logPath = options.shellAgentActivityLogPath
-    ? path.resolve(String(options.shellAgentActivityLogPath))
-    : DEFAULT_SHELL_ACTIVITY_LOG_PATH;
+  const logPath = path.resolve(String(
+    options.shellAgentActivityLogPath
+    || process.env[SHELL_ACTIVITY_LOG_PATH_ENV]
+    || DEFAULT_SHELL_ACTIVITY_LOG_PATH,
+  ));
   const limit = Number(options.shellAgentActivityLimit || DEFAULT_LIMIT);
   const records = readJsonlRecords(logPath, Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT);
   const items = records
@@ -154,11 +238,108 @@ function summarizeShellActivity(shellActivity) {
   return itemText.length ? `${countText}; items=[${itemText.join(' | ')}]` : countText;
 }
 
+function parseAppendArgs(argv) {
+  const args = Array.isArray(argv) ? argv.slice() : [];
+  const input = {};
+  const extras = [];
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--help' || arg === '-h') {
+      input.help = true;
+      continue;
+    }
+    if (arg.startsWith('--')) {
+      const eqIndex = arg.indexOf('=');
+      let key = eqIndex >= 0 ? arg.slice(2, eqIndex) : arg.slice(2);
+      let value = eqIndex >= 0 ? arg.slice(eqIndex + 1) : args[i + 1];
+      if (eqIndex < 0) i += 1;
+      key = key.trim();
+      if (!key) {
+        extras.push(arg);
+        continue;
+      }
+      switch (key) {
+        case 'agent':
+        case 'project':
+        case 'status':
+        case 'task':
+        case 'message':
+        case 'log-path':
+        case 'path':
+          input[key.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value === undefined ? '' : String(value);
+          break;
+        default:
+          extras.push(arg);
+          if (eqIndex < 0 && value !== undefined) {
+            extras.push(String(value));
+          }
+          break;
+      }
+      continue;
+    }
+    extras.push(arg);
+  }
+
+  input._extras = extras;
+  return input;
+}
+
+function printCliUsage() {
+  process.stdout.write(`${CLI_USAGE}\n`);
+}
+
+function runCli(argv) {
+  const args = Array.isArray(argv) ? argv.slice() : [];
+  const command = normalizeText(args.shift());
+  const parsed = parseAppendArgs(args);
+  if (parsed.help) {
+    printCliUsage();
+    return { ok: true, help: true };
+  }
+  if (command !== 'append') {
+    throw new Error(`Unsupported command: ${command || '(empty)'}`);
+  }
+  if (Array.isArray(parsed._extras) && parsed._extras.length > 0) {
+    throw new Error(`Unsupported arguments: ${parsed._extras.join(' ')}`);
+  }
+
+  const result = appendShellAgentActivityEvent({
+    shellAgentActivityLogPath: parsed.logPath || parsed.path,
+    agent: parsed.agent,
+    project: parsed.project,
+    status: parsed.status,
+    task: parsed.task,
+    message: parsed.message,
+  });
+  process.stdout.write(`${JSON.stringify(result.event)}\n`);
+  return result;
+}
+
 module.exports = {
   DEFAULT_SHELL_ACTIVITY_LOG_PATH,
+  ALLOWED_STATUSES,
+  appendShellAgentActivityEvent,
+  compactText,
+  ensureSafeActivityField,
   normalizeShellActivityRecord,
   normalizeShellActivityStatus,
+  normalizeActivityStatus,
+  hasDangerousActivityText,
   readJsonlRecords,
   readShellAgentActivity,
+  runCli,
+  parseAppendArgs,
   summarizeShellActivity,
 };
+
+if (require.main === module) {
+  try {
+    const [, , command = '', ...argv] = process.argv;
+    runCli([command, ...argv]);
+  } catch (error) {
+    console.error(error && error.message ? error.message : String(error));
+    console.error(CLI_USAGE);
+    process.exitCode = 1;
+  }
+}

@@ -101,7 +101,10 @@ assert.ok(html.includes('sound-toggle'), 'HTML must keep notification sound togg
 assert.ok(html.includes('sound-test'), 'HTML must keep notification sound test');
 assert.ok(html.includes('buildChatPayload'), 'HTML must include chat payload helper');
 assert.ok(html.includes('playNotificationChime'), 'HTML must include improved chime helper');
-assert.ok(html.includes('payload.contextSummary = latestSnapshot.consoleContextSummary;'), 'HTML must send console context summary');
+assert.ok(
+  html.includes("payload.contextSummary = String(latestSnapshot.consoleContextSummary || '').slice(0, 800);"),
+  'HTML must keep console context summary with safe truncation'
+);
 console.log('  PASS: HTML branding and existing features remain in place');
 
 assert.equal(typeof chatServer.normalizeChatRequest, 'function', 'chat server must export normalizeChatRequest');
@@ -148,28 +151,22 @@ assert.ok(!consoleContext.summary.includes('credentials'), 'context summary must
 assert.ok(!consoleContext.summary.includes('customer@example.com'), 'context summary must not contain customer data');
 console.log('  PASS: context summary helper keeps secrets out');
 
-const previousApiKey = process.env.OPENAI_API_KEY;
-process.env.OPENAI_API_KEY = 'sk-test-mock';
-Promise.resolve(chatServer.handleChatRequest({ message: 'hello' }))
+Promise.resolve(chatServer.handleChatRequest({
+  message: '今の状況を教えて',
+  project: 'KOSAME Console',
+  context: 'currentVersion=110.84.19; shellActivity=ok; taskFeeder=ok; confirmationBridge=none',
+}))
   .then((result) => {
-    assert.equal(result.noContext, true, 'message-only request without context must be marked noContext');
-    assert.equal(result.reply, '状態コンテキスト未取得です。', 'message-only request without context must explain missing context');
-    assert.equal(result.contextStatus, 'unavailable', 'message-only request without context must mark unavailable');
-    console.log('  PASS: chat handler distinguishes missing context from missing API key');
-  })
-  .then(() => {
-    if (typeof previousApiKey === 'string') {
-      process.env.OPENAI_API_KEY = previousApiKey;
-    } else {
-      delete process.env.OPENAI_API_KEY;
-    }
+    assert.equal(result.ok, true, 'local chat handler must succeed');
+    assert.equal(typeof result.reply, 'string', 'local chat handler must return reply');
+    assert.equal(typeof result.suggested_action, 'string', 'local chat handler must return suggested_action');
+    assert.equal(result.human_gate_required, false, 'local chat handler must keep human_gate_required false');
+    assert.ok(!result.reply.includes('currentVersion='), 'reply must not expose raw key/value');
+    assert.ok(!result.reply.includes('changed='), 'reply must not expose raw change counts');
+    assert.ok(/確認中|未コミット|正本化/.test(result.reply), 'reply must read naturally');
+    console.log('  PASS: chat handler returns local status reply');
   })
   .catch((error) => {
-    if (typeof previousApiKey === 'string') {
-      process.env.OPENAI_API_KEY = previousApiKey;
-    } else {
-      delete process.env.OPENAI_API_KEY;
-    }
     throw error;
   });
 

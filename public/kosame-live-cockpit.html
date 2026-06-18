@@ -432,14 +432,40 @@ h1 {
 }
 .agent-event-feed {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  max-height: 208px;
+  overflow-y: auto;
+  padding-right: 2px;
+  overscroll-behavior: contain;
+}
+.agent-event-feed-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.agent-event-feed-summary-text {
+  min-width: 0;
+}
+.agent-event-feed-toggle {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
 }
 .agent-event-feed-item {
   position: relative;
   display: grid;
-  gap: 4px;
-  padding: 9px 11px;
-  border-radius: 14px;
+  gap: 3px;
+  padding: 7px 9px;
+  border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.035);
   overflow: hidden;
@@ -460,28 +486,33 @@ h1 {
   justify-content: space-between;
 }
 .agent-event-feed-item .agent-event-kind {
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
 }
 .agent-event-feed-item .agent-event-actor {
-  font-size: 11px;
+  font-size: 10px;
   color: #e0f2fe;
 }
 .agent-event-feed-item .agent-event-text {
   position: relative;
   z-index: 1;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 11px;
+  line-height: 1.4;
   color: var(--text);
+  max-height: 3.1em;
+  overflow: hidden;
 }
 .agent-event-feed-item .agent-event-meta {
   position: relative;
   z-index: 1;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
   color: var(--muted);
+  max-height: 2.8em;
+  overflow: hidden;
 }
 .agent-event-feed-item.kind-running { border-color: rgba(125,211,252,0.14); }
 .agent-event-feed-item.kind-done { border-color: rgba(52,211,153,0.18); background: rgba(52,211,153,0.05); }
@@ -517,6 +548,11 @@ h1 {
   background: linear-gradient(90deg, transparent 0%, rgba(125,211,252,0.65) 50%, transparent 100%);
   animation: shellActivityPulse 2.2s ease-in-out infinite;
   pointer-events: none;
+}
+@media (max-width: 900px) {
+  .agent-event-feed {
+    max-height: 188px;
+  }
 }
 @keyframes shellActivityPulse {
   0%, 100% { opacity: 0.2; transform: translateX(-5%); }
@@ -1887,6 +1923,7 @@ let notificationLastBridgeDetected = false;
 let notificationLastHumanGateCount = 0;
 let notificationLastFeedQuestion = '';
 let notificationInitialized = false;
+let agentEventFeedExpanded = false;
 
 const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
 const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
@@ -2855,13 +2892,39 @@ function renderAgentEventFeed(agentEventFeed) {
   const items = Array.isArray(feed.items) ? feed.items : [];
   if (!items.length) {
     const empty = document.createElement('div');
-    empty.className = 'mono';
+    empty.className = 'mono agent-event-feed-empty';
     empty.textContent = 'Agent Event Feed はまだありません。';
     mount.appendChild(empty);
     return;
   }
 
-  for (const [index, item] of items.entries()) {
+  const visibleItems = agentEventFeedExpanded ? items : items.slice(-3);
+  const hiddenCount = Math.max(0, items.length - visibleItems.length);
+
+  const summary = document.createElement('div');
+  summary.className = 'agent-event-feed-summary';
+  const summaryText = document.createElement('div');
+  summaryText.className = 'agent-event-feed-summary-text';
+  summaryText.textContent = agentEventFeedExpanded
+    ? `最新 ${items.length} 件を表示中`
+    : `最新 ${visibleItems.length} 件を表示中${hiddenCount ? ` / さらに ${hiddenCount} 件` : ''}`;
+  summary.appendChild(summaryText);
+
+  if (items.length > 3) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'agent-event-feed-toggle';
+    toggle.textContent = agentEventFeedExpanded ? '折りたたむ' : 'さらに表示';
+    toggle.addEventListener('click', () => {
+      agentEventFeedExpanded = !agentEventFeedExpanded;
+      renderAgentEventFeed(agentEventFeed);
+    });
+    summary.appendChild(toggle);
+  }
+
+  mount.appendChild(summary);
+
+  for (const [index, item] of visibleItems.entries()) {
     const row = document.createElement('div');
     const kindClass = String(item.kind || 'running').toLowerCase().replace(/_/g, '-');
     row.className = `agent-event-feed-item kind-${kindClass}`;
@@ -2872,19 +2935,19 @@ function renderAgentEventFeed(agentEventFeed) {
     kind.textContent = item.kind || 'RUNNING';
     const actor = document.createElement('span');
     actor.className = 'agent-event-actor';
-    actor.textContent = item.actor || 'KOSAME';
+    actor.textContent = truncateText(item.actor || 'KOSAME', 16);
     head.appendChild(kind);
     head.appendChild(actor);
     const textNode = document.createElement('div');
     textNode.className = 'agent-event-text';
-    textNode.textContent = item.text || `${item.actor || 'KOSAME'}: ${item.message || '実行中です'}`;
+    textNode.textContent = truncateText(item.text || `${item.actor || 'KOSAME'}: ${item.message || '実行中です'}`, 96);
     const meta = document.createElement('div');
     meta.className = 'agent-event-meta';
     const age = item.timestamp ? formatRelativeAge(item.timestamp) : '';
     const absolute = item.timestamp ? formatTokyoTimestamp(item.timestamp) : '';
     const parts = [];
-    if (item.project) parts.push(`project=${item.project}`);
-    if (item.taskId) parts.push(`taskId=${item.taskId}`);
+    if (item.project) parts.push(`project=${truncateText(item.project, 18)}`);
+    if (item.taskId) parts.push(`taskId=${truncateText(item.taskId, 18)}`);
     if (absolute) parts.push(absolute);
     if (age) parts.push(age);
     meta.textContent = parts.length ? parts.join(' / ') : `template ${item.kind || 'RUNNING'} #${index + 1}`;
@@ -3223,6 +3286,12 @@ function formatTimestampDisplay(snapshot) {
   return relative ? `最終更新: ${timeText} / ${relative}` : `最終更新: ${timeText}`;
 }
 
+function truncateText(value, maxLength = 100) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '—';
+  return text.length > maxLength ? `${text.slice(0, Math.max(1, maxLength - 1))}…` : text;
+}
+
 function formatTaskFeedItem(task) {
   return [
     `taskId: ${task.taskId || '—'}`,
@@ -3446,15 +3515,17 @@ function renderChatThread() {
 }
 
 function buildChatPayload(userText, confirmationContext) {
+  const selectedProject = getSelectedProject(latestSnapshot || {});
+  const trimmedMessage = (userText || '').trim();
+  const trimmedContext = (confirmationContext || latestSnapshot?.consoleContextSummary || '').trim();
   const payload = {
-    message: userText || '',
-    messages: chatHistory
-      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
-      .map((msg) => ({ role: msg.role, content: msg.content })),
+    message: trimmedMessage,
+    project: selectedProject ? (selectedProject.id || selectedProject.name || selectedProject.shortName || selectedProject.statusTitle || '') : '',
+    context: trimmedContext.slice(0, 800),
   };
-  if (confirmationContext) payload.confirmationContext = confirmationContext;
+  if (confirmationContext) payload.confirmationContext = trimmedContext.slice(0, 800);
   if (latestSnapshot && latestSnapshot.consoleContextSummary) {
-    payload.contextSummary = latestSnapshot.consoleContextSummary;
+    payload.contextSummary = String(latestSnapshot.consoleContextSummary || '').slice(0, 800);
     payload.contextStatus = latestSnapshot.consoleContextStatus || 'ok';
   }
   return payload;
@@ -3505,29 +3576,29 @@ async function sendChatMessage(userText, confirmationContext) {
     });
     const data = await res.json();
 
-    const reply = data.reply || data.error || '応答なし';
+    if (!data.ok) {
+      const errorText = data.error || '入力を確認してください。';
+      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}` });
+      hideTypingIndicator();
+      renderChatThread();
+      statusEl.textContent = `エラー: ${errorText}`;
+      return;
+    }
+
+    const reply = data.reply || '応答なし';
     chatHistory.push({ role: 'assistant', content: reply });
     hideTypingIndicator();
     renderChatThread();
     maybeNotifyFromAssistant(reply);
-
-    if (data.noKey) {
-      statusEl.textContent = 'AI未接続（APIキー未設定）';
-      chatStatusState.ai = 'missing';
-    } else if (data.noContext) {
-      statusEl.textContent = '状態コンテキスト未取得です。';
-      chatStatusState.context = 'missing';
-    } else if (!statusEl.textContent.includes('接続済')) {
-      statusEl.textContent = 'こさめ AI: 接続済';
-      chatStatusState.ai = 'connected';
-      chatStatusState.context = 'loaded';
-    }
+    statusEl.textContent = data.suggested_action ? `次の一手: ${data.suggested_action}` : 'こさめ応答を表示しました';
+    chatStatusState.ai = 'connected';
+    chatStatusState.context = 'loaded';
     renderChatStatusBadges(latestSnapshot || {});
   } catch {
     hideTypingIndicator();
-    chatHistory.push({ role: 'assistant', content: 'エラーが発生しました。サーバーに接続できません。' });
+    chatHistory.push({ role: 'assistant', content: 'エラー: サーバーに接続できません。' });
     renderChatThread();
-    statusEl.textContent = 'エラーが発生しました。サーバーに接続できません。';
+    statusEl.textContent = 'エラー: サーバーに接続できません。';
   } finally {
     if (sendBtn) sendBtn.textContent = '送信';
   }

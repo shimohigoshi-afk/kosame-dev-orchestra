@@ -102,9 +102,9 @@ console.log('  PASS: context summary includes task/wishlist titles');
 const chatServerSource = read(chatServerPath);
 include(chatServerSource, 'loadPersona', 'chat server');
 include(chatServerSource, 'contextSummary', 'chat server');
-include(chatServerSource, 'process.env.OPENAI_API_KEY', 'chat server');
+include(chatServerSource, 'buildLocalReply', 'chat server');
 assert.ok(!/writeFileSync/.test(chatServerSource), 'chat server must not write files');
-assert.ok(!/DeepSeek|opencode/.test(chatServerSource), 'chat server must not use DeepSeek/opencode');
+assert.ok(!/DeepSeek|opencode|api\.openai\.com|OPENAI_API_KEY|GEMINI_API_KEY|ANTHROPIC_API_KEY/.test(chatServerSource), 'chat server must not use external APIs or secret env names');
 console.log('  PASS: chat server source safety checks');
 
 console.log('✅ v110.84.3 persona smoke PASSED');

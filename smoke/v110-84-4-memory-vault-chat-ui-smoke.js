@@ -173,7 +173,10 @@ assert.ok(html.includes('chat-memory-badge'), 'HTML must include Memory badge');
 assert.ok(html.includes('chat-sound-badge'), 'HTML must include Sound badge');
 assert.ok(html.includes('Enterで送信、Shift+Enterで改行'), 'HTML must document Enter / Shift+Enter behavior');
 assert.ok(html.includes('こさめ考え中…☂️'), 'HTML must show thinking status');
-assert.ok(html.includes('payload.contextSummary = latestSnapshot.consoleContextSummary;'), 'chat payload hotfix must remain');
+assert.ok(
+  html.includes("payload.contextSummary = String(latestSnapshot.consoleContextSummary || '').slice(0, 800);"),
+  'chat payload hotfix must remain with safe truncation'
+);
 assert.ok(html.includes('playNotificationChime'), 'notification chime must remain');
 assert.ok(html.includes('DEV ORCHESTRA STATUS'), 'project registry status title must remain');
 assert.ok(html.includes('SALES DX STATUS'), 'project registry status title must remain');

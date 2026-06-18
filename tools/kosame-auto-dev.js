@@ -35,6 +35,7 @@ const activity = require('./kosame-activity-events');
 
 const fs        = require('node:fs');
 const path      = require('node:path');
+const os        = require('node:os');
 const readline  = require('node:readline');
 const { spawnSync, execSync } = require('node:child_process');
 
@@ -46,7 +47,9 @@ const TOOL_META = {
 };
 
 const CLAUDE_TIMEOUT_MS = parseInt(process.env.CLAUDE_TIMEOUT_MS || '300000', 10);
-const BACKUP_DIR        = path.resolve(__dirname, '..', '.auto-dev-backups');
+const BACKUP_DIR        = path.resolve(
+  process.env.KOSAME_AUTO_DEV_BACKUP_DIR || path.join(os.tmpdir(), 'kosame-auto-dev-backups')
+);
 
 // ── Secret redaction ──────────────────────────────────────────────────────────
 

@@ -122,7 +122,10 @@ assert.ok(html.includes('PROJECT STRIP'), 'HTML must include project registry se
 assert.ok(html.includes('consoleContextSummary'), 'HTML must include console context injection');
 assert.ok(html.includes('buildChatPayload'), 'HTML must include chat payload helper');
 assert.ok(html.includes('playNotificationChime'), 'HTML must include notification chime function');
-assert.ok(html.includes('payload.contextSummary = latestSnapshot.consoleContextSummary;'), 'HTML must send console context summary');
+assert.ok(
+  html.includes("payload.contextSummary = String(latestSnapshot.consoleContextSummary || '').slice(0, 800);"),
+  'HTML must send console context summary with safe truncation'
+);
 assert.ok(html.includes('こさめ考え中…☂️'), 'HTML must include こさめ thinking status text');
 assert.ok(html.includes('API COST METER'), 'HTML must include API cost meter section');
 assert.ok(html.includes('IDEA BOARD'), 'HTML must include IDEA BOARD section');

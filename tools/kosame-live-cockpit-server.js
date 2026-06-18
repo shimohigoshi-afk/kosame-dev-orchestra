@@ -55,7 +55,7 @@ function createLiveCockpitServer(options = {}) {
     if (url.pathname === '/api/chat') {
       if (req.method !== 'POST') {
         res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
         return;
       }
       let body = '';
@@ -90,7 +90,8 @@ function createLiveCockpitServer(options = {}) {
           consoleContextSummary: contextSummary,
           consoleContextStatus: contextStatus,
         }).then((result) => {
-          res.writeHead(200, {
+          const statusCode = result && result.ok === false ? 400 : 200;
+          res.writeHead(statusCode, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store',
             'X-Content-Type-Options': 'nosniff',
@@ -98,7 +99,7 @@ function createLiveCockpitServer(options = {}) {
           res.end(JSON.stringify(result));
         }).catch(() => {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: '内部エラーが発生しました。' }));
+          res.end(JSON.stringify({ ok: false, error: '内部エラーが発生しました。' }));
         });
       });
       return;

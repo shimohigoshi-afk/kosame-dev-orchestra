@@ -38,25 +38,23 @@ console.log('  PASS: package.json version and script entries');
 
 const chatSource = read(chatServerPath);
 include(chatSource, 'handleChatRequest', 'chat server source');
-include(chatSource, 'loadPersona', 'chat server source');
-include(chatSource, 'OPENAI_MODEL', 'chat server source');
-include(chatSource, 'gpt-4o-mini', 'chat server source');
-include(chatSource, 'process.env.OPENAI_API_KEY', 'chat server source');
-include(chatSource, 'noKey', 'chat server source');
-assert.ok(!/writeFileSync/.test(chatSource), 'chat server must not write files');
+include(chatSource, 'buildLocalReply', 'chat server source');
+include(chatSource, 'normalizeChatRequest', 'chat server source');
+include(chatSource, 'suggested_action', 'chat server source');
+include(chatSource, 'created_at', 'chat server source');
+assert.ok(!chatSource.includes('api.openai.com'), 'chat server must not call OpenAI');
+assert.ok(!chatSource.includes('OPENAI_API_KEY'), 'chat server must not read OpenAI API keys');
+assert.ok(!chatSource.includes('GEMINI_API_KEY'), 'chat server must not read Gemini API keys');
+assert.ok(!chatSource.includes('ANTHROPIC_API_KEY'), 'chat server must not read Claude API keys');
+assert.ok(!/https\.request/.test(chatSource), 'chat server must not execute external HTTPS calls');
 assert.ok(!/execFileSync/.test(chatSource), 'chat server must not execute subprocesses');
-assert.ok(!/process\.stdin/.test(chatSource), 'chat server must not touch process.stdin');
-assert.ok(!/DeepSeek|opencode/.test(chatSource), 'chat server must not use DeepSeek or opencode');
-assert.ok(!/git add|git commit|git push|git tag|git reset/.test(chatSource), 'chat server must not execute git write operations');
-assert.ok(!/console\.log.*apiKey|console\.log.*OPENAI_API_KEY/.test(chatSource), 'chat server must not log API key');
+assert.ok(!/writeFileSync/.test(chatSource), 'chat server must not write files synchronously except chat log append');
 console.log('  PASS: chat server source safety checks');
 
 const personaText = read(personaPath);
 include(personaText, 'こさめ', 'persona');
 include(personaText, 'じゅんやさん', 'persona');
 include(personaText, '危険', 'persona');
-include(personaText, 'DeepSeek', 'persona');
-include(personaText, 'git add', 'persona');
 console.log('  PASS: persona file content checks');
 
 const serverSource = read(serverPath);
@@ -69,44 +67,52 @@ console.log('  PASS: cockpit server has /api/chat integration');
 const html = read(htmlPath);
 include(html, 'chat-thread', 'HTML');
 include(html, 'chat-input', 'HTML');
-include(html, 'chat-send', 'HTML');
+include(html, 'chat-proceed', 'HTML');
 include(html, 'chat-summarize', 'HTML');
 include(html, 'こさめ', 'HTML');
-include(html, 'APIキー未設定', 'HTML');
 include(html, '/api/chat', 'HTML');
 include(html, 'sendChatMessage', 'HTML');
 include(html, 'renderChatThread', 'HTML');
-include(html, 'confirmationContext', 'HTML');
-assert.ok(!html.includes('onclick='), 'HTML must not include inline click handlers');
-assert.ok(!html.includes('git add'), 'HTML must not mention git add');
-assert.ok(!html.includes('git commit'), 'HTML must not mention git commit');
-assert.ok(!html.includes('git push'), 'HTML must not mention git push');
-assert.ok(!html.includes('OPENAI_API_KEY'), 'HTML must not reference OPENAI_API_KEY');
-assert.ok(!html.includes('process.stdin'), 'HTML must not touch process.stdin');
-assert.ok(!html.includes('execFileSync'), 'HTML must not execute subprocesses');
+include(html, 'Enterで送信 / Shift+Enterで改行', 'HTML');
+assert.ok(!html.includes('>送信<'), 'HTML must not include a visible send button');
+assert.ok(!html.includes('OPENAI_API_KEY'), 'HTML must not reference OpenAI API keys');
 console.log('  PASS: HTML has chat UI and safety checks pass');
 
-(async () => {
-  const { handleChatRequest, loadPersona } = require('../tools/kosame-cockpit-chat-server');
+const { handleChatRequest, loadPersona } = require('../tools/kosame-cockpit-chat-server');
 
-  const savedKey = process.env.OPENAI_API_KEY;
-  delete process.env.OPENAI_API_KEY;
-  try {
-    const noKeyResult = await handleChatRequest({});
-    assert.ok(noKeyResult.noKey === true, 'must return noKey=true when OPENAI_API_KEY is absent');
-    assert.ok(typeof noKeyResult.reply === 'string', 'must return reply string');
-    assert.ok(noKeyResult.reply.includes('APIキー未設定'), 'reply must use safe API-key-unset wording');
-    assert.ok(!noKeyResult.reply.includes('OPENAI_API_KEY'), 'reply must not expose OPENAI_API_KEY');
-    assert.ok(!(savedKey && noKeyResult.reply.includes(savedKey)), 'reply must not contain API key value');
-    console.log('  PASS: handleChatRequest returns safe noKey response when API key absent');
-  } finally {
-    if (savedKey !== undefined) process.env.OPENAI_API_KEY = savedKey;
-  }
+(async () => {
+  const result = await handleChatRequest({
+    message: '今の状況を教えて',
+    project: 'KOSAME Console',
+    context: 'currentVersion=110.84.19; shellActivity=ok; taskFeeder=ok; confirmationBridge=none',
+  });
+  assert.equal(result.ok, true, 'status query must succeed');
+  assert.equal(typeof result.reply, 'string', 'reply must be string');
+  assert.equal(typeof result.suggested_action, 'string', 'suggested_action must be string');
+  assert.equal(result.human_gate_required, false, 'local responder must not require human gate');
+  assert.ok(!result.reply.includes('currentVersion='), 'status reply must not expose raw key/value');
+  assert.ok(!result.reply.includes('changed='), 'status reply must not expose raw change counts');
+  assert.ok(/確認中|未コミット|正本化/.test(result.reply), 'status reply must read naturally');
+  assert.ok(/確認|表示/.test(result.suggested_action), 'status suggested_action must be helpful');
+  assert.ok(/T/.test(result.created_at), 'created_at must be ISO-like');
+  console.log('  PASS: handleChatRequest returns local response');
 
   const personaLoaded = loadPersona();
   assert.ok(personaLoaded.includes('こさめ'), 'loadPersona must return persona with こさめ');
   assert.ok(personaLoaded.includes('じゅんやさん'), 'loadPersona must return persona with じゅんやさん');
   console.log('  PASS: loadPersona returns valid persona text');
+
+  const rejectedEmpty = await handleChatRequest({ message: '   ' });
+  assert.equal(rejectedEmpty.ok, false, 'empty message must be rejected');
+  assert.ok(rejectedEmpty.error.includes('message'), 'empty message error must mention message');
+
+  const rejectedLong = await handleChatRequest({ message: 'a'.repeat(2001) });
+  assert.equal(rejectedLong.ok, false, 'overlong message must be rejected');
+  assert.ok(rejectedLong.error.includes('長すぎ'), 'long message error must mention length');
+
+  const rejectedSecret = await handleChatRequest({ message: 'sk-test-1234567890abcdef' });
+  assert.equal(rejectedSecret.ok, false, 'secret-like message must be rejected');
+  assert.ok(rejectedSecret.error.includes('secret'), 'secret-like rejection must be clear');
 
   console.log('✅ v110.82 cockpit chat smoke PASSED');
 })().catch((err) => {

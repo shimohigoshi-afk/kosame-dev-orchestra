@@ -318,6 +318,7 @@ function runCli(argv) {
 
 module.exports = {
   DEFAULT_SHELL_ACTIVITY_LOG_PATH,
+  SHELL_ACTIVITY_LOG_PATH_ENV,
   ALLOWED_STATUSES,
   appendShellAgentActivityEvent,
   compactText,

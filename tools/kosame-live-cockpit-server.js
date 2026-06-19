@@ -9,12 +9,19 @@ const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
 const { handleChatRequest } = require('./kosame-cockpit-chat-server');
 const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order-approval-store');
+const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
 
 function readHtml() {
   return fs.readFileSync(HTML_PATH, 'utf8');
+}
+
+function targetRepoToProject(targetRepo) {
+  if (targetRepo === '/home/lavie/kosame-dev-orchestra') return 'KOSAME Dev Orchestra';
+  if (targetRepo === '/home/lavie/repos/transcriber') return 'Transcriber';
+  return 'KOSAME Project';
 }
 
 function createLiveCockpitServer(options = {}) {
@@ -71,12 +78,28 @@ function createLiveCockpitServer(options = {}) {
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
             approvedBy: options.approvedBy,
           });
+          let activityLogged = false;
+          try {
+            const ap = result.approval;
+            const riskPart = ap.risk_level ? ` / risk:${ap.risk_level}` : '';
+            appendShellAgentActivityEvent({
+              shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
+              agent: 'KOSAME',
+              project: targetRepoToProject(ap.target_repo),
+              status: 'human_gate',
+              task: ap.title || '作業票採用',
+              message: `作業票を採用しました。Codexへ貼り付け待ちです。${riskPart}`,
+            });
+            activityLogged = true;
+          } catch {
+            // best-effort: activity log failure does not fail the approval
+          }
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store',
             'X-Content-Type-Options': 'nosniff',
           });
-          res.end(JSON.stringify(result));
+          res.end(JSON.stringify({ ...result, activityLogged }));
         } catch (error) {
           res.writeHead(400, {
             'Content-Type': 'application/json; charset=utf-8',

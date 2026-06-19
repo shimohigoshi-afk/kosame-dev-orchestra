@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.84.21",
+  "version": "110.84.22",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -803,7 +803,8 @@
     "smoke:v110-84-19": "node smoke/v110-84-19-kosame-chat-api-bridge-lite-smoke.js",
     "smoke:v110-84-20": "node smoke/v110-84-20-kosame-chat-work-order-draft-lite-smoke.js",
     "smoke:v110-84-21": "node smoke/v110-84-21-kosame-chat-work-order-approval-bridge-lite-smoke.js",
-    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16",
+    "smoke:v110-84-22": "node smoke/v110-84-22-work-order-approval-activity-feed-smoke.js",
+    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7",
     "activity:append": "node tools/kosame-shell-agent-activity.js append"
   },
   "dependencies": {

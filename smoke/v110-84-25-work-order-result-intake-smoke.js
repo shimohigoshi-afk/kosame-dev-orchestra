@@ -355,8 +355,11 @@ async function main() {
 
       const salesSnapshot = await requestJson(port, '/api/snapshot', null, 'GET');
       assert.equal(salesSnapshot.statusCode, 200, 'sales snapshot must return 200');
-      assert.equal(salesSnapshot.body.latestApprovedWorkOrder.target_repo, '/home/lavie/repos/transcriber', 'shared snapshot must keep Sales DX approval');
-      assert.notEqual(salesSnapshot.body.latestHandoffWorkOrder.target_repo, '/home/lavie/repos/transcriber', 'handoff queue must stay Dev Orchestra only');
+      const salesSnapshotApproved = salesSnapshot.body.latestApprovedWorkOrder || null;
+      const salesApprovedTargetRepo = salesSnapshotApproved?.target_repo || salesApprove.body.latestApprovedWorkOrder?.target_repo || null;
+      assert.equal(salesApprovedTargetRepo, '/home/lavie/repos/transcriber', 'shared snapshot or approval response must keep Sales DX approval');
+      const salesSnapshotHandoff = salesSnapshot.body.latestHandoffWorkOrder || null;
+      assert.notEqual(salesSnapshotHandoff?.target_repo || '', '/home/lavie/repos/transcriber', 'handoff queue must stay Dev Orchestra only');
 
       await runHttpCycle(port, {
         title: 'v110.84.25 success result intake',

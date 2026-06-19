@@ -8,7 +8,7 @@ const path = require('node:path');
 const DEFAULT_SHELL_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'shell-agent-activity.jsonl');
 const SHELL_ACTIVITY_LOG_PATH_ENV = 'KOSAME_SHELL_AGENT_ACTIVITY_LOG_PATH';
 const DEFAULT_LIMIT = 8;
-const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting']);
+const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result']);
 const DANGEROUS_PATTERNS = [
   /sk-[A-Za-z0-9_-]{8,}/i,
   /\bapi[_-]?key\b/i,
@@ -118,9 +118,12 @@ function appendShellAgentActivityEvent(input = {}) {
 function normalizeShellActivityStatus(record) {
   const raw = normalizeText(record && (record.status || record.state || record.eventType || record.kind));
   const lower = raw.toLowerCase();
-  if (['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting'].includes(lower)) {
+  if (['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result'].includes(lower)) {
     return lower;
   }
+  if (lower.includes('ready_to_handoff') || lower.includes('handoff_ready') || lower.includes('ready-handoff')) return 'ready_to_handoff';
+  if (lower.includes('handed_to_agent') || lower.includes('handoff_done') || lower.includes('handed') || lower.includes('handoff')) return 'handed_to_agent';
+  if (lower.includes('waiting_result') || lower.includes('result_wait') || lower.includes('awaiting_result')) return 'waiting_result';
   if (lower.includes('verify_pass') || lower.includes('verify-pass') || lower.includes('passed')) return 'success';
   if (lower.includes('verify') || lower.includes('review')) return 'verifying';
   if (lower.includes('task_started') || lower.includes('agent_started') || lower.includes('running')) return 'running';
@@ -143,6 +146,9 @@ function statusLabel(status) {
     failed: '失敗',
     human_gate: '確認待ち',
     blocked: '停止中',
+    ready_to_handoff: '引き継ぎ待ち',
+    handed_to_agent: '担当AIへ渡済み',
+    waiting_result: '結果待ち',
   }[status] || '実装中';
 }
 
@@ -157,6 +163,9 @@ function severityForStatus(status) {
     failed: 'error',
     human_gate: 'human_gate',
     blocked: 'blocked',
+    ready_to_handoff: 'waiting',
+    handed_to_agent: 'waiting',
+    waiting_result: 'waiting',
   }[status] || 'running';
 }
 
@@ -228,6 +237,9 @@ function summarizeShellActivity(shellActivity) {
     `human_gate=${counts.human_gate || 0}`,
     `blocked=${counts.blocked || 0}`,
     `waiting=${counts.waiting || 0}`,
+    `ready_to_handoff=${counts.ready_to_handoff || 0}`,
+    `handed_to_agent=${counts.handed_to_agent || 0}`,
+    `waiting_result=${counts.waiting_result || 0}`,
   ].join(' / ');
   const itemText = items.slice(0, 5).map((item) => {
     const agent = normalizeText(item.agent || 'Shell');

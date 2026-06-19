@@ -896,6 +896,27 @@ h1 {
   cursor: not-allowed;
   opacity: 0.7;
 }
+.chat-work-order-handoff {
+  cursor: pointer;
+  border: 1px solid rgba(96,165,250,0.26);
+  background: rgba(96,165,250,0.10);
+  color: #dbeafe;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.chat-work-order-handoff:hover {
+  background: rgba(96,165,250,0.16);
+}
+.chat-work-order-handoff:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.work-order-handoff-queue {
+  margin: 0 0 10px;
+  display: grid;
+  gap: 10px;
+}
 .chat-status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 9px; }
 .chat-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
 .chat-status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.18); }
@@ -1754,6 +1775,8 @@ h1 {
           <span id="chat-llama-audit-badge" class="chat-status-badge warn">Llama audit: missing</span>
         </div>
         <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
+        <div id="work-order-handoff-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
+        <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -2702,6 +2725,7 @@ function buildAssistPanelModel(snapshot, tab) {
           `Context: ${chatStatusState.context}`,
           `Memory: ${chatStatusState.memory}`,
           `Llama audit: ${chatStatusState.llamaAudit}`,
+          `Handoff: ${(snapshot.latestHandoffWorkOrder && snapshot.latestHandoffWorkOrder.status) || (snapshot.latestApprovedWorkOrder ? 'ready_to_handoff' : 'missing')}`,
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
@@ -3844,6 +3868,208 @@ function renderWorkOrderCard(workOrder) {
   return card;
 }
 
+function getCurrentWorkOrderHandoff(snapshot = latestSnapshot || {}) {
+  const latestApproved = snapshot.latestApprovedWorkOrder || null;
+  const latestHandoff = snapshot.latestHandoffWorkOrder || null;
+  if (latestHandoff) return latestHandoff;
+  if (!latestApproved) return null;
+  return {
+    approval_id: latestApproved.approval_id || latestApproved.work_order_id || '',
+    work_order_id: latestApproved.approval_id || latestApproved.work_order_id || '',
+    status: 'ready_to_handoff',
+    title: latestApproved.title || '作業票',
+    target_repo: latestApproved.target_repo || '',
+    assigned_agent: latestApproved.agent || '',
+    recommended_agent: latestApproved.agent || '',
+    risk_level: latestApproved.risk_level || 'low',
+    human_gate_required: latestApproved.requires_human_confirmation !== false,
+    safe_prompt_summary: latestApproved.prompt || '',
+    prompt: latestApproved.prompt || '',
+    source: 'approval',
+  };
+}
+
+function formatHandoffStatusLabel(status) {
+  return {
+    approved: 'approved / 承認済み',
+    ready_to_handoff: 'ready_to_handoff / 引き継ぎ準備完了',
+    handed_to_agent: 'handed_to_agent / 担当AIへ渡済み',
+    waiting_result: 'waiting_result / 結果待ち',
+  }[status] || `${status || 'unknown'}`;
+}
+
+function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('work-order-handoff-queue');
+  const statusNode = document.getElementById('work-order-handoff-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+  const current = getCurrentWorkOrderHandoff(snapshot);
+  if (!current) {
+    statusNode.textContent = '採用済みの作業票はまだありません。';
+    const empty = document.createElement('div');
+    empty.className = 'chat-work-order-note';
+    empty.textContent = 'Handoff Queue はまだ空です。まず作業票を採用してください。';
+    node.appendChild(empty);
+    return;
+  }
+
+  statusNode.textContent = `Handoff Queue: ${current.title || '—'} / ${formatHandoffStatusLabel(current.status)} / ${current.assigned_agent || current.recommended_agent || '—'}`;
+
+  const card = document.createElement('div');
+  card.className = 'chat-work-order-card is-approved';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = current.title || 'Handoff Queue';
+  head.appendChild(title);
+  const badge = document.createElement('span');
+  badge.className = 'chat-work-order-badge';
+  badge.textContent = 'Handoff Queue';
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['agent', current.assigned_agent || current.recommended_agent || '—'],
+    ['target', current.target_repo || '—'],
+    ['risk', current.risk_level || '—'],
+    ['status', current.status || 'ready_to_handoff'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+
+  const gate = document.createElement('span');
+  gate.className = 'chat-work-order-flag';
+  gate.textContent = current.human_gate_required ? 'human gate required' : 'human gate optional';
+  meta.appendChild(gate);
+  card.appendChild(meta);
+
+  const statusRow = document.createElement('div');
+  statusRow.className = 'chat-work-order-status-row';
+  const status = document.createElement('div');
+  status.className = 'chat-work-order-status approved';
+  status.textContent = formatHandoffStatusLabel(current.status || 'ready_to_handoff');
+  statusRow.appendChild(status);
+
+  const handoffButton = document.createElement('button');
+  handoffButton.type = 'button';
+  handoffButton.className = 'chat-work-order-handoff';
+  handoffButton.dataset.handoffAction = 'handed_to_agent';
+  handoffButton.textContent = 'Codexへ渡した';
+  handoffButton.disabled = current.status === 'handed_to_agent';
+  statusRow.appendChild(handoffButton);
+
+  const waitingButton = document.createElement('button');
+  waitingButton.type = 'button';
+  waitingButton.className = 'chat-work-order-handoff';
+  waitingButton.dataset.handoffAction = 'waiting_result';
+  waitingButton.textContent = '結果待ちにする';
+  waitingButton.disabled = current.status === 'waiting_result';
+  statusRow.appendChild(waitingButton);
+
+  card.appendChild(statusRow);
+
+  const promptSection = document.createElement('div');
+  promptSection.className = 'chat-work-order-section';
+  const promptLabel = document.createElement('div');
+  promptLabel.className = 'chat-work-order-label';
+  promptLabel.textContent = 'コピー用';
+  promptSection.appendChild(promptLabel);
+  const prompt = document.createElement('textarea');
+  prompt.className = 'chat-work-order-prompt';
+  prompt.readOnly = true;
+  prompt.value = (snapshot.latestApprovedWorkOrder && snapshot.latestApprovedWorkOrder.prompt)
+    || current.prompt
+    || current.safe_prompt_summary
+    || '';
+  promptSection.appendChild(prompt);
+  const actions = document.createElement('div');
+  actions.className = 'chat-work-order-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.className = 'chat-work-order-copy';
+  copyBtn.textContent = 'コピー';
+  copyBtn.addEventListener('click', async () => {
+    const text = prompt.value || '';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        prompt.focus();
+        prompt.select();
+        document.execCommand('copy');
+      }
+      copyBtn.textContent = 'コピー済み';
+      setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+    } catch {
+      copyBtn.textContent = 'コピー失敗';
+      setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+    }
+  });
+  actions.appendChild(copyBtn);
+  promptSection.appendChild(actions);
+
+  const note = document.createElement('div');
+  note.className = 'chat-work-order-note';
+  note.textContent = '外部AIへは自動送信しません。必要なら手動で Codex に貼り付けてください。';
+  promptSection.appendChild(note);
+
+  card.appendChild(promptSection);
+  node.appendChild(card);
+}
+
+async function handleWorkOrderHandoffAction(action, buttonNode) {
+  const current = getCurrentWorkOrderHandoff(latestSnapshot || {});
+  if (!current || !buttonNode) return;
+  const originalLabel = buttonNode.textContent;
+  const statusNode = document.getElementById('work-order-handoff-status');
+  const panel = document.getElementById('work-order-handoff-queue');
+  if (panel) {
+    panel.querySelectorAll('button[data-handoff-action]').forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
+  buttonNode.textContent = '更新中...';
+  if (statusNode) statusNode.textContent = 'Handoff 更新中です...';
+  try {
+    const response = await fetch('/api/work-orders/handoff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: action,
+        work_order_id: current.work_order_id || current.approval_id || '',
+        assigned_agent: current.assigned_agent || current.recommended_agent || 'Codex',
+        work_order: latestSnapshot.latestApprovedWorkOrder || current,
+      }),
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      throw new Error(data.error || 'handoff に失敗しました。');
+    }
+    if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
+    latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+    renderWorkOrderHandoffQueue(latestSnapshot);
+    renderLatestApprovedWorkOrder(latestSnapshot);
+    if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
+  } catch (error) {
+    if (statusNode) {
+      statusNode.textContent = `エラー: ${error && error.message ? error.message : 'handoff を更新できませんでした。'}`;
+    }
+    if (panel) {
+      panel.querySelectorAll('button[data-handoff-action]').forEach((btn) => {
+        btn.disabled = false;
+      });
+    }
+    buttonNode.textContent = originalLabel;
+    return;
+  }
+}
+
 function resolveWorkOrderApprovalState(workOrder) {
   const current = workOrder && typeof workOrder === 'object' ? workOrder : {};
   if (current.approval_state === 'approved') {
@@ -3877,11 +4103,14 @@ function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-approval-status');
   if (!node) return;
   const approved = snapshot.latestApprovedWorkOrder || null;
+  const handoff = snapshot.latestHandoffWorkOrder || null;
   if (!approved) {
-    node.textContent = '採用済みの作業票はまだありません。';
+    node.textContent = handoff
+      ? `Handoff Queue: ${handoff.title || '—'} / ${formatHandoffStatusLabel(handoff.status || 'ready_to_handoff')}`
+      : '採用済みの作業票はまだありません。';
     return;
   }
-  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / Codexへ貼り付け待ち`;
+  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}`;
 }
 
 async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
@@ -3909,6 +4138,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
     buttonNode.textContent = '採用済み';
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);
+    renderWorkOrderHandoffQueue(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
   } catch (error) {
     statusNode.textContent = `エラー: ${error && error.message ? error.message : '承認できませんでした。'}`;
@@ -4048,6 +4278,7 @@ async function loadSnapshot() {
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderChatStatusBadges(snapshot);
     renderLatestApprovedWorkOrder(snapshot);
+    renderWorkOrderHandoffQueue(snapshot);
     renderChatAssistPanel(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
@@ -4075,6 +4306,7 @@ if (!notificationEnabled) notificationUnlocked = false;
 updateNotificationUI();
 renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});
+renderWorkOrderHandoffQueue({});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 
@@ -4128,6 +4360,17 @@ document.querySelectorAll('[data-assist-tab]').forEach((button) => {
     selectAssistTab(button.dataset.assistTab || 'current');
   });
 });
+
+const workOrderHandoffQueue = document.getElementById('work-order-handoff-queue');
+if (workOrderHandoffQueue) {
+  workOrderHandoffQueue.addEventListener('click', (event) => {
+    const target = event.target && event.target.closest ? event.target.closest('[data-handoff-action]') : null;
+    if (!target || !workOrderHandoffQueue.contains(target)) return;
+    event.preventDefault();
+    const action = target.dataset.handoffAction || 'handed_to_agent';
+    handleWorkOrderHandoffAction(action, target);
+  });
+}
 
 const chatCalloutButton = document.getElementById('chat-callout-jump');
 if (chatCalloutButton) {

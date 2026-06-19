@@ -9,6 +9,7 @@ const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
 const { handleChatRequest } = require('./kosame-cockpit-chat-server');
 const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order-approval-store');
+const { readLatestWorkOrderHandoff, recordWorkOrderHandoff, HANDOFF_LOG_PATH_ENV } = require('./kosame-work-order-handoff-store');
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -22,6 +23,28 @@ function targetRepoToProject(targetRepo) {
   if (targetRepo === '/home/lavie/kosame-dev-orchestra') return 'KOSAME Dev Orchestra';
   if (targetRepo === '/home/lavie/repos/transcriber') return 'Transcriber';
   return 'KOSAME Project';
+}
+
+function buildHandoffActivityMessage(status, title) {
+  const safeTitle = String(title || '作業票').trim();
+  const messages = {
+    approved: `${safeTitle} を承認しました。引き継ぎ準備中です。`,
+    ready_to_handoff: `${safeTitle} は引き継ぎ準備完了です。`,
+    handed_to_agent: `${safeTitle} を Codexへ渡しました。実装結果待ちです。`,
+    waiting_result: `${safeTitle} を担当AIへ渡しました。実装結果待ちです。`,
+  };
+  return messages[status] || `${safeTitle} の引き継ぎ状態を更新しました。`;
+}
+
+function parseJsonBody(req, callback) {
+  let body = '';
+  req.setEncoding('utf8');
+  req.on('data', (chunk) => { body += chunk; });
+  req.on('end', () => {
+    let parsed = {};
+    try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
+    callback(parsed);
+  });
 }
 
 function createLiveCockpitServer(options = {}) {
@@ -39,6 +62,7 @@ function createLiveCockpitServer(options = {}) {
         salesRepoPath: options.salesRepoPath,
         projectRegistryPath: options.projectRegistryPath,
         workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+        workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
         confirmationBridge,
       });
       res.writeHead(200, {
@@ -67,12 +91,7 @@ function createLiveCockpitServer(options = {}) {
         res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
         return;
       }
-      let body = '';
-      req.setEncoding('utf8');
-      req.on('data', (chunk) => { body += chunk; });
-      req.on('end', () => {
-        let parsed = {};
-        try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
+      parseJsonBody(req, (parsed) => {
         try {
           const result = approveWorkOrder(parsed, {
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
@@ -112,18 +131,103 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    if (url.pathname === '/api/work-orders/handoff') {
+      if (req.method === 'GET') {
+        const latest = readLatestWorkOrderHandoff({
+          workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+          workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
+        });
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        res.end(JSON.stringify(latest, null, 2));
+        return;
+      }
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      parseJsonBody(req, (parsed) => {
+        try {
+          const snapshot = collectLiveCockpitSnapshot({
+            activeRepoPath: options.activeRepoPath,
+            devRepoPath: options.devRepoPath,
+            salesRepoPath: options.salesRepoPath,
+            projectRegistryPath: options.projectRegistryPath,
+            workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+            workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
+            confirmationBridge: detectConfirmation(),
+          });
+          const latestApproved = snapshot.latestApprovedWorkOrder || null;
+          if (!latestApproved) {
+            throw new Error('承認済みの作業票がありません。');
+          }
+          if (parsed.work_order_id && String(parsed.work_order_id) !== String(latestApproved.approval_id || '')) {
+            throw new Error('work_order_id が承認済みの作業票と一致しません。');
+          }
+          const status = parsed.status || 'handed_to_agent';
+          const result = recordWorkOrderHandoff({
+            ...parsed,
+            status,
+            work_order: parsed.work_order || latestApproved,
+            latestApprovedWorkOrder: latestApproved,
+            assigned_agent: parsed.assigned_agent || latestApproved.agent,
+          }, {
+            workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
+            workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+            latestApprovedWorkOrder: latestApproved,
+          });
+
+          let activityLogged = false;
+          try {
+            const handoff = result.latestHandoffWorkOrder;
+            appendShellAgentActivityEvent({
+              shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
+              agent: 'KOSAME',
+              project: targetRepoToProject(handoff.target_repo),
+              status: handoff.status,
+              task: 'work order handoff',
+              message: buildHandoffActivityMessage(handoff.status, handoff.title),
+            });
+            activityLogged = true;
+          } catch {
+            // best-effort logging only
+          }
+
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({
+            ...result,
+            ok: true,
+            status: result.latestHandoffWorkOrder ? result.latestHandoffWorkOrder.status : status,
+            activityLogged,
+            latestHandoffWorkOrder: result.latestHandoffWorkOrder,
+          }));
+        } catch (error) {
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'invalid handoff' }));
+        }
+      });
+      return;
+    }
+
     if (url.pathname === '/api/chat') {
       if (req.method !== 'POST') {
         res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
         return;
       }
-      let body = '';
-      req.setEncoding('utf8');
-      req.on('data', (chunk) => { body += chunk; });
-      req.on('end', () => {
-        let parsed = {};
-        try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
+      parseJsonBody(req, (parsed) => {
         let contextSummary = '';
         let contextStatus = 'unavailable';
         try {
@@ -134,6 +238,7 @@ function createLiveCockpitServer(options = {}) {
             salesRepoPath: options.salesRepoPath,
             projectRegistryPath: options.projectRegistryPath,
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+            workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
             confirmationBridge,
           });
           const consoleContext = buildConsoleContextSummary(snapshot);

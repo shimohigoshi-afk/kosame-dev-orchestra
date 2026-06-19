@@ -18,6 +18,7 @@ const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
 const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-store');
+const { readLatestWorkOrderHandoff } = require('./kosame-work-order-handoff-store');
 const { getConfig: getProviderConfig } = require('../providers/provider-config');
 
 const READ_ONLY_COMMANDS = new Set([
@@ -506,6 +507,12 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderApprovalLogPath: options.workOrderApprovalLogPath,
     limit: options.workOrderApprovalLimit,
   });
+  const latestWorkOrderHandoff = readLatestWorkOrderHandoff({
+    workOrderApprovalLogPath: options.workOrderApprovalLogPath,
+    workOrderHandoffLogPath: options.workOrderHandoffLogPath,
+    limit: options.workOrderHandoffLimit,
+    approvalLimit: options.workOrderApprovalLimit,
+  });
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -614,6 +621,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     agentEventFeed,
     shellAgentActivity,
     latestApprovedWorkOrder: latestApprovedWorkOrder.latestApprovedWorkOrder,
+    latestHandoffWorkOrder: latestWorkOrderHandoff.latestHandoffWorkOrder,
+    workOrderHandoffQueue: latestWorkOrderHandoff.workOrderHandoffQueue,
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
@@ -656,6 +665,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     agentEventFeed,
     shellAgentActivity,
     latestApprovedWorkOrder: latestApprovedWorkOrder.latestApprovedWorkOrder,
+    latestHandoffWorkOrder: latestWorkOrderHandoff.latestHandoffWorkOrder,
+    workOrderHandoffQueue: latestWorkOrderHandoff.workOrderHandoffQueue,
     chatStatus: {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',

@@ -12,6 +12,7 @@ const PROVIDER_CONFIG_PATH = path.join(ROOT, 'providers', 'provider-config.js');
 const SNAPSHOT_PATH = path.join(ROOT, 'tools', 'kosame-live-cockpit-snapshot.js');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
 const TEMP_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'kosame-llama-audit-'));
+const { isVersionAtLeast } = require('./version-compare');
 
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');
@@ -36,7 +37,7 @@ async function main() {
   console.log('=== v110.84.23 llama audit lane smoke ===');
   assert.ok(pkg.scripts['smoke:v110-84-23'], 'smoke:v110-84-23 must exist');
   assert.ok(pkg.scripts.verify.includes('npm run smoke:v110-84-23'), 'verify must include smoke:v110-84-23');
-  assert.ok(/110\.84\.23/.test(pkg.version), `package version must be 110.84.23-compatible (got ${pkg.version})`);
+  assert.ok(isVersionAtLeast(pkg.version, '110.84.23'), `package version must be 110.84.23-compatible (got ${pkg.version})`);
   console.log('  PASS: package wiring');
 
   const providerConfigSource = read(PROVIDER_CONFIG_PATH);

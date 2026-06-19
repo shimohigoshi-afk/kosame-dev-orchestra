@@ -149,9 +149,10 @@ function normalizeApprovedWorkOrder(record) {
 function readLatestApprovedWorkOrder(options = {}) {
   const approvalLogPath = getApprovalLogPath(options);
   const records = readJsonlRecords(approvalLogPath, Number(options.limit || 200));
+  const targetRepo = normalizeText(options.targetRepo || options.target_repo || '');
   for (let index = records.length - 1; index >= 0; index -= 1) {
     const normalized = normalizeApprovedWorkOrder(records[index]);
-    if (normalized) {
+    if (normalized && (!targetRepo || normalized.target_repo === targetRepo)) {
       return {
         ok: true,
         approvalLogPath,

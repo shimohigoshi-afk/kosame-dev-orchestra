@@ -105,6 +105,25 @@ function summarizeMemoryVault(memoryVault) {
   ].join(' / ');
 }
 
+function summarizeWorkOrderHandoff(workOrder) {
+  const handoff = workOrder && typeof workOrder === 'object' ? workOrder : {};
+  const title = normalizeText(handoff.title || handoff.safe_prompt_summary || '');
+  const status = normalizeText(handoff.status || 'unknown');
+  const repo = normalizeText(handoff.target_repo || '');
+  const agent = normalizeText(handoff.assigned_agent || handoff.recommended_agent || '');
+  const risk = normalizeText(handoff.risk_level || '');
+  const humanGate = handoff.human_gate_required === false ? 'optional' : 'required';
+  const parts = [
+    `status=${status || 'unknown'}`,
+    `repo=${repo || '—'}`,
+    `agent=${agent || '—'}`,
+    `risk=${risk || '—'}`,
+    `humanGate=${humanGate}`,
+  ];
+  if (title) parts.push(`title=${title}`);
+  return parts.join(' / ');
+}
+
 function summarizeProjectStrip(projectStrip) {
   const items = Array.isArray(projectStrip) ? projectStrip : [];
   if (!items.length) return '—';
@@ -248,6 +267,11 @@ function buildConsoleContextSummary(snapshot) {
   const memoryVault = snapshot.memoryVault || {};
   if (memoryVault) {
     lines.push(`memoryVault=${summarizeMemoryVault(memoryVault)}`);
+  }
+
+  const latestHandoffWorkOrder = snapshot.latestHandoffWorkOrder || {};
+  if (latestHandoffWorkOrder && Object.keys(latestHandoffWorkOrder).length) {
+    lines.push(`handoffQueue=${summarizeWorkOrderHandoff(latestHandoffWorkOrder)}`);
   }
 
   const agentEventFeed = snapshot.agentEventFeed || {};

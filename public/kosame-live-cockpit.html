@@ -768,6 +768,10 @@ h1 {
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(8, 15, 28, 0.88));
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
 }
+.chat-work-order-card.is-approved {
+  border-color: rgba(52,211,153,0.24);
+  background: linear-gradient(180deg, rgba(6, 30, 20, 0.92), rgba(5, 24, 18, 0.9));
+}
 .chat-work-order-head {
   display: flex;
   flex-wrap: wrap;
@@ -859,6 +863,38 @@ h1 {
   font-size: 11px;
   line-height: 1.55;
   color: var(--muted);
+}
+.chat-work-order-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.chat-work-order-status {
+  font-size: 11px;
+  color: #dbeafe;
+}
+.chat-work-order-status.approved {
+  color: #34d399;
+}
+.chat-work-order-status.pending {
+  color: #fbbf24;
+}
+.chat-work-order-approve {
+  cursor: pointer;
+  border: 1px solid rgba(52,211,153,0.22);
+  background: rgba(52,211,153,0.09);
+  color: #d1fae5;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.chat-work-order-approve:hover {
+  background: rgba(52,211,153,0.16);
+}
+.chat-work-order-approve:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 .chat-status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 9px; }
 .chat-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
@@ -1710,6 +1746,7 @@ h1 {
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
+        <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -2071,19 +2108,20 @@ function updateNotificationUI() {
   const summaryNode = document.getElementById('sound-summary-mode');
   const soundBadge = document.getElementById('chat-sound-badge');
   const modeLabel = notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF';
-  if (stateNode) stateNode.textContent = modeLabel;
-  if (summaryNode) summaryNode.textContent = modeLabel;
+  const enabledLabel = notificationEnabled ? 'ON' : 'OFF';
+  if (stateNode) stateNode.textContent = `通知音 ${enabledLabel}`;
+  if (summaryNode) summaryNode.textContent = enabledLabel;
   ['off', 'soft', 'clear'].forEach((m) => {
     const btn = document.getElementById(`sound-btn-${m}`);
     if (btn) btn.classList.toggle('active', notificationMode === m);
   });
   if (hintNode) {
     hintNode.textContent = notificationEnabled
-      ? (notificationUnlocked ? `Sound: ${modeLabel}` : `Sound: ${modeLabel} / ブラウザ操作後に有効化`)
+      ? (notificationUnlocked ? `Sound: ON (${modeLabel})` : `Sound: ON (${modeLabel}) / ブラウザ操作後に有効化`)
       : 'Sound: OFF';
   }
   if (soundBadge) {
-    soundBadge.textContent = `Sound: ${modeLabel}`;
+    soundBadge.textContent = `Sound: ${enabledLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
   }
 }
@@ -3620,8 +3658,9 @@ function renderChatThread() {
 }
 
 function renderWorkOrderCard(workOrder) {
+  const approval = resolveWorkOrderApprovalState(workOrder);
   const card = document.createElement('div');
-  card.className = 'chat-work-order-card';
+  card.className = `chat-work-order-card${approval.status === 'approved' ? ' is-approved' : ''}`;
 
   const head = document.createElement('div');
   head.className = 'chat-work-order-head';
@@ -3655,6 +3694,26 @@ function renderWorkOrderCard(workOrder) {
   gate.textContent = workOrder.requires_human_confirmation ? 'human gate required' : 'human gate optional';
   meta.appendChild(gate);
   card.appendChild(meta);
+
+  const statusRow = document.createElement('div');
+  statusRow.className = 'chat-work-order-status-row';
+  const status = document.createElement('div');
+  status.className = `chat-work-order-status ${approval.status === 'approved' ? 'approved' : 'pending'}`;
+  status.textContent = approval.label;
+  statusRow.appendChild(status);
+
+  const approveBtn = document.createElement('button');
+  approveBtn.type = 'button';
+  approveBtn.className = 'chat-work-order-approve';
+  approveBtn.textContent = approval.status === 'approved' ? '採用済み' : 'この作業票を採用';
+  approveBtn.disabled = approval.status === 'approved';
+  if (approval.status !== 'approved') {
+    approveBtn.addEventListener('click', async () => {
+      await approveWorkOrderForCard(workOrder, status, approveBtn);
+    });
+  }
+  statusRow.appendChild(approveBtn);
+  card.appendChild(statusRow);
 
   const promptSection = document.createElement('div');
   promptSection.className = 'chat-work-order-section';
@@ -3698,12 +3757,88 @@ function renderWorkOrderCard(workOrder) {
 
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
-  note.textContent = '内容を確認してから Codex に貼ってください。';
+  note.textContent = approval.status === 'approved'
+    ? '採用済みです。Codexへ貼り付け待ちです。'
+    : '内容を確認してから Codex に貼ってください。';
   promptSection.appendChild(note);
 
   card.appendChild(promptSection);
 
   return card;
+}
+
+function resolveWorkOrderApprovalState(workOrder) {
+  const current = workOrder && typeof workOrder === 'object' ? workOrder : {};
+  if (current.approval_state === 'approved') {
+    return {
+      status: 'approved',
+      label: current.approval_label || '採用済み / Codexへ貼り付け待ち',
+      record: current.approval_record || null,
+    };
+  }
+  const approved = latestSnapshot && latestSnapshot.latestApprovedWorkOrder;
+  if (
+    approved &&
+    String(approved.title || '') === String(current.title || '') &&
+    String(approved.target_repo || '') === String(current.target_repo || '') &&
+    String(approved.prompt || '') === String(current.prompt || '')
+  ) {
+    return {
+      status: 'approved',
+      label: '採用済み / Codexへ貼り付け待ち',
+      record: approved,
+    };
+  }
+  return {
+    status: 'pending',
+    label: '承認待ち',
+    record: null,
+  };
+}
+
+function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('work-order-approval-status');
+  if (!node) return;
+  const approved = snapshot.latestApprovedWorkOrder || null;
+  if (!approved) {
+    node.textContent = '採用済みの作業票はまだありません。';
+    return;
+  }
+  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / Codexへ貼り付け待ち`;
+}
+
+async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
+  if (!workOrder || !statusNode || !buttonNode) return;
+  const originalLabel = buttonNode.textContent;
+  buttonNode.disabled = true;
+  buttonNode.textContent = '採用中...';
+  statusNode.textContent = '採用処理中です...';
+  try {
+    const response = await fetch('/api/work-orders/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ work_order: workOrder }),
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      throw new Error(data.error || '承認に失敗しました。');
+    }
+    workOrder.approval_state = 'approved';
+    workOrder.approval_label = '採用済み / Codexへ貼り付け待ち';
+    workOrder.approval_record = data.approval || data.latestApprovedWorkOrder || null;
+    if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
+    latestSnapshot.latestApprovedWorkOrder = data.latestApprovedWorkOrder || data.approval || workOrder.approval_record || null;
+    statusNode.textContent = '採用済み / Codexへ貼り付け待ち';
+    buttonNode.textContent = '採用済み';
+    renderChatThread();
+    renderLatestApprovedWorkOrder(latestSnapshot);
+    if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
+  } catch (error) {
+    statusNode.textContent = `エラー: ${error && error.message ? error.message : '承認できませんでした。'}`;
+    buttonNode.textContent = originalLabel;
+    buttonNode.disabled = false;
+    return;
+  }
 }
 
 function buildChatPayload(userText, confirmationContext) {
@@ -3835,6 +3970,7 @@ async function loadSnapshot() {
     renderAgentEventFeed(snapshot.agentEventFeed || {});
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderChatStatusBadges(snapshot);
+    renderLatestApprovedWorkOrder(snapshot);
     renderChatAssistPanel(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
@@ -3856,6 +3992,7 @@ async function loadSnapshot() {
 setNotificationMode(readNotificationMode(), { persist: false });
 updateNotificationUI();
 renderChatAssistPanel({});
+renderLatestApprovedWorkOrder({});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 

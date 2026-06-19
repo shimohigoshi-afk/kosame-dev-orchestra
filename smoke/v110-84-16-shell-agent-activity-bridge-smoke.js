@@ -107,7 +107,7 @@ try {
   assert.equal(ctx.status, 'ok', 'context summary must be ok');
   assert.ok(ctx.summary.includes('shellActivity='), 'context summary must include shellActivity');
   assert.ok(ctx.summary.includes('running='), 'context summary must include shell activity counts');
-  assert.ok(!/v110\.84\.2(?!0)/.test(ctx.summary), 'context summary must not include stale version text');
+  assert.ok(!/(?:^|[^0-9])v110\.84\.2(?:[^0-9]|$)/.test(ctx.summary), 'context summary must not include stale version text');
 
   console.log('  PASS: shell activity snapshot and context integration');
 } finally {

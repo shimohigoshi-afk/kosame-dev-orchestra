@@ -8,6 +8,7 @@ const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot')
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
 const { handleChatRequest } = require('./kosame-cockpit-chat-server');
+const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order-approval-store');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -30,6 +31,7 @@ function createLiveCockpitServer(options = {}) {
         devRepoPath: options.devRepoPath,
         salesRepoPath: options.salesRepoPath,
         projectRegistryPath: options.projectRegistryPath,
+        workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
         confirmationBridge,
       });
       res.writeHead(200, {
@@ -49,6 +51,41 @@ function createLiveCockpitServer(options = {}) {
         'X-Content-Type-Options': 'nosniff',
       });
       res.end(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    if (url.pathname === '/api/work-orders/approve') {
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      let body = '';
+      req.setEncoding('utf8');
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', () => {
+        let parsed = {};
+        try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
+        try {
+          const result = approveWorkOrder(parsed, {
+            workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+            approvedBy: options.approvedBy,
+          });
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'invalid work order' }));
+        }
+      });
       return;
     }
 
@@ -73,6 +110,7 @@ function createLiveCockpitServer(options = {}) {
             devRepoPath: options.devRepoPath,
             salesRepoPath: options.salesRepoPath,
             projectRegistryPath: options.projectRegistryPath,
+            workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
             confirmationBridge,
           });
           const consoleContext = buildConsoleContextSummary(snapshot);

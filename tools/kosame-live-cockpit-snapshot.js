@@ -17,6 +17,7 @@ const { buildApiCostSnapshot } = require('./kosame-cost-meter');
 const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
 const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
+const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-store');
 
 const READ_ONLY_COMMANDS = new Set([
   'git status -sb',
@@ -499,6 +500,10 @@ function collectLiveCockpitSnapshot(options = {}) {
     shellAgentActivityLogPath: options.shellAgentActivityLogPath,
     shellAgentActivityLimit: options.shellAgentActivityLimit,
   });
+  const latestApprovedWorkOrder = readLatestApprovedWorkOrder({
+    workOrderApprovalLogPath: options.workOrderApprovalLogPath,
+    limit: options.workOrderApprovalLimit,
+  });
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -606,6 +611,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     apiCost,
     agentEventFeed,
     shellAgentActivity,
+    latestApprovedWorkOrder: latestApprovedWorkOrder.latestApprovedWorkOrder,
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
@@ -647,6 +653,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     memoryVault,
     agentEventFeed,
     shellAgentActivity,
+    latestApprovedWorkOrder: latestApprovedWorkOrder.latestApprovedWorkOrder,
     chatStatus: {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',

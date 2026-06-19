@@ -171,6 +171,10 @@ function parseSummarySignals(contextText) {
     shellRunningCount: null,
     selectedCount: null,
     blockedCount: null,
+    resultStatus: '',
+    resultSmoke: '',
+    resultVerify: '',
+    resultNext: '',
   };
 
   const getNumber = (text, key) => {
@@ -245,6 +249,25 @@ function parseSummarySignals(contextText) {
       const match = line.match(/blocked=([0-9]+)/);
       if (match) signals.blockedCount = Number(match[1]);
     }
+
+    if (/workOrderResult=/.test(line)) {
+      if (!signals.resultStatus) {
+        const statusMatch = line.match(/status=([^/]+)/);
+        if (statusMatch) signals.resultStatus = normalizeContent(statusMatch[1]);
+      }
+      if (!signals.resultSmoke) {
+        const smokeMatch = line.match(/smoke=([^/]+)/);
+        if (smokeMatch) signals.resultSmoke = normalizeContent(smokeMatch[1]);
+      }
+      if (!signals.resultVerify) {
+        const verifyMatch = line.match(/verify=([^/]+)/);
+        if (verifyMatch) signals.resultVerify = normalizeContent(verifyMatch[1]);
+      }
+      if (!signals.resultNext) {
+        const nextMatch = line.match(/next=([^/]+)/);
+        if (nextMatch) signals.resultNext = normalizeContent(nextMatch[1]);
+      }
+    }
   }
 
   return signals;
@@ -285,6 +308,16 @@ function buildStatusReply(input, snapshotSummary) {
     segments.push(`人間確認待ちは${signals.humanGateCount}件です。`);
   }
 
+  if (signals.resultStatus) {
+    segments.push(`実装結果は${signals.resultStatus}です。`);
+    if (signals.resultSmoke || signals.resultVerify) {
+      segments.push(`smoke は ${signals.resultSmoke || 'unknown'}、verify は ${signals.resultVerify || 'unknown'} です。`);
+    }
+    if (signals.resultNext) {
+      segments.push(`次の判断は ${signals.resultNext} です。`);
+    }
+  }
+
   segments.push('次は見た目を確認して、問題なければ正本化できます☂️');
 
   return {
@@ -297,6 +330,13 @@ function buildNextActionReply(input, snapshotSummary) {
   const signals = parseSummarySignals(input.contextSummary || input.context || snapshotSummary);
   const versionLabel = signals.version ? `v${signals.version}` : 'いま';
   const parts = [];
+
+  if (signals.resultNext) {
+    return {
+      reply: `${signals.resultNext} が次の判断です。${signals.resultStatus ? ` 実装結果は${signals.resultStatus}です。` : ''}`,
+      suggested_action: '次の判断を確認して、必要なら result を見直す。',
+    };
+  }
 
   if (signals.changed != null && signals.changed > 0) {
     parts.push('まずは表示を軽く確認して、');

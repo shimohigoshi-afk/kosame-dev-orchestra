@@ -8,7 +8,7 @@ const path = require('node:path');
 const DEFAULT_SHELL_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'shell-agent-activity.jsonl');
 const SHELL_ACTIVITY_LOG_PATH_ENV = 'KOSAME_SHELL_AGENT_ACTIVITY_LOG_PATH';
 const DEFAULT_LIMIT = 8;
-const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result']);
+const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result', 'review_ready', 'needs_attention', 'revision_needed']);
 const DANGEROUS_PATTERNS = [
   /sk-[A-Za-z0-9_-]{8,}/i,
   /\bapi[_-]?key\b/i,
@@ -118,12 +118,15 @@ function appendShellAgentActivityEvent(input = {}) {
 function normalizeShellActivityStatus(record) {
   const raw = normalizeText(record && (record.status || record.state || record.eventType || record.kind));
   const lower = raw.toLowerCase();
-  if (['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result'].includes(lower)) {
+  if (['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result', 'review_ready', 'needs_attention', 'revision_needed'].includes(lower)) {
     return lower;
   }
   if (lower.includes('ready_to_handoff') || lower.includes('handoff_ready') || lower.includes('ready-handoff')) return 'ready_to_handoff';
   if (lower.includes('handed_to_agent') || lower.includes('handoff_done') || lower.includes('handed') || lower.includes('handoff')) return 'handed_to_agent';
   if (lower.includes('waiting_result') || lower.includes('result_wait') || lower.includes('awaiting_result')) return 'waiting_result';
+  if (lower.includes('review_ready') || lower.includes('review-ready') || lower.includes('ready_for_commit')) return 'review_ready';
+  if (lower.includes('needs_attention') || lower.includes('needs-attention')) return 'needs_attention';
+  if (lower.includes('revision_needed') || lower.includes('revision-needed') || lower.includes('request_fix')) return 'revision_needed';
   if (lower.includes('verify_pass') || lower.includes('verify-pass') || lower.includes('passed')) return 'success';
   if (lower.includes('verify') || lower.includes('review')) return 'verifying';
   if (lower.includes('task_started') || lower.includes('agent_started') || lower.includes('running')) return 'running';
@@ -149,6 +152,9 @@ function statusLabel(status) {
     ready_to_handoff: '引き継ぎ待ち',
     handed_to_agent: '担当AIへ渡済み',
     waiting_result: '結果待ち',
+    review_ready: '確認待ち',
+    needs_attention: '要確認',
+    revision_needed: '修正依頼',
   }[status] || '実装中';
 }
 
@@ -166,6 +172,9 @@ function severityForStatus(status) {
     ready_to_handoff: 'waiting',
     handed_to_agent: 'waiting',
     waiting_result: 'waiting',
+    review_ready: 'waiting',
+    needs_attention: 'warning',
+    revision_needed: 'warning',
   }[status] || 'running';
 }
 

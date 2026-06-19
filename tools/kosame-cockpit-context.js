@@ -124,6 +124,25 @@ function summarizeWorkOrderHandoff(workOrder) {
   return parts.join(' / ');
 }
 
+function summarizeWorkOrderResult(workOrderResult) {
+  const result = workOrderResult && typeof workOrderResult === 'object' ? workOrderResult : {};
+  const status = normalizeText(result.result_status || result.work_order_status || 'unknown');
+  const smoke = normalizeText(result.smoke_result || 'unknown');
+  const verify = normalizeText(result.verify_result || 'unknown');
+  const next = normalizeText(result.nextRecommendedAction || 'review');
+  const changedFiles = Array.isArray(result.changed_files) ? result.changed_files.slice(0, 3).map((item) => normalizeText(item)).filter(Boolean) : [];
+  const parts = [
+    `status=${status}`,
+    `smoke=${smoke}`,
+    `verify=${verify}`,
+    `next=${next}`,
+  ];
+  if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
+  const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');
+  if (summary) parts.push(`summary=${summary}`);
+  return parts.join(' / ');
+}
+
 function summarizeProjectStrip(projectStrip) {
   const items = Array.isArray(projectStrip) ? projectStrip : [];
   if (!items.length) return '—';
@@ -274,6 +293,11 @@ function buildConsoleContextSummary(snapshot) {
     lines.push(`handoffQueue=${summarizeWorkOrderHandoff(latestHandoffWorkOrder)}`);
   }
 
+  const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
+  if (latestWorkOrderResult && Object.keys(latestWorkOrderResult).length) {
+    lines.push(`workOrderResult=${summarizeWorkOrderResult(latestWorkOrderResult)}`);
+  }
+
   const agentEventFeed = snapshot.agentEventFeed || {};
   if (agentEventFeed) {
     lines.push(`agentEventFeed=${summarizeAgentEventFeed(agentEventFeed)}`);
@@ -331,4 +355,6 @@ function buildConsoleContextSummary(snapshot) {
 module.exports = {
   buildConsoleContextSummary,
   summarizeShellActivity,
+  summarizeWorkOrderHandoff,
+  summarizeWorkOrderResult,
 };

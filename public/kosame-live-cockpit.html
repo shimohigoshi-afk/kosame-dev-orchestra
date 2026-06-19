@@ -917,6 +917,87 @@ h1 {
   display: grid;
   gap: 10px;
 }
+.work-order-result-panel {
+  margin: 0 0 10px;
+  display: grid;
+  gap: 10px;
+}
+.work-order-result-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.chat-work-order-result {
+  cursor: pointer;
+  border: 1px solid rgba(167,139,250,0.26);
+  background: rgba(167,139,250,0.10);
+  color: #ede9fe;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.chat-work-order-result:hover {
+  background: rgba(167,139,250,0.16);
+}
+.chat-work-order-result:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.chat-work-order-result-form {
+  display: grid;
+  gap: 8px;
+}
+.chat-work-order-result-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.chat-work-order-result-field {
+  display: grid;
+  gap: 4px;
+}
+.chat-work-order-result-field label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.chat-work-order-result-field input,
+.chat-work-order-result-field textarea,
+.chat-work-order-result-field select {
+  width: 100%;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-family: inherit;
+  outline: none;
+}
+.chat-work-order-result-field textarea {
+  resize: vertical;
+  min-height: 62px;
+}
+.chat-work-order-result-field input:focus,
+.chat-work-order-result-field textarea:focus,
+.chat-work-order-result-field select:focus {
+  border-color: rgba(167,139,250,0.38);
+}
+.chat-work-order-result-summary {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.chat-work-order-result-form .chat-work-order-actions {
+  justify-content: flex-start;
+}
+.chat-work-order-result-empty {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
 .chat-status-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 9px; }
 .chat-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: var(--text); }
 .chat-status-badge.ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.18); }
@@ -1115,6 +1196,9 @@ h1 {
   .chat-command-ghost {
     font-size: 11px;
     padding: 5px 8px;
+  }
+  .chat-work-order-result-fields {
+    grid-template-columns: 1fr;
   }
   .chat-thread {
     min-height: 160px;
@@ -1777,6 +1861,8 @@ h1 {
         <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
         <div id="work-order-handoff-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
         <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
+        <div id="work-order-result-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
+        <div id="work-order-result-panel" class="work-order-result-panel"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -2094,6 +2180,7 @@ let notificationLastHumanGateCount = 0;
 let notificationLastFeedQuestion = '';
 let notificationInitialized = false;
 let agentEventFeedExpanded = false;
+let workOrderResultDraft = null;
 
 const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
 const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
@@ -2716,7 +2803,8 @@ function buildAssistPanelModel(snapshot, tab) {
           'ON/OFF と音色は別々に扱います。',
         ],
       };
-    case 'diagnostics':
+    case 'diagnostics': {
+      const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
       return {
         title: '診断情報',
         subtitle: '内部状態は必要な時だけここで確認します。',
@@ -2726,11 +2814,13 @@ function buildAssistPanelModel(snapshot, tab) {
           `Memory: ${chatStatusState.memory}`,
           `Llama audit: ${chatStatusState.llamaAudit}`,
           `Handoff: ${(snapshot.latestHandoffWorkOrder && snapshot.latestHandoffWorkOrder.status) || (snapshot.latestApprovedWorkOrder ? 'ready_to_handoff' : 'missing')}`,
+          `Result: ${latestWorkOrderResult.result_status || 'unsubmitted'} / smoke: ${latestWorkOrderResult.smoke_result || 'unknown'} / verify: ${latestWorkOrderResult.verify_result || 'unknown'} / next: ${latestWorkOrderResult.nextRecommendedAction || 'review'}`,
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
         ],
       };
+    }
     case 'current':
     default:
       return {
@@ -3228,6 +3318,9 @@ function renderShellAgentActivity(shellAgentActivity) {
       'human-gate': 'human-gate',
       human_gate: 'human-gate',
       blocked: 'blocked',
+      review_ready: 'done',
+      needs_attention: 'error',
+      revision_needed: 'error',
     })[rawStatus] || rawStatus;
     row.className = `agent-event-feed-item shell-agent-activity-item kind-${kindClass}`;
     if (item.status === 'running' || item.status === 'editing' || item.status === 'verifying') {
@@ -4023,6 +4116,168 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('work-order-result-panel');
+  const statusNode = document.getElementById('work-order-result-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+
+  const current = getCurrentWorkOrderResult(snapshot);
+  if (!current) {
+    statusNode.textContent = '結果を貼り戻す作業票はまだありません。';
+    const empty = document.createElement('div');
+    empty.className = 'chat-work-order-result-empty';
+    empty.textContent = 'Handoff 済みの作業票を採用すると、ここで実装結果を受け取れます。';
+    node.appendChild(empty);
+    return;
+  }
+
+  const result = current.result_record || snapshot.latestWorkOrderResult || current || {};
+  const currentId = getWorkOrderResultDraftKey(current);
+  const formState = getWorkOrderResultFormState(result && result.work_order_id ? result : current);
+
+  statusNode.textContent = `Result Intake: ${current.title || '—'} / ${current.status || result.result_status || 'unsubmitted'} / ${result.nextRecommendedAction || 'review'}`;
+
+  const card = document.createElement('div');
+  card.className = 'chat-work-order-card is-approved';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = current.title || 'Result Intake';
+  head.appendChild(title);
+  const badge = document.createElement('span');
+  badge.className = 'chat-work-order-badge';
+  badge.textContent = 'Work Order Result';
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['agent', current.assigned_agent || current.recommended_agent || '—'],
+    ['target', current.target_repo || '—'],
+    ['risk', current.risk_level || '—'],
+    ['status', current.status || 'waiting_result'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+  const gate = document.createElement('span');
+  gate.className = 'chat-work-order-flag';
+  gate.textContent = current.human_gate_required ? 'human gate required' : 'human gate optional';
+  meta.appendChild(gate);
+  card.appendChild(meta);
+
+  const summary = document.createElement('div');
+  summary.className = 'chat-work-order-result-summary';
+  const savedResultStatus = current.result_status || current.result_record?.result_status || snapshot.latestWorkOrderResult?.result_status || 'unsubmitted';
+  const summaryLines = [
+    `実装結果: ${savedResultStatus}`,
+    `smoke: ${current.smoke_result || 'unknown'}`,
+    `verify: ${current.verify_result || 'unknown'}`,
+    `changed files: ${current.changed_files_summary || (Array.isArray(current.changed_files) ? current.changed_files.join(' | ') : '—')}`,
+    `nextRecommendedAction: ${current.nextRecommendedAction || 'review'}`,
+  ];
+  summary.textContent = summaryLines.join('\n');
+  card.appendChild(summary);
+
+  const form = document.createElement('form');
+  form.className = 'chat-work-order-result-form';
+  form.dataset.resultForm = '1';
+  form.autocomplete = 'off';
+
+  const hidden = document.createElement('input');
+  hidden.type = 'hidden';
+  hidden.name = 'work_order_id';
+  hidden.value = currentId;
+  form.appendChild(hidden);
+
+  const fields = document.createElement('div');
+  fields.className = 'chat-work-order-result-fields';
+
+  const fieldSpecs = [
+    {
+      name: 'result_status',
+      label: 'result_status',
+      type: 'select',
+      options: [
+        ['success', 'success'],
+        ['failed', 'failed'],
+        ['needs_fix', 'needs_fix'],
+      ],
+    },
+    { name: 'smoke_result', label: 'smoke_result', type: 'text', placeholder: 'PASS / FAIL / unknown' },
+    { name: 'verify_result', label: 'verify_result', type: 'text', placeholder: 'PASS / FAIL / unknown' },
+    { name: 'result_summary', label: 'result_summary', type: 'textarea', placeholder: '結果の要約' },
+    { name: 'changed_files', label: 'changed_files', type: 'textarea', placeholder: 'changed files を改行またはカンマ区切りで入力' },
+    { name: 'notes', label: 'notes', type: 'textarea', placeholder: '補足メモ' },
+  ];
+
+  fieldSpecs.forEach((spec) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-work-order-result-field';
+    const label = document.createElement('label');
+    label.textContent = spec.label;
+    label.setAttribute('for', `work-order-result-${spec.name}`);
+    wrap.appendChild(label);
+    let input;
+    if (spec.type === 'select') {
+      input = document.createElement('select');
+      spec.options.forEach(([value, text]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = text;
+        input.appendChild(option);
+      });
+    } else if (spec.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.rows = spec.name === 'changed_files' ? 4 : 3;
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+    }
+    input.id = `work-order-result-${spec.name}`;
+    input.name = spec.name;
+    if (spec.placeholder) input.placeholder = spec.placeholder;
+    if (spec.name === 'result_status') {
+      input.value = formState.result_status || 'success';
+    } else if (spec.name === 'smoke_result') {
+      input.value = formState.smoke_result || 'unknown';
+    } else if (spec.name === 'verify_result') {
+      input.value = formState.verify_result || 'unknown';
+    } else if (spec.name === 'result_summary') {
+      input.value = formState.result_summary || '';
+    } else if (spec.name === 'changed_files') {
+      input.value = formState.changed_files || '';
+    } else if (spec.name === 'notes') {
+      input.value = formState.notes || '';
+    }
+    wrap.appendChild(input);
+    fields.appendChild(wrap);
+  });
+  form.appendChild(fields);
+
+  const actions = document.createElement('div');
+  actions.className = 'chat-work-order-actions';
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.className = 'chat-work-order-result';
+  submitBtn.textContent = '結果を保存';
+  actions.appendChild(submitBtn);
+  form.appendChild(actions);
+
+  const note = document.createElement('div');
+  note.className = 'chat-work-order-note';
+  note.textContent = '保存内容は Secret / API key / credentials / .env / 顧客情報の混入を検査します。外部AIへは送信しません。';
+  form.appendChild(note);
+
+  card.appendChild(form);
+  node.appendChild(card);
+}
+
 async function handleWorkOrderHandoffAction(action, buttonNode) {
   const current = getCurrentWorkOrderHandoff(latestSnapshot || {});
   if (!current || !buttonNode) return;
@@ -4054,6 +4309,7 @@ async function handleWorkOrderHandoffAction(action, buttonNode) {
     if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
     latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
     renderWorkOrderHandoffQueue(latestSnapshot);
+    renderWorkOrderResultPanel(latestSnapshot);
     renderLatestApprovedWorkOrder(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
   } catch (error) {
@@ -4067,6 +4323,130 @@ async function handleWorkOrderHandoffAction(action, buttonNode) {
     }
     buttonNode.textContent = originalLabel;
     return;
+  }
+}
+
+function formatWorkOrderResultStatusLabel(status) {
+  return {
+    success: 'success / 実装完了',
+    failed: 'failed / 失敗',
+    needs_fix: 'needs_fix / 修正待ち',
+  }[status] || `${status || 'unsubmitted'}`;
+}
+
+function getCurrentWorkOrderResult(snapshot = latestSnapshot || {}) {
+  const latestResult = snapshot.latestWorkOrderResult || null;
+  const latestHandoff = snapshot.latestHandoffWorkOrder || null;
+  const currentId = String(
+    latestHandoff && (latestHandoff.approval_id || latestHandoff.work_order_id || '')
+  ).trim();
+  const resultId = String(latestResult && (latestResult.work_order_id || latestResult.approval_id || '')).trim();
+  if (latestResult && currentId && resultId && resultId === currentId) {
+    return { ...latestHandoff, ...latestResult, result_record: latestResult };
+  }
+  if (latestHandoff && ['handed_to_agent', 'waiting_result', 'review_ready', 'needs_attention', 'revision_needed'].includes(String(latestHandoff.status || '').trim())) {
+    return latestHandoff;
+  }
+  if (latestHandoff && latestHandoff.result_record) {
+    return { ...latestHandoff, ...latestHandoff.result_record };
+  }
+  return null;
+}
+
+function readWorkOrderResultFormState(form, current) {
+  const data = new FormData(form);
+  return {
+    work_order_id: String(data.get('work_order_id') || current.work_order_id || current.approval_id || '').trim(),
+    result_status: String(data.get('result_status') || 'success').trim(),
+    result_summary: String(data.get('result_summary') || '').trim(),
+    changed_files: String(data.get('changed_files') || '').trim(),
+    smoke_result: String(data.get('smoke_result') || '').trim(),
+    verify_result: String(data.get('verify_result') || '').trim(),
+    notes: String(data.get('notes') || '').trim(),
+  };
+}
+
+function getWorkOrderResultDraftKey(current) {
+  return String(current && (current.work_order_id || current.approval_id || current.handoff_id || '')).trim();
+}
+
+function getWorkOrderResultFormState(current) {
+  const currentId = getWorkOrderResultDraftKey(current);
+  const draft = workOrderResultDraft && getWorkOrderResultDraftKey(workOrderResultDraft) === currentId ? workOrderResultDraft : null;
+  const latest = current && current.result_record ? current.result_record : current;
+  return {
+    work_order_id: currentId,
+    result_status: draft?.result_status || latest?.result_status || 'success',
+    result_summary: draft?.result_summary || latest?.result_summary || '',
+    changed_files: draft?.changed_files || (Array.isArray(latest?.changed_files) ? latest.changed_files.join('\n') : latest?.changed_files_summary || ''),
+    smoke_result: draft?.smoke_result || latest?.smoke_result || 'unknown',
+    verify_result: draft?.verify_result || latest?.verify_result || 'unknown',
+    notes: draft?.notes || latest?.notes || '',
+  };
+}
+
+function updateWorkOrderResultDraft(form, current) {
+  if (!form || !current) return;
+  const currentId = getWorkOrderResultDraftKey(current);
+  workOrderResultDraft = {
+    ...readWorkOrderResultFormState(form, current),
+    work_order_id: currentId,
+  };
+}
+
+function clearWorkOrderResultDraft(current) {
+  if (!current) {
+    workOrderResultDraft = null;
+    return;
+  }
+  const currentId = getWorkOrderResultDraftKey(current);
+  if (!workOrderResultDraft || getWorkOrderResultDraftKey(workOrderResultDraft) === currentId) {
+    workOrderResultDraft = null;
+  }
+}
+
+async function handleWorkOrderResultSubmit(form) {
+  const current = getCurrentWorkOrderResult(latestSnapshot || {});
+  if (!current || !form) return;
+  const statusNode = document.getElementById('work-order-result-status');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const formState = readWorkOrderResultFormState(form, current);
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中...';
+  }
+  if (statusNode) statusNode.textContent = '結果を保存中です...';
+  try {
+    const response = await fetch('/api/work-orders/result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formState),
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      throw new Error(data.error || '結果の保存に失敗しました。');
+    }
+    if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
+    latestSnapshot.latestWorkOrderResult = data.latestWorkOrderResult || latestSnapshot.latestWorkOrderResult || null;
+    latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+    latestSnapshot.workOrderResultQueue = latestSnapshot.latestWorkOrderResult ? [latestSnapshot.latestWorkOrderResult] : [];
+    clearWorkOrderResultDraft(current);
+    renderWorkOrderResultPanel(latestSnapshot);
+    renderWorkOrderHandoffQueue(latestSnapshot);
+    renderLatestApprovedWorkOrder(latestSnapshot);
+    if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
+    if (statusNode) {
+      statusNode.textContent = `結果: ${formatWorkOrderResultStatusLabel(data.latestWorkOrderResult && data.latestWorkOrderResult.result_status)} / 次の判断: ${data.nextRecommendedAction || 'review'}`;
+    }
+  } catch (error) {
+    if (statusNode) {
+      statusNode.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '結果を保存';
+    }
   }
 }
 
@@ -4104,13 +4484,17 @@ function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
   if (!node) return;
   const approved = snapshot.latestApprovedWorkOrder || null;
   const handoff = snapshot.latestHandoffWorkOrder || null;
+  const result = snapshot.latestWorkOrderResult || null;
   if (!approved) {
     node.textContent = handoff
       ? `Handoff Queue: ${handoff.title || '—'} / ${formatHandoffStatusLabel(handoff.status || 'ready_to_handoff')}`
       : '採用済みの作業票はまだありません。';
     return;
   }
-  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}`;
+  const resultText = result && result.work_order_id && String(result.work_order_id) === String(approved.approval_id || approved.work_order_id || '')
+    ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'}`
+    : '';
+  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}${resultText}`;
 }
 
 async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
@@ -4139,6 +4523,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
+    renderWorkOrderResultPanel(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
   } catch (error) {
     statusNode.textContent = `エラー: ${error && error.message ? error.message : '承認できませんでした。'}`;
@@ -4279,6 +4664,7 @@ async function loadSnapshot() {
     renderChatStatusBadges(snapshot);
     renderLatestApprovedWorkOrder(snapshot);
     renderWorkOrderHandoffQueue(snapshot);
+    renderWorkOrderResultPanel(snapshot);
     renderChatAssistPanel(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
@@ -4307,6 +4693,7 @@ updateNotificationUI();
 renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});
 renderWorkOrderHandoffQueue({});
+renderWorkOrderResultPanel({});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 
@@ -4369,6 +4756,23 @@ if (workOrderHandoffQueue) {
     event.preventDefault();
     const action = target.dataset.handoffAction || 'handed_to_agent';
     handleWorkOrderHandoffAction(action, target);
+  });
+}
+
+const workOrderResultPanel = document.getElementById('work-order-result-panel');
+if (workOrderResultPanel) {
+  workOrderResultPanel.addEventListener('submit', (event) => {
+    const form = event.target && event.target.closest ? event.target.closest('form[data-result-form]') : null;
+    if (!form || !workOrderResultPanel.contains(form)) return;
+    event.preventDefault();
+    handleWorkOrderResultSubmit(form);
+  });
+  workOrderResultPanel.addEventListener('input', (event) => {
+    const form = event.target && event.target.closest ? event.target.closest('form[data-result-form]') : null;
+    if (!form || !workOrderResultPanel.contains(form)) return;
+    const current = getCurrentWorkOrderResult(latestSnapshot || {});
+    if (!current) return;
+    updateWorkOrderResultDraft(form, current);
   });
 }
 

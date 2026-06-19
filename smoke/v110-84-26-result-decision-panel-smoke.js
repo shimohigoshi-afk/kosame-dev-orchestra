@@ -369,7 +369,9 @@ async function runHttpCycle(port) {
   });
   assert.equal(chatReply.statusCode, 200, 'chat reply must return 200');
   assert.equal(chatReply.body.ok, true, 'chat reply must be ok');
-  assert.ok(chatReply.body.reply.includes('commit前review') || chatReply.body.reply.includes('commit準備'), 'chat reply must mention commit review guidance');
+  assert.ok(/ready_for_commit|commit/.test(chatReply.body.reply), 'chat reply must reflect ready_for_commit guidance');
+  assert.ok(/review|確認|人間承認/.test(chatReply.body.reply), 'chat reply must mention review or human gate guidance');
+  assert.ok(!/自動commit|自動でcommit|自動タグ|自動push|自動deploy/.test(chatReply.body.reply), 'chat reply must not imply automatic commit/tag/push/deploy');
 
   const secretGate = await requestJson(port, '/api/work-orders/result', {
     work_order_id: devApprove.body.latestApprovedWorkOrder.approval_id,

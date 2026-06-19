@@ -371,15 +371,15 @@ function buildNextActionReply(input, snapshotSummary) {
   const versionLabel = signals.version ? `v${signals.version}` : 'いま';
   const parts = [];
 
-  if (signals.resultNext) {
-    const decisionText = signals.resultDecision || signals.resultNext;
+  const decisionText = normalizeContent(signals.resultDecision || signals.resultNext);
+  if (decisionText || signals.resultNext) {
     const readyCommit = decisionText === 'ready_for_commit';
     const readyReview = decisionText === 'ready_for_review';
     const requestFix = decisionText === 'request_fix';
     const stopInvestigate = decisionText === 'stop_and_investigate';
-    const waitResult = decisionText === 'wait_for_result';
+    const waitResult = decisionText === 'wait_for_result' || !decisionText;
     const lead = readyCommit
-      ? '最新結果はPASSです。次はcommit前reviewまたはcommit準備です。'
+      ? '最新結果はPASSです。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
       : readyReview
         ? '最新結果はPASSですが、smoke/verify の確認がまだ必要です。'
         : requestFix

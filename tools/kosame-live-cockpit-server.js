@@ -13,6 +13,7 @@ const { readLatestWorkOrderHandoff, recordWorkOrderHandoff, HANDOFF_LOG_PATH_ENV
 const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } = require('./kosame-work-order-result-store');
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
+const { saveHandoffInbox, readLatestHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -296,6 +297,65 @@ function createLiveCockpitServer(options = {}) {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: false, error: '内部エラーが発生しました。' }));
         });
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/handoff') {
+      if (req.method === 'GET') {
+        try {
+          const result = readLatestHandoffInbox({ handoffDir: options.handoffDir });
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({
+            ok: true,
+            latestHandoff: result.latest || null,
+            latestPath: result.latestPath,
+            queuePath: result.queuePath,
+            count: result.count,
+          }));
+        } catch (error) {
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'cannot read handoff inbox' }));
+        }
+        return;
+      }
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      parseJsonBody(req, (parsed) => {
+        try {
+          const result = saveHandoffInbox(parsed, { handoffDir: options.handoffDir });
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({
+            ok: true,
+            saved_at: result.saved_at,
+            latestHandoff: result.latestHandoff,
+            latestPath: result.latestPath,
+            queuePath: result.queuePath,
+            message: 'Codexへ自動入力はしていません。Inboxへ保存しただけです。',
+          }));
+        } catch (error) {
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'invalid handoff payload' }));
+        }
       });
       return;
     }

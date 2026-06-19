@@ -917,6 +917,55 @@ h1 {
   display: grid;
   gap: 10px;
 }
+.handoff-inbox-panel {
+  margin: 0 0 10px;
+  display: grid;
+  gap: 10px;
+}
+.handoff-inbox-card {
+  border: 1px solid rgba(125,211,252,0.16);
+  background: linear-gradient(180deg, rgba(11, 21, 36, 0.96), rgba(8, 15, 28, 0.96));
+  border-radius: 16px;
+  padding: 12px 14px 10px;
+  display: grid;
+  gap: 10px;
+}
+.handoff-inbox-lines {
+  display: grid;
+  gap: 4px;
+}
+.handoff-inbox-line {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #dbeafe;
+}
+.handoff-inbox-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.handoff-inbox-status {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.handoff-inbox-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.handoff-inbox-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(125,211,252,0.08);
+  border: 1px solid rgba(125,211,252,0.22);
+}
 .work-order-result-panel {
   margin: 0 0 10px;
   display: grid;
@@ -1879,6 +1928,8 @@ h1 {
         </div>
         <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
         <div id="work-order-handoff-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
+        <div id="handoff-inbox-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
+        <div id="handoff-inbox-panel" class="handoff-inbox-panel"></div>
         <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
         <div id="work-order-result-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
         <div id="work-order-result-panel" class="work-order-result-panel"></div>
@@ -2205,6 +2256,9 @@ let workOrderResultDraft = null;
 
 const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
 const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
+const HANDOFF_INBOX_LAST_STATUS_KEY = 'kosame.cockpit.handoffInbox.lastStatus';
+const HANDOFF_INBOX_LAST_SENT_AT_KEY = 'kosame.cockpit.handoffInbox.lastSentAt';
+const HANDOFF_INBOX_LAST_PATH_KEY = 'kosame.cockpit.handoffInbox.lastPath';
 const NOTIFICATION_COOLDOWN_MS = 5000;
 const NOTIFICATION_FREQ = 880;
 const NOTIFICATION_FREQ_2 = 660;
@@ -2250,6 +2304,32 @@ function readNotificationPreference() {
 
 function writeNotificationPreference(enabled) {
   writeNotificationEnabled(enabled);
+}
+
+function readHandoffInboxBridgeState() {
+  try {
+    return {
+      lastStatus: localStorage.getItem(HANDOFF_INBOX_LAST_STATUS_KEY) || '',
+      lastSentAt: localStorage.getItem(HANDOFF_INBOX_LAST_SENT_AT_KEY) || '',
+      lastPath: localStorage.getItem(HANDOFF_INBOX_LAST_PATH_KEY) || '',
+    };
+  } catch {
+    return { lastStatus: '', lastSentAt: '', lastPath: '' };
+  }
+}
+
+function writeHandoffInboxBridgeState(state = {}) {
+  try {
+    if (Object.prototype.hasOwnProperty.call(state, 'lastStatus')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_STATUS_KEY, String(state.lastStatus || ''));
+    }
+    if (Object.prototype.hasOwnProperty.call(state, 'lastSentAt')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_SENT_AT_KEY, String(state.lastSentAt || ''));
+    }
+    if (Object.prototype.hasOwnProperty.call(state, 'lastPath')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_PATH_KEY, String(state.lastPath || ''));
+    }
+  } catch {}
 }
 
 function isQuestionCue(text) {
@@ -4139,6 +4219,168 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
+  const current = getCurrentWorkOrderHandoff(snapshot) || snapshot.latestApprovedWorkOrder || snapshot.latestHandoffWorkOrder || null;
+  if (!current) return null;
+  const title = String(current.title || '').trim();
+  const targetRepo = String(current.target_repo || '').trim();
+  const assignedAgent = String(current.assigned_agent || current.recommended_agent || current.agent || 'Codex').trim() || 'Codex';
+  const riskLevel = String(current.risk_level || 'low').trim() || 'low';
+  const humanGateRequired = current.human_gate_required !== false;
+  const promptText = String(
+    current.prompt
+    || current.safe_prompt_summary
+    || (snapshot.latestApprovedWorkOrder && snapshot.latestApprovedWorkOrder.prompt) || ''
+  ).trim();
+  const id = String(current.work_order_id || current.approval_id || current.handoff_id || current.id || '').trim();
+  if (!id || !title || !targetRepo || !promptText) return null;
+  return {
+    id,
+    title,
+    target_repo: targetRepo,
+    assigned_agent: assignedAgent,
+    risk_level: riskLevel,
+    human_gate_required: humanGateRequired,
+    prompt_text: promptText,
+    created_at: String(current.created_at || current.timestamp || snapshot.generatedAt || new Date().toISOString()).trim(),
+    source: 'kosame_console',
+  };
+}
+
+async function sendCurrentHandoffToInbox(buttonNode) {
+  const current = getCurrentWorkOrderHandoff(latestSnapshot || {});
+  const statusNode = document.getElementById('handoff-inbox-status');
+  const panelNode = document.getElementById('handoff-inbox-panel');
+  if (!current) return;
+  const payload = buildHandoffInboxPayload(latestSnapshot || {});
+  if (!payload) {
+    if (statusNode) statusNode.textContent = 'エラー: Inbox 送信用の安全な内容がありません。';
+    return;
+  }
+
+  const originalLabel = buttonNode ? buttonNode.textContent : '';
+  if (buttonNode) {
+    buttonNode.disabled = true;
+    buttonNode.textContent = '送信中...';
+  }
+  if (statusNode) statusNode.textContent = 'Handoff Inbox へ送信中です...';
+  if (panelNode) {
+    panelNode.querySelectorAll('button[data-handoff-inbox-action="send"]').forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
+
+  try {
+    const response = await fetch('/api/handoff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      throw new Error(data.error || 'Handoff Inbox への保存に失敗しました。');
+    }
+    const savedAt = data.saved_at || new Date().toISOString();
+    writeHandoffInboxBridgeState({
+      lastStatus: 'success',
+      lastSentAt: savedAt,
+      lastPath: data.latestPath || data.queuePath || '',
+    });
+    if (statusNode) statusNode.textContent = `送信成功 / Inboxへ保存しました。 最終送信時刻: ${formatTokyoTimestamp(savedAt) || savedAt}`;
+    renderHandoffInboxBridge(latestSnapshot || {});
+  } catch (error) {
+    writeHandoffInboxBridgeState({
+      lastStatus: 'failed',
+      lastSentAt: new Date().toISOString(),
+      lastPath: '',
+    });
+    if (statusNode) statusNode.textContent = `送信失敗: ${error && error.message ? error.message : 'Handoff Inbox へ保存できませんでした。'}`;
+    renderHandoffInboxBridge(latestSnapshot || {});
+  } finally {
+    if (buttonNode) {
+      buttonNode.disabled = false;
+      buttonNode.textContent = originalLabel || 'Handoff Inboxへ送る';
+    }
+  }
+}
+
+function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('handoff-inbox-panel');
+  const statusNode = document.getElementById('handoff-inbox-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+
+  const current = buildHandoffInboxPayload(snapshot);
+  const bridgeState = readHandoffInboxBridgeState();
+  const currentStatus = current ? (current.human_gate_required ? 'human gate required' : 'human gate optional') : '送信待機中';
+  statusNode.textContent = current
+    ? `送信先: localhost handoff bridge / ${current.title || '—'} / ${currentStatus}`
+    : '送信先: localhost handoff bridge / まだ送信可能な作業票はありません。';
+
+  const card = document.createElement('div');
+  card.className = 'handoff-inbox-card';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = 'Handoff Inbox Bridge';
+  head.appendChild(title);
+  const badge = document.createElement('span');
+  badge.className = 'handoff-inbox-badge';
+  badge.textContent = 'localhost handoff bridge';
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['destination', 'localhost handoff bridge'],
+    ['last status', bridgeState.lastStatus || '—'],
+    ['last sent', bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+  card.appendChild(meta);
+
+  const lines = document.createElement('div');
+  lines.className = 'handoff-inbox-lines';
+  [
+    `送信先: localhost handoff bridge`,
+    `Codexへ自動入力はしていません。Inboxへ保存しただけです。`,
+    `最終送信時刻: ${bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'}`,
+    `最終保存先: ${bridgeState.lastPath || '—'}`,
+  ].forEach((textLine) => {
+    const line = document.createElement('div');
+    line.className = 'handoff-inbox-line';
+    line.textContent = textLine;
+    lines.appendChild(line);
+  });
+  card.appendChild(lines);
+
+  const actions = document.createElement('div');
+  actions.className = 'chat-work-order-actions';
+  const sendBtn = document.createElement('button');
+  sendBtn.type = 'button';
+  sendBtn.className = 'chat-work-order-copy';
+  sendBtn.dataset.handoffInboxAction = 'send';
+  sendBtn.textContent = current ? 'Handoff Inboxへ送る' : '送信対象なし';
+  sendBtn.disabled = !current;
+  actions.appendChild(sendBtn);
+  card.appendChild(actions);
+
+  const note = document.createElement('div');
+  note.className = 'handoff-inbox-note';
+  note.textContent = current
+    ? '対象作業票と担当AI向けプロンプトをローカル inbox に保存します。'
+    : '作業票を採用すると送信対象が表示されます。';
+  card.appendChild(note);
+
+  node.appendChild(card);
+}
+
 function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-result-panel');
   const statusNode = document.getElementById('work-order-result-status');
@@ -4475,6 +4717,7 @@ async function handleWorkOrderHandoffAction(action, buttonNode) {
     }
     if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
     latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+    renderHandoffInboxBridge(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderWorkOrderResultPanel(latestSnapshot);
     renderResultDecisionPanel(latestSnapshot);
@@ -4603,6 +4846,7 @@ async function handleWorkOrderResultSubmit(form) {
     clearWorkOrderResultDraft(current);
     renderWorkOrderResultPanel(latestSnapshot);
     renderResultDecisionPanel(latestSnapshot);
+    renderHandoffInboxBridge(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderLatestApprovedWorkOrder(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
@@ -4693,6 +4937,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
     buttonNode.textContent = '採用済み';
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);
+    renderHandoffInboxBridge(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderWorkOrderResultPanel(latestSnapshot);
     renderResultDecisionPanel(latestSnapshot);
@@ -4835,6 +5080,7 @@ async function loadSnapshot() {
     renderWishlist(snapshot.wishlist || (snapshot.taskFeeder && snapshot.taskFeeder.wishlist) || {});
     renderChatStatusBadges(snapshot);
     renderLatestApprovedWorkOrder(snapshot);
+    renderHandoffInboxBridge(snapshot);
     renderWorkOrderHandoffQueue(snapshot);
     renderWorkOrderResultPanel(snapshot);
     renderResultDecisionPanel(snapshot);
@@ -4865,6 +5111,7 @@ if (!notificationEnabled) notificationUnlocked = false;
 updateNotificationUI();
 renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});
+renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
@@ -4930,6 +5177,19 @@ if (workOrderHandoffQueue) {
     event.preventDefault();
     const action = target.dataset.handoffAction || 'handed_to_agent';
     handleWorkOrderHandoffAction(action, target);
+  });
+}
+
+const handoffInboxPanel = document.getElementById('handoff-inbox-panel');
+if (handoffInboxPanel) {
+  handoffInboxPanel.addEventListener('click', (event) => {
+    const target = event.target && event.target.closest ? event.target.closest('[data-handoff-inbox-action]') : null;
+    if (!target || !handoffInboxPanel.contains(target)) return;
+    event.preventDefault();
+    const action = target.dataset.handoffInboxAction || 'send';
+    if (action === 'send') {
+      sendCurrentHandoffToInbox(target);
+    }
   });
 }
 

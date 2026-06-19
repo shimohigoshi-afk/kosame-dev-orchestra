@@ -107,6 +107,13 @@ function assertDecision(status, decision, extra = {}) {
   }
 }
 
+function assertMeaningfulReadyForCommitReply(reply, label) {
+  assert.ok(reply && typeof reply === 'string', `${label} reply must be a string`);
+  assert.ok(/ready_for_commit|commit候補|commit準備|正本化候補/.test(reply), `${label} reply must reflect ready_for_commit guidance`);
+  assert.ok(/commit前review|review|確認|人間承認/.test(reply), `${label} reply must mention review or human gate guidance`);
+  assert.ok(/自動commitはしません|自動.*しません|人間承認待ち/.test(reply), `${label} reply must not imply automatic commit/tag/push/deploy`);
+}
+
 async function startServerIfPossible() {
   const previousApproval = process.env.KOSAME_WORK_ORDER_APPROVAL_LOG_PATH;
   const previousHandoff = process.env.KOSAME_WORK_ORDER_HANDOFF_LOG_PATH;
@@ -369,9 +376,35 @@ async function runHttpCycle(port) {
   });
   assert.equal(chatReply.statusCode, 200, 'chat reply must return 200');
   assert.equal(chatReply.body.ok, true, 'chat reply must be ok');
-  assert.ok(/ready_for_commit|commit/.test(chatReply.body.reply), 'chat reply must reflect ready_for_commit guidance');
-  assert.ok(/review|確認|人間承認/.test(chatReply.body.reply), 'chat reply must mention review or human gate guidance');
-  assert.ok(!/自動commit|自動でcommit|自動タグ|自動push|自動deploy/.test(chatReply.body.reply), 'chat reply must not imply automatic commit/tag/push/deploy');
+  if (!/ready_for_commit|commit候補|commit準備|正本化候補/.test(chatReply.body.reply)) {
+    console.error('  DEBUG chatReply.reply =', chatReply.body.reply);
+  }
+  assertMeaningfulReadyForCommitReply(chatReply.body.reply, 'decision snapshot reply');
+
+  const fallbackSnapshot = collectLiveCockpitSnapshot({
+    activeRepoPath: '/home/lavie/kosame-dev-orchestra',
+    devRepoPath: '/home/lavie/kosame-dev-orchestra',
+    salesRepoPath: '/home/lavie/repos/transcriber',
+    workOrderApprovalLogPath: APPROVAL_LOG_PATH,
+    workOrderHandoffLogPath: HANDOFF_LOG_PATH,
+    workOrderResultLogPath: RESULT_LOG_PATH,
+    shellAgentActivityLogPath: ACTIVITY_LOG_PATH,
+  });
+  delete fallbackSnapshot.latestWorkOrderDecision;
+  fallbackSnapshot.latestWorkOrderResult = {
+    result_status: 'success',
+    smoke_result: 'PASS',
+    verify_result: 'PASS',
+    title: 'fallback ready_for_commit case',
+  };
+  fallbackSnapshot.workOrderResultQueue = [fallbackSnapshot.latestWorkOrderResult];
+  const fallbackContext = buildConsoleContextSummary(fallbackSnapshot).summary;
+  const fallbackReply = buildLocalReply({
+    message: '次なにする？',
+    project: 'KOSAME Console',
+    contextSummary: fallbackContext,
+  }, fallbackContext);
+  assertMeaningfulReadyForCommitReply(fallbackReply.reply, 'fallback result reply');
 
   const secretGate = await requestJson(port, '/api/work-orders/result', {
     work_order_id: devApprove.body.latestApprovedWorkOrder.approval_id,

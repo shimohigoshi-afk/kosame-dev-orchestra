@@ -371,18 +371,31 @@ function buildNextActionReply(input, snapshotSummary) {
   const versionLabel = signals.version ? `v${signals.version}` : 'いま';
   const parts = [];
 
-  const decisionText = normalizeContent(
-    signals.resultDecision
-    || signals.resultNext
-    || ((signals.resultStatus === 'success' && signals.resultSmoke === 'PASS' && signals.resultVerify === 'PASS') ? 'ready_for_commit' : '')
-    || ((signals.resultStatus === 'success' && (signals.resultSmoke === 'unknown' || signals.resultVerify === 'unknown')) ? 'ready_for_review' : '')
-  );
-  if (decisionText || signals.resultNext) {
-    const readyCommit = decisionText === 'ready_for_commit';
-    const readyReview = decisionText === 'ready_for_review';
-    const requestFix = decisionText === 'request_fix';
-    const stopInvestigate = decisionText === 'stop_and_investigate';
-    const waitResult = decisionText === 'wait_for_result' || !decisionText;
+  const inferredResultDecision = (() => {
+    if (signals.resultDecision) return normalizeContent(signals.resultDecision);
+    if (signals.resultStatus === 'success' && signals.resultSmoke === 'PASS' && signals.resultVerify === 'PASS') {
+      return 'ready_for_commit';
+    }
+    if (signals.resultStatus === 'success' && (signals.resultSmoke === 'unknown' || signals.resultVerify === 'unknown')) {
+      return 'ready_for_review';
+    }
+    if (signals.resultStatus === 'needs_fix') {
+      return 'request_fix';
+    }
+    if (signals.resultStatus === 'failed' || signals.resultSmoke === 'FAIL' || signals.resultVerify === 'FAIL') {
+      return 'stop_and_investigate';
+    }
+    if (signals.resultNext) {
+      return normalizeContent(signals.resultNext);
+    }
+    return '';
+  })();
+  if (inferredResultDecision || signals.resultNext) {
+    const readyCommit = inferredResultDecision === 'ready_for_commit';
+    const readyReview = inferredResultDecision === 'ready_for_review';
+    const requestFix = inferredResultDecision === 'request_fix';
+    const stopInvestigate = inferredResultDecision === 'stop_and_investigate';
+    const waitResult = inferredResultDecision === 'wait_for_result' || !inferredResultDecision;
     const lead = readyCommit
       ? 'ready_for_commit 判定です。最新結果はPASSです。commit候補です。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
       : readyReview

@@ -1747,6 +1747,12 @@ h1 {
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
+        <div class="chat-status-badges" aria-label="Chat and audit status">
+          <span id="chat-ai-badge" class="chat-status-badge warn">AI: missing</span>
+          <span id="chat-context-badge" class="chat-status-badge warn">Context: missing</span>
+          <span id="chat-memory-badge" class="chat-status-badge warn">Memory: missing</span>
+          <span id="chat-llama-audit-badge" class="chat-status-badge warn">Llama audit: missing</span>
+        </div>
         <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
@@ -2052,6 +2058,7 @@ let chatStatusState = {
   ai: 'missing',
   context: 'missing',
   memory: 'missing',
+  llamaAudit: 'missing',
 };
 let notificationAudioContext = null;
 let notificationMode = 'off';
@@ -2484,10 +2491,12 @@ function renderChatStatusBadges(snapshot = {}) {
     ai: chat.ai || chatStatusState.ai || 'missing',
     context: chat.context || chatStatusState.context || 'missing',
     memory: chat.memory || (snapshot.memoryVault && snapshot.memoryVault.status) || chatStatusState.memory || 'missing',
+    llamaAudit: chat.llamaAudit || chatStatusState.llamaAudit || 'missing',
   };
   setStatusBadge('chat-ai-badge', 'AI', chatStatusState.ai === 'connected' ? 'connected' : 'missing', chatStatusState.ai === 'connected' ? 'ok' : 'warn');
   setStatusBadge('chat-context-badge', 'Context', chatStatusState.context === 'loaded' ? 'loaded' : 'missing', chatStatusState.context === 'loaded' ? 'ok' : 'warn');
   setStatusBadge('chat-memory-badge', 'Memory', chatStatusState.memory === 'ready' ? 'ready' : chatStatusState.memory === 'warning' ? 'warning' : 'missing', chatStatusState.memory === 'ready' ? 'ok' : chatStatusState.memory === 'warning' ? 'warn' : 'warn');
+  setStatusBadge('chat-llama-audit-badge', 'Llama audit', chatStatusState.llamaAudit === 'configured' ? 'configured' : 'missing', chatStatusState.llamaAudit === 'configured' ? 'ok' : 'warn');
   updateNotificationUI();
 }
 
@@ -2692,6 +2701,7 @@ function buildAssistPanelModel(snapshot, tab) {
           `AI: ${chatStatusState.ai}`,
           `Context: ${chatStatusState.context}`,
           `Memory: ${chatStatusState.memory}`,
+          `Llama audit: ${chatStatusState.llamaAudit}`,
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,

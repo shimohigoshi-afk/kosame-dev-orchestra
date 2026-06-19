@@ -18,6 +18,7 @@ const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
 const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-store');
+const { getConfig: getProviderConfig } = require('../providers/provider-config');
 
 const READ_ONLY_COMMANDS = new Set([
   'git status -sb',
@@ -487,6 +488,7 @@ function buildProjectState(project, options = {}) {
 }
 
 function collectLiveCockpitSnapshot(options = {}) {
+  const providerConfig = getProviderConfig();
   const devRepoPath = options.devRepoPath || DEV_ORCHESTRA_REPO;
   const salesRepoPath = options.salesRepoPath || SALES_DX_REPO;
   const activeRepoPath = options.activeRepoPath || devRepoPath;
@@ -658,6 +660,7 @@ function collectLiveCockpitSnapshot(options = {}) {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',
       memory: memoryVault?.status || 'missing',
+      llamaAudit: providerConfig.llamaAuditLane?.status || (providerConfig.llamaKeyPresent ? 'configured' : 'missing'),
     },
     confirmationBridge: options.confirmationBridge || null,
     consoleContextSummary: consoleContext.summary,

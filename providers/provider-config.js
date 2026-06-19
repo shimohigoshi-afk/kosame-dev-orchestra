@@ -26,6 +26,10 @@ const deepseekKeyPresent =
   typeof process.env.DEEPSEEK_API_KEY === "string" &&
   process.env.DEEPSEEK_API_KEY.length > 0;
 
+const llamaKeyPresent =
+  typeof process.env.LLAMA_API_KEY === "string" &&
+  process.env.LLAMA_API_KEY.length > 0;
+
 const MAX_TOKENS_CAP = 1000;
 const TIMEOUT_MS_CAP = 30000;
 
@@ -100,6 +104,31 @@ const openaiLiveEnabled = liveCallsActuallyEnabled && openaiKeyPresent;
 const geminiLiveEnabled = liveCallsActuallyEnabled && geminiKeyPresent;
 const deepseekLiveEnabled = liveCallsActuallyEnabled && deepseekKeyPresent;
 
+const llamaAuditLane = {
+  key: "llama_audit",
+  provider: "llama",
+  role: "audit/review",
+  status: llamaKeyPresent ? "configured" : "missing",
+  allowedUses: [
+    "sanitized diff",
+    "smoke review",
+    "docs review",
+    "security review",
+  ],
+  forbiddenUses: [
+    "Secret",
+    ".env",
+    "credentials",
+    "customer data",
+    "Sales DX",
+    "transcriber",
+    "独自プロンプト",
+    "保険ロジック",
+  ],
+  apiKeyPresent: llamaKeyPresent,
+  apiKeyStatus: llamaKeyPresent ? "configured" : "missing",
+};
+
 function getConfig() {
   return {
     liveCallsRequested,
@@ -107,6 +136,7 @@ function getConfig() {
     openaiKeyPresent,
     geminiKeyPresent,
     deepseekKeyPresent,
+    llamaKeyPresent,
     openaiModel,
     geminiModel,
     maxTokens,
@@ -115,6 +145,7 @@ function getConfig() {
     openaiLiveEnabled,
     geminiLiveEnabled,
     deepseekLiveEnabled,
+    llamaAuditLane,
     lightweightRoutingPolicy,
     reason: liveCallsActuallyEnabled
       ? "live calls gate open (key presence required per provider)"

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+const { buildWorkOrderResultDecision, summarizeDecision } = require('./kosame-work-order-result-decision');
+
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -141,6 +143,15 @@ function summarizeWorkOrderResult(workOrderResult) {
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');
   if (summary) parts.push(`summary=${summary}`);
   return parts.join(' / ');
+}
+
+function summarizeWorkOrderDecision(workOrderDecision) {
+  const decision = workOrderDecision && typeof workOrderDecision === 'object'
+    ? workOrderDecision
+    : buildWorkOrderResultDecision({
+      latestWorkOrderResult: workOrderDecision || {},
+    });
+  return summarizeDecision(decision);
 }
 
 function summarizeProjectStrip(projectStrip) {
@@ -296,6 +307,18 @@ function buildConsoleContextSummary(snapshot) {
   const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
   if (latestWorkOrderResult && Object.keys(latestWorkOrderResult).length) {
     lines.push(`workOrderResult=${summarizeWorkOrderResult(latestWorkOrderResult)}`);
+  }
+
+  const latestWorkOrderDecision = snapshot.latestWorkOrderDecision || {};
+  if (latestWorkOrderDecision && Object.keys(latestWorkOrderDecision).length) {
+    lines.push(`workOrderDecision=${summarizeWorkOrderDecision(latestWorkOrderDecision)}`);
+  } else if (latestWorkOrderResult && Object.keys(latestWorkOrderResult).length) {
+    const decision = buildWorkOrderResultDecision({
+      latestWorkOrderResult,
+      latestHandoffWorkOrder: snapshot.latestHandoffWorkOrder || null,
+      latestApprovedWorkOrder: snapshot.latestApprovedWorkOrder || null,
+    });
+    lines.push(`workOrderDecision=${summarizeWorkOrderDecision(decision)}`);
   }
 
   const agentEventFeed = snapshot.agentEventFeed || {};

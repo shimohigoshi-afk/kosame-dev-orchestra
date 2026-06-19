@@ -156,6 +156,16 @@ function buildContextDigest(contextText) {
   return selected.map((part) => truncate(part, 80)).join(' / ');
 }
 
+function decisionLabel(status) {
+  return {
+    ready_for_commit: 'commit候補',
+    ready_for_review: '確認待ち',
+    request_fix: '修正依頼',
+    stop_and_investigate: '要調査',
+    wait_for_result: '結果待ち',
+  }[normalizeContent(status)] || normalizeContent(status);
+}
+
 function parseSummarySignals(contextText) {
   const summary = normalizeContent(contextText);
   const lines = summary.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -175,6 +185,10 @@ function parseSummarySignals(contextText) {
     resultSmoke: '',
     resultVerify: '',
     resultNext: '',
+    resultDecision: '',
+    resultDecisionReason: '',
+    resultDecisionHumanGate: '',
+    resultDecisionCommit: '',
   };
 
   const getNumber = (text, key) => {
@@ -268,6 +282,29 @@ function parseSummarySignals(contextText) {
         if (nextMatch) signals.resultNext = normalizeContent(nextMatch[1]);
       }
     }
+
+    if (/workOrderDecision=/.test(line)) {
+      if (!signals.resultDecision) {
+        const match = line.match(/(?:decision_status|status)=([^/]+)/);
+        if (match) signals.resultDecision = normalizeContent(match[1]);
+      }
+      if (!signals.resultNext) {
+        const nextMatch = line.match(/next=([^/]+)/);
+        if (nextMatch) signals.resultNext = normalizeContent(nextMatch[1]);
+      }
+      if (!signals.resultDecisionReason) {
+        const reasonMatch = line.match(/reason=([^/]+)/);
+        if (reasonMatch) signals.resultDecisionReason = normalizeContent(reasonMatch[1]);
+      }
+      if (!signals.resultDecisionHumanGate) {
+        const gateMatch = line.match(/humanGate=([^/]+)/);
+        if (gateMatch) signals.resultDecisionHumanGate = normalizeContent(gateMatch[1]);
+      }
+      if (!signals.resultDecisionCommit) {
+        const commitMatch = line.match(/commitTagPush=([^/]+)/);
+        if (commitMatch) signals.resultDecisionCommit = normalizeContent(commitMatch[1]);
+      }
+    }
   }
 
   return signals;
@@ -308,13 +345,16 @@ function buildStatusReply(input, snapshotSummary) {
     segments.push(`人間確認待ちは${signals.humanGateCount}件です。`);
   }
 
-  if (signals.resultStatus) {
-    segments.push(`実装結果は${signals.resultStatus}です。`);
+  if (signals.resultStatus || signals.resultDecision) {
+    segments.push(`結果判定は${decisionLabel(signals.resultDecision || signals.resultStatus)}です。`);
     if (signals.resultSmoke || signals.resultVerify) {
       segments.push(`smoke は ${signals.resultSmoke || 'unknown'}、verify は ${signals.resultVerify || 'unknown'} です。`);
     }
     if (signals.resultNext) {
       segments.push(`次の判断は ${signals.resultNext} です。`);
+    }
+    if (signals.resultDecisionReason) {
+      segments.push(`理由は ${signals.resultDecisionReason} です。`);
     }
   }
 
@@ -332,9 +372,35 @@ function buildNextActionReply(input, snapshotSummary) {
   const parts = [];
 
   if (signals.resultNext) {
+    const decisionText = signals.resultDecision || signals.resultNext;
+    const readyCommit = decisionText === 'ready_for_commit';
+    const readyReview = decisionText === 'ready_for_review';
+    const requestFix = decisionText === 'request_fix';
+    const stopInvestigate = decisionText === 'stop_and_investigate';
+    const waitResult = decisionText === 'wait_for_result';
+    const lead = readyCommit
+      ? '最新結果はPASSです。次はcommit前reviewまたはcommit準備です。'
+      : readyReview
+        ? '最新結果はPASSですが、smoke/verify の確認がまだ必要です。'
+        : requestFix
+          ? '修正依頼が必要です。'
+          : stopInvestigate
+            ? 'failed または FAIL があるため、原因調査が必要です。'
+            : waitResult
+              ? 'まだ結果待ちです。'
+              : `${signals.resultNext} が次の判断です。`;
+    const tail = signals.resultDecisionReason ? ` 理由: ${signals.resultDecisionReason}` : '';
     return {
-      reply: `${signals.resultNext} が次の判断です。${signals.resultStatus ? ` 実装結果は${signals.resultStatus}です。` : ''}`,
-      suggested_action: '次の判断を確認して、必要なら result を見直す。',
+      reply: `${lead}${tail}`,
+      suggested_action: readyCommit
+        ? 'commit 前 review をして、人間承認を待つ。'
+        : readyReview
+          ? 'smoke と verify を確認して、必要なら再判定する。'
+          : requestFix
+            ? '修正内容を整理して再依頼する。'
+            : stopInvestigate
+              ? '原因調査と切り分けを進める。'
+              : '次の判断を確認して、必要なら result を見直す。',
     };
   }
 

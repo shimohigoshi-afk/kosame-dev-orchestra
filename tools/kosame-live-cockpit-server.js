@@ -12,6 +12,7 @@ const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order
 const { readLatestWorkOrderHandoff, recordWorkOrderHandoff, HANDOFF_LOG_PATH_ENV } = require('./kosame-work-order-handoff-store');
 const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } = require('./kosame-work-order-result-store');
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
+const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -37,15 +38,18 @@ function buildHandoffActivityMessage(status, title) {
   return messages[status] || `${safeTitle} の引き継ぎ状態を更新しました。`;
 }
 
-function buildResultActivityMessage(status, title, agent) {
+function buildResultActivityMessage(decision, title, agent) {
   const safeTitle = String(title || '作業票').trim();
   const safeAgent = String(agent || '担当AI').trim() || '担当AI';
+  const decisionStatus = String(decision && decision.decision_status || decision && decision.nextRecommendedAction || 'wait_for_result').trim();
   const messages = {
-    review_ready: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。確認待ちです。`,
-    needs_attention: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。失敗のため確認が必要です。`,
-    revision_needed: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。修正依頼が必要です。`,
+    ready_for_commit: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は commit候補です。人間承認待ちです。`,
+    ready_for_review: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は review待ちです。smoke / verify を確認してください。`,
+    request_fix: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。修正依頼が必要です。`,
+    stop_and_investigate: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。原因調査が必要です。`,
+    wait_for_result: `${safeTitle} は結果待ちです。`,
   };
-  return messages[status] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
+  return messages[decisionStatus] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
 }
 
 function parseJsonBody(req, callback) {
@@ -298,12 +302,17 @@ function createLiveCockpitServer(options = {}) {
           workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
           latestHandoffWorkOrder: latestHandoff.latestHandoffWorkOrder || null,
         });
+        const latestDecision = buildWorkOrderResultDecision({
+          latestWorkOrderResult: latest.latestWorkOrderResult || null,
+          latestHandoffWorkOrder: latest.latestHandoffWorkOrder || latestHandoff.latestHandoffWorkOrder || null,
+          latestApprovedWorkOrder: latest.latestApprovedWorkOrder || latestHandoff.latestHandoffWorkOrder || null,
+        });
         res.writeHead(200, {
           'Content-Type': 'application/json; charset=utf-8',
           'Cache-Control': 'no-store',
           'X-Content-Type-Options': 'nosniff',
         });
-        res.end(JSON.stringify(latest, null, 2));
+        res.end(JSON.stringify({ ...latest, latestWorkOrderDecision: latestDecision }, null, 2));
         return;
       }
       if (req.method !== 'POST') {
@@ -351,6 +360,11 @@ function createLiveCockpitServer(options = {}) {
           });
 
           const latestResult = result.latestWorkOrderResult || null;
+          const latestDecision = buildWorkOrderResultDecision({
+            latestWorkOrderResult: latestResult,
+            latestHandoffWorkOrder: result.latestHandoffWorkOrder || latestHandoff,
+            latestApprovedWorkOrder: latestHandoff,
+          });
           let activityLogged = false;
           try {
             if (latestResult) {
@@ -358,9 +372,9 @@ function createLiveCockpitServer(options = {}) {
                 shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
                 agent: 'KOSAME',
                 project: 'KOSAME Dev Orchestra',
-                status: latestResult.activity_status,
-                task: 'work order result intake',
-                message: buildResultActivityMessage(latestResult.activity_status, latestResult.title, latestResult.assigned_agent || latestHandoff.assigned_agent || latestHandoff.recommended_agent),
+                status: latestResult.activity_status || latestDecision.activity_status,
+                task: 'work order result decision',
+                message: buildResultActivityMessage(latestDecision, latestResult.title, latestResult.assigned_agent || latestHandoff.assigned_agent || latestHandoff.recommended_agent),
               });
               activityLogged = true;
             }
@@ -385,8 +399,13 @@ function createLiveCockpitServer(options = {}) {
             ...result,
             latestWorkOrderResult: refreshed.latestWorkOrderResult || latestResult || null,
             latestHandoffWorkOrder: refreshed.latestHandoffWorkOrder || latestHandoff,
+            latestWorkOrderDecision: buildWorkOrderResultDecision({
+              latestWorkOrderResult: refreshed.latestWorkOrderResult || latestResult || null,
+              latestHandoffWorkOrder: refreshed.latestHandoffWorkOrder || latestHandoff,
+              latestApprovedWorkOrder: latestHandoff,
+            }),
             activityLogged,
-            nextRecommendedAction: (refreshed.latestWorkOrderResult && refreshed.latestWorkOrderResult.nextRecommendedAction) || result.latestWorkOrderResult?.nextRecommendedAction || 'review',
+            nextRecommendedAction: (refreshed.latestWorkOrderResult && refreshed.latestWorkOrderResult.nextRecommendedAction) || result.latestWorkOrderResult?.nextRecommendedAction || latestDecision.nextRecommendedAction || 'wait_for_result',
           }, null, 2));
         } catch (error) {
           res.writeHead(400, {

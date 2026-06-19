@@ -12,6 +12,10 @@ const {
   hasSecretLikeText,
   readLatestApprovedWorkOrder,
 } = require('./kosame-work-order-approval-store');
+const {
+  buildWorkOrderResultDecision,
+  normalizeOutcome,
+} = require('./kosame-work-order-result-decision');
 
 const DEFAULT_RESULT_LOG_PATH = path.join(os.homedir(), '.kosame', 'work-order-results.jsonl');
 const RESULT_LOG_PATH_ENV = 'KOSAME_WORK_ORDER_RESULT_LOG_PATH';
@@ -19,27 +23,6 @@ const HANDOFF_TARGET_REPO = '/home/lavie/kosame-dev-orchestra';
 const MAX_TEXT_LENGTH = 260;
 const MAX_NOTE_LENGTH = 400;
 const ALLOWED_RESULT_STATUSES = new Set(['success', 'failed', 'needs_fix']);
-const SAFE_STATUS_MAP = {
-  success: {
-    work_order_status: 'completed',
-    handoff_status: 'review_ready',
-    activity_status: 'review_ready',
-    nextRecommendedAction: 'ready_for_commit',
-  },
-  failed: {
-    work_order_status: 'failed',
-    handoff_status: 'needs_attention',
-    activity_status: 'needs_attention',
-    nextRecommendedAction: 'stop_and_investigate',
-  },
-  needs_fix: {
-    work_order_status: 'needs_fix',
-    handoff_status: 'revision_needed',
-    activity_status: 'revision_needed',
-    nextRecommendedAction: 'request_fix',
-  },
-};
-
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -88,14 +71,6 @@ function normalizeResultStatus(value) {
   return status;
 }
 
-function normalizeOutcome(value) {
-  const text = normalizeText(value).toUpperCase();
-  if (!text) return 'unknown';
-  if (text.includes('PASS')) return 'PASS';
-  if (text.includes('FAIL')) return 'FAIL';
-  return 'unknown';
-}
-
 function normalizeChangedFiles(value) {
   const rawItems = Array.isArray(value)
     ? value
@@ -120,10 +95,13 @@ function summarizeChangedFiles(items) {
 }
 
 function buildNextRecommendedAction(resultStatus, smokeResult, verifyResult) {
-  if (resultStatus === 'failed') return 'stop_and_investigate';
-  if (resultStatus === 'needs_fix') return 'request_fix';
-  if (smokeResult === 'PASS' && verifyResult === 'PASS') return 'ready_for_commit';
-  return 'review';
+  return buildWorkOrderResultDecision({
+    latestWorkOrderResult: {
+      result_status: resultStatus,
+      smoke_result: smokeResult,
+      verify_result: verifyResult,
+    },
+  }).nextRecommendedAction;
 }
 
 function buildSafeResultText(input = {}) {
@@ -143,14 +121,29 @@ function buildSafeResultText(input = {}) {
   if (hasSecretLikeText(rawCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
   }
-  const statusMap = SAFE_STATUS_MAP[status];
-  if (!statusMap) throw new Error('result status が不明です。');
+  const decision = buildWorkOrderResultDecision({
+    latestWorkOrderResult: {
+      result_status: status,
+      smoke_result: smoke,
+      verify_result: verify,
+    },
+  });
   return {
     result_status: status,
-    work_order_status: statusMap.work_order_status,
-    handoff_status: statusMap.handoff_status,
-    activity_status: statusMap.activity_status,
-    nextRecommendedAction: buildNextRecommendedAction(status, smoke, verify),
+    work_order_status: status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : 'completed',
+    handoff_status: status === 'failed'
+      ? 'needs_attention'
+      : status === 'needs_fix'
+        ? 'revision_needed'
+        : 'review_ready',
+    activity_status: decision.activity_status,
+    nextRecommendedAction: decision.nextRecommendedAction,
+    decision_status: decision.decision_status,
+    decision_reason: decision.reason,
+    required_next_work: decision.required_next_work,
+    commit_tag_push_allowed: decision.commit_tag_push_allowed,
+    human_gate_required: decision.human_gate_required,
+    decision_summary: decision.summary,
     result_summary: summary,
     changed_files: changedFiles,
     changed_files_summary: summarizeChangedFiles(changedFiles),
@@ -170,6 +163,36 @@ function normalizeWorkOrderResultRecord(record) {
   const title = truncate(record.title || '', 120);
   const assignedAgent = truncate(record.assigned_agent || record.agent || '', 60);
   if (!workOrderId || !title || !assignedAgent) return null;
+  const smoke = normalizeOutcome(record.smoke_result);
+  const verify = normalizeOutcome(record.verify_result);
+  const decision = buildWorkOrderResultDecision({
+    latestWorkOrderResult: {
+      result_status: status,
+      smoke_result: smoke,
+      verify_result: verify,
+      title,
+      target_repo: targetRepo,
+      assigned_agent: assignedAgent,
+      recommended_agent: truncate(record.recommended_agent || record.agent || assignedAgent, 60),
+      risk_level: truncate(record.risk_level || 'low', 24),
+      human_gate_required: record.human_gate_required !== false,
+    },
+    latestHandoffWorkOrder: {
+      title,
+      target_repo: targetRepo,
+      assigned_agent: assignedAgent,
+      recommended_agent: truncate(record.recommended_agent || record.agent || assignedAgent, 60),
+      risk_level: truncate(record.risk_level || 'low', 24),
+      human_gate_required: record.human_gate_required !== false,
+    },
+    latestApprovedWorkOrder: {
+      title,
+      target_repo: targetRepo,
+      agent: assignedAgent,
+      risk_level: truncate(record.risk_level || 'low', 24),
+      requires_human_confirmation: record.human_gate_required !== false,
+    },
+  });
   return {
     result_id: normalizeText(record.result_id || record.id || workOrderId),
     work_order_id: workOrderId,
@@ -182,19 +205,24 @@ function normalizeWorkOrderResultRecord(record) {
     risk_level: truncate(record.risk_level || 'low', 24),
     human_gate_required: record.human_gate_required !== false,
     result_status: status,
-    work_order_status: normalizeText(record.work_order_status || SAFE_STATUS_MAP[status].work_order_status),
-    handoff_status: normalizeText(record.handoff_status || SAFE_STATUS_MAP[status].handoff_status),
-    activity_status: normalizeText(record.activity_status || SAFE_STATUS_MAP[status].activity_status),
-    nextRecommendedAction: normalizeText(record.nextRecommendedAction || SAFE_STATUS_MAP[status].nextRecommendedAction),
+    work_order_status: normalizeText(record.work_order_status || (status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : 'completed')),
+    handoff_status: normalizeText(record.handoff_status || (status === 'failed' ? 'needs_attention' : status === 'needs_fix' ? 'revision_needed' : 'review_ready')),
+    activity_status: normalizeText(record.activity_status || decision.activity_status),
+    nextRecommendedAction: normalizeText(record.nextRecommendedAction || decision.nextRecommendedAction),
     result_summary: truncate(record.result_summary || record.summary || '', MAX_NOTE_LENGTH),
     changed_files: Array.isArray(record.changed_files) ? record.changed_files.slice(0, 20).map((item) => truncate(item, 140)) : [],
     changed_files_summary: truncate(record.changed_files_summary || summarizeChangedFiles(record.changed_files), MAX_NOTE_LENGTH),
-    smoke_result: normalizeOutcome(record.smoke_result),
-    verify_result: normalizeOutcome(record.verify_result),
+    smoke_result: smoke,
+    verify_result: verify,
     notes: truncate(record.notes || '', MAX_NOTE_LENGTH),
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
     updated_at: normalizeText(record.updated_at || record.timestamp || record.created_at || ''),
     source: truncate(record.source || 'kosame-console', 40),
+    decision_status: normalizeText(record.decision_status || record.result_decision || decision.decision_status),
+    decision_reason: truncate(record.decision_reason || decision.reason, MAX_NOTE_LENGTH),
+    required_next_work: truncate(record.required_next_work || decision.required_next_work, MAX_NOTE_LENGTH),
+    commit_tag_push_allowed: record.commit_tag_push_allowed === true || decision.commit_tag_push_allowed,
+    decision_summary: truncate(record.decision_summary || decision.summary, MAX_NOTE_LENGTH),
   };
 }
 
@@ -214,6 +242,11 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     handoff_status: latestResult.handoff_status,
     activity_status: latestResult.activity_status,
     nextRecommendedAction: latestResult.nextRecommendedAction,
+    decision_status: latestResult.decision_status,
+    decision_reason: latestResult.decision_reason,
+    required_next_work: latestResult.required_next_work,
+    commit_tag_push_allowed: latestResult.commit_tag_push_allowed,
+    decision_summary: latestResult.decision_summary,
     result_summary: latestResult.result_summary,
     changed_files: latestResult.changed_files,
     changed_files_summary: latestResult.changed_files_summary,

@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.84.25.1",
+  "version": "110.84.26",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -807,7 +807,8 @@
     "smoke:v110-84-23": "node smoke/v110-84-23-llama-audit-lane-smoke.js",
     "smoke:v110-84-24": "node smoke/v110-84-24-approved-work-order-handoff-queue-smoke.js",
     "smoke:v110-84-25": "node smoke/v110-84-25-work-order-result-intake-smoke.js",
-    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v110-84-25 && npm run smoke:v110-84-24 && npm run smoke:v110-84-23 && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7",
+    "smoke:v110-84-26": "node smoke/v110-84-26-result-decision-panel-smoke.js",
+    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v110-84-26 && npm run smoke:v110-84-25 && npm run smoke:v110-84-24 && npm run smoke:v110-84-23 && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7",
     "activity:append": "node tools/kosame-shell-agent-activity.js append"
   },
   "dependencies": {

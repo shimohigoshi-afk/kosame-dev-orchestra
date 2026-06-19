@@ -922,6 +922,11 @@ h1 {
   display: grid;
   gap: 10px;
 }
+.work-order-decision-panel {
+  margin: 0 0 10px;
+  display: grid;
+  gap: 10px;
+}
 .work-order-result-status-row {
   display: flex;
   flex-wrap: wrap;
@@ -989,6 +994,20 @@ h1 {
   font-size: 11px;
   line-height: 1.6;
   color: var(--muted);
+}
+.chat-work-order-decision-summary {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.chat-work-order-decision-lines {
+  display: grid;
+  gap: 4px;
+}
+.chat-work-order-decision-line {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #dbeafe;
 }
 .chat-work-order-result-form .chat-work-order-actions {
   justify-content: flex-start;
@@ -1863,6 +1882,8 @@ h1 {
         <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
         <div id="work-order-result-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
         <div id="work-order-result-panel" class="work-order-result-panel"></div>
+        <div id="work-order-result-decision-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
+        <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">
@@ -2805,6 +2826,7 @@ function buildAssistPanelModel(snapshot, tab) {
       };
     case 'diagnostics': {
       const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
+      const latestWorkOrderDecision = snapshot.latestWorkOrderDecision || {};
       return {
         title: '診断情報',
         subtitle: '内部状態は必要な時だけここで確認します。',
@@ -2815,6 +2837,7 @@ function buildAssistPanelModel(snapshot, tab) {
           `Llama audit: ${chatStatusState.llamaAudit}`,
           `Handoff: ${(snapshot.latestHandoffWorkOrder && snapshot.latestHandoffWorkOrder.status) || (snapshot.latestApprovedWorkOrder ? 'ready_to_handoff' : 'missing')}`,
           `Result: ${latestWorkOrderResult.result_status || 'unsubmitted'} / smoke: ${latestWorkOrderResult.smoke_result || 'unknown'} / verify: ${latestWorkOrderResult.verify_result || 'unknown'} / next: ${latestWorkOrderResult.nextRecommendedAction || 'review'}`,
+          `Decision: ${latestWorkOrderDecision.decision_status || latestWorkOrderDecision.nextRecommendedAction || 'wait_for_result'} / next: ${latestWorkOrderDecision.nextRecommendedAction || 'wait_for_result'} / gate: ${latestWorkOrderDecision.human_gate_required ? 'yes' : 'no'}`,
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
@@ -4135,8 +4158,9 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   const result = current.result_record || snapshot.latestWorkOrderResult || current || {};
   const currentId = getWorkOrderResultDraftKey(current);
   const formState = getWorkOrderResultFormState(result && result.work_order_id ? result : current);
+  const decisionNext = (snapshot.latestWorkOrderDecision && snapshot.latestWorkOrderDecision.nextRecommendedAction) || result.nextRecommendedAction || current.nextRecommendedAction || 'review';
 
-  statusNode.textContent = `Result Intake: ${current.title || '—'} / ${current.status || result.result_status || 'unsubmitted'} / ${result.nextRecommendedAction || 'review'}`;
+  statusNode.textContent = `Result Intake: ${current.title || '—'} / ${current.status || result.result_status || 'unsubmitted'} / ${decisionNext}`;
 
   const card = document.createElement('div');
   card.className = 'chat-work-order-card is-approved';
@@ -4179,7 +4203,7 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
     `smoke: ${current.smoke_result || 'unknown'}`,
     `verify: ${current.verify_result || 'unknown'}`,
     `changed files: ${current.changed_files_summary || (Array.isArray(current.changed_files) ? current.changed_files.join(' | ') : '—')}`,
-    `nextRecommendedAction: ${current.nextRecommendedAction || 'review'}`,
+    `nextRecommendedAction: ${decisionNext}`,
   ];
   summary.textContent = summaryLines.join('\n');
   card.appendChild(summary);
@@ -4278,6 +4302,149 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
+  const latestDecision = snapshot.latestWorkOrderDecision || null;
+  if (latestDecision && typeof latestDecision === 'object' && Object.keys(latestDecision).length) {
+    return latestDecision;
+  }
+  const latestResult = snapshot.latestWorkOrderResult || null;
+  const latestHandoff = snapshot.latestHandoffWorkOrder || null;
+  if (!latestResult && !latestHandoff) return null;
+  const resultStatus = String(latestResult && latestResult.result_status || '').trim();
+  const smoke = String(latestResult && latestResult.smoke_result || 'unknown').trim();
+  const verify = String(latestResult && latestResult.verify_result || 'unknown').trim();
+  let decisionStatus = 'wait_for_result';
+  let reason = 'まだ実装結果が届いていません。';
+  let requiredNextWork = 'Handoff 済みの作業票から結果貼り戻しを待つ';
+  let humanGateRequired = false;
+  let commitTagPushAllowed = false;
+  let activityStatus = 'waiting';
+  if (resultStatus === 'needs_fix') {
+    decisionStatus = 'request_fix';
+    reason = '修正依頼が必要です。';
+    requiredNextWork = '修正内容を整理して再依頼する';
+    humanGateRequired = true;
+    activityStatus = 'human_gate';
+  } else if (resultStatus === 'failed' || smoke === 'FAIL' || verify === 'FAIL') {
+    decisionStatus = 'stop_and_investigate';
+    reason = 'failed または smoke と verify に FAIL があるため、先に原因調査が必要です。';
+    requiredNextWork = '原因調査と切り分けを行う';
+    humanGateRequired = true;
+    activityStatus = 'blocked';
+  } else if (resultStatus === 'success' && smoke === 'PASS' && verify === 'PASS') {
+    decisionStatus = 'ready_for_commit';
+    reason = '実装結果と smoke と verify がそろって PASS です。';
+    requiredNextWork = 'commit 前 review と人間承認を待つ';
+    humanGateRequired = true;
+    commitTagPushAllowed = true;
+    activityStatus = 'human_gate';
+  } else if (resultStatus === 'success') {
+    decisionStatus = 'ready_for_review';
+    reason = '実装結果は PASS ですが、smoke / verify の確認がまだ揃っていません。';
+    requiredNextWork = 'smoke と verify を確認してから commit 候補へ進める';
+    humanGateRequired = true;
+    activityStatus = 'human_gate';
+  }
+  const base = latestHandoff || latestResult || {};
+  const title = base.title || '作業票';
+  return {
+    title,
+    target_repo: base.target_repo || '—',
+    assigned_agent: base.assigned_agent || base.recommended_agent || '—',
+    risk_level: base.risk_level || 'low',
+    human_gate_required: humanGateRequired,
+    commit_tag_push_allowed: commitTagPushAllowed,
+    decision_status: decisionStatus,
+    nextRecommendedAction: decisionStatus,
+    reason,
+    required_next_work: requiredNextWork,
+    activity_status: activityStatus,
+    summary: `status=${decisionStatus} / next=${decisionStatus} / humanGate=${humanGateRequired ? 'yes' : 'no'} / commitTagPush=${commitTagPushAllowed ? 'candidate' : 'hold'} / reason=${reason} / required=${requiredNextWork}`,
+  };
+}
+
+function formatDecisionStatusLabel(status) {
+  return {
+    ready_for_review: 'ready_for_review / 確認待ち',
+    ready_for_commit: 'ready_for_commit / commit候補',
+    request_fix: 'request_fix / 修正依頼',
+    stop_and_investigate: 'stop_and_investigate / 調査必要',
+    wait_for_result: 'wait_for_result / 結果待ち',
+  }[status] || `${status || 'wait_for_result'}`;
+}
+
+function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('work-order-result-decision-panel');
+  const statusNode = document.getElementById('work-order-result-decision-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+
+  const current = getCurrentWorkOrderDecision(snapshot);
+  if (!current) {
+    statusNode.textContent = 'Result Decision: まだ判定対象はありません。';
+    const empty = document.createElement('div');
+    empty.className = 'chat-work-order-result-empty';
+    empty.textContent = '結果貼り戻し後に、次アクションをここで見られます。';
+    node.appendChild(empty);
+    return;
+  }
+
+  statusNode.textContent = `Result Decision: ${current.title || '—'} / ${formatDecisionStatusLabel(current.decision_status || 'wait_for_result')}`;
+
+  const card = document.createElement('div');
+  card.className = 'chat-work-order-card is-approved';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = 'Result Decision Panel';
+  head.appendChild(title);
+  const badge = document.createElement('span');
+  badge.className = 'chat-work-order-badge';
+  badge.textContent = formatDecisionStatusLabel(current.decision_status || 'wait_for_result');
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['agent', current.assigned_agent || '—'],
+    ['target', current.target_repo || '—'],
+    ['risk', current.risk_level || '—'],
+    ['human gate', current.human_gate_required ? 'required' : 'optional'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+  card.appendChild(meta);
+
+  const lines = document.createElement('div');
+  lines.className = 'chat-work-order-decision-lines';
+  [
+    `判定ステータス: ${current.decision_status || 'wait_for_result'}`,
+    `nextRecommendedAction: ${current.nextRecommendedAction || 'wait_for_result'}`,
+    `理由: ${current.reason || '—'}`,
+    `必要な次作業: ${current.required_next_work || '—'}`,
+    `human gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
+    `commit/tag/push可否: ${current.commit_tag_push_allowed ? 'commit候補 / 人間承認待ち' : '保留'}`,
+  ].forEach((textLine) => {
+    const line = document.createElement('div');
+    line.className = 'chat-work-order-decision-line';
+    line.textContent = textLine;
+    lines.appendChild(line);
+  });
+  card.appendChild(lines);
+
+  const summary = document.createElement('div');
+  summary.className = 'chat-work-order-decision-summary';
+  summary.textContent = current.summary || '';
+  card.appendChild(summary);
+
+  node.appendChild(card);
+}
+
 async function handleWorkOrderHandoffAction(action, buttonNode) {
   const current = getCurrentWorkOrderHandoff(latestSnapshot || {});
   if (!current || !buttonNode) return;
@@ -4310,6 +4477,7 @@ async function handleWorkOrderHandoffAction(action, buttonNode) {
     latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderWorkOrderResultPanel(latestSnapshot);
+    renderResultDecisionPanel(latestSnapshot);
     renderLatestApprovedWorkOrder(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
   } catch (error) {
@@ -4429,9 +4597,12 @@ async function handleWorkOrderResultSubmit(form) {
     if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
     latestSnapshot.latestWorkOrderResult = data.latestWorkOrderResult || latestSnapshot.latestWorkOrderResult || null;
     latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+    latestSnapshot.latestWorkOrderDecision = data.latestWorkOrderDecision || latestSnapshot.latestWorkOrderDecision || null;
     latestSnapshot.workOrderResultQueue = latestSnapshot.latestWorkOrderResult ? [latestSnapshot.latestWorkOrderResult] : [];
+    latestSnapshot.workOrderDecisionQueue = latestSnapshot.latestWorkOrderDecision ? [latestSnapshot.latestWorkOrderDecision] : [];
     clearWorkOrderResultDraft(current);
     renderWorkOrderResultPanel(latestSnapshot);
+    renderResultDecisionPanel(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderLatestApprovedWorkOrder(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
@@ -4524,6 +4695,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
     renderLatestApprovedWorkOrder(latestSnapshot);
     renderWorkOrderHandoffQueue(latestSnapshot);
     renderWorkOrderResultPanel(latestSnapshot);
+    renderResultDecisionPanel(latestSnapshot);
     if (typeof renderChatStatusBadges === 'function') renderChatStatusBadges(latestSnapshot || {});
   } catch (error) {
     statusNode.textContent = `エラー: ${error && error.message ? error.message : '承認できませんでした。'}`;
@@ -4665,6 +4837,7 @@ async function loadSnapshot() {
     renderLatestApprovedWorkOrder(snapshot);
     renderWorkOrderHandoffQueue(snapshot);
     renderWorkOrderResultPanel(snapshot);
+    renderResultDecisionPanel(snapshot);
     renderChatAssistPanel(snapshot);
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
@@ -4694,6 +4867,7 @@ renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});
 renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
+renderResultDecisionPanel({});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 

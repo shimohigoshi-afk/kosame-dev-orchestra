@@ -20,6 +20,7 @@ const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-store');
 const { readLatestWorkOrderHandoff } = require('./kosame-work-order-handoff-store');
 const { readLatestWorkOrderResult } = require('./kosame-work-order-result-store');
+const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { getConfig: getProviderConfig } = require('../providers/provider-config');
 
 const READ_ONLY_COMMANDS = new Set([
@@ -524,7 +525,13 @@ function collectLiveCockpitSnapshot(options = {}) {
   const mergedLatestHandoffWorkOrder = latestWorkOrderResult.latestHandoffWorkOrder
     || latestWorkOrderHandoff.latestHandoffWorkOrder
     || null;
+  const latestWorkOrderDecision = buildWorkOrderResultDecision({
+    latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult || null,
+    latestHandoffWorkOrder: mergedLatestHandoffWorkOrder || latestWorkOrderHandoff.latestHandoffWorkOrder || null,
+    latestApprovedWorkOrder: latestWorkOrderResult.latestApprovedWorkOrder || latestApprovedWorkOrder.latestApprovedWorkOrder || null,
+  });
   const mergedWorkOrderHandoffQueue = mergedLatestHandoffWorkOrder ? [mergedLatestHandoffWorkOrder] : [];
+  const workOrderDecisionQueue = latestWorkOrderDecision ? [latestWorkOrderDecision] : [];
   const projects = projectRegistry
     .filter((project) => project.enabled !== false)
     .map((project) => buildProjectState(project, options));
@@ -637,6 +644,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderHandoffQueue: mergedWorkOrderHandoffQueue,
     latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
     workOrderResultQueue: latestWorkOrderResult.latestWorkOrderResult ? [latestWorkOrderResult.latestWorkOrderResult] : [],
+    latestWorkOrderDecision,
+    workOrderDecisionQueue,
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
@@ -683,6 +692,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderHandoffQueue: mergedWorkOrderHandoffQueue,
     latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
     workOrderResultQueue: latestWorkOrderResult.latestWorkOrderResult ? [latestWorkOrderResult.latestWorkOrderResult] : [],
+    latestWorkOrderDecision,
+    workOrderDecisionQueue,
     chatStatus: {
       ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',

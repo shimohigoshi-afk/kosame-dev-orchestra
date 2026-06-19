@@ -371,7 +371,12 @@ function buildNextActionReply(input, snapshotSummary) {
   const versionLabel = signals.version ? `v${signals.version}` : 'いま';
   const parts = [];
 
-  const decisionText = normalizeContent(signals.resultDecision || signals.resultNext);
+  const decisionText = normalizeContent(
+    signals.resultDecision
+    || signals.resultNext
+    || ((signals.resultStatus === 'success' && signals.resultSmoke === 'PASS' && signals.resultVerify === 'PASS') ? 'ready_for_commit' : '')
+    || ((signals.resultStatus === 'success' && (signals.resultSmoke === 'unknown' || signals.resultVerify === 'unknown')) ? 'ready_for_review' : '')
+  );
   if (decisionText || signals.resultNext) {
     const readyCommit = decisionText === 'ready_for_commit';
     const readyReview = decisionText === 'ready_for_review';
@@ -379,7 +384,7 @@ function buildNextActionReply(input, snapshotSummary) {
     const stopInvestigate = decisionText === 'stop_and_investigate';
     const waitResult = decisionText === 'wait_for_result' || !decisionText;
     const lead = readyCommit
-      ? '最新結果はPASSです。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
+      ? '最新結果はPASSです。commit候補です。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
       : readyReview
         ? '最新結果はPASSですが、smoke/verify の確認がまだ必要です。'
         : requestFix

@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "110.84.22",
+  "version": "110.84.22.1",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",

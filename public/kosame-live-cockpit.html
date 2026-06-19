@@ -1641,6 +1641,7 @@ h1 {
             <div class="status-chip-row">
               <span class="status-chip" id="hero-chip-dev">Dev Orchestra</span>
               <span class="status-chip" id="hero-chip-sales">Sales DX</span>
+              <span class="status-chip ok" id="hero-chip-sound">Sound: Clear</span>
             </div>
             <div class="hero-meta">
               <div class="hero-meta-row"><span class="hero-meta-label">VER</span><code id="hero-version">—</code></div>
@@ -2071,30 +2072,46 @@ const NOTIFICATION_FREQ = 880;
 const NOTIFICATION_FREQ_2 = 660;
 const NOTIFICATION_DURATION_MS = 120;
 
-function readNotificationMode() {
+function readNotificationEnabled() {
   try {
-    const mode = localStorage.getItem(NOTIFICATION_MODE_KEY);
-    if (mode === 'soft' || mode === 'clear') return mode;
-    if (localStorage.getItem(NOTIFICATION_STORAGE_KEY) === '1') return 'soft';
-    return 'off';
+    const value = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+    if (value === 'true' || value === '1') return true;
+    if (value === 'false' || value === '0') return false;
+    const legacyMode = localStorage.getItem(NOTIFICATION_MODE_KEY);
+    return legacyMode === 'soft' || legacyMode === 'clear';
   } catch {
-    return 'off';
+    return false;
   }
 }
 
+function readNotificationMode() {
+  try {
+    const mode = localStorage.getItem(NOTIFICATION_MODE_KEY);
+    return mode === 'clear' ? 'clear' : 'soft';
+  } catch {
+    return 'soft';
+  }
+}
+
+function writeNotificationEnabled(enabled) {
+  try {
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, enabled ? 'true' : 'false');
+  } catch {}
+}
+
 function writeNotificationMode(mode) {
+  if (mode !== 'soft' && mode !== 'clear') return;
   try {
     localStorage.setItem(NOTIFICATION_MODE_KEY, mode);
-    localStorage.setItem(NOTIFICATION_STORAGE_KEY, mode !== 'off' ? '1' : '0');
   } catch {}
 }
 
 function readNotificationPreference() {
-  return readNotificationMode() !== 'off';
+  return readNotificationEnabled();
 }
 
 function writeNotificationPreference(enabled) {
-  writeNotificationMode(enabled ? 'soft' : 'off');
+  writeNotificationEnabled(enabled);
 }
 
 function isQuestionCue(text) {
@@ -2106,23 +2123,30 @@ function updateNotificationUI() {
   const stateNode = document.getElementById('sound-state');
   const hintNode = document.getElementById('sound-hint');
   const summaryNode = document.getElementById('sound-summary-mode');
+  const toneNode = document.getElementById('sound-tone-state');
   const soundBadge = document.getElementById('chat-sound-badge');
-  const modeLabel = notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF';
+  const modeLabel = notificationMode === 'clear' ? 'Clear' : 'Soft';
   const enabledLabel = notificationEnabled ? 'ON' : 'OFF';
-  if (stateNode) stateNode.textContent = `通知音 ${enabledLabel}`;
+  if (stateNode) stateNode.textContent = enabledLabel;
   if (summaryNode) summaryNode.textContent = enabledLabel;
-  ['off', 'soft', 'clear'].forEach((m) => {
+  if (toneNode) toneNode.textContent = modeLabel;
+  ['soft', 'clear'].forEach((m) => {
     const btn = document.getElementById(`sound-btn-${m}`);
     if (btn) btn.classList.toggle('active', notificationMode === m);
   });
   if (hintNode) {
-    hintNode.textContent = notificationEnabled
-      ? (notificationUnlocked ? `Sound: ON (${modeLabel})` : `Sound: ON (${modeLabel}) / ブラウザ操作後に有効化`)
-      : 'Sound: OFF';
+    hintNode.textContent = notificationUnlocked
+      ? '通知音の試し鳴らしは利用できます。'
+      : '通知音はブラウザ操作後に有効化できます。';
   }
   if (soundBadge) {
     soundBadge.textContent = `Sound: ${enabledLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
+  }
+  const heroSoundChip = document.getElementById('hero-chip-sound');
+  if (heroSoundChip) {
+    heroSoundChip.textContent = `Sound: ${enabledLabel}`;
+    heroSoundChip.className = `status-chip ${notificationEnabled ? 'ok' : 'warn'}`;
   }
 }
 
@@ -2189,18 +2213,31 @@ async function unlockNotificationAudio() {
 }
 
 function setNotificationMode(mode, { persist = true } = {}) {
+  if (mode !== 'soft' && mode !== 'clear') return;
   notificationMode = mode;
-  notificationEnabled = mode !== 'off';
-  if (!notificationEnabled) notificationUnlocked = false;
   if (persist) writeNotificationMode(mode);
   updateNotificationUI();
 }
 
 function setNotificationEnabled(nextEnabled, { persist = true } = {}) {
-  setNotificationMode(
-    nextEnabled ? (notificationMode !== 'off' ? notificationMode : 'soft') : 'off',
-    { persist }
-  );
+  notificationEnabled = !!nextEnabled;
+  if (notificationEnabled && notificationMode !== 'soft' && notificationMode !== 'clear') {
+    notificationMode = 'soft';
+  }
+  if (persist) writeNotificationEnabled(notificationEnabled);
+  updateNotificationUI();
+}
+
+function setNotificationSoundEnabled(enabled) {
+  notificationEnabled = !!enabled;
+  if (notificationEnabled && notificationMode !== 'soft' && notificationMode !== 'clear') {
+    notificationMode = 'soft';
+  }
+  try {
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, String(notificationEnabled));
+    if (notificationEnabled) writeNotificationMode(notificationMode);
+  } catch {}
+  updateNotificationUI();
 }
 
 function playNotificationTone(ctx, frequency, startAt, duration, volume) {
@@ -2268,7 +2305,6 @@ function playNotificationChime() {
 }
 
 async function playSoundTypeTest(type) {
-  if (notificationMode === 'off') setNotificationMode('soft');
   const unlocked = await unlockNotificationAudio();
   if (!unlocked) return;
   const ctx = ensureNotificationAudioContext();
@@ -2278,6 +2314,19 @@ async function playSoundTypeTest(type) {
   } else {
     playSoftChimeCtx(ctx);
   }
+}
+
+async function playNotificationTestChime() {
+  const unlocked = await unlockNotificationAudio();
+  if (!unlocked) return false;
+  const ctx = ensureNotificationAudioContext();
+  if (!ctx) return false;
+  if (notificationMode === 'clear') {
+    playClearChimeCtx(ctx);
+  } else {
+    playSoftChimeCtx(ctx);
+  }
+  return true;
 }
 
 function playNotificationBeep() {
@@ -2628,10 +2677,11 @@ function buildAssistPanelModel(snapshot, tab) {
         title: '通知設定',
         subtitle: '通知音は補助メニューの中だけで扱います。',
         lines: [
-          `Sound: ${notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF'}`,
+          `通知音: ${notificationEnabled ? 'ON' : 'OFF'}`,
+          `音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Call pill: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
-          'ブラウザ操作後に有効化してください。',
+          'ON/OFF と音色は別々に扱います。',
         ],
       };
     case 'diagnostics':
@@ -2642,7 +2692,7 @@ function buildAssistPanelModel(snapshot, tab) {
           `AI: ${chatStatusState.ai}`,
           `Context: ${chatStatusState.context}`,
           `Memory: ${chatStatusState.memory}`,
-          `Sound: ${notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF'}`,
+          `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
           `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
         ],
@@ -2677,10 +2727,18 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
 
   const card = document.createElement('div');
   card.className = model.title === '通知設定' ? 'chat-assist-card chat-sound-details-compact' : 'chat-assist-card';
-  const textBlock = document.createElement('div');
-  textBlock.className = 'mono chat-assist-text';
-  textBlock.textContent = model.lines.join('\n');
-  card.appendChild(textBlock);
+  if (selectedAssistTab !== 'notifications') {
+    const textBlock = document.createElement('div');
+    textBlock.className = 'mono chat-assist-text';
+    textBlock.textContent = model.lines.join('\n');
+    card.appendChild(textBlock);
+  } else {
+    const note = document.createElement('div');
+    note.className = 'small chat-assist-text';
+    note.style.color = 'var(--muted)';
+    note.textContent = '通知音の状態は上の表示に集約しています。操作ボタンで切り替えてください。';
+    card.appendChild(note);
+  }
 
   if (selectedAssistTab === 'notifications') {
     const soundMeta = document.createElement('div');
@@ -2695,18 +2753,29 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     soundMeta.appendChild(soundState);
     card.appendChild(soundMeta);
 
+    const powerRow = document.createElement('div');
+    powerRow.className = 'sound-mode-row';
+    [
+      { label: '通知音をONにする', enabled: true },
+      { label: '通知音をOFFにする', enabled: false },
+    ].forEach((spec) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chat-sound-mode-btn';
+      btn.textContent = spec.label;
+      btn.addEventListener('click', () => setNotificationSoundEnabled(spec.enabled));
+      powerRow.appendChild(btn);
+    });
     const testBtn = document.createElement('button');
     testBtn.type = 'button';
     testBtn.className = 'chat-sound-btn';
     testBtn.id = 'sound-test';
     testBtn.textContent = 'テスト';
     testBtn.addEventListener('click', async () => {
-      if (notificationMode === 'off') setNotificationMode('soft');
-      const unlocked = await unlockNotificationAudio();
-      if (unlocked) playNotificationChime();
-      renderChatAssistPanel(latestSnapshot || {});
+      await playNotificationTestChime();
     });
-    card.appendChild(testBtn);
+    powerRow.appendChild(testBtn);
+    card.appendChild(powerRow);
 
     const modeDetails = document.createElement('details');
     modeDetails.className = 'chat-sound-details chat-sound-details-compact';
@@ -2732,10 +2801,21 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     const detailsBody = document.createElement('div');
     detailsBody.className = 'chat-sound-details-body';
 
+    const toneChip = document.createElement('div');
+    toneChip.className = 'chat-sound-chip';
+    const toneLabel = document.createElement('span');
+    toneLabel.className = 'sound-label';
+    toneLabel.textContent = '音色';
+    const toneState = document.createElement('span');
+    toneState.id = 'sound-tone-state';
+    toneState.textContent = 'Soft';
+    toneChip.appendChild(toneLabel);
+    toneChip.appendChild(toneState);
+    detailsBody.appendChild(toneChip);
+
     const modeRow = document.createElement('div');
     modeRow.className = 'sound-mode-row';
     [
-      { label: 'OFF', mode: 'off' },
       { label: 'Soft', mode: 'soft' },
       { label: 'Clear', mode: 'clear' },
     ].forEach((spec) => {
@@ -2747,16 +2827,10 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
       btn.textContent = spec.label;
       btn.addEventListener('click', async () => {
         setNotificationMode(spec.mode);
-        if (spec.mode !== 'off') await unlockNotificationAudio();
-        renderChatAssistPanel(latestSnapshot || {});
+        await unlockNotificationAudio();
       });
       modeRow.appendChild(btn);
     });
-    const hiddenToggle = document.createElement('span');
-    hiddenToggle.id = 'sound-toggle';
-    hiddenToggle.setAttribute('aria-hidden', 'true');
-    hiddenToggle.style.display = 'none';
-    modeRow.appendChild(hiddenToggle);
     detailsBody.appendChild(modeRow);
 
     const typeRow = document.createElement('div');
@@ -2782,15 +2856,8 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     hint.id = 'sound-hint';
     hint.className = 'small';
     hint.style.color = 'var(--muted)';
-    hint.textContent = 'ブラウザ操作後に有効化してください';
+    hint.textContent = '通知音の状態は上の表示で確認できます。';
     detailsBody.appendChild(hint);
-
-    const hintLegacy = document.createElement('span');
-    hintLegacy.id = 'sound-hint-legacy';
-    hintLegacy.setAttribute('aria-hidden', 'true');
-    hintLegacy.style.display = 'none';
-    hintLegacy.textContent = 'ブラウザ操作後に有効化してください / テスト音';
-    detailsBody.appendChild(hintLegacy);
 
     modeDetails.appendChild(detailsBody);
     card.appendChild(modeDetails);
@@ -3989,7 +4056,12 @@ async function loadSnapshot() {
   }
 }
 
-setNotificationMode(readNotificationMode(), { persist: false });
+notificationMode = readNotificationMode();
+notificationEnabled = readNotificationPreference();
+if (notificationEnabled && notificationMode !== 'soft' && notificationMode !== 'clear') {
+  notificationMode = 'soft';
+}
+if (!notificationEnabled) notificationUnlocked = false;
 updateNotificationUI();
 renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});

@@ -384,7 +384,7 @@ function buildNextActionReply(input, snapshotSummary) {
     const stopInvestigate = decisionText === 'stop_and_investigate';
     const waitResult = decisionText === 'wait_for_result' || !decisionText;
     const lead = readyCommit
-      ? '最新結果はPASSです。commit候補です。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
+      ? 'ready_for_commit 判定です。最新結果はPASSです。commit候補です。次はcommit前reviewまたはcommit準備です。人間承認待ちです。自動commitはしません。'
       : readyReview
         ? '最新結果はPASSですが、smoke/verify の確認がまだ必要です。'
         : requestFix

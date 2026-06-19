@@ -366,8 +366,97 @@ function buildStatusReply(input, snapshotSummary) {
   };
 }
 
+
+function collectDirectDecisionSignals(input) {
+  const source = input && typeof input === 'object' ? input : {};
+  const latestDecision = source.latestWorkOrderDecision && typeof source.latestWorkOrderDecision === 'object'
+    ? source.latestWorkOrderDecision
+    : null;
+  const latestResult = source.latestWorkOrderResult && typeof source.latestWorkOrderResult === 'object'
+    ? source.latestWorkOrderResult
+    : null;
+  const resultQueue = Array.isArray(source.workOrderResultQueue) ? source.workOrderResultQueue : [];
+  const queueResult = resultQueue.find((item) => item && typeof item === 'object') || null;
+
+  const pick = (...values) => {
+    for (const value of values) {
+      const text = normalizeContent(value);
+      if (text) return text;
+    }
+    return '';
+  };
+
+  const directStatus = pick(
+    latestDecision && (latestDecision.decision_status || latestDecision.status || latestDecision.result_status),
+    latestResult && (latestResult.decision_status || latestResult.result_status || latestResult.work_order_status),
+    queueResult && (queueResult.decision_status || queueResult.result_status || queueResult.work_order_status),
+  );
+
+  return {
+    resultStatus: pick(
+      latestResult && (latestResult.result_status || latestResult.work_order_status),
+      queueResult && (queueResult.result_status || queueResult.work_order_status),
+      latestDecision && (latestDecision.result_status || latestDecision.decision_status || latestDecision.status),
+    ),
+    resultSmoke: pick(
+      latestResult && latestResult.smoke_result,
+      queueResult && queueResult.smoke_result,
+      latestDecision && latestDecision.smoke_result,
+    ),
+    resultVerify: pick(
+      latestResult && latestResult.verify_result,
+      queueResult && queueResult.verify_result,
+      latestDecision && latestDecision.verify_result,
+    ),
+    resultNext: pick(
+      latestDecision && latestDecision.nextRecommendedAction,
+      latestResult && latestResult.nextRecommendedAction,
+      queueResult && queueResult.nextRecommendedAction,
+      directStatus,
+    ),
+    resultDecision: pick(
+      latestDecision && (latestDecision.decision_status || latestDecision.status || latestDecision.result_status),
+      latestResult && latestResult.decision_status,
+      queueResult && queueResult.decision_status,
+    ),
+    resultDecisionReason: pick(
+      latestDecision && latestDecision.reason,
+      latestResult && latestResult.reason,
+      queueResult && queueResult.reason,
+    ),
+    resultDecisionHumanGate: pick(
+      latestDecision && latestDecision.humanGate,
+      latestDecision && latestDecision.human_gate_required,
+      latestResult && latestResult.human_gate_required,
+      queueResult && queueResult.human_gate_required,
+    ),
+    resultDecisionCommit: pick(
+      latestDecision && latestDecision.commit_tag_push_allowed,
+      latestResult && latestResult.commit_tag_push_allowed,
+      queueResult && queueResult.commit_tag_push_allowed,
+    ),
+  };
+}
+
 function buildNextActionReply(input, snapshotSummary) {
-  const signals = parseSummarySignals(input.contextSummary || input.context || snapshotSummary);
+  const directSignals = collectDirectDecisionSignals(input);
+  const parsedSignals = parseSummarySignals(input.contextSummary || input.context || snapshotSummary);
+  const signals = { ...parsedSignals };
+  for (const key of [
+    'resultStatus',
+    'resultSmoke',
+    'resultVerify',
+    'resultNext',
+    'resultDecision',
+    'resultDecisionReason',
+    'resultDecisionHumanGate',
+    'resultDecisionCommit',
+  ]) {
+    if (normalizeContent(directSignals[key])) {
+      signals[key] = directSignals[key];
+    }
+  }
+
   const versionLabel = signals.version ? `v${signals.version}` : 'いま';
   const parts = [];
 
@@ -666,11 +755,12 @@ function normalizeChatRequest(body) {
 
 async function handleChatRequest(body) {
   const requestAt = new Date().toISOString();
-  const normalized = normalizeChatRequest(body);
+  const source = body && typeof body === 'object' ? body : {};
+  const normalized = normalizeChatRequest(source);
   const message = normalizeContent(normalized.message);
   const project = normalizeContent(normalized.project);
   const context = normalizeContent(normalized.context);
-  const contextSummary = normalizeContent(normalized.contextSummary);
+  const contextSummary = normalizeContent(source.contextSummary || source.context || normalized.contextSummary);
   const directText = [message, project].filter(Boolean).join(' ');
 
   if (!message) {
@@ -702,6 +792,12 @@ async function handleChatRequest(body) {
     project,
     context: context.slice(0, MAX_CONTEXT_LENGTH),
     contextSummary: contextSummary.slice(0, MAX_CONTEXT_LENGTH),
+    latestWorkOrderResult: source.latestWorkOrderResult || null,
+    workOrderResultQueue: Array.isArray(source.workOrderResultQueue) ? source.workOrderResultQueue : [],
+    latestWorkOrderDecision: source.latestWorkOrderDecision || null,
+    workOrderDecisionQueue: Array.isArray(source.workOrderDecisionQueue) ? source.workOrderDecisionQueue : [],
+    latestApprovedWorkOrder: source.latestApprovedWorkOrder || null,
+    latestHandoffWorkOrder: source.latestHandoffWorkOrder || null,
   }, contextSummary);
 
   const result = {

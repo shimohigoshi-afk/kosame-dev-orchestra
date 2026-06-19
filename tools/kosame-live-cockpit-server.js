@@ -248,9 +248,10 @@ function createLiveCockpitServer(options = {}) {
       parseJsonBody(req, (parsed) => {
         let contextSummary = '';
         let contextStatus = 'unavailable';
+        let snapshot = null;
         try {
           const confirmationBridge = detectConfirmation();
-          const snapshot = collectLiveCockpitSnapshot({
+          snapshot = collectLiveCockpitSnapshot({
             activeRepoPath: options.activeRepoPath,
             devRepoPath: options.devRepoPath,
             salesRepoPath: options.salesRepoPath,
@@ -266,14 +267,23 @@ function createLiveCockpitServer(options = {}) {
         } catch {
           contextSummary = '';
           contextStatus = 'unavailable';
+          snapshot = null;
         }
 
+        const decisionContext = `${parsed.contextSummary || parsed.context || ''}`;
+        const shouldAttachDecisionFields = /workOrderDecision=|workOrderResult=/.test(decisionContext);
         handleChatRequest({
           ...parsed,
           contextSummary: parsed.contextSummary || contextSummary,
           contextStatus: parsed.contextStatus || contextStatus,
           consoleContextSummary: contextSummary,
           consoleContextStatus: contextStatus,
+          latestWorkOrderResult: shouldAttachDecisionFields && snapshot && snapshot.latestWorkOrderResult ? snapshot.latestWorkOrderResult : null,
+          workOrderResultQueue: shouldAttachDecisionFields && snapshot && Array.isArray(snapshot.workOrderResultQueue) ? snapshot.workOrderResultQueue : [],
+          latestWorkOrderDecision: shouldAttachDecisionFields && snapshot && snapshot.latestWorkOrderDecision ? snapshot.latestWorkOrderDecision : null,
+          workOrderDecisionQueue: shouldAttachDecisionFields && snapshot && Array.isArray(snapshot.workOrderDecisionQueue) ? snapshot.workOrderDecisionQueue : [],
+          latestApprovedWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestApprovedWorkOrder ? snapshot.latestApprovedWorkOrder : null,
+          latestHandoffWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestHandoffWorkOrder ? snapshot.latestHandoffWorkOrder : null,
         }).then((result) => {
           const statusCode = result && result.ok === false ? 400 : 200;
           res.writeHead(statusCode, {
@@ -372,7 +382,13 @@ function createLiveCockpitServer(options = {}) {
                 shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
                 agent: 'KOSAME',
                 project: 'KOSAME Dev Orchestra',
-                status: latestResult.activity_status || latestDecision.activity_status,
+                status: latestDecision.decision_status === 'ready_for_commit' || latestDecision.decision_status === 'ready_for_review'
+                  ? 'review_ready'
+                  : latestDecision.decision_status === 'stop_and_investigate'
+                    ? 'needs_attention'
+                    : latestDecision.decision_status === 'request_fix'
+                      ? 'revision_needed'
+                      : latestResult.activity_status || latestDecision.activity_status,
                 task: 'work order result decision',
                 message: buildResultActivityMessage(latestDecision, latestResult.title, latestResult.assigned_agent || latestHandoff.assigned_agent || latestHandoff.recommended_agent),
               });

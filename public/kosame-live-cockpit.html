@@ -747,7 +747,7 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 320px; max-height: 560px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; }
+.chat-thread { min-height: 320px; max-height: 560px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 12px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
@@ -967,12 +967,12 @@ h1 {
   border: 1px solid rgba(125,211,252,0.22);
 }
 .work-order-result-panel {
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   display: grid;
   gap: 10px;
 }
 .work-order-decision-panel {
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   display: grid;
   gap: 10px;
 }
@@ -1079,7 +1079,7 @@ h1 {
   grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   align-items: stretch;
-  margin: 7px 0 4px;
+  margin: 10px 0 4px;
 }
 .chat-primary-btn {
   cursor: pointer;
@@ -4847,10 +4847,6 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   const current = getCurrentWorkOrderDecision(snapshot);
   if (!current) {
     statusNode.textContent = 'Result Decision: まだ判定対象はありません。';
-    const empty = document.createElement('div');
-    empty.className = 'chat-work-order-result-empty';
-    empty.textContent = '結果貼り戻し後に、次アクションをここで見られます。';
-    node.appendChild(empty);
     return;
   }
 
@@ -5587,6 +5583,9 @@ renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 updateChatSummarizeButtonLabel();
+document.querySelectorAll('.chat-section-details').forEach((details) => {
+  details.open = false;
+});
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 

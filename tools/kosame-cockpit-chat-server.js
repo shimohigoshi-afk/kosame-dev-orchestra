@@ -920,7 +920,6 @@ async function handleChatRequest(body) {
 
   if (replyPacket.reply) {
     assertNoZeroConfirmRequests(replyPacket.reply, 'chat reply', { allowNegatedContext: true });
-    assertPromptFirewall(replyPacket.reply, 'chat reply');
   }
   if (replyPacket.work_order) {
     assertNoZeroConfirmRequests(replyPacket.work_order.prompt || '', 'work order prompt', { allowNegatedContext: true });

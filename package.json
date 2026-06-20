@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "113.1.0",
+  "version": "113.1.1",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -814,6 +814,7 @@
     "smoke:v110-84-30": "node smoke/v110-84-30-handoff-inbox-persistence-smoke.js",
     "smoke:v110-84-31": "node smoke/v110-84-31-codex-dispatch-smoke.js",
     "smoke:v110-84-33": "node smoke/v110-84-33-complete-run-first-runtime-smoke.js",
+    "smoke:v113-1-1": "node smoke/v113-1-1-layout-order-smoke.js",
     "smoke:v113-1-0": "node smoke/v113-1-0-real-console-dogfood-e2e-smoke.js",
     "smoke:v113-0-10": "node smoke/v113-0-10-ui-polish-smoke.js",
     "smoke:v113-0-9": "node smoke/v113-0-9-runner-noninteractive-smoke.js",
@@ -828,7 +829,7 @@
     "handoff:bridge": "node tools/kosame-codex-handoff-bridge-server.js",
     "handoff:latest": "node tools/kosame-codex-handoff-inbox.js latest",
     "handoff:list": "node tools/kosame-codex-handoff-inbox.js list",
-    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v113-1-0 && npm run smoke:v113-0-10 && npm run smoke:v113-0-9 && npm run smoke:v113-0-8 && npm run smoke:v113-0-7 && npm run smoke:v113-0-6 && npm run smoke:v113-0-4 && npm run smoke:v113-0-0 && npm run smoke:v110-84-33 && npm run smoke:v110-84-32 && npm run smoke:v110-84-31 && npm run smoke:v110-84-30 && npm run smoke:v110-84-29 && npm run smoke:v110-84-28 && npm run smoke:v110-84-27 && npm run smoke:v110-84-26 && npm run smoke:v110-84-25 && npm run smoke:v110-84-24 && npm run smoke:v110-84-23 && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7",
+    "verify": "npm run smoke:cloud-run-launch-pack-max && npm run smoke:v113-1-1 && npm run smoke:v113-1-0 && npm run smoke:v113-0-10 && npm run smoke:v113-0-9 && npm run smoke:v113-0-8 && npm run smoke:v113-0-7 && npm run smoke:v113-0-6 && npm run smoke:v113-0-4 && npm run smoke:v113-0-0 && npm run smoke:v110-84-33 && npm run smoke:v110-84-32 && npm run smoke:v110-84-31 && npm run smoke:v110-84-30 && npm run smoke:v110-84-29 && npm run smoke:v110-84-28 && npm run smoke:v110-84-27 && npm run smoke:v110-84-26 && npm run smoke:v110-84-25 && npm run smoke:v110-84-24 && npm run smoke:v110-84-23 && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7",
     "activity:append": "node tools/kosame-shell-agent-activity.js append"
   },
   "dependencies": {

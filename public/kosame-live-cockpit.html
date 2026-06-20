@@ -1966,7 +1966,39 @@ h1 {
       </div>
     </section>
 
-    <!-- Active Task Board (order 2) -->
+    <!-- Project Strip + DEV ORCHESTRA STATUS (order 2) -->
+    <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
+      <article class="panel project-strip-panel">
+        <h2>PROJECT STRIP</h2>
+        <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
+      </article>
+
+      <article class="panel project-focus-panel" id="project-focus-card">
+        <details class="project-focus-collapse" id="project-focus-collapse">
+          <summary class="project-focus-collapse-toggle">
+            <div class="project-focus-head">
+              <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
+              <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
+            </div>
+          </summary>
+          <div id="project-focus" class="project-focus-shell" style="margin-top:12px"></div>
+        </details>
+      </article>
+    </section>
+
+    <!-- AI ROSTER (order 3, collapsible open) -->
+    <section class="ai-roster-shell" style="margin-top:14px">
+      <article class="panel ai-roster-panel">
+        <details class="chat-section-details" id="ai-roster-details" open>
+          <summary class="chat-section-summary">AI ROSTER</summary>
+          <div class="chat-section-body">
+            <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>
+          </div>
+        </details>
+      </article>
+    </section>
+
+    <!-- Active Task Board (order 4) -->
     <section class="active-task-board" id="active-task-board" style="margin-top:14px">
       <article class="panel">
         <div class="task-board-title-row">
@@ -2082,36 +2114,6 @@ h1 {
         <h2 class="task-board-section-title">AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></h2>
         <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
         <div id="agent-event-feed" class="agent-event-feed"></div>
-      </article>
-    </section>
-
-    <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
-      <article class="panel project-strip-panel">
-        <h2>PROJECT STRIP</h2>
-        <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
-      </article>
-
-      <article class="panel project-focus-panel" id="project-focus-card">
-        <details class="project-focus-collapse" id="project-focus-collapse">
-          <summary class="project-focus-collapse-toggle">
-            <div class="project-focus-head">
-              <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
-              <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
-            </div>
-          </summary>
-          <div id="project-focus" class="project-focus-shell" style="margin-top:12px"></div>
-        </details>
-      </article>
-    </section>
-
-    <section class="ai-roster-shell" style="margin-top:14px">
-      <article class="panel ai-roster-panel">
-        <details class="chat-section-details" id="ai-roster-details" open>
-          <summary class="chat-section-summary">AI ROSTER</summary>
-          <div class="chat-section-body">
-            <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>
-          </div>
-        </details>
       </article>
     </section>
 

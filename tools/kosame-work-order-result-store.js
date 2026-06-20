@@ -111,6 +111,11 @@ function buildSafeResultText(input = {}) {
   const verify = normalizeOutcome(input.verify_result);
   const changedFiles = normalizeChangedFiles(input.changed_files);
   const status = normalizeResultStatus(input.result_status || input.status || 'success');
+  const yesCount = Number.isFinite(Number(input.yes_count ?? input.yesCount)) ? Number(input.yes_count ?? input.yesCount) : 0;
+  const copyCount = Number.isFinite(Number(input.copy_count ?? input.copyCount)) ? Number(input.copy_count ?? input.copyCount) : 0;
+  const humanWait = Number.isFinite(Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount))
+    ? Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount)
+    : 0;
   const rawCheck = [
     summary,
     notes,
@@ -150,6 +155,12 @@ function buildSafeResultText(input = {}) {
     smoke_result: smoke,
     verify_result: verify,
     notes,
+    yes_count: yesCount,
+    copy_count: copyCount,
+    human_wait: humanWait,
+    yesCount,
+    copyCount,
+    humanWait,
   };
 }
 
@@ -215,6 +226,11 @@ function normalizeWorkOrderResultRecord(record) {
     smoke_result: smoke,
     verify_result: verify,
     notes: truncate(record.notes || '', MAX_NOTE_LENGTH),
+    yes_count: Number.isFinite(Number(record.yes_count ?? record.yesCount)) ? Number(record.yes_count ?? record.yesCount) : 0,
+    copy_count: Number.isFinite(Number(record.copy_count ?? record.copyCount)) ? Number(record.copy_count ?? record.copyCount) : 0,
+    human_wait: Number.isFinite(Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount))
+      ? Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount)
+      : 0,
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
     updated_at: normalizeText(record.updated_at || record.timestamp || record.created_at || ''),
     source: truncate(record.source || 'kosame-console', 40),
@@ -253,6 +269,12 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     smoke_result: latestResult.smoke_result,
     verify_result: latestResult.verify_result,
     notes: latestResult.notes,
+    yes_count: latestResult.yes_count,
+    copy_count: latestResult.copy_count,
+    human_wait: latestResult.human_wait,
+    yesCount: latestResult.yes_count,
+    copyCount: latestResult.copy_count,
+    humanWait: latestResult.human_wait,
     result_timestamp: latestResult.timestamp,
     result_record: latestResult,
   };
@@ -331,6 +353,9 @@ function recordWorkOrderResult(input = {}, options = {}) {
     human_gate_required: sourceWorkOrder.human_gate_required !== false
       && latestApprovedWorkOrder?.requires_human_confirmation !== false,
     ...safeFields,
+    yes_count: safeFields.yes_count,
+    copy_count: safeFields.copy_count,
+    human_wait: safeFields.human_wait,
     source: truncate(input.source || sourceWorkOrder.source || 'kosame-console', 40),
   };
 

@@ -132,7 +132,7 @@ function postResult(data, options = {}) {
 
 function runClaude(prompt, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('claude', ['-p', '--dangerously-skip-permissions'], {
+    const proc = spawn('claude', ['--dangerously-skip-permissions', '-p'], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
     });

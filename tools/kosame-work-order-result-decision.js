@@ -27,6 +27,9 @@ function summarizeDecision(decision) {
     `next=${normalizeText(current.nextRecommendedAction || 'wait_for_result')}`,
     `humanGate=${current.human_gate_required ? 'yes' : 'no'}`,
     `commitTagPush=${current.commit_tag_push_allowed ? 'candidate' : 'hold'}`,
+    `yesCount=${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}`,
+    `copyCount=${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}`,
+    `humanWait=${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}`,
   ];
   const reason = clamp(current.reason || current.summary || '', 120);
   if (reason) parts.push(`reason=${reason}`);
@@ -136,6 +139,9 @@ function buildWorkOrderResultDecision(input = {}) {
     reason: hasResult ? base.reason : base.reason,
     required_next_work: hasResult ? base.required_next_work : base.required_next_work,
     activity_status: hasResult ? base.activity_status : base.activity_status,
+    yes_count: Number.isFinite(Number(latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.yes_count) : 0,
+    copy_count: Number.isFinite(Number(latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.copy_count) : 0,
+    human_wait: Number.isFinite(Number(latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.human_wait) : 0,
   };
 
   decision.summary = summarizeDecision(decision);

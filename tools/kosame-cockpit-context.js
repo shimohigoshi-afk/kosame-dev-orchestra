@@ -141,6 +141,10 @@ function summarizeWorkOrderResult(workOrderResult) {
   const approvalCount = Number.isFinite(Number(result.approval_request_count ?? result.approvalRequestCount ?? result.yes_count ?? result.yesCount)) ? Number(result.approval_request_count ?? result.approvalRequestCount ?? result.yes_count ?? result.yesCount) : 0;
   const manualPasteCount = Number.isFinite(Number(result.manual_paste_count ?? result.manualPasteCount ?? result.copy_count ?? result.copyCount)) ? Number(result.manual_paste_count ?? result.manualPasteCount ?? result.copy_count ?? result.copyCount) : 0;
   const waitCount = Number.isFinite(Number(result.wait_request_count ?? result.waitRequestCount ?? result.human_wait ?? result.humanWait)) ? Number(result.wait_request_count ?? result.waitRequestCount ?? result.human_wait ?? result.humanWait) : 0;
+  const autoApprovedCount = Number.isFinite(Number(result.auto_approved_count ?? result.autoApprovedCount)) ? Number(result.auto_approved_count ?? result.autoApprovedCount) : 0;
+  const autoBlockedCount = Number.isFinite(Number(result.auto_blocked_count ?? result.autoBlockedCount)) ? Number(result.auto_blocked_count ?? result.autoBlockedCount) : 0;
+  const retryCount = Number.isFinite(Number(result.retry_count ?? result.retryCount)) ? Number(result.retry_count ?? result.retryCount) : 0;
+  const recovered = !!result.recovered;
   const changedFiles = Array.isArray(result.changed_files) ? result.changed_files.slice(0, 3).map((item) => normalizeText(item)).filter(Boolean) : [];
   const parts = [
     `status=${status}`,
@@ -153,6 +157,10 @@ function summarizeWorkOrderResult(workOrderResult) {
     `承認要求回数=${approvalCount}`,
     `手動貼付回数=${manualPasteCount}`,
     `待機要求回数=${waitCount}`,
+    `自動YES回数=${autoApprovedCount}`,
+    `自動遮断回数=${autoBlockedCount}`,
+    `retryCount=${retryCount}`,
+    `recovered=${recovered ? 'yes' : 'no'}`,
   ];
   if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');
@@ -167,6 +175,31 @@ function summarizeWorkOrderDecision(workOrderDecision) {
       latestWorkOrderResult: workOrderDecision || {},
     });
   return summarizeDecision(decision);
+}
+
+function summarizeOperationsBoard(board) {
+  const current = board && typeof board === 'object' ? board : {};
+  return [
+    `zero-confirm=${normalizeText(current.route || 'zero-confirm')}`,
+    `executor=${normalizeText(current.executor || 'claude-zero-confirm')}`,
+    `policyKernel=${normalizeText(current.policyKernel || 'active')}`,
+    `promptClassifier=${normalizeText(current.promptClassifier || 'active')}`,
+    `autoResponder=${normalizeText(current.autoResponder || 'active')}`,
+    `firewall=${normalizeText(current.firewall || 'active')}`,
+    `safetyStopDetector=${normalizeText(current.safetyStopDetector || 'active')}`,
+    `directSpawnAudit=${normalizeText(current.directSpawnAudit || 'PASS')}`,
+    `startupAudit=${normalizeText(current.startupAudit || 'PASS')}`,
+    `queueHealth=${normalizeText(current.queueHealth || 'ok')}`,
+    `watcherStatus=${normalizeText(current.watcherStatus || 'unknown')}`,
+    `resultPOST=${normalizeText(current.resultPOSTStatus || current.result_post || 'POST /api/work-orders/result 200')}`,
+    `history=${Number(current.runHistoryCount || 0)}`,
+    `blocked=${Number(current.blockedCount || 0)}`,
+    `autoApproved=${Number(current.autoApprovedCount || 0)}`,
+    `recovered=${Number(current.recoveredCount || 0)}`,
+    `latestDecision=${normalizeText(current.latestDecision || 'wait_for_result')}`,
+    `latestTag=${normalizeText(current.latestTag || '—')}`,
+    `latestCommit=${normalizeText(current.latestCommit || '—')}`,
+  ].join(' / ');
 }
 
 function summarizeProjectStrip(projectStrip) {
@@ -346,6 +379,11 @@ function buildConsoleContextSummary(snapshot) {
     lines.push(`shellActivity=${summarizeShellActivity(shellAgentActivity)}`);
   }
 
+  const operationsBoard = snapshot.operationsBoard || {};
+  if (operationsBoard && Object.keys(operationsBoard).length) {
+    lines.push(`operationsBoard=${summarizeOperationsBoard(operationsBoard)}`);
+  }
+
   const autoSave = snapshot.autoSave || {};
   if (autoSave && typeof autoSave === 'object') {
     lines.push(
@@ -392,6 +430,7 @@ function buildConsoleContextSummary(snapshot) {
 
 module.exports = {
   buildConsoleContextSummary,
+  summarizeOperationsBoard,
   summarizeShellActivity,
   summarizeWorkOrderHandoff,
   summarizeWorkOrderResult,

@@ -6,6 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 
 const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOWN, assertNoZeroConfirmRequests } = require('./kosame-prompt-lint');
+const { classifyPrompt } = require('./kosame-prompt-classifier');
+const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 
 const PERSONA_PATH = path.join(__dirname, '..', 'config', 'kosame-cockpit-chat-persona.md');
 const CHAT_EVENTS_PATH = path.join(os.homedir(), '.kosame', 'kosame-chat-events.jsonl');
@@ -41,24 +43,6 @@ const WORK_ORDER_TARGETS = [
     selectedProjectPath: '/home/lavie/repos/kosame-sales-dx',
     riskLevel: 'medium',
     hints: /sales dx|kosame-sales-dx|営業dx/i,
-  },
-  {
-    label: 'KOSAME Console',
-    repo: '/home/lavie/kosame-dev-orchestra',
-    selectedProjectId: 'dev-orchestra',
-    selectedProjectPath: '/home/lavie/kosame-dev-orchestra',
-    riskLevel: 'low',
-    hints: /kosame console|dev orchestra|kosame dev orchestra/i,
-  },
-];
-const LEGACY_WORK_ORDER_TARGETS = [
-  {
-    label: 'Sales DX',
-    repo: '/home/lavie/repos/transcriber',
-    selectedProjectId: 'sales-dx',
-    selectedProjectPath: '/home/lavie/repos/transcriber',
-    riskLevel: 'medium',
-    hints: /sales dx|transcriber|営業dx/i,
   },
   {
     label: 'KOSAME Console',
@@ -675,6 +659,12 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     AUTO_YES_CONTRACT,
     COMPLETE_RUN_FIRST_POLICY,
     ZERO_CONFIRM_ROUTE_LOCKDOWN,
+    '【Batch Execution Contract】',
+    '- safe command は 1つずつ確認せず、まとめて実行する',
+    '- エラーが出たら自分で再修正して再実行する',
+    '- Safety Stop 条件に該当しない限り、ユーザーへYES確認しない',
+    '- 追加の確認要求は出さない',
+    '- 最終報告まで完走する',
     `cd ${target.repo}`,
     '',
     `${title} の作業票ドラフトです。`,
@@ -689,6 +679,7 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '- 対象repo以外を触らない',
     '',
     '保持項目:',
+    '- executor / route / autoResponder / promptClassifier / policyKernel / promptFirewall / safetyStopDetector',
     '- originalRequest / target / agent / risk / safetyConditions / reportItems / body',
     '',
     '報告項目:',
@@ -758,6 +749,19 @@ function buildWorkOrderReply(input, snapshotSummary) {
       agent: 'Codex',
       executor: 'claude-zero-confirm',
       route: 'zero-confirm',
+      autoResponder: 'active',
+      autoResponderMode: 'blocklist-only',
+      promptClassifier: 'active',
+      policyKernel: 'active',
+      promptFirewall: 'active',
+      safetyStopDetector: 'active',
+      completionMode: 'complete-run-first',
+      noHumanWait: true,
+      noManualPaste: true,
+      resultPOSTRequired: true,
+      runHistoryRequired: true,
+      resultDecisionRequired: true,
+      operationsBoardRequired: true,
       executionCommand: 'claude --dangerously-skip-permissions -p',
       target_repo: target.repo,
       risk_level: target.riskLevel,
@@ -916,10 +920,13 @@ async function handleChatRequest(body) {
 
   if (replyPacket.reply) {
     assertNoZeroConfirmRequests(replyPacket.reply, 'chat reply', { allowNegatedContext: true });
+    assertPromptFirewall(replyPacket.reply, 'chat reply');
   }
   if (replyPacket.work_order) {
     assertNoZeroConfirmRequests(replyPacket.work_order.prompt || '', 'work order prompt', { allowNegatedContext: true });
     assertNoZeroConfirmRequests(replyPacket.work_order.body || '', 'work order body', { allowNegatedContext: true });
+    const promptClassification = classifyPrompt(replyPacket.work_order.body || replyPacket.work_order.prompt || '', 'work_order');
+    replyPacket.work_order.promptType = promptClassification.promptType;
   }
 
   const result = {

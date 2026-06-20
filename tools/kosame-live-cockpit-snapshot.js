@@ -21,6 +21,9 @@ const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-st
 const { readLatestWorkOrderHandoff } = require('./kosame-work-order-handoff-store');
 const { readLatestWorkOrderResult, readWorkOrderResultHistory } = require('./kosame-work-order-result-store');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
+const { buildOperationsBoard } = require('./kosame-operations-board');
+const { runDirectSpawnAudit } = require('./kosame-direct-spawn-audit');
+const { runStartupAudit } = require('./kosame-startup-audit');
 const { getConfig: getProviderConfig } = require('../providers/provider-config');
 
 const READ_ONLY_COMMANDS = new Set([
@@ -592,7 +595,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderApprovalLogPath: options.workOrderApprovalLogPath,
     workOrderResultLogPath: options.workOrderResultLogPath,
     approvalLimit: options.workOrderApprovalLimit,
-    limit: options.workOrderResultHistoryLimit || 3,
+    limit: options.workOrderResultHistoryLimit || 10,
   });
   const mergedLatestHandoffWorkOrder = latestWorkOrderResult.latestHandoffWorkOrder
     || latestWorkOrderHandoff.latestHandoffWorkOrder
@@ -684,6 +687,8 @@ function collectLiveCockpitSnapshot(options = {}) {
   }
 
   const codexWatchState = detectCodexWatch();
+  const directSpawnAudit = runDirectSpawnAudit();
+  const startupAudit = runStartupAudit();
 
   const humanGate = [
     '書き込み操作の前には必ず人間承認が必要です。',
@@ -721,6 +726,19 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderResultHistory: workOrderResultHistory.items || [],
     latestWorkOrderDecision,
     workOrderDecisionQueue,
+    directSpawnAudit,
+    startupAudit,
+    operationsBoard: buildOperationsBoard({
+      latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
+      latestWorkOrderDecision,
+      workOrderResultHistory: workOrderResultHistory.items || [],
+      codexWatch: codexWatchState,
+      directSpawnAudit,
+      startupAudit,
+      handoffQueueHealth: mergedLatestHandoffWorkOrder ? 'ok' : 'idle',
+      latestTag: versionContext.latestTag,
+      headCommit: versionContext.headCommit,
+    }),
     confirmationBridge: options.confirmationBridge || null,
     humanGate,
     warnings,
@@ -770,6 +788,17 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderResultHistory: workOrderResultHistory.items || [],
     latestWorkOrderDecision,
     workOrderDecisionQueue,
+    operationsBoard: buildOperationsBoard({
+      latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
+      latestWorkOrderDecision,
+      workOrderResultHistory: workOrderResultHistory.items || [],
+      codexWatch: codexWatchState,
+      directSpawnAudit,
+      startupAudit,
+      handoffQueueHealth: mergedLatestHandoffWorkOrder ? 'ok' : 'idle',
+      latestTag: versionContext.latestTag,
+      headCommit: versionContext.headCommit,
+    }),
     chatStatus: {
       ai: 'connected',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',
@@ -788,6 +817,19 @@ function collectLiveCockpitSnapshot(options = {}) {
     aiRoster: buildAiRoster(providerConfig, codexWatchState, mergedLatestHandoffWorkOrder),
     humanGate,
     warnings,
+    directSpawnAudit,
+    startupAudit,
+    operationsBoard: buildOperationsBoard({
+      latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
+      latestWorkOrderDecision,
+      workOrderResultHistory: workOrderResultHistory.items || [],
+      codexWatch: codexWatchState,
+      directSpawnAudit,
+      startupAudit,
+      handoffQueueHealth: mergedLatestHandoffWorkOrder ? 'ok' : 'idle',
+      latestTag: versionContext.latestTag,
+      headCommit: versionContext.headCommit,
+    }),
     nextAction,
     readOnlyPolicy: Array.from(READ_ONLY_COMMANDS),
   };

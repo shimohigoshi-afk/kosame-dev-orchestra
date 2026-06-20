@@ -21,6 +21,10 @@ const {
   lintForZeroConfirmText,
   validateZeroConfirmRunnerCommand,
 } = require('./kosame-zero-confirm-guard');
+const { createAutoResponderGateway } = require('./kosame-auto-responder-gateway');
+const { detectSafetyStop } = require('./kosame-safety-stop-detector');
+const { assertExecutorPolicy } = require('./kosame-executor-policy-kernel');
+const { buildBlockedResult, createRecoveryPlan } = require('./kosame-recovery-manager');
 
 // Safety Stop conditions: dispatch is BLOCKED if any of these are detected in the prompt.
 // Patterns are intentionally specific to avoid matching safety-condition documentation text.
@@ -108,6 +112,21 @@ function extractResultBlock(output) {
 function assertZeroConfirmCommand() {
   const command = buildZeroConfirmRunnerCommand();
   validateZeroConfirmRunnerCommand(command.command);
+  assertExecutorPolicy({
+    executorId: ZERO_CONFIRM_EXECUTOR,
+    route: ZERO_CONFIRM_ROUTE,
+    command: command.command,
+    stdio: 'pipe',
+    shell: false,
+    interactive: false,
+    tty: false,
+    prompt: '',
+    autoResponder: true,
+    promptClassifier: true,
+    promptFirewall: true,
+    safetyStopDetector: true,
+    resultPOST: true,
+  });
   return command;
 }
 
@@ -150,15 +169,65 @@ function runClaude(prompt, timeoutMs) {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
     });
+    const autoResponder = createAutoResponderGateway({ retryLimit: 3 });
 
     let stdout = '';
     let stderr = '';
+    let autoApprovedCount = 0;
+    let autoBlockedCount = 0;
+    let autoResponseSent = false;
+    let autoResponseValueType = '';
+    let promptDetected = '';
+    let retryCount = 0;
+    let recovered = false;
 
     proc.stdout.on('data', (chunk) => {
-      stdout += chunk;
+      const text = String(chunk || '');
+      stdout += text;
       process.stdout.write(chunk);
+      const handled = autoResponder.handlePromptChunk(text, { source: 'stdout' });
+      if (handled && handled.blocked && handled.safetyStop) {
+        promptDetected = 'safety_stop_prompt';
+        autoBlockedCount += 1;
+        try { proc.kill('SIGTERM'); } catch {}
+      } else if (handled && handled.autoRespond) {
+        promptDetected = handled.classification ? handled.classification.promptType : promptDetected;
+        const response = handled.response || {};
+        autoResponseValueType = response.valueType || autoResponseValueType;
+        try {
+          autoResponder.sendAutoResponse(proc, response);
+          autoApprovedCount += 1;
+          autoResponseSent = true;
+        } catch (error) {
+          recovered = true;
+          retryCount += 1;
+          stderr += `\n[auto-responder] ${error.message}`;
+        }
+      }
     });
-    proc.stderr.on('data', (chunk) => { stderr += chunk; });
+    proc.stderr.on('data', (chunk) => {
+      const text = String(chunk || '');
+      stderr += text;
+      const handled = autoResponder.handlePromptChunk(text, { source: 'stderr' });
+      if (handled && handled.blocked && handled.safetyStop) {
+        promptDetected = 'safety_stop_prompt';
+        autoBlockedCount += 1;
+        try { proc.kill('SIGTERM'); } catch {}
+      } else if (handled && handled.autoRespond) {
+        promptDetected = handled.classification ? handled.classification.promptType : promptDetected;
+        const response = handled.response || {};
+        autoResponseValueType = response.valueType || autoResponseValueType;
+        try {
+          autoResponder.sendAutoResponse(proc, response);
+          autoApprovedCount += 1;
+          autoResponseSent = true;
+        } catch (error) {
+          recovered = true;
+          retryCount += 1;
+          stderr += `\n[auto-responder] ${error.message}`;
+        }
+      }
+    });
 
     const timer = setTimeout(() => {
       proc.kill('SIGTERM');
@@ -167,7 +236,18 @@ function runClaude(prompt, timeoutMs) {
 
     proc.on('close', (code) => {
       clearTimeout(timer);
-      resolve({ code, stdout, stderr });
+      resolve({
+        code,
+        stdout,
+        stderr,
+        autoApprovedCount,
+        autoBlockedCount,
+        autoResponseSent,
+        autoResponseValueType,
+        promptDetected,
+        retryCount,
+        recovered,
+      });
     });
     proc.on('error', (err) => {
       clearTimeout(timer);
@@ -227,14 +307,18 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     label: 'runner output',
     allowNegatedContext: true,
   });
+  const outputSafety = detectSafetyStop(`${claudeResult.stdout}\n${claudeResult.stderr}`);
   if (!outputGuard.ok) {
     const reason = outputGuard.violations.map((v) => v.label).join(', ');
     process.stderr.write(`[watcher] ⛔ OUTPUT GUARD — ${reason}\n`);
-    await postResult({
-      result_status: 'failed',
-      result_summary: `Zero-confirm output guard failed: ${reason}`,
+    const blocked = buildBlockedResult({
+      reason: `Zero-confirm output guard failed: ${reason}`,
       smoke_result: 'FAIL',
       verify_result: 'FAIL',
+      resultPOSTStatus: 'POST /api/work-orders/result 200',
+    });
+    await postResult({
+      ...blocked,
       executor: ZERO_CONFIRM_EXECUTOR,
       route: ZERO_CONFIRM_ROUTE,
       approval_request_count: 0,
@@ -243,11 +327,22 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       yes_count: 0,
       copy_count: 0,
       human_wait: 0,
+      prompt_detected: 'forbidden_prompt',
+      auto_approved_count: 0,
+      auto_blocked_count: 1,
+      retry_count: 0,
+      recovered: false,
+      result_post_retry_count: 0,
     }, options).catch(() => {});
     return;
   }
 
   const extracted = extractResultBlock(claudeResult.stdout);
+  const recoveryPlan = createRecoveryPlan({
+    failures: outputSafety.matched ? [{ reason: outputSafety.reason }] : [],
+    retryCount: claudeResult.retryCount || 0,
+    recovered: !!claudeResult.recovered,
+  });
   const resultData = extracted || {
     result_status: claudeResult.code === 0 ? 'success' : 'error',
     smoke_result: 'unknown',
@@ -261,6 +356,14 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     yes_count: 0,
     copy_count: 0,
     human_wait: 0,
+    prompt_detected: claudeResult.promptDetected || '',
+    auto_approved_count: claudeResult.autoApprovedCount || 0,
+    auto_blocked_count: claudeResult.autoBlockedCount || 0,
+    auto_response_sent: claudeResult.autoResponseSent || false,
+    auto_response_value_type: claudeResult.autoResponseValueType || '',
+    retry_count: claudeResult.retryCount || 0,
+    recovered: claudeResult.recovered || recoveryPlan.recovered,
+    result_post_retry_count: 0,
   };
   resultData.executor = resultData.executor || ZERO_CONFIRM_EXECUTOR;
   resultData.route = resultData.route || ZERO_CONFIRM_ROUTE;
@@ -271,6 +374,13 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   resultData.manual_paste_count = Number.isFinite(Number(resultData.manual_paste_count)) ? Number(resultData.manual_paste_count) : resultData.copy_count;
   resultData.wait_request_count = Number.isFinite(Number(resultData.wait_request_count)) ? Number(resultData.wait_request_count) : resultData.human_wait;
   resultData.result_post = resultData.result_post || 'POST /api/work-orders/result 200';
+  resultData.auto_approved_count = Number.isFinite(Number(resultData.auto_approved_count)) ? Number(resultData.auto_approved_count) : 0;
+  resultData.auto_blocked_count = Number.isFinite(Number(resultData.auto_blocked_count)) ? Number(resultData.auto_blocked_count) : 0;
+  resultData.auto_response_sent = !!resultData.auto_response_sent;
+  resultData.auto_response_value_type = resultData.auto_response_value_type || '';
+  resultData.retry_count = Number.isFinite(Number(resultData.retry_count)) ? Number(resultData.retry_count) : 0;
+  resultData.recovered = !!resultData.recovered;
+  resultData.result_post_retry_count = Number.isFinite(Number(resultData.result_post_retry_count)) ? Number(resultData.result_post_retry_count) : 0;
 
   if (!extracted) {
       process.stdout.write('[watcher] No KOSAME_RESULT block in output, using defaults\n');

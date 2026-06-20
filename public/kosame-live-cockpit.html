@@ -2080,6 +2080,13 @@ h1 {
             <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
           </div>
         </details>
+        <details class="chat-section-details" id="operations-board-details">
+          <summary class="chat-section-summary">OPERATIONS BOARD</summary>
+          <div class="chat-section-body">
+            <div id="operations-board-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="operations-board-panel" class="work-order-decision-panel"></div>
+          </div>
+        </details>
         <details class="chat-section-details" id="run-history-details">
           <summary class="chat-section-summary">RUN HISTORY</summary>
           <div class="chat-section-body">
@@ -5010,6 +5017,10 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
     approval_request_count: Number.isFinite(Number(base.approval_request_count ?? base.yes_count)) ? Number(base.approval_request_count ?? base.yes_count) : 0,
     manual_paste_count: Number.isFinite(Number(base.manual_paste_count ?? base.copy_count)) ? Number(base.manual_paste_count ?? base.copy_count) : 0,
     wait_request_count: Number.isFinite(Number(base.wait_request_count ?? base.human_wait)) ? Number(base.wait_request_count ?? base.human_wait) : 0,
+    auto_approved_count: Number.isFinite(Number(base.auto_approved_count ?? base.autoApprovedCount)) ? Number(base.auto_approved_count ?? base.autoApprovedCount) : 0,
+    auto_blocked_count: Number.isFinite(Number(base.auto_blocked_count ?? base.autoBlockedCount)) ? Number(base.auto_blocked_count ?? base.autoBlockedCount) : 0,
+    retry_count: Number.isFinite(Number(base.retry_count ?? base.retryCount)) ? Number(base.retry_count ?? base.retryCount) : 0,
+    recovered: !!base.recovered,
     summary: `status=${decisionStatus} / next=${decisionStatus} / route=${base.route || 'zero-confirm'} / humanGate=${humanGateRequired ? 'yes' : 'no'} / commitTagPush=${commitTagPushAllowed ? 'candidate' : 'hold'} / 承認要求回数=${Number.isFinite(Number(base.approval_request_count ?? base.yes_count)) ? Number(base.approval_request_count ?? base.yes_count) : 0} / 手動貼付回数=${Number.isFinite(Number(base.manual_paste_count ?? base.copy_count)) ? Number(base.manual_paste_count ?? base.copy_count) : 0} / 待機要求回数=${Number.isFinite(Number(base.wait_request_count ?? base.human_wait)) ? Number(base.wait_request_count ?? base.human_wait) : 0} / reason=${reason} / required=${requiredNextWork}`,
   };
 }
@@ -5090,6 +5101,10 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `承認要求回数: ${formatZeroConfirmCounterLabel(current.approval_request_count ?? current.yes_count)}`,
     `手動貼付回数: ${formatZeroConfirmCounterLabel(current.manual_paste_count ?? current.copy_count)}`,
     `待機要求回数: ${formatZeroConfirmCounterLabel(current.wait_request_count ?? current.human_wait)}`,
+    `自動YES回数: ${formatZeroConfirmCounterLabel(current.auto_approved_count ?? current.autoApprovedCount)}`,
+    `自動遮断回数: ${formatZeroConfirmCounterLabel(current.auto_blocked_count ?? current.autoBlockedCount)}`,
+    `retryCount: ${formatZeroConfirmCounterLabel(current.retry_count ?? current.retryCount)}`,
+    `recovered: ${(current.recovered || false) ? 'yes' : 'no'}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';
@@ -5106,6 +5121,72 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function renderOperationsBoard(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('operations-board-panel');
+  const statusNode = document.getElementById('operations-board-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+
+  const board = snapshot.operationsBoard || {};
+  statusNode.textContent = board.summary || 'Operations Board: まだ利用可能な状態ではありません。';
+
+  const card = document.createElement('div');
+  card.className = 'chat-work-order-card is-approved';
+
+  const head = document.createElement('div');
+  head.className = 'chat-work-order-head';
+  const title = document.createElement('div');
+  title.className = 'chat-work-order-title';
+  title.textContent = 'Operations Board';
+  head.appendChild(title);
+  const badge = document.createElement('span');
+  badge.className = 'chat-work-order-badge';
+  badge.textContent = board.route || 'zero-confirm';
+  head.appendChild(badge);
+  card.appendChild(head);
+
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
+    ['zero-confirm', board.route || 'zero-confirm'],
+    ['executor', board.executor || 'claude-zero-confirm'],
+    ['policy', board.policyKernel || 'active'],
+    ['classifier', board.promptClassifier || 'active'],
+    ['autoResponder', board.autoResponder || 'active'],
+    ['firewall', board.firewall || 'active'],
+    ['safety', board.safetyStopDetector || 'active'],
+    ['directSpawnAudit', board.directSpawnAudit || 'PASS'],
+    ['startupAudit', board.startupAudit || 'PASS'],
+    ['queue', board.queueHealth || 'ok'],
+    ['watcher', board.watcherStatus || 'unknown'],
+  ].forEach(([label, value]) => {
+    const chip = document.createElement('span');
+    chip.textContent = `${label}: ${value}`;
+    meta.appendChild(chip);
+  });
+  card.appendChild(meta);
+
+  const lines = document.createElement('div');
+  lines.className = 'chat-work-order-decision-lines';
+  [
+    `resultPOST: ${board.resultPOSTStatus || 'POST /api/work-orders/result 200'}`,
+    `run history count: ${Number(board.runHistoryCount || 0)}`,
+    `blocked count: ${Number(board.blockedCount || 0)}`,
+    `auto-approved count: ${Number(board.autoApprovedCount || 0)}`,
+    `recovered count: ${Number(board.recoveredCount || 0)}`,
+    `latest decision: ${board.latestDecision || 'wait_for_result'}`,
+    `latest tag: ${board.latestTag || '—'}`,
+    `latest commit: ${board.latestCommit || '—'}`,
+  ].forEach((textLine) => {
+    const line = document.createElement('div');
+    line.className = 'chat-work-order-decision-line';
+    line.textContent = textLine;
+    lines.appendChild(line);
+  });
+  card.appendChild(lines);
+  node.appendChild(card);
+}
+
 function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-run-history-panel');
   const statusNode = document.getElementById('work-order-run-history-status');
@@ -5117,7 +5198,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     statusNode.textContent = 'Run History: まだ run はありません。';
     const empty = document.createElement('div');
     empty.className = 'work-order-run-history-empty';
-    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / resultPOST / decision status / timestamp を表示します。';
+    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / 自動YES回数 / 自動遮断回数 / retryCount / recovered / resultPOST / decision status / timestamp を表示します。';
     node.appendChild(empty);
     return;
   }
@@ -5147,6 +5228,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
       ['executor', run.executor || 'Codex'],
       ['route', run.route || 'zero-confirm'],
       ['status', run.result_status || 'unknown'],
+      ['decision', run.decision_status || 'wait_for_result'],
     ].forEach(([label, value]) => {
       const chip = document.createElement('span');
       chip.textContent = `${label}: ${value}`;
@@ -5161,6 +5243,10 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
       `承認要求回数: ${formatZeroConfirmCounterLabel(run.approval_request_count ?? run.yes_count)}`,
       `手動貼付回数: ${formatZeroConfirmCounterLabel(run.manual_paste_count ?? run.copy_count)}`,
       `待機要求回数: ${formatZeroConfirmCounterLabel(run.wait_request_count ?? run.human_wait)}`,
+      `自動YES回数: ${formatZeroConfirmCounterLabel(run.auto_approved_count ?? run.autoApprovedCount)}`,
+      `自動遮断回数: ${formatZeroConfirmCounterLabel(run.auto_blocked_count ?? run.autoBlockedCount)}`,
+      `retryCount: ${formatZeroConfirmCounterLabel(run.retry_count ?? run.retryCount)}`,
+      `recovered: ${(run.recovered || false) ? 'yes' : 'no'}`,
       `resultPOST: ${run.result_post || 'POST /api/work-orders/result 200'}`,
       `decision status: ${run.decision_status || 'wait_for_result'}`,
     ].forEach((textLine) => {
@@ -5831,6 +5917,7 @@ async function loadSnapshot() {
     renderWorkOrderHandoffQueue(snapshot);
     renderWorkOrderResultPanel(snapshot);
     renderResultDecisionPanel(snapshot);
+    renderOperationsBoard(snapshot);
     renderWorkOrderRunHistory(snapshot);
     renderChatAssistPanel(snapshot);
     updateChatSummarizeButtonLabel();
@@ -5864,6 +5951,7 @@ renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
+renderOperationsBoard({});
 renderWorkOrderRunHistory({});
 updateChatSummarizeButtonLabel();
 document.querySelectorAll('.chat-section-details').forEach((details) => {

@@ -60,7 +60,7 @@ function readWorkOrderResultHistory(options = {}) {
   const approvalLogPath = options.workOrderApprovalLogPath
     || process.env[APPROVAL_LOG_PATH_ENV]
     || DEFAULT_APPROVAL_LOG_PATH;
-  const limit = Number(options.limit || 3);
+  const limit = Number(options.limit || 10);
   const targetRepoFilter = normalizeText(options.targetRepo || options.target_repo || HANDOFF_TARGET_REPO);
   const records = readJsonlRecords(resultLogPath, Number.isFinite(limit) && limit > 0 ? limit : 3);
   const items = records
@@ -148,6 +148,12 @@ function buildSafeResultText(input = {}) {
   const resultPost = truncate(input.result_post || input.resultPOST || input.result_post_status || '', 120);
   const executionPath = truncate(input.execution_path || input.executionPath || '', 180);
   const route = truncate(input.route || input.execution_route || 'zero-confirm', 40);
+  const promptType = truncate(input.prompt_type || input.promptType || '', 40);
+  const autoApprovedCount = Number.isFinite(Number(input.auto_approved_count ?? input.autoApprovedCount)) ? Number(input.auto_approved_count ?? input.autoApprovedCount) : 0;
+  const autoBlockedCount = Number.isFinite(Number(input.auto_blocked_count ?? input.autoBlockedCount)) ? Number(input.auto_blocked_count ?? input.autoBlockedCount) : 0;
+  const retryCount = Number.isFinite(Number(input.retry_count ?? input.retryCount)) ? Number(input.retry_count ?? input.retryCount) : 0;
+  const recovered = !!input.recovered;
+  const resultPostRetryCount = Number.isFinite(Number(input.result_post_retry_count ?? input.resultPostRetryCount)) ? Number(input.result_post_retry_count ?? input.resultPostRetryCount) : 0;
   const rawCheck = [
     summary,
     notes,
@@ -158,6 +164,7 @@ function buildSafeResultText(input = {}) {
     resultPost,
     executionPath,
     route,
+    promptType,
   ].join('\n');
   if (hasSecretLikeText(rawCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
@@ -205,6 +212,12 @@ function buildSafeResultText(input = {}) {
     waitRequestCount,
     executor: executor || 'Codex',
     route,
+    prompt_type: promptType,
+    auto_approved_count: autoApprovedCount,
+    auto_blocked_count: autoBlockedCount,
+    retry_count: retryCount,
+    recovered,
+    result_post_retry_count: resultPostRetryCount,
     result_post: resultPost || 'POST /api/work-orders/result 200',
     execution_path: executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
   };
@@ -280,6 +293,11 @@ function normalizeWorkOrderResultRecord(record) {
     approval_request_count: Number.isFinite(Number(record.approval_request_count ?? record.yesCount ?? record.yes_count)) ? Number(record.approval_request_count ?? record.yesCount ?? record.yes_count) : 0,
     manual_paste_count: Number.isFinite(Number(record.manual_paste_count ?? record.copyCount ?? record.copy_count)) ? Number(record.manual_paste_count ?? record.copyCount ?? record.copy_count) : 0,
     wait_request_count: Number.isFinite(Number(record.wait_request_count ?? record.humanWaitCount ?? record.human_wait)) ? Number(record.wait_request_count ?? record.humanWaitCount ?? record.human_wait) : 0,
+    auto_approved_count: Number.isFinite(Number(record.auto_approved_count ?? record.autoApprovedCount)) ? Number(record.auto_approved_count ?? record.autoApprovedCount) : 0,
+    auto_blocked_count: Number.isFinite(Number(record.auto_blocked_count ?? record.autoBlockedCount)) ? Number(record.auto_blocked_count ?? record.autoBlockedCount) : 0,
+    retry_count: Number.isFinite(Number(record.retry_count ?? record.retryCount)) ? Number(record.retry_count ?? record.retryCount) : 0,
+    recovered: !!record.recovered,
+    result_post_retry_count: Number.isFinite(Number(record.result_post_retry_count ?? record.resultPostRetryCount)) ? Number(record.result_post_retry_count ?? record.resultPostRetryCount) : 0,
     executor: truncate(record.executor || record.assigned_agent || record.agent || 'Codex', 60),
     route: truncate(record.route || record.execution_route || 'zero-confirm', 40),
     result_post: truncate(record.result_post || record.resultPOST || 'POST /api/work-orders/result 200', 120),
@@ -328,14 +346,25 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     approval_request_count: latestResult.approval_request_count,
     manual_paste_count: latestResult.manual_paste_count,
     wait_request_count: latestResult.wait_request_count,
+    auto_approved_count: latestResult.auto_approved_count,
+    auto_blocked_count: latestResult.auto_blocked_count,
+    retry_count: latestResult.retry_count,
+    recovered: latestResult.recovered,
+    result_post_retry_count: latestResult.result_post_retry_count,
     yesCount: latestResult.yes_count,
     copyCount: latestResult.copy_count,
     humanWait: latestResult.human_wait,
     approvalRequestCount: latestResult.approval_request_count,
     manualPasteCount: latestResult.manual_paste_count,
     waitRequestCount: latestResult.wait_request_count,
+    autoApprovedCount: latestResult.auto_approved_count,
+    autoBlockedCount: latestResult.auto_blocked_count,
+    retryCount: latestResult.retry_count,
+    recovered: latestResult.recovered,
+    resultPostRetryCount: latestResult.result_post_retry_count,
     executor: latestResult.executor,
     route: latestResult.route,
+    prompt_type: latestResult.prompt_type,
     result_post: latestResult.result_post,
     execution_path: latestResult.execution_path,
     result_timestamp: latestResult.timestamp,
@@ -426,6 +455,12 @@ function recordWorkOrderResult(input = {}, options = {}) {
     approval_request_count: safeFields.approval_request_count,
     manual_paste_count: safeFields.manual_paste_count,
     wait_request_count: safeFields.wait_request_count,
+    auto_approved_count: safeFields.auto_approved_count,
+    auto_blocked_count: safeFields.auto_blocked_count,
+    retry_count: safeFields.retry_count,
+    recovered: safeFields.recovered,
+    result_post_retry_count: safeFields.result_post_retry_count,
+    prompt_type: safeFields.prompt_type,
     result_post: safeFields.result_post,
     execution_path: safeFields.execution_path,
     source: truncate(input.source || sourceWorkOrder.source || 'kosame-console', 40),

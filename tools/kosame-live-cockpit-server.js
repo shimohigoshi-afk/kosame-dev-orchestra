@@ -50,12 +50,15 @@ function buildResultActivityMessage(decision, title, agent) {
   const approvalCount = Number.isFinite(Number(decision && (decision.approval_request_count ?? decision.yes_count))) ? Number(decision.approval_request_count ?? decision.yes_count) : 0;
   const manualPasteCount = Number.isFinite(Number(decision && (decision.manual_paste_count ?? decision.copy_count))) ? Number(decision.manual_paste_count ?? decision.copy_count) : 0;
   const waitCount = Number.isFinite(Number(decision && (decision.wait_request_count ?? decision.human_wait))) ? Number(decision.wait_request_count ?? decision.human_wait) : 0;
+  const autoApprovedCount = Number.isFinite(Number(decision && (decision.auto_approved_count ?? decision.autoApprovedCount))) ? Number(decision.auto_approved_count ?? decision.autoApprovedCount) : 0;
+  const autoBlockedCount = Number.isFinite(Number(decision && (decision.auto_blocked_count ?? decision.autoBlockedCount))) ? Number(decision.auto_blocked_count ?? decision.autoBlockedCount) : 0;
+  const retryCount = Number.isFinite(Number(decision && (decision.retry_count ?? decision.retryCount))) ? Number(decision.retry_count ?? decision.retryCount) : 0;
   const messages = {
-    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
-    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
-    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
-    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
-    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
+    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
   };
   return messages[decisionStatus] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
 }

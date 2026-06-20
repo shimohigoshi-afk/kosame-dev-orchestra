@@ -25,6 +25,9 @@ function summarizeDecision(decision) {
   const approvalCount = Number.isFinite(Number(current.approval_request_count ?? current.yes_count)) ? Number(current.approval_request_count ?? current.yes_count) : 0;
   const manualPasteCount = Number.isFinite(Number(current.manual_paste_count ?? current.copy_count)) ? Number(current.manual_paste_count ?? current.copy_count) : 0;
   const waitCount = Number.isFinite(Number(current.wait_request_count ?? current.human_wait)) ? Number(current.wait_request_count ?? current.human_wait) : 0;
+  const autoApprovedCount = Number.isFinite(Number(current.auto_approved_count ?? current.autoApprovedCount)) ? Number(current.auto_approved_count ?? current.autoApprovedCount) : 0;
+  const autoBlockedCount = Number.isFinite(Number(current.auto_blocked_count ?? current.autoBlockedCount)) ? Number(current.auto_blocked_count ?? current.autoBlockedCount) : 0;
+  const retryCount = Number.isFinite(Number(current.retry_count ?? current.retryCount)) ? Number(current.retry_count ?? current.retryCount) : 0;
   const parts = [
     `status=${normalizeText(current.decision_status || current.nextRecommendedAction || 'wait_for_result')}`,
     `next=${normalizeText(current.nextRecommendedAction || 'wait_for_result')}`,
@@ -36,6 +39,9 @@ function summarizeDecision(decision) {
     `承認要求回数=${approvalCount}`,
     `手動貼付回数=${manualPasteCount}`,
     `待機要求回数=${waitCount}`,
+    `自動YES回数=${autoApprovedCount}`,
+    `自動遮断回数=${autoBlockedCount}`,
+    `retryCount=${retryCount}`,
   ];
   const reason = clamp(current.reason || current.summary || '', 120);
   if (reason) parts.push(`reason=${reason}`);
@@ -148,6 +154,13 @@ function buildWorkOrderResultDecision(input = {}) {
     || 'zero-confirm',
     40
   );
+  const promptType = clamp(
+    latestWorkOrderResult?.prompt_type
+    || latestWorkOrderResult?.promptType
+    || latestHandoffWorkOrder?.prompt_type
+    || '',
+    40
+  );
   const executionPath = clamp(
     latestWorkOrderResult?.execution_path
     || latestWorkOrderResult?.executionPath
@@ -185,6 +198,11 @@ function buildWorkOrderResultDecision(input = {}) {
     approval_request_count: Number.isFinite(Number(latestWorkOrderResult?.approval_request_count ?? latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.approval_request_count ?? latestWorkOrderResult.yes_count) : 0,
     manual_paste_count: Number.isFinite(Number(latestWorkOrderResult?.manual_paste_count ?? latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.manual_paste_count ?? latestWorkOrderResult.copy_count) : 0,
     wait_request_count: Number.isFinite(Number(latestWorkOrderResult?.wait_request_count ?? latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.wait_request_count ?? latestWorkOrderResult.human_wait) : 0,
+    auto_approved_count: Number.isFinite(Number(latestWorkOrderResult?.auto_approved_count ?? latestWorkOrderResult?.autoApprovedCount)) ? Number(latestWorkOrderResult.auto_approved_count ?? latestWorkOrderResult.autoApprovedCount) : 0,
+    auto_blocked_count: Number.isFinite(Number(latestWorkOrderResult?.auto_blocked_count ?? latestWorkOrderResult?.autoBlockedCount)) ? Number(latestWorkOrderResult.auto_blocked_count ?? latestWorkOrderResult.autoBlockedCount) : 0,
+    retry_count: Number.isFinite(Number(latestWorkOrderResult?.retry_count ?? latestWorkOrderResult?.retryCount)) ? Number(latestWorkOrderResult.retry_count ?? latestWorkOrderResult.retryCount) : 0,
+    recovered: !!(latestWorkOrderResult?.recovered || latestHandoffWorkOrder?.recovered),
+    prompt_type: promptType,
   };
 
   decision.summary = summarizeDecision(decision);

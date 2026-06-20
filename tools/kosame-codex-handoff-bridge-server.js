@@ -305,7 +305,7 @@ function buildLatestMarkdown(entry) {
     safe.prompt_text,
     '```',
     '',
-    '> Codexへ自動入力はしていません。Inboxへ保存しただけです。',
+    '> KOSAME Console Handoff — codex:watch により自動ディスパッチされます。',
   ].filter((line) => line != null).join('\n');
 }
 
@@ -429,7 +429,7 @@ function createCodexHandoffBridgeServer(options = {}) {
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,
             queuePath: result.queuePath,
-            message: 'Codexへ自動入力はしていません。Inboxへ保存しただけです。',
+            message: 'Inboxに保存しました。codex:watch 起動中なら自動実行されます。',
           }));
         } catch (error) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

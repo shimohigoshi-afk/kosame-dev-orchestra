@@ -4317,7 +4317,7 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
 
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
-  note.textContent = '外部AIへは自動送信しません。必要なら手動で Codex に貼り付けてください。';
+  note.textContent = '作業票をHandoff Inboxに保存しました。npm run codex:watch 起動中なら自動でCodexへ渡されます。';
   promptSection.appendChild(note);
 
   card.appendChild(promptSection);
@@ -4498,7 +4498,7 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   lines.className = 'handoff-inbox-lines';
   [
     `送信先: ${bridgeUrl}`,
-    `Codexへ自動入力はしていません。Inboxへ保存しただけです。`,
+    `Inboxに保存しました。codex:watch 起動中なら自動実行されます。`,
     `最終送信時刻: ${bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'}`,
     `最終保存先: ${bridgeState.lastHandoffDir || bridgeState.lastPath || '—'}`,
     `最終保存ファイル: ${bridgeState.lastPath || '—'}`,

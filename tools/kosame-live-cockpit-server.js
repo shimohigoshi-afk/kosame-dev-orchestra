@@ -349,7 +349,7 @@ function createLiveCockpitServer(options = {}) {
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,
             queuePath: result.queuePath,
-            message: 'Codexへ自動入力はしていません。Inboxへ保存しただけです。',
+            message: 'Inboxに保存しました。codex:watch 起動中なら自動実行されます。',
           }));
         } catch (error) {
           res.writeHead(400, {

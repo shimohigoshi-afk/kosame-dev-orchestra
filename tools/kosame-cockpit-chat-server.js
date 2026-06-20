@@ -692,6 +692,13 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '- UI上の動き',
     '- work_order の内容',
     '- git status -sb',
+    '',
+    '完了後に以下コマンドを実行してKOSAME Consoleへ自動報告:',
+    'node ~/kosame-dev-orchestra/tools/kosame-codex-result-poster.js',
+    '(実行不可の場合は以下フォーマットで標準出力)',
+    'KOSAME_RESULT_BEGIN',
+    '{"result_status":"success","smoke_result":"PASS","verify_result":"PASS","result_summary":"概要","changed_files":[]}',
+    'KOSAME_RESULT_END',
   ].filter((line, index, array) => !(line === '' && array[index - 1] === '')).join('\n');
 }
 

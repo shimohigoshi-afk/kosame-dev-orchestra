@@ -337,6 +337,57 @@ function resolveVersionContext() {
   };
 }
 
+function buildAiRoster(providerConfig, codexWatch, latestHandoffWorkOrder) {
+  const cw = codexWatch || {};
+  const handoffTitle = latestHandoffWorkOrder && latestHandoffWorkOrder.title
+    ? String(latestHandoffWorkOrder.title).slice(0, 40)
+    : null;
+  return [
+    {
+      id: 'codex',
+      name: 'Codex',
+      status: cw.running ? 'running' : 'idle',
+      task: cw.running ? (handoffTitle ? `実行中: ${handoffTitle}` : 'dispatch実行中') : '待機中',
+      tier: 'A',
+    },
+    {
+      id: 'claude',
+      name: 'Claude',
+      status: 'running',
+      task: 'KOSAME Console主担当',
+      tier: 'A',
+    },
+    {
+      id: 'gemini',
+      name: 'Gemini',
+      status: providerConfig.geminiKeyPresent ? 'idle' : 'missing',
+      task: providerConfig.geminiKeyPresent ? '待機中' : '未設定',
+      tier: 'B',
+    },
+    {
+      id: 'grok',
+      name: 'Grok',
+      status: 'missing',
+      task: '未設定',
+      tier: 'C',
+    },
+    {
+      id: 'deepseek',
+      name: 'DeepSeek',
+      status: providerConfig.deepseekKeyPresent ? 'idle' : 'missing',
+      task: providerConfig.deepseekKeyPresent ? '待機中' : '未設定',
+      tier: 'B',
+    },
+    {
+      id: 'llama',
+      name: 'Llama',
+      status: providerConfig.llamaKeyPresent ? 'idle' : 'missing',
+      task: providerConfig.llamaKeyPresent ? 'audit lane' : '未設定',
+      tier: 'C',
+    },
+  ];
+}
+
 function detectCodexWatch() {
   try {
     const { execFileSync: _exec } = require('node:child_process');
@@ -626,6 +677,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     warnings.push('監視対象のどちらかに未コミットまたはステージ済み変更があります。');
   }
 
+  const codexWatchState = detectCodexWatch();
+
   const humanGate = [
     '書き込み操作の前には必ず人間承認が必要です。',
     'commit 候補に進む前に changed files と staged files を確認してください。',
@@ -723,7 +776,8 @@ function collectLiveCockpitSnapshot(options = {}) {
     latestTag: versionContext.latestTag,
     headCommit: versionContext.headCommit,
     versionSource: versionContext.source,
-    codexWatch: detectCodexWatch(),
+    codexWatch: codexWatchState,
+    aiRoster: buildAiRoster(providerConfig, codexWatchState, mergedLatestHandoffWorkOrder),
     humanGate,
     warnings,
     nextAction,
@@ -738,6 +792,7 @@ if (require.main === module) {
 
 module.exports = {
   collectLiveCockpitSnapshot,
+  buildAiRoster,
   READ_ONLY_COMMANDS,
   loadProjectRegistry,
 };

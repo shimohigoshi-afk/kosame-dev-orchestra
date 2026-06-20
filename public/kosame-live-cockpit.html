@@ -387,6 +387,56 @@ h1 {
   color: var(--text);
   font-size: 11px;
 }
+/* ===== AI Roster ===== */
+.ai-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ai-roster-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  min-width: 120px;
+  flex: 1 1 120px;
+}
+.ai-roster-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--fg, #e8e8e8);
+}
+.ai-roster-status {
+  font-size: 10px;
+  font-weight: 600;
+}
+.ai-roster-status.running { color: var(--color-ok, #4caf50); }
+.ai-roster-status.idle    { color: var(--muted, #888); }
+.ai-roster-status.missing { color: var(--color-warn, #ff9800); }
+.ai-roster-task {
+  font-size: 10px;
+  color: var(--muted, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.ai-roster-tier {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  width: fit-content;
+  margin-top: 2px;
+}
+.ai-roster-tier.tier-a { background: rgba(100,180,255,0.15); color: #64b4ff; }
+.ai-roster-tier.tier-b { background: rgba(200,150,255,0.12); color: #c896ff; }
+.ai-roster-tier.tier-c { background: rgba(160,160,160,0.12); color: #aaa; }
 .project-focus-panel {
   position: relative;
   overflow: hidden;
@@ -1964,6 +2014,13 @@ h1 {
           <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
         </div>
         <div id="project-focus" class="project-focus-shell"></div>
+      </article>
+    </section>
+
+    <section class="ai-roster-shell" style="margin-top:14px">
+      <article class="panel ai-roster-panel">
+        <h2>AI ROSTER</h2>
+        <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>
       </article>
     </section>
 
@@ -3681,6 +3738,36 @@ function statusLabel(status) {
   if (status === 'ok' || status === 'success') return ['ok', 'OK'];
   if (status === 'error' || status === 'danger') return ['danger', 'ERROR'];
   return ['warn', 'WARNING'];
+}
+
+function renderAiRoster(snapshot) {
+  const node = document.getElementById('ai-roster');
+  if (!node) return;
+  const roster = snapshot && Array.isArray(snapshot.aiRoster) ? snapshot.aiRoster : [];
+  if (!roster.length) { node.textContent = '—'; return; }
+  node.innerHTML = '';
+  const statusLabel = { running: '実行中', idle: '待機中', missing: 'missing' };
+  for (const ai of roster) {
+    const item = document.createElement('div');
+    item.className = 'ai-roster-item';
+    const name = document.createElement('div');
+    name.className = 'ai-roster-name';
+    name.textContent = ai.name;
+    const statusEl = document.createElement('div');
+    statusEl.className = `ai-roster-status ${ai.status || 'missing'}`;
+    statusEl.textContent = `● ${statusLabel[ai.status] || ai.status || '—'}`;
+    const taskEl = document.createElement('div');
+    taskEl.className = 'ai-roster-task';
+    taskEl.textContent = ai.task || '—';
+    const tierEl = document.createElement('div');
+    tierEl.className = `ai-roster-tier tier-${(ai.tier || 'c').toLowerCase()}`;
+    tierEl.textContent = `Tier ${ai.tier || '?'}`;
+    item.appendChild(name);
+    item.appendChild(statusEl);
+    item.appendChild(taskEl);
+    item.appendChild(tierEl);
+    node.appendChild(item);
+  }
 }
 
 function renderTaskVault(taskVault, autoSave) {
@@ -5537,6 +5624,7 @@ async function loadSnapshot() {
     const dev = snapshot.devOrchestra || {};
     const sales = snapshot.salesDx || {};
     renderProjectRegistry(snapshot);
+    renderAiRoster(snapshot);
     renderTaskVault(snapshot.taskVault || {}, snapshot.autoSave || {});
     renderMemoryVault(snapshot.memoryVault || (snapshot.taskVault && snapshot.taskVault.memoryVault) || {}, snapshot.taskVault || {});
     renderApiCost(snapshot.apiCost || {});

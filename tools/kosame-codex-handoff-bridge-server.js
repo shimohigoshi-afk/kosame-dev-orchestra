@@ -174,25 +174,43 @@ function readJsonlRecords(filePath, limit = 200) {
 
 function sanitizeHandoffPayload(payload = {}) {
   const source = payload && typeof payload === 'object' ? payload : {};
-  const id = compactText(source.id || source.work_order_id || source.approval_id || source.handoff_id || '', 80);
-  const title = compactText(source.title || '', 120);
-  const targetRepo = compactText(source.target_repo || '', 160);
-  const assignedAgent = compactText(source.assigned_agent || source.recommended_agent || source.agent || 'Codex', 80);
+  const workOrder = source.work_order && typeof source.work_order === 'object'
+    ? source.work_order
+    : source.latestApprovedWorkOrder && typeof source.latestApprovedWorkOrder === 'object'
+      ? source.latestApprovedWorkOrder
+      : source.approval && typeof source.approval === 'object'
+        ? source.approval
+        : source;
+  const id = compactText(
+    source.id
+    || source.work_order_id
+    || source.approval_id
+    || source.handoff_id
+    || workOrder.id
+    || workOrder.work_order_id
+    || workOrder.approval_id
+    || workOrder.handoff_id
+    || '',
+    80,
+  );
+  const title = compactText(source.title || workOrder.title || '', 120);
+  const targetRepo = compactText(source.target_repo || workOrder.target_repo || '', 160);
+  const assignedAgent = compactText(source.assigned_agent || source.recommended_agent || source.agent || workOrder.assigned_agent || workOrder.recommended_agent || workOrder.agent || 'Codex', 80);
   const agent = assignedAgent;
-  const riskLevel = compactText(source.risk_level || 'low', 24);
-  const humanGateRequired = !!source.human_gate_required;
-  const createdAt = compactText(source.created_at || source.createdAt || new Date().toISOString(), 40);
-  const inputSource = compactText(source.source || 'kosame_console', 40);
-  const promptInput = source.body ?? source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? '';
+  const riskLevel = compactText(source.risk_level || workOrder.risk_level || 'low', 24);
+  const humanGateRequired = !!(source.human_gate_required ?? workOrder.human_gate_required);
+  const createdAt = compactText(source.created_at || source.createdAt || workOrder.created_at || workOrder.createdAt || new Date().toISOString(), 40);
+  const inputSource = compactText(source.source || workOrder.source || 'kosame_console', 40);
+  const promptInput = source.body ?? source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? workOrder.body ?? workOrder.prompt_text ?? workOrder.prompt ?? workOrder.safe_prompt_summary ?? '';
   const promptInfo = sanitizePromptText(promptInput);
   const promptText = compactText(promptInfo.promptText, MAX_TEXT_LENGTH);
-  const originalRequest = compactText(source.original_request || source.originalRequest || '', MAX_TEXT_LENGTH);
-  const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || '', 60);
-  const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || '', 160);
-  const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || '', 120);
-  const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions, 20, 240)
+  const originalRequest = compactText(source.original_request || source.originalRequest || workOrder.original_request || workOrder.originalRequest || '', MAX_TEXT_LENGTH);
+  const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || workOrder.selected_project_id || workOrder.selectedProjectId || '', 60);
+  const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || workOrder.selected_project_path || workOrder.selectedProjectPath || '', 160);
+  const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || workOrder.selected_project_label || workOrder.selectedProjectLabel || '', 120);
+  const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions || workOrder.safety_conditions || workOrder.safetyConditions, 20, 240)
     .map((line) => maskHandoffText(line));
-  const reportItems = normalizeTextList(source.report_items || source.reportItems, 20, 240)
+  const reportItems = normalizeTextList(source.report_items || source.reportItems || workOrder.report_items || workOrder.reportItems, 20, 240)
     .map((line) => maskHandoffText(line));
   const target = source.target && typeof source.target === 'object'
     ? {

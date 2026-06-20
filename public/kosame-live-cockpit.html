@@ -602,7 +602,7 @@ h1 {
   gap: 6px;
 }
 .shell-agent-activity-feed .agent-event-feed-item {
-  padding: 7px 9px;
+  padding: 5px 8px;
 }
 .shell-agent-activity-feed .agent-event-feed-item .agent-event-text {
   font-size: 11px;
@@ -1590,18 +1590,19 @@ h1 {
 }
 .task-motion-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 1.4fr) repeat(3, minmax(190px, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
 }
 .task-motion-panel {
   position: relative;
   overflow: hidden;
-  min-height: 152px;
+  min-height: 60px;
 }
 .task-motion-panel.running-panel {
-  grid-column: 1 / -1;
-  min-height: 198px;
+  grid-column: span 2;
+  min-height: 60px;
 }
+.task-motion-panel h3 { font-size: 10px; letter-spacing: 0.1em; margin: 0 0 4px; }
 .task-motion-panel h3,
 .task-motion-panel .stack {
   position: relative;
@@ -1684,6 +1685,7 @@ h1 {
 .chat-section-details > summary::after { content: '▾'; color: var(--accent); transition: transform 0.2s; }
 .chat-section-details[open] > summary::after { content: '▴'; }
 .chat-section-body { padding: 0 0 8px; }
+#result-decision-details .chat-section-body { padding-bottom: 2px; }
 
 /* ===== Running task animation ===== */
 .running-task-wrapper {
@@ -2049,7 +2051,7 @@ h1 {
       </article>
     </section>
 
-    <section class="chat-outer" style="margin-top:14px">
+    <section class="chat-outer" style="margin-top:10px">
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
         <div id="chat-status" class="small" style="margin-bottom:10px;color:var(--muted)"></div>
@@ -3648,8 +3650,9 @@ function renderShellAgentActivity(shellAgentActivity) {
     return;
   }
 
-  for (const [index, item] of items.slice(0, 5).entries()) {
+  for (const [index, item] of items.slice(0, 3).entries()) {
     const row = document.createElement('div');
+    row.style.opacity = index === 0 ? '1' : index === 1 ? '0.6' : '0.3';
     const rawStatus = String(item.status || item.severity || 'running').toLowerCase().replace(/_/g, '-');
     const kindClass = ({
       queued: 'waiting',

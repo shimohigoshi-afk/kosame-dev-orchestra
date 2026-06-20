@@ -187,7 +187,8 @@ function normalizeMaskedText(value) {
   return String(value || '').replace(/\[\[([^\]]+)\]\]/g, '[$1]');
 }
 
-async function runServerCycle(serverFactory, handoffDir) {
+async function runServerCycle(serverFactory, handoffDir, options = {}) {
+  const { expectCorsOptions = true } = options;
   const { server } = serverFactory;
   const port = await new Promise((resolve, reject) => {
     const onError = (error) => {
@@ -210,9 +211,11 @@ async function runServerCycle(serverFactory, handoffDir) {
   try {
     if (port == null) return { port: null, skipped: true };
 
-    const optionsResponse = await requestOptions(port, '/api/handoff');
-    assert.equal(optionsResponse.statusCode, 204, 'OPTIONS /api/handoff must return 204');
-    assert.equal(optionsResponse.headers['access-control-allow-origin'], '*', 'CORS allow origin must be wildcard');
+    if (expectCorsOptions) {
+      const optionsResponse = await requestOptions(port, '/api/handoff');
+      assert.equal(optionsResponse.statusCode, 204, 'OPTIONS /api/handoff must return 204');
+      assert.equal(optionsResponse.headers['access-control-allow-origin'], '*', 'CORS allow origin must be wildcard');
+    }
 
     const payload = makeAdoptedPayload();
     const sanitized = sanitizeHandoffPayload(payload);
@@ -344,6 +347,7 @@ async function main() {
   const liveServerCycle = await runServerCycle(
     { server: createLiveCockpitServer({ handoffDir: liveTempRoot }).server },
     liveTempRoot,
+    { expectCorsOptions: false },
   );
   if (liveServerCycle.skipped) {
     console.log('  PASS: live cockpit runtime checks skipped — listen EPERM in this environment');

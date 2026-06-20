@@ -1989,9 +1989,13 @@ h1 {
             </div>
 
         <div class="task-board-section">
-          <h3 class="task-board-section-title">SHELL AGENT ACTIVITY <span aria-hidden="true" style="display:none">実行状況</span></h3>
-          <div class="task-board-meta small">ローカル activity log 由来 / 読み取り専用</div>
-          <div id="shell-agent-activity" class="shell-agent-activity-feed"></div>
+          <details class="chat-section-details" id="shell-agent-activity-details">
+            <summary class="chat-section-summary">SHELL AGENT ACTIVITY <span aria-hidden="true" style="display:none">実行状況</span></summary>
+            <div class="chat-section-body">
+              <div class="task-board-meta small">ローカル activity log 由来 / 読み取り専用</div>
+              <div id="shell-agent-activity" class="shell-agent-activity-feed"></div>
+            </div>
+          </details>
         </div>
 
         <div class="task-board-section">
@@ -2022,6 +2026,42 @@ h1 {
           <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
           <div id="agent-event-feed" class="agent-event-feed"></div>
         </div>
+      </article>
+    </section>
+
+    <!-- Handoff & Result (order 3) -->
+    <section class="handoff-result-strip" id="handoff-result-strip" style="margin-top:8px">
+      <article class="panel">
+        <h2>HANDOFF &amp; RESULT</h2>
+        <div id="work-order-approval-status" class="small" style="margin: 0 0 6px;color:var(--muted)"></div>
+        <details class="chat-section-details" id="handoff-inbox-details">
+          <summary class="chat-section-summary">Handoff Inbox Bridge</summary>
+          <div class="chat-section-body">
+            <div id="handoff-inbox-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="handoff-inbox-panel" class="handoff-inbox-panel"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="handoff-queue-details">
+          <summary class="chat-section-summary">HANDOFF QUEUE</summary>
+          <div class="chat-section-body">
+            <div id="work-order-handoff-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="work-order-result-details">
+          <summary class="chat-section-summary">WORK ORDER RESULT</summary>
+          <div class="chat-section-body">
+            <div id="work-order-result-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-result-panel" class="work-order-result-panel"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="result-decision-details">
+          <summary class="chat-section-summary">RESULT DECISION PANEL</summary>
+          <div class="chat-section-body">
+            <div id="work-order-result-decision-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
+          </div>
+        </details>
       </article>
     </section>
 
@@ -2061,35 +2101,6 @@ h1 {
           <span id="chat-memory-badge" class="chat-status-badge warn">Memory: missing</span>
           <span id="chat-llama-audit-badge" class="chat-status-badge warn">Llama audit: missing</span>
         </div>
-        <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
-        <details class="chat-section-details" id="handoff-inbox-details">
-          <summary class="chat-section-summary">Handoff Inbox Bridge</summary>
-          <div class="chat-section-body">
-            <div id="handoff-inbox-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
-            <div id="handoff-inbox-panel" class="handoff-inbox-panel"></div>
-          </div>
-        </details>
-        <details class="chat-section-details" id="handoff-queue-details">
-          <summary class="chat-section-summary">HANDOFF QUEUE</summary>
-          <div class="chat-section-body">
-            <div id="work-order-handoff-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
-            <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
-          </div>
-        </details>
-        <details class="chat-section-details" id="work-order-result-details">
-          <summary class="chat-section-summary">WORK ORDER RESULT</summary>
-          <div class="chat-section-body">
-            <div id="work-order-result-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
-            <div id="work-order-result-panel" class="work-order-result-panel"></div>
-          </div>
-        </details>
-        <details class="chat-section-details" id="result-decision-details">
-          <summary class="chat-section-summary">RESULT DECISION PANEL</summary>
-          <div class="chat-section-body">
-            <div id="work-order-result-decision-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
-            <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
-          </div>
-        </details>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
           <div class="chat-msg-ai">

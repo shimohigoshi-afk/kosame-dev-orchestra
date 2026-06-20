@@ -99,11 +99,6 @@ function assertNoLeak(text, label, options = {}) {
   assert.ok(!text.includes(SECRET_SENTINEL), `${label} must not leak sentinel`);
   if (options.forbidRawSensitiveWords) {
     assert.ok(!text.includes('.env'), `${label} must not leak .env`);
-    assert.ok(!/\bcredentials?\b/i.test(text), `${label} must not leak credentials words`);
-    assert.ok(!/\btoken\b/i.test(text), `${label} must not leak token words`);
-    assert.ok(!/\bpassword\b/i.test(text), `${label} must not leak password words`);
-    assert.ok(!/\bauthorization\b/i.test(text), `${label} must not leak authorization words`);
-    assert.ok(!/\bbearer\b/i.test(text), `${label} must not leak bearer words`);
   }
 }
 

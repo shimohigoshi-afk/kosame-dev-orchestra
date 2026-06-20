@@ -1,0 +1,18 @@
+{
+  "version": "110.84.31",
+  "defaultDecision": "YES",
+  "normalTaskRequiresConfirmation": false,
+  "safetyStop": {
+    "enabled": true,
+    "triggers": [
+      "secret",
+      "production_deploy",
+      "billing",
+      "force_push",
+      "mass_delete",
+      "target_repo_change",
+      "customer_data_external_send"
+    ]
+  },
+  "waitForUserPolicy": "failure_outside_safety_stop"
+}

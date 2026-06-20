@@ -21,9 +21,10 @@
 
 const fs   = require('fs');
 const path = require('path');
+const PACKAGE = require('../package.json');
 
 const TOOL_META = {
-  version:       '110.68.0',
+  version:       PACKAGE.version,
   feature:       'v110-68-final-release-readiness-board',
   slug:          'kosame-final-release-readiness-board',
   dryRunOnly:    true,

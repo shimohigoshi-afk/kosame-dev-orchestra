@@ -337,6 +337,21 @@ function resolveVersionContext() {
   };
 }
 
+function detectCodexWatch() {
+  try {
+    const { execFileSync: _exec } = require('node:child_process');
+    const out = _exec('pgrep', ['-f', 'kosame-codex-dispatch-watcher'], {
+      encoding: 'utf8',
+      timeout: 3000,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const pids = String(out || '').trim().split(/\s+/).filter(Boolean).map(Number).filter(n => n > 0);
+    return { running: pids.length > 0, pid: pids[0] || null };
+  } catch {
+    return { running: false, pid: null };
+  }
+}
+
 function formatLocalTimestamp(isoString) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return '';
@@ -708,6 +723,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     latestTag: versionContext.latestTag,
     headCommit: versionContext.headCommit,
     versionSource: versionContext.source,
+    codexWatch: detectCodexWatch(),
     humanGate,
     warnings,
     nextAction,

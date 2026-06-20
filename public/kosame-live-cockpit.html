@@ -1821,6 +1821,7 @@ h1 {
               <div class="hero-meta-row timestamp" id="timestamp">—</div>
               <div class="hero-meta-row"><span class="hero-meta-label">ACTIVE REPO</span><span id="active-repo">—</span></div>
               <div class="hero-meta-row"><span class="hero-meta-label">MODE</span><span id="mode-display">Readonly</span></div>
+              <div class="hero-meta-row"><span class="hero-meta-label">WATCHER</span><span id="codex-watch-status">—</span></div>
             </div>
           </div>
         </div>
@@ -4143,7 +4144,7 @@ function renderWorkOrderCard(workOrder) {
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
   note.textContent = approval.status === 'approved'
-    ? '採用済みです。codex:watch が起動中なら自動ディスパッチされます。'
+    ? '了解しました！作業を開始します☂️ codex:watchで自動実行中です。'
     : '採用後、codex:watch に自動ディスパッチされます。';
   promptSection.appendChild(note);
 
@@ -5139,6 +5140,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
 
     statusNode.textContent = '採用済み / 自動ディスパッチ済み';
     buttonNode.textContent = '採用済み';
+    chatHistory.push({ role: 'assistant', content: '了解しました！作業を開始します☂️ codex:watchで自動実行中です。' });
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);
     renderHandoffInboxBridge(latestSnapshot);
@@ -5446,6 +5448,17 @@ async function loadSnapshot() {
     text(document.getElementById('hero-next'), snapshot.nextAction);
     const heroVer = document.getElementById('hero-version');
     if (heroVer) heroVer.textContent = `v${snapshot.currentVersion || ''}`;
+    const codexWatchEl = document.getElementById('codex-watch-status');
+    if (codexWatchEl) {
+      const cw = snapshot.codexWatch || {};
+      if (cw.running) {
+        codexWatchEl.textContent = `起動中 (PID ${cw.pid || '?'})`;
+        codexWatchEl.style.color = 'var(--color-ok, #4caf50)';
+      } else {
+        codexWatchEl.textContent = '停止中';
+        codexWatchEl.style.color = 'var(--color-warn, #ff9800)';
+      }
+    }
     updateHeroChips(snapshot);
 
     latestBridge = snapshot.confirmationBridge || null;

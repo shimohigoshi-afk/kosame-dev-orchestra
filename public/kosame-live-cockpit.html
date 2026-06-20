@@ -2292,7 +2292,12 @@ const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
 const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
 const HANDOFF_INBOX_LAST_STATUS_KEY = 'kosame.cockpit.handoffInbox.lastStatus';
 const HANDOFF_INBOX_LAST_SENT_AT_KEY = 'kosame.cockpit.handoffInbox.lastSentAt';
+const HANDOFF_INBOX_LAST_TARGET_URL_KEY = 'kosame.cockpit.handoffInbox.lastTargetUrl';
 const HANDOFF_INBOX_LAST_PATH_KEY = 'kosame.cockpit.handoffInbox.lastPath';
+const HANDOFF_INBOX_LAST_HANOFF_DIR_KEY = 'kosame.cockpit.handoffInbox.lastHandoffDir';
+const HANDOFF_INBOX_LAST_ERROR_KEY = 'kosame.cockpit.handoffInbox.lastError';
+const HANDOFF_INBOX_BRIDGE_URL_KEY = 'kosame.cockpit.handoffInbox.bridgeUrl';
+const HANDOFF_INBOX_BRIDGE_PORT = 18345;
 const NOTIFICATION_COOLDOWN_MS = 5000;
 const NOTIFICATION_FREQ = 880;
 const NOTIFICATION_FREQ_2 = 660;
@@ -2345,10 +2350,13 @@ function readHandoffInboxBridgeState() {
     return {
       lastStatus: localStorage.getItem(HANDOFF_INBOX_LAST_STATUS_KEY) || '',
       lastSentAt: localStorage.getItem(HANDOFF_INBOX_LAST_SENT_AT_KEY) || '',
+      lastTargetUrl: localStorage.getItem(HANDOFF_INBOX_LAST_TARGET_URL_KEY) || '',
       lastPath: localStorage.getItem(HANDOFF_INBOX_LAST_PATH_KEY) || '',
+      lastHandoffDir: localStorage.getItem(HANDOFF_INBOX_LAST_HANOFF_DIR_KEY) || '',
+      lastError: localStorage.getItem(HANDOFF_INBOX_LAST_ERROR_KEY) || '',
     };
   } catch {
-    return { lastStatus: '', lastSentAt: '', lastPath: '' };
+    return { lastStatus: '', lastSentAt: '', lastTargetUrl: '', lastPath: '', lastHandoffDir: '', lastError: '' };
   }
 }
 
@@ -2363,7 +2371,48 @@ function writeHandoffInboxBridgeState(state = {}) {
     if (Object.prototype.hasOwnProperty.call(state, 'lastPath')) {
       localStorage.setItem(HANDOFF_INBOX_LAST_PATH_KEY, String(state.lastPath || ''));
     }
+    if (Object.prototype.hasOwnProperty.call(state, 'lastTargetUrl')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_TARGET_URL_KEY, String(state.lastTargetUrl || ''));
+    }
+    if (Object.prototype.hasOwnProperty.call(state, 'lastHandoffDir')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_HANOFF_DIR_KEY, String(state.lastHandoffDir || ''));
+    }
+    if (Object.prototype.hasOwnProperty.call(state, 'lastError')) {
+      localStorage.setItem(HANDOFF_INBOX_LAST_ERROR_KEY, String(state.lastError || ''));
+    }
   } catch {}
+}
+
+function readHandoffInboxBridgeUrl() {
+  const normalize = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    try {
+      const parsed = new URL(text, window.location.href);
+      parsed.pathname = '/';
+      parsed.search = '';
+      parsed.hash = '';
+      return parsed.origin;
+    } catch {
+      return '';
+    }
+  };
+
+  try {
+    const stored = normalize(localStorage.getItem(HANDOFF_INBOX_BRIDGE_URL_KEY));
+    if (stored) return stored;
+  } catch {}
+
+  const injected = normalize(window.KOSAME_HANDOFF_BRIDGE_URL || window.__KOSAME_HANDOFF_BRIDGE_URL);
+  if (injected) return injected;
+
+  const hostname = (window.location && window.location.hostname) ? window.location.hostname : '127.0.0.1';
+  return `http://${hostname}:${HANDOFF_INBOX_BRIDGE_PORT}`;
+}
+
+function buildHandoffInboxBridgeUrl(pathname = '/api/handoff') {
+  const baseUrl = readHandoffInboxBridgeUrl();
+  return new URL(pathname, `${baseUrl.replace(/\/+$/, '')}/`).toString();
 }
 
 function isQuestionCue(text) {
@@ -4296,16 +4345,25 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
     title,
     target_repo: targetRepo,
     assigned_agent: assignedAgent,
+    agent: assignedAgent,
     risk_level: riskLevel,
     human_gate_required: humanGateRequired,
     prompt_text: promptText,
-    body: String(current.body || current.prompt || '').trim(),
+    body: String(current.body || current.prompt || current.safe_prompt_summary || '').trim(),
+    originalRequest: String(current.originalRequest || current.original_request || '').trim(),
     original_request: String(current.originalRequest || current.original_request || '').trim(),
     selected_project_id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
     selected_project_path: String(current.selectedProjectPath || current.selected_project_path || '').trim(),
     selected_project_label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
     safety_conditions: Array.isArray(current.safetyConditions || current.safety_conditions) ? (current.safetyConditions || current.safety_conditions) : [],
+    safetyConditions: Array.isArray(current.safetyConditions || current.safety_conditions) ? (current.safetyConditions || current.safety_conditions) : [],
     report_items: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
+    reportItems: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
+    target: {
+      id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
+      label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
+      path: targetRepo,
+    },
     created_at: String(current.created_at || current.timestamp || snapshot.generatedAt || new Date().toISOString()).trim(),
     source: 'kosame_console',
   };
@@ -4319,15 +4377,21 @@ async function sendCurrentHandoffToInbox(buttonNode) {
   const payload = buildHandoffInboxPayload(latestSnapshot || {});
   if (!payload) {
     if (statusNode) statusNode.textContent = 'エラー: Inbox 送信用の安全な内容がありません。';
+    writeHandoffInboxBridgeState({
+      lastStatus: 'failed',
+      lastError: 'Inbox 送信用の安全な内容がありません。',
+    });
     return;
   }
+
+  const bridgeUrl = buildHandoffInboxBridgeUrl('/api/handoff');
 
   const originalLabel = buttonNode ? buttonNode.textContent : '';
   if (buttonNode) {
     buttonNode.disabled = true;
     buttonNode.textContent = '送信中...';
   }
-  if (statusNode) statusNode.textContent = 'Handoff Inbox へ送信中です...';
+  if (statusNode) statusNode.textContent = `Handoff Inbox へ送信中です... / ${bridgeUrl}`;
   if (panelNode) {
     panelNode.querySelectorAll('button[data-handoff-inbox-action="send"]').forEach((btn) => {
       btn.disabled = true;
@@ -4335,12 +4399,23 @@ async function sendCurrentHandoffToInbox(buttonNode) {
   }
 
   try {
-    const response = await fetch('/api/handoff', {
+    const response = await fetch(bridgeUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      mode: 'cors',
+      cache: 'no-store',
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
+    const raw = await response.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      throw new Error(`Handoff Inbox bridge の応答が JSON ではありません。status=${response.status}`);
+    }
+    if (!response.ok) {
+      throw new Error(data.error || `Handoff Inbox bridge が HTTP ${response.status} を返しました。`);
+    }
     if (!data.ok) {
       throw new Error(data.error || 'Handoff Inbox への保存に失敗しました。');
     }
@@ -4348,17 +4423,21 @@ async function sendCurrentHandoffToInbox(buttonNode) {
     writeHandoffInboxBridgeState({
       lastStatus: 'success',
       lastSentAt: savedAt,
+      lastTargetUrl: bridgeUrl,
       lastPath: data.latestPath || data.queuePath || '',
+      lastHandoffDir: data.handoffDir || '',
+      lastError: '',
     });
-    if (statusNode) statusNode.textContent = `送信成功 / Inboxへ保存しました。 最終送信時刻: ${formatTokyoTimestamp(savedAt) || savedAt}`;
+    if (statusNode) statusNode.textContent = `送信成功 / Inboxへ保存しました。 ${bridgeUrl} / 最終送信時刻: ${formatTokyoTimestamp(savedAt) || savedAt}`;
     renderHandoffInboxBridge(latestSnapshot || {});
   } catch (error) {
     writeHandoffInboxBridgeState({
       lastStatus: 'failed',
       lastSentAt: new Date().toISOString(),
-      lastPath: '',
+      lastTargetUrl: bridgeUrl,
+      lastError: error && error.message ? error.message : 'Handoff Inbox へ保存できませんでした。',
     });
-    if (statusNode) statusNode.textContent = `送信失敗: ${error && error.message ? error.message : 'Handoff Inbox へ保存できませんでした。'}`;
+    if (statusNode) statusNode.textContent = `送信失敗: ${error && error.message ? error.message : 'Handoff Inbox へ保存できませんでした。'} / ${bridgeUrl}`;
     renderHandoffInboxBridge(latestSnapshot || {});
   } finally {
     if (buttonNode) {
@@ -4376,10 +4455,15 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
 
   const current = buildHandoffInboxPayload(snapshot);
   const bridgeState = readHandoffInboxBridgeState();
+  const bridgeUrl = readHandoffInboxBridgeUrl();
   const currentStatus = current ? (current.human_gate_required ? 'human gate required' : 'human gate optional') : '送信待機中';
-  statusNode.textContent = current
-    ? `送信先: localhost handoff bridge / ${current.title || '—'} / ${currentStatus}`
-    : '送信先: localhost handoff bridge / まだ送信可能な作業票はありません。';
+  const statusBits = [
+    `送信先: ${bridgeUrl}`,
+    current ? `候補: ${current.title || '—'} / ${currentStatus}` : 'まだ送信可能な作業票はありません。',
+  ];
+  if (bridgeState.lastStatus) statusBits.push(`last status: ${bridgeState.lastStatus}`);
+  if (bridgeState.lastError) statusBits.push(`last error: ${bridgeState.lastError}`);
+  statusNode.textContent = statusBits.join(' / ');
 
   const card = document.createElement('div');
   card.className = 'handoff-inbox-card';
@@ -4392,16 +4476,17 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   head.appendChild(title);
   const badge = document.createElement('span');
   badge.className = 'handoff-inbox-badge';
-  badge.textContent = 'localhost handoff bridge';
+  badge.textContent = `localhost handoff bridge / ${bridgeUrl}`;
   head.appendChild(badge);
   card.appendChild(head);
 
   const meta = document.createElement('div');
   meta.className = 'chat-work-order-meta';
   [
-    ['destination', 'localhost handoff bridge'],
+    ['destination', bridgeUrl],
     ['last status', bridgeState.lastStatus || '—'],
     ['last sent', bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'],
+    ['last dir', bridgeState.lastHandoffDir || '—'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
     chip.textContent = `${label}: ${value}`;
@@ -4412,11 +4497,14 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   const lines = document.createElement('div');
   lines.className = 'handoff-inbox-lines';
   [
-    `送信先: localhost handoff bridge`,
+    `送信先: ${bridgeUrl}`,
     `Codexへ自動入力はしていません。Inboxへ保存しただけです。`,
     `最終送信時刻: ${bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'}`,
-    `最終保存先: ${bridgeState.lastPath || '—'}`,
+    `最終保存先: ${bridgeState.lastHandoffDir || bridgeState.lastPath || '—'}`,
+    `最終保存ファイル: ${bridgeState.lastPath || '—'}`,
+    bridgeState.lastError ? `最終エラー: ${bridgeState.lastError}` : null,
   ].forEach((textLine) => {
+    if (!textLine) return;
     const line = document.createElement('div');
     line.className = 'handoff-inbox-line';
     line.textContent = textLine;

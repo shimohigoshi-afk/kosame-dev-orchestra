@@ -314,6 +314,7 @@ function createLiveCockpitServer(options = {}) {
           res.end(JSON.stringify({
             ok: true,
             latestHandoff: result.latest || null,
+            handoffDir: result.handoffDir,
             latestPath: result.latestPath,
             queuePath: result.queuePath,
             count: result.count,
@@ -343,6 +344,7 @@ function createLiveCockpitServer(options = {}) {
           });
           res.end(JSON.stringify({
             ok: true,
+            handoffDir: result.handoffDir,
             saved_at: result.saved_at,
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,

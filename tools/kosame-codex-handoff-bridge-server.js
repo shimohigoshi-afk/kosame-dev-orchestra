@@ -79,7 +79,13 @@ function normalizeTextList(value, maxItems = 12, maxLength = 240) {
 
 function maskHandoffText(value) {
   return compactText(value || '')
+    .replace(/\bSecret\b/gi, '[secret]')
     .replace(/\.env\b/gi, '[env]')
+    .replace(/\bcredentials?\b/gi, '[credentials]')
+    .replace(/\btoken\b/gi, '[token]')
+    .replace(/\bpassword\b/gi, '[password]')
+    .replace(/\bauthorization\b/gi, '[authorization]')
+    .replace(/\bbearer\b/gi, '[bearer]')
     .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY');
 }
 
@@ -105,7 +111,13 @@ function sanitizePromptText(promptText) {
   for (const line of lines) {
     const compact = compactText(
       line
+        .replace(/\bSecret\b/gi, '[secret]')
         .replace(/\.env\b/gi, '[env]')
+        .replace(/\bcredentials?\b/gi, '[credentials]')
+        .replace(/\btoken\b/gi, '[token]')
+        .replace(/\bpassword\b/gi, '[password]')
+        .replace(/\bauthorization\b/gi, '[authorization]')
+        .replace(/\bbearer\b/gi, '[bearer]')
         .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY'),
       MAX_LINE_LENGTH,
     );
@@ -166,6 +178,7 @@ function sanitizeHandoffPayload(payload = {}) {
   const title = compactText(source.title || '', 120);
   const targetRepo = compactText(source.target_repo || '', 160);
   const assignedAgent = compactText(source.assigned_agent || source.recommended_agent || source.agent || 'Codex', 80);
+  const agent = assignedAgent;
   const riskLevel = compactText(source.risk_level || 'low', 24);
   const humanGateRequired = !!source.human_gate_required;
   const createdAt = compactText(source.created_at || source.createdAt || new Date().toISOString(), 40);
@@ -181,6 +194,17 @@ function sanitizeHandoffPayload(payload = {}) {
     .map((line) => maskHandoffText(line));
   const reportItems = normalizeTextList(source.report_items || source.reportItems, 20, 240)
     .map((line) => maskHandoffText(line));
+  const target = source.target && typeof source.target === 'object'
+    ? {
+        id: compactText(source.target.id || source.target.projectId || selectedProjectId, 60),
+        label: compactText(source.target.label || source.target.name || selectedProjectLabel, 120),
+        path: compactText(source.target.path || source.target.repo || targetRepo, 160),
+      }
+    : {
+        id: selectedProjectId,
+        label: selectedProjectLabel,
+        path: targetRepo,
+      };
 
   if (!id) throw new Error('id が必要です。');
   if (!title) throw new Error('title が必要です。');
@@ -218,20 +242,25 @@ function sanitizeHandoffPayload(payload = {}) {
   return {
     id,
     title,
+    agent,
     target_repo: targetRepo,
     assigned_agent: assignedAgent,
     risk_level: riskLevel,
     human_gate_required: humanGateRequired,
     original_request: originalRequest,
+    originalRequest,
     selected_project_id: selectedProjectId,
     selected_project_path: selectedProjectPath,
     selected_project_label: selectedProjectLabel,
     safety_conditions: safetyConditions,
+    safetyConditions,
     report_items: reportItems,
+    reportItems,
     body: promptText,
     prompt_text: promptText,
     created_at: createdAt,
     source: inputSource,
+    target,
     redacted_count: promptInfo.redactedCount,
   };
 }
@@ -246,15 +275,20 @@ function buildLatestMarkdown(entry) {
     `- id: ${safe.id}`,
     `- title: ${safe.title}`,
     `- target_repo: ${safe.target_repo}`,
+    safe.agent ? `- agent: ${safe.agent}` : null,
     `- assigned_agent: ${safe.assigned_agent}`,
     `- risk_level: ${safe.risk_level}`,
     `- human_gate_required: ${safe.human_gate_required ? 'true' : 'false'}`,
     `- created_at: ${safe.created_at}`,
     `- source: ${safe.source}`,
+    safe.originalRequest ? `- originalRequest: ${safe.originalRequest}` : null,
     safe.original_request ? `- original_request: ${safe.original_request}` : null,
     safe.selected_project_id ? `- selected_project_id: ${safe.selected_project_id}` : null,
     safe.selected_project_path ? `- selected_project_path: ${safe.selected_project_path}` : null,
     safe.selected_project_label ? `- selected_project_label: ${safe.selected_project_label}` : null,
+    safe.target ? `- target_id: ${safe.target.id || ''}` : null,
+    safe.target ? `- target_label: ${safe.target.label || ''}` : null,
+    safe.target ? `- target_path: ${safe.target.path || ''}` : null,
     safe.redacted_count ? `- redacted_count: ${safe.redacted_count}` : null,
     '',
     safetyConditions.length ? '## safety_conditions' : null,
@@ -390,6 +424,7 @@ function createCodexHandoffBridgeServer(options = {}) {
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
           res.end(JSON.stringify({
             ok: true,
+            handoffDir: result.handoffDir,
             saved_at: result.saved_at,
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,

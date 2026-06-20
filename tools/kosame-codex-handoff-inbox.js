@@ -19,6 +19,7 @@ function printRecord(record) {
     `id: ${safe.id}`,
     `title: ${safe.title}`,
     `target_repo: ${safe.target_repo}`,
+    safe.agent ? `agent: ${safe.agent}` : null,
     `assigned_agent: ${safe.assigned_agent}`,
     `risk_level: ${safe.risk_level}`,
     `human_gate_required: ${safe.human_gate_required ? 'true' : 'false'}`,
@@ -28,6 +29,13 @@ function printRecord(record) {
     'prompt_text:',
     safe.prompt_text,
   ];
+  if (safe.target) {
+    lines.push('');
+    lines.push('target:');
+    lines.push(`  id: ${safe.target.id || ''}`);
+    lines.push(`  label: ${safe.target.label || ''}`);
+    lines.push(`  path: ${safe.target.path || ''}`);
+  }
   process.stdout.write(`${lines.join('\n')}\n`);
 }
 

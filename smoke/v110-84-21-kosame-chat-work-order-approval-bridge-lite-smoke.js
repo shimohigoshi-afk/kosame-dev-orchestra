@@ -88,7 +88,7 @@ async function main() {
 
   const html = read(HTML_PATH);
   assert.ok(html.includes('この作業票を採用'), 'HTML must include approval button');
-  assert.ok(html.includes('採用済み / Codexへ貼り付け待ち'), 'HTML must include approved status copy');
+  assert.ok(html.includes('採用済み / dispatch待ち'), 'HTML must include approved dispatch status');
   assert.ok(html.includes('work-order-approval-status'), 'HTML must include approval summary area');
   assert.ok(html.includes('kosame.cockpit.notificationMode'), 'HTML must keep notification mode localStorage key');
   assert.ok(html.includes('kosame.cockpit.notificationSoundEnabled'), 'HTML must keep notification sound localStorage key');

@@ -15,6 +15,23 @@ const DEFAULT_HOST = process.env.KOSAME_CONSOLE_HOST || '127.0.0.1';
 const POLL_INTERVAL_MS = 2000;
 const CLAUDE_TIMEOUT_MS = 10 * 60 * 1000;
 
+// Safety Stop conditions: dispatch is BLOCKED if any of these are detected in the prompt.
+// Patterns are intentionally specific to avoid matching safety-condition documentation text.
+const DISPATCH_SAFETY_STOP_PATTERNS = [
+  /git\s+push\s+.*--force|git\s+push\s+-f\b|--force\s+origin/i,
+  /git\s+tag\s+-f\b/i,
+  /rm\s+-rf\s+\//i,
+  /DROP\s+TABLE|DROP\s+DATABASE/i,
+  /npm\s+.*publish\s+--tag\s+latest/i,
+];
+
+// Required safety conditions that must appear in every dispatched prompt.
+const REQUIRED_SAFETY_KEYWORDS = [
+  '機密情報・環境変数ファイル・認証情報・APIキーは読まない',
+  '外部APIを呼ばない',
+  '対象repo以外を触らない',
+];
+
 function readQueueCount(handoffDir) {
   const p = path.join(handoffDir, QUEUE_FILENAME);
   if (!fs.existsSync(p)) return 0;
@@ -33,6 +50,20 @@ function readLatestMd(handoffDir) {
   const p = path.join(handoffDir, LATEST_FILENAME);
   if (!fs.existsSync(p)) return null;
   return fs.readFileSync(p, 'utf8');
+}
+
+function safetyPreFlight(prompt) {
+  for (const pattern of DISPATCH_SAFETY_STOP_PATTERNS) {
+    if (pattern.test(prompt)) {
+      return { ok: false, reason: `Safety Stop: prompt matched forbidden pattern ${pattern}` };
+    }
+  }
+  for (const keyword of REQUIRED_SAFETY_KEYWORDS) {
+    if (!prompt.includes(keyword)) {
+      return { ok: false, reason: `Safety Stop: required condition missing — "${keyword}"` };
+    }
+  }
+  return { ok: true };
 }
 
 function extractResultBlock(output) {
@@ -91,7 +122,7 @@ function runClaude(prompt, timeoutMs) {
 
     const timer = setTimeout(() => {
       proc.kill('SIGTERM');
-      reject(new Error(`Codex timeout after ${timeoutMs}ms`));
+      reject(new Error(`Claude runner timeout after ${timeoutMs}ms`));
     }, timeoutMs);
 
     proc.on('close', (code) => {
@@ -115,16 +146,23 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     return;
   }
 
-  process.stdout.write(`[watcher] Dispatching: ${entry.title || entry.id || '?'}\n`);
+  const safety = safetyPreFlight(prompt);
+  if (!safety.ok) {
+    process.stderr.write(`[watcher] ⛔ SAFETY STOP — ${safety.reason}\n`);
+    process.stderr.write('[watcher] Dispatch blocked. Human review required.\n');
+    return;
+  }
+
+  process.stdout.write(`[watcher] Claude dispatch: ${entry.title || entry.id || '?'}\n`);
 
   let claudeResult;
   try {
     claudeResult = await runClaude(prompt, options.timeoutMs || CLAUDE_TIMEOUT_MS);
   } catch (error) {
-    process.stderr.write(`[watcher] Codex error: ${error.message}\n`);
+    process.stderr.write(`[watcher] Claude runner error: ${error.message}\n`);
     await postResult({
       result_status: 'error',
-      result_summary: `Codex dispatch failed: ${error.message}`,
+      result_summary: `Claude runner failed: ${error.message}`,
       smoke_result: 'unknown',
       verify_result: 'unknown',
     }, options).catch(() => {});
@@ -136,7 +174,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     result_status: claudeResult.code === 0 ? 'success' : 'error',
     smoke_result: 'unknown',
     verify_result: 'unknown',
-    result_summary: `Codex完了 (exit ${claudeResult.code})`,
+    result_summary: `Claude runner完了 (exit ${claudeResult.code})`,
   };
 
   if (!extracted) {
@@ -174,7 +212,7 @@ async function main() {
 
   process.stdout.write(`[watcher] Watching ${handoffDir}\n`);
   process.stdout.write(`[watcher] Posting results → http://${host}:${port}\n`);
-  process.stdout.write('[watcher] 作業票をApprove→Handoffすると自動でCodexへ渡されます\n');
+  process.stdout.write('[watcher] Codex Runner起動 — Approve→Handoffで自動ディスパッチ / Claudeはreview/audit専用\n');
 
   let lastCount = readQueueCount(handoffDir);
   let dispatching = false;
@@ -198,7 +236,15 @@ async function main() {
   process.on('SIGTERM', () => { clearInterval(timer); process.exit(0); });
 }
 
-module.exports = { extractResultBlock, readQueueCount, readLatestEntry, dispatchWorkOrder };
+module.exports = {
+  extractResultBlock,
+  readQueueCount,
+  readLatestEntry,
+  dispatchWorkOrder,
+  safetyPreFlight,
+  DISPATCH_SAFETY_STOP_PATTERNS,
+  REQUIRED_SAFETY_KEYWORDS,
+};
 
 if (require.main === module) {
   main().catch((error) => {

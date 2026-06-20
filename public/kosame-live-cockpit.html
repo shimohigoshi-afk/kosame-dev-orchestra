@@ -4143,8 +4143,8 @@ function renderWorkOrderCard(workOrder) {
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
   note.textContent = approval.status === 'approved'
-    ? '採用済みです。Codexへ貼り付け待ちです。'
-    : '内容を確認してから Codex に貼ってください。';
+    ? '採用済みです。codex:watch が起動中なら自動ディスパッチされます。'
+    : '採用後、codex:watch に自動ディスパッチされます。';
   promptSection.appendChild(note);
 
   card.appendChild(promptSection);
@@ -5022,7 +5022,7 @@ function resolveWorkOrderApprovalState(workOrder) {
   if (current.approval_state === 'approved') {
     return {
       status: 'approved',
-      label: current.approval_label || '採用済み / Codexへ貼り付け待ち',
+      label: current.approval_label || '採用済み / dispatch待ち',
       record: current.approval_record || null,
     };
   }
@@ -5035,7 +5035,7 @@ function resolveWorkOrderApprovalState(workOrder) {
   ) {
     return {
       status: 'approved',
-      label: '採用済み / Codexへ貼り付け待ち',
+      label: '採用済み / dispatch待ち',
       record: approved,
     };
   }
@@ -5081,11 +5081,11 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
       throw new Error(data.error || '承認に失敗しました。');
     }
     workOrder.approval_state = 'approved';
-    workOrder.approval_label = '採用済み / Codexへ貼り付け待ち';
+    workOrder.approval_label = '採用済み / dispatch待ち';
     workOrder.approval_record = data.approval || data.latestApprovedWorkOrder || null;
     if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
     latestSnapshot.latestApprovedWorkOrder = data.latestApprovedWorkOrder || data.approval || workOrder.approval_record || null;
-    statusNode.textContent = '採用済み / Codexへ貼り付け待ち';
+    statusNode.textContent = '採用済み / dispatch待ち';
     buttonNode.textContent = '採用済み';
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);

@@ -124,7 +124,7 @@ async function main() {
       assert.ok(sales.body.work_order.prompt.includes('外部APIを呼ばない'), 'prompt must include external API restriction');
       assert.ok(sales.body.work_order.prompt.includes('対象repo以外を触らない'), 'prompt must include repo boundary restriction');
       assert.ok(sales.body.work_order.prompt.includes('git status -sb'), 'prompt must include git status -sb');
-      assert.ok(/確認してから Codex に貼ってください/.test(sales.body.reply), 'reply must sound natural');
+      assert.ok(/codex:watch|自動でディスパッチ/.test(sales.body.reply), 'reply must reference codex:watch dispatch');
       console.log('  PASS: Sales DX work order routing');
 
       const kosame = await requestJson(port, {

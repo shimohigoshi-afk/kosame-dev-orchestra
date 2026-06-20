@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const { AUTO_YES_CONTRACT } = require('./kosame-prompt-lint');
+
 const PERSONA_PATH = path.join(__dirname, '..', 'config', 'kosame-cockpit-chat-persona.md');
 const CHAT_EVENTS_PATH = path.join(os.homedir(), '.kosame', 'kosame-chat-events.jsonl');
 const MAX_MESSAGE_LENGTH = 2000;
@@ -670,6 +672,7 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
   if (normalizeContent(snapshotSummary)) contextLines.push(`参考コンテキスト: ${normalizeContent(snapshotSummary)}`);
 
   return [
+    AUTO_YES_CONTRACT,
     `cd ${target.repo}`,
     '',
     `${title} の作業票ドラフトです。`,
@@ -745,8 +748,8 @@ function buildWorkOrderReply(input, snapshotSummary) {
     : [];
 
   return {
-    reply: `${title} の作業票ドラフトを作りました。確認してから Codex に貼ってください☂️`,
-    suggested_action: '内容を確認して、問題なければ Codexへ貼る',
+    reply: `${title} の作業票ドラフトを作りました。採用後、codex:watch が自動でディスパッチします☂️`,
+    suggested_action: '内容を確認して採用ボタンを押す。codex:watch が自動ディスパッチします。',
     human_gate_required: true,
     work_order: {
       title,

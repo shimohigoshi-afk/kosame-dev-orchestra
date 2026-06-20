@@ -36,7 +36,7 @@ const SAFETY_STOP_PATTERNS = {
   mass_delete:
     /(?:rm\s+-[rf]{1,2}\s+[^;|&\n]{2,}|git clean\s+-[fd]{1,2}|DROP\s+(?:TABLE|DATABASE)|TRUNCATE\b|全(?:削除|消去))/i,
   target_repo_change:
-    /(?:target_repo\s*[=:→]|ALLOWED_TARGET_REPOS|対象.{0,15}(?:repo|リポ)|(?:repo|リポ).{0,15}変更)/i,
+    /(?:target_repo\s*(?:[=:→]|changed?|updated?|modified?|override)|ALLOWED_TARGET_REPOS|対象.{0,15}(?:repo|リポ)|(?:repo|リポ).{0,15}変更)/i,
   customer_data_external_send:
     /(?:顧客.{0,30}(?:送信|外部|upload)|customer.{0,30}(?:send|external|upload)|個人情報.{0,30}送信)/i,
 };

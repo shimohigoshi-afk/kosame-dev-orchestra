@@ -876,17 +876,19 @@ function printBudgetStatus(budgetCheck) {
  *   dryRun         {boolean}  true=模擬実行（デフォルト）
  *   silent         {boolean}  コンソール出力を抑制
  *   skipHumanGate  {boolean}  human_gate 表示を呼び出し元が管理する場合
+ *   isIrreversible {boolean}  true のとき high タスクで human_gate を発火（デフォルト false）
  *   taskInput      {string}   Learning Log 用タスク説明
  *   taskType       {string}   'code'|'hp-lp'|'mobile-app'|'review'|'text'|'other'
  */
 async function cheapFirstRun(prompt, difficulty, opts = {}) {
   const {
-    dryRun        = true,
-    silent        = false,
-    skipHumanGate = false,
-    taskInput     = prompt.slice(0, 120),
-    taskType      = 'other',
-    project       = null,   // プロジェクト識別子 (DeepSeekガード用)
+    dryRun          = true,
+    silent          = false,
+    skipHumanGate   = false,
+    isIrreversible  = false,  // true のとき high + isIrreversible で human_gate を発火
+    taskInput       = prompt.slice(0, 120),
+    taskType        = 'other',
+    project         = null,   // プロジェクト識別子 (DeepSeekガード用)
   } = opts;
 
   const out    = silent ? () => {} : console.log;
@@ -942,6 +944,18 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
     };
   }
 
+  // ── high + isIrreversible → human_gate ─────────────────────────────────
+  if (isHigh && isIrreversible && !skipHumanGate) {
+    const approved = await waitForHumanApproval(chain[0], difficulty, { dryRun, out });
+    if (!approved) {
+      return {
+        tool: TOOL_META.slug, version: TOOL_META.version,
+        ok: false, dryRun, blocked: true,
+        reason: 'human gate: irreversible high task rejected by user',
+      };
+    }
+  }
+
   // ── メインループ（直列Cheap-First） ──────────────────────────────────────
   const attempts = [];
 
@@ -961,7 +975,7 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
       if (guard.blocked) {
         out(`     ${c('red', '⛔ DeepSeek ブロック')} [${guard.reason}]`);
         out(`     ${c('yellow', '↷')} ${guard.fallback ?? 'next worker'} へ自動切替`);
-        attempts.push({ workerName, modelId, success: false, dryRun, blocked: true, reason: guard.reason, fallback: guard.fallback });
+        attempts.push({ workerName, modelId, success: false, dryRun, policyBlocked: true, blocked: true, reason: guard.reason, fallback: guard.fallback });
         sessionSkipList.push(workerName);
         continue;
       }
@@ -1076,8 +1090,10 @@ async function cheapFirstRun(prompt, difficulty, opts = {}) {
   }
 
   // ── 全ワーカー失敗 → human_gate（単一プロバイダー障害では要求しない） ───────
-  const uniqueProviders = new Set(attempts.map(a => resolveWorker(a.workerName ?? a.modelId ?? '', config).provider));
-  const allFailed       = attempts.every(a => !a.success);
+  // ポリシーブロック（policyBlocked）は障害ではなくスキップ扱い — 除外して集計
+  const realFailures    = attempts.filter(a => !a.policyBlocked);
+  const uniqueProviders = new Set(realFailures.map(a => resolveWorker(a.workerName ?? a.modelId ?? '', config).provider));
+  const allFailed       = realFailures.length > 0 && realFailures.every(a => !a.success);
 
   out(`\n  ${c('red', '⛔ すべてのワーカーが失敗しました')}`);
 

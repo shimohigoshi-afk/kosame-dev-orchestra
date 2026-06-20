@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY } = require('./kosame-prompt-lint');
+const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOWN, assertNoZeroConfirmRequests } = require('./kosame-prompt-lint');
 
 const PERSONA_PATH = path.join(__dirname, '..', 'config', 'kosame-cockpit-chat-persona.md');
 const CHAT_EVENTS_PATH = path.join(os.homedir(), '.kosame', 'kosame-chat-events.jsonl');
@@ -674,6 +674,7 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
   return [
     AUTO_YES_CONTRACT,
     COMPLETE_RUN_FIRST_POLICY,
+    ZERO_CONFIRM_ROUTE_LOCKDOWN,
     `cd ${target.repo}`,
     '',
     `${title} の作業票ドラフトです。`,
@@ -749,12 +750,15 @@ function buildWorkOrderReply(input, snapshotSummary) {
     : [];
 
   return {
-    reply: `${title} の作業票ドラフトを作りました。採用後、KOSAME Runner / dispatch watcher が自動でディスパッチします☂️`,
-    suggested_action: '内容を確認して採用すると、KOSAME Runner / dispatch watcher が自動ディスパッチします。',
+    reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が自動でディスパッチします。`,
+    suggested_action: '採用すると、KOSAME Runner / dispatch watcher が zero-confirm で自動ディスパッチします。',
     human_gate_required: true,
     work_order: {
       title,
       agent: 'Codex',
+      executor: 'claude-zero-confirm',
+      route: 'zero-confirm',
+      executionCommand: 'claude --dangerously-skip-permissions -p',
       target_repo: target.repo,
       risk_level: target.riskLevel,
       requires_human_confirmation: true,
@@ -909,6 +913,14 @@ async function handleChatRequest(body) {
     selectedProjectPath: normalized.selectedProjectPath || '',
     selectedProjectLabel: normalized.selectedProjectLabel || '',
   }, contextSummary);
+
+  if (replyPacket.reply) {
+    assertNoZeroConfirmRequests(replyPacket.reply, 'chat reply', { allowNegatedContext: true });
+  }
+  if (replyPacket.work_order) {
+    assertNoZeroConfirmRequests(replyPacket.work_order.prompt || '', 'work order prompt', { allowNegatedContext: true });
+    assertNoZeroConfirmRequests(replyPacket.work_order.body || '', 'work order body', { allowNegatedContext: true });
+  }
 
   const result = {
     ok: true,

@@ -4820,6 +4820,7 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   [
     ['agent', current.assigned_agent || current.recommended_agent || '—'],
     ['target', current.target_repo || '—'],
+    ['route', current.route || 'zero-confirm'],
     ['risk', current.risk_level || '—'],
     ['status', current.status || 'waiting_result'],
     ['executor', current.executor || current.assigned_agent || current.recommended_agent || 'Codex'],
@@ -4843,6 +4844,7 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
     `smoke: ${current.smoke_result || 'unknown'}`,
     `verify: ${current.verify_result || 'unknown'}`,
     `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
+    `route: ${current.route || 'zero-confirm'}`,
     `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
     `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
     `changed files: ${current.changed_files_summary || (Array.isArray(current.changed_files) ? current.changed_files.join(' | ') : '—')}`,
@@ -4995,6 +4997,7 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
     target_repo: base.target_repo || '—',
     assigned_agent: base.assigned_agent || base.recommended_agent || '—',
     risk_level: base.risk_level || 'low',
+    route: base.route || 'zero-confirm',
     human_gate_required: humanGateRequired,
     commit_tag_push_allowed: commitTagPushAllowed,
     decision_status: decisionStatus,
@@ -5002,7 +5005,12 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
     reason,
     required_next_work: requiredNextWork,
     activity_status: activityStatus,
-    summary: `status=${decisionStatus} / next=${decisionStatus} / humanGate=${humanGateRequired ? 'yes' : 'no'} / commitTagPush=${commitTagPushAllowed ? 'candidate' : 'hold'} / reason=${reason} / required=${requiredNextWork}`,
+    executor: base.executor || base.assigned_agent || base.recommended_agent || 'claude-zero-confirm',
+    result_post: base.result_post || base.resultPOST || 'POST /api/work-orders/result 200',
+    approval_request_count: Number.isFinite(Number(base.approval_request_count ?? base.yes_count)) ? Number(base.approval_request_count ?? base.yes_count) : 0,
+    manual_paste_count: Number.isFinite(Number(base.manual_paste_count ?? base.copy_count)) ? Number(base.manual_paste_count ?? base.copy_count) : 0,
+    wait_request_count: Number.isFinite(Number(base.wait_request_count ?? base.human_wait)) ? Number(base.wait_request_count ?? base.human_wait) : 0,
+    summary: `status=${decisionStatus} / next=${decisionStatus} / route=${base.route || 'zero-confirm'} / humanGate=${humanGateRequired ? 'yes' : 'no'} / commitTagPush=${commitTagPushAllowed ? 'candidate' : 'hold'} / 承認要求回数=${Number.isFinite(Number(base.approval_request_count ?? base.yes_count)) ? Number(base.approval_request_count ?? base.yes_count) : 0} / 手動貼付回数=${Number.isFinite(Number(base.manual_paste_count ?? base.copy_count)) ? Number(base.manual_paste_count ?? base.copy_count) : 0} / 待機要求回数=${Number.isFinite(Number(base.wait_request_count ?? base.human_wait)) ? Number(base.wait_request_count ?? base.human_wait) : 0} / reason=${reason} / required=${requiredNextWork}`,
   };
 }
 
@@ -5014,6 +5022,10 @@ function formatDecisionStatusLabel(status) {
     stop_and_investigate: 'stop_and_investigate / 調査必要',
     wait_for_result: 'wait_for_result / 結果待ち',
   }[status] || `${status || 'wait_for_result'}`;
+}
+
+function formatZeroConfirmCounterLabel(value) {
+  return Number.isFinite(Number(value)) ? Number(value) : 0;
 }
 
 function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
@@ -5050,6 +5062,7 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   [
     ['agent', current.assigned_agent || '—'],
     ['target', current.target_repo || '—'],
+    ['route', current.route || 'zero-confirm'],
     ['risk', current.risk_level || '—'],
     ['human gate', current.human_gate_required ? 'required' : 'optional'],
     ['executor', current.executor || current.assigned_agent || 'Codex'],
@@ -5067,15 +5080,16 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `判定ステータス: ${current.decision_status || 'wait_for_result'}`,
     `nextRecommendedAction: ${current.nextRecommendedAction || 'wait_for_result'}`,
     `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
+    `route: ${current.route || 'zero-confirm'}`,
     `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
     `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
     `理由: ${current.reason || '—'}`,
     `必要な次作業: ${current.required_next_work || '—'}`,
     `review gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
     `commit/tag/push可否: ${current.commit_tag_push_allowed ? 'commit候補 / commit前review' : '保留'}`,
-    `yesCount: ${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}`,
-    `copyCount: ${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}`,
-    `humanWait: ${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}`,
+    `承認要求回数: ${formatZeroConfirmCounterLabel(current.approval_request_count ?? current.yes_count)}`,
+    `手動貼付回数: ${formatZeroConfirmCounterLabel(current.manual_paste_count ?? current.copy_count)}`,
+    `待機要求回数: ${formatZeroConfirmCounterLabel(current.wait_request_count ?? current.human_wait)}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';
@@ -5103,7 +5117,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     statusNode.textContent = 'Run History: まだ run はありません。';
     const empty = document.createElement('div');
     empty.className = 'work-order-run-history-empty';
-    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / status / yesCount / copyCount / humanWait / resultPOST / decision status / timestamp を表示します。';
+    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / resultPOST / decision status / timestamp を表示します。';
     node.appendChild(empty);
     return;
   }
@@ -5131,6 +5145,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
       ['run', run.run_number || index + 1],
       ['work order id', run.work_order_id || '—'],
       ['executor', run.executor || 'Codex'],
+      ['route', run.route || 'zero-confirm'],
       ['status', run.result_status || 'unknown'],
     ].forEach(([label, value]) => {
       const chip = document.createElement('span');
@@ -5143,9 +5158,9 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     lines.className = 'chat-work-order-decision-lines';
     [
       `timestamp: ${run.timestamp || run.updated_at || '—'}`,
-      `yesCount: ${Number.isFinite(Number(run.yes_count)) ? Number(run.yes_count) : 0}`,
-      `copyCount: ${Number.isFinite(Number(run.copy_count)) ? Number(run.copy_count) : 0}`,
-      `humanWait: ${Number.isFinite(Number(run.human_wait)) ? Number(run.human_wait) : 0}`,
+      `承認要求回数: ${formatZeroConfirmCounterLabel(run.approval_request_count ?? run.yes_count)}`,
+      `手動貼付回数: ${formatZeroConfirmCounterLabel(run.manual_paste_count ?? run.copy_count)}`,
+      `待機要求回数: ${formatZeroConfirmCounterLabel(run.wait_request_count ?? run.human_wait)}`,
       `resultPOST: ${run.result_post || 'POST /api/work-orders/result 200'}`,
       `decision status: ${run.decision_status || 'wait_for_result'}`,
     ].forEach((textLine) => {
@@ -5390,7 +5405,7 @@ function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
     ? (result.execution_path || result.executionPath)
     : 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision';
   const resultText = result && result.work_order_id && String(result.work_order_id) === String(approved.approval_id || approved.work_order_id || '')
-    ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'} / executor: ${executor} / resultPOST: ${resultPost}`
+    ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'} / executor: ${executor} / route: ${result.route || 'zero-confirm'} / 承認要求回数: ${formatZeroConfirmCounterLabel(result.approval_request_count ?? result.yes_count)} / 手動貼付回数: ${formatZeroConfirmCounterLabel(result.manual_paste_count ?? result.copy_count)} / 待機要求回数: ${formatZeroConfirmCounterLabel(result.wait_request_count ?? result.human_wait)} / resultPOST: ${resultPost}`
     : '';
   node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}${resultText} / execution: ${executionPath}`;
 }
@@ -5523,6 +5538,7 @@ function getWorkOrderResultInputContext(snapshot = latestSnapshot || {}) {
     assigned_agent: String(current.assigned_agent || current.recommended_agent || 'Codex').trim() || 'Codex',
     risk_level: String(current.risk_level || 'low').trim() || 'low',
     human_gate_required: current.human_gate_required !== false,
+    route: String(current.route || 'zero-confirm').trim() || 'zero-confirm',
   };
 }
 

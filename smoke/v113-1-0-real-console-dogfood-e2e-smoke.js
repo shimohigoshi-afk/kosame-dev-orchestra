@@ -106,11 +106,12 @@ async function main() {
   assertContains(html, '"chat-outer" style="margin-top:10px"', 'chat-outer margin-top must remain natural');
   assertContains(html, '#result-decision-details .chat-section-body { padding-bottom: 2px; }', 'result-decision spacing must stay compact');
   assertContains(html, 'executor: ${current.executor || current.assigned_agent || \'Codex\'}', 'Result Decision Panel must render executor');
+  assertContains(html, 'route: ${current.route || \'zero-confirm\'}', 'Result Decision Panel must render route');
   assertContains(html, 'resultPOST: ${current.result_post || current.resultPOST || \'POST /api/work-orders/result 200\'}', 'Result Decision Panel must render resultPOST');
   assertContains(html, 'execution path: ${current.execution_path || current.executionPath || \'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision\'}', 'Result Decision Panel must render execution path');
-  assertContains(html, 'yesCount: ${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}', 'Result Decision Panel must render yesCount');
-  assertContains(html, 'copyCount: ${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}', 'Result Decision Panel must render copyCount');
-  assertContains(html, 'humanWait: ${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}', 'Result Decision Panel must render humanWait');
+  assertContains(html, '承認要求回数: ${formatZeroConfirmCounterLabel(current.approval_request_count ?? current.yes_count)}', 'Result Decision Panel must render approval request count');
+  assertContains(html, '手動貼付回数: ${formatZeroConfirmCounterLabel(current.manual_paste_count ?? current.copy_count)}', 'Result Decision Panel must render manual paste count');
+  assertContains(html, '待機要求回数: ${formatZeroConfirmCounterLabel(current.wait_request_count ?? current.human_wait)}', 'Result Decision Panel must render wait request count');
   assertContains(html, '最新の採用済み作業票', 'HTML must keep approval strip');
   assert.ok(!html.includes('結果貼り戻し後に、次アクションをここで見られます。'), 'empty decision panel must not show extra placeholder blank');
   console.log('  PASS: HTML layout / collapsible defaults / execution path labels');
@@ -207,7 +208,7 @@ async function main() {
       'shell activity must log executor and resultPOST'
     );
     assert.ok(
-      snapshot.shellAgentActivity.items.some((item) => String(item.message || '').includes('yesCount: 0') && String(item.message || '').includes('humanWait: 0')),
+      snapshot.shellAgentActivity.items.some((item) => String(item.message || '').includes('承認要求回数: 0') && String(item.message || '').includes('待機要求回数: 0')),
       'shell activity must log zero confirmation counters'
     );
     console.log('  PASS: full cycle resultPOST updates Result Decision Panel and execution log');

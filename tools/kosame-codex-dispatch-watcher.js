@@ -14,6 +14,13 @@ const DEFAULT_PORT = Number(process.env.PORT || 8080);
 const DEFAULT_HOST = process.env.KOSAME_CONSOLE_HOST || '127.0.0.1';
 const POLL_INTERVAL_MS = 2000;
 const CLAUDE_TIMEOUT_MS = 10 * 60 * 1000;
+const {
+  ZERO_CONFIRM_EXECUTOR,
+  ZERO_CONFIRM_ROUTE,
+  buildZeroConfirmRunnerCommand,
+  lintForZeroConfirmText,
+  validateZeroConfirmRunnerCommand,
+} = require('./kosame-zero-confirm-guard');
 
 // Safety Stop conditions: dispatch is BLOCKED if any of these are detected in the prompt.
 // Patterns are intentionally specific to avoid matching safety-condition documentation text.
@@ -98,6 +105,12 @@ function extractResultBlock(output) {
   try { return JSON.parse(match[1]); } catch { return null; }
 }
 
+function assertZeroConfirmCommand() {
+  const command = buildZeroConfirmRunnerCommand();
+  validateZeroConfirmRunnerCommand(command.command);
+  return command;
+}
+
 function postResult(data, options = {}) {
   const host = options.host || DEFAULT_HOST;
   const port = Number(options.port || DEFAULT_PORT);
@@ -131,8 +144,9 @@ function postResult(data, options = {}) {
 }
 
 function runClaude(prompt, timeoutMs) {
+  const command = assertZeroConfirmCommand();
   return new Promise((resolve, reject) => {
-    const proc = spawn('claude', ['--dangerously-skip-permissions', '-p'], {
+    const proc = spawn(command.command[0], command.command.slice(1), {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
     });
@@ -179,8 +193,13 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     process.stderr.write('[watcher] Dispatch blocked. Human review required.\n');
     return;
   }
+  const promptGuard = lintForZeroConfirmText(prompt, { label: 'dispatch prompt', allowNegatedContext: true });
+  if (!promptGuard.ok) {
+    process.stderr.write(`[watcher] ⛔ OUTPUT GUARD — ${promptGuard.violations.map((v) => v.label).join(', ')}\n`);
+    return;
+  }
 
-  process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'}\n`);
+  process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'} / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR}\n`);
 
   let claudeResult;
   try {
@@ -192,6 +211,38 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       result_summary: `Claude runner failed: ${error.message}`,
       smoke_result: 'unknown',
       verify_result: 'unknown',
+      executor: ZERO_CONFIRM_EXECUTOR,
+      route: ZERO_CONFIRM_ROUTE,
+      approval_request_count: 0,
+      manual_paste_count: 0,
+      wait_request_count: 0,
+      yes_count: 0,
+      copy_count: 0,
+      human_wait: 0,
+    }, options).catch(() => {});
+    return;
+  }
+
+  const outputGuard = lintForZeroConfirmText(`${claudeResult.stdout}\n${claudeResult.stderr}`, {
+    label: 'runner output',
+    allowNegatedContext: true,
+  });
+  if (!outputGuard.ok) {
+    const reason = outputGuard.violations.map((v) => v.label).join(', ');
+    process.stderr.write(`[watcher] ⛔ OUTPUT GUARD — ${reason}\n`);
+    await postResult({
+      result_status: 'failed',
+      result_summary: `Zero-confirm output guard failed: ${reason}`,
+      smoke_result: 'FAIL',
+      verify_result: 'FAIL',
+      executor: ZERO_CONFIRM_EXECUTOR,
+      route: ZERO_CONFIRM_ROUTE,
+      approval_request_count: 0,
+      manual_paste_count: 0,
+      wait_request_count: 0,
+      yes_count: 0,
+      copy_count: 0,
+      human_wait: 0,
     }, options).catch(() => {});
     return;
   }
@@ -202,7 +253,24 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     smoke_result: 'unknown',
     verify_result: 'unknown',
     result_summary: `Claude runner完了 (exit ${claudeResult.code})`,
+    executor: ZERO_CONFIRM_EXECUTOR,
+    route: ZERO_CONFIRM_ROUTE,
+    approval_request_count: 0,
+    manual_paste_count: 0,
+    wait_request_count: 0,
+    yes_count: 0,
+    copy_count: 0,
+    human_wait: 0,
   };
+  resultData.executor = resultData.executor || ZERO_CONFIRM_EXECUTOR;
+  resultData.route = resultData.route || ZERO_CONFIRM_ROUTE;
+  resultData.yes_count = Number.isFinite(Number(resultData.yes_count)) ? Number(resultData.yes_count) : 0;
+  resultData.copy_count = Number.isFinite(Number(resultData.copy_count)) ? Number(resultData.copy_count) : 0;
+  resultData.human_wait = Number.isFinite(Number(resultData.human_wait)) ? Number(resultData.human_wait) : 0;
+  resultData.approval_request_count = Number.isFinite(Number(resultData.approval_request_count)) ? Number(resultData.approval_request_count) : resultData.yes_count;
+  resultData.manual_paste_count = Number.isFinite(Number(resultData.manual_paste_count)) ? Number(resultData.manual_paste_count) : resultData.copy_count;
+  resultData.wait_request_count = Number.isFinite(Number(resultData.wait_request_count)) ? Number(resultData.wait_request_count) : resultData.human_wait;
+  resultData.result_post = resultData.result_post || 'POST /api/work-orders/result 200';
 
   if (!extracted) {
       process.stdout.write('[watcher] No KOSAME_RESULT block in output, using defaults\n');
@@ -211,7 +279,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   try {
     const posted = await postResult(resultData, options);
     if (posted.statusCode === 200 && posted.body && posted.body.ok) {
-      process.stdout.write('[watcher] ✅ Result posted to Console\n');
+      process.stdout.write(`[watcher] ✅ Result posted to Console / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR}\n`);
     } else {
       process.stderr.write(`[watcher] ❌ Post failed: ${posted.statusCode}\n`);
     }

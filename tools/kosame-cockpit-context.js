@@ -133,10 +133,14 @@ function summarizeWorkOrderResult(workOrderResult) {
   const verify = normalizeText(result.verify_result || 'unknown');
   const next = normalizeText(result.nextRecommendedAction || 'review');
   const executor = normalizeText(result.executor || result.assigned_agent || 'Codex');
+  const route = normalizeText(result.route || 'zero-confirm');
   const resultPost = normalizeText(result.result_post || result.resultPOST || 'POST /api/work-orders/result 200');
   const yesCount = Number.isFinite(Number(result.yes_count ?? result.yesCount)) ? Number(result.yes_count ?? result.yesCount) : 0;
   const copyCount = Number.isFinite(Number(result.copy_count ?? result.copyCount)) ? Number(result.copy_count ?? result.copyCount) : 0;
   const humanWait = Number.isFinite(Number(result.human_wait ?? result.humanWait)) ? Number(result.human_wait ?? result.humanWait) : 0;
+  const approvalCount = Number.isFinite(Number(result.approval_request_count ?? result.approvalRequestCount ?? result.yes_count ?? result.yesCount)) ? Number(result.approval_request_count ?? result.approvalRequestCount ?? result.yes_count ?? result.yesCount) : 0;
+  const manualPasteCount = Number.isFinite(Number(result.manual_paste_count ?? result.manualPasteCount ?? result.copy_count ?? result.copyCount)) ? Number(result.manual_paste_count ?? result.manualPasteCount ?? result.copy_count ?? result.copyCount) : 0;
+  const waitCount = Number.isFinite(Number(result.wait_request_count ?? result.waitRequestCount ?? result.human_wait ?? result.humanWait)) ? Number(result.wait_request_count ?? result.waitRequestCount ?? result.human_wait ?? result.humanWait) : 0;
   const changedFiles = Array.isArray(result.changed_files) ? result.changed_files.slice(0, 3).map((item) => normalizeText(item)).filter(Boolean) : [];
   const parts = [
     `status=${status}`,
@@ -144,10 +148,11 @@ function summarizeWorkOrderResult(workOrderResult) {
     `verify=${verify}`,
     `next=${next}`,
     `executor=${executor}`,
+    `route=${route}`,
     `resultPOST=${resultPost}`,
-    `yesCount=${yesCount}`,
-    `copyCount=${copyCount}`,
-    `humanWait=${humanWait}`,
+    `承認要求回数=${approvalCount}`,
+    `手動貼付回数=${manualPasteCount}`,
+    `待機要求回数=${waitCount}`,
   ];
   if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');

@@ -45,16 +45,17 @@ function buildResultActivityMessage(decision, title, agent) {
   const safeAgent = String(agent || '担当AI').trim() || '担当AI';
   const decisionStatus = String(decision && decision.decision_status || decision && decision.nextRecommendedAction || 'wait_for_result').trim();
   const executor = String(decision && decision.executor || safeAgent || '担当AI').trim() || '担当AI';
+  const route = String(decision && decision.route || 'zero-confirm').trim() || 'zero-confirm';
   const resultPost = String(decision && decision.result_post || decision && decision.resultPOST || 'POST /api/work-orders/result 200').trim() || 'POST /api/work-orders/result 200';
-  const yesCount = Number.isFinite(Number(decision && decision.yes_count)) ? Number(decision.yes_count) : 0;
-  const copyCount = Number.isFinite(Number(decision && decision.copy_count)) ? Number(decision.copy_count) : 0;
-  const humanWait = Number.isFinite(Number(decision && decision.human_wait)) ? Number(decision.human_wait) : 0;
+  const approvalCount = Number.isFinite(Number(decision && (decision.approval_request_count ?? decision.yes_count))) ? Number(decision.approval_request_count ?? decision.yes_count) : 0;
+  const manualPasteCount = Number.isFinite(Number(decision && (decision.manual_paste_count ?? decision.copy_count))) ? Number(decision.manual_paste_count ?? decision.copy_count) : 0;
+  const waitCount = Number.isFinite(Number(decision && (decision.wait_request_count ?? decision.human_wait))) ? Number(decision.wait_request_count ?? decision.human_wait) : 0;
   const messages = {
-    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
-    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
-    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
-    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
-    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
+    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
+    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
+    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
+    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
+    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount}`,
   };
   return messages[decisionStatus] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
 }

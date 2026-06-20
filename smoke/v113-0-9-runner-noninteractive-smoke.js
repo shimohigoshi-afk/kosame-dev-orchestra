@@ -84,14 +84,15 @@ async function main() {
   console.log('  PASS: package wiring');
 
   const watcherSource = fs.readFileSync(path.join(ROOT, 'tools', 'kosame-codex-dispatch-watcher.js'), 'utf8');
-  assert.ok(watcherSource.includes("spawn('claude', ['--dangerously-skip-permissions', '-p']"), 'watcher must run claude in noninteractive mode');
-  assert.ok(!watcherSource.includes("spawn('claude', ['-p', '--dangerously-skip-permissions']"), 'watcher must not rely on old arg order');
+  assert.ok(watcherSource.includes('buildZeroConfirmRunnerCommand()'), 'watcher must build the zero-confirm runner command');
+  assert.ok(watcherSource.includes('validateZeroConfirmRunnerCommand'), 'watcher must validate the zero-confirm runner command');
   console.log('  PASS: watcher noninteractive execution path');
 
   const html = fs.readFileSync(path.join(ROOT, 'public', 'kosame-live-cockpit.html'), 'utf8');
-  assert.ok(html.includes('yesCount: ${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}'), 'Result Decision Panel must render yesCount');
-  assert.ok(html.includes('copyCount: ${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}'), 'Result Decision Panel must render copyCount');
-  assert.ok(html.includes('humanWait: ${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}'), 'Result Decision Panel must render humanWait');
+  assert.ok(html.includes('route: ${current.route || \'zero-confirm\'}'), 'Result Decision Panel must render route');
+  assert.ok(html.includes('承認要求回数: ${formatZeroConfirmCounterLabel(current.approval_request_count ?? current.yes_count)}'), 'Result Decision Panel must render approval request count');
+  assert.ok(html.includes('手動貼付回数: ${formatZeroConfirmCounterLabel(current.manual_paste_count ?? current.copy_count)}'), 'Result Decision Panel must render manual paste count');
+  assert.ok(html.includes('待機要求回数: ${formatZeroConfirmCounterLabel(current.wait_request_count ?? current.human_wait)}'), 'Result Decision Panel must render wait request count');
   console.log('  PASS: result decision counters rendered');
 
   const TEMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kosame-113-09-'));

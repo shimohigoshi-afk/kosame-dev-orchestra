@@ -141,9 +141,13 @@ function buildSafeResultText(input = {}) {
   const humanWait = Number.isFinite(Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount))
     ? Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount)
     : 0;
+  const approvalRequestCount = Number.isFinite(Number(input.approval_request_count ?? input.yesCount ?? input.yes_count)) ? Number(input.approval_request_count ?? input.yesCount ?? input.yes_count) : yesCount;
+  const manualPasteCount = Number.isFinite(Number(input.manual_paste_count ?? input.copyCount ?? input.copy_count)) ? Number(input.manual_paste_count ?? input.copyCount ?? input.copy_count) : copyCount;
+  const waitRequestCount = Number.isFinite(Number(input.wait_request_count ?? input.humanWaitCount ?? input.human_wait)) ? Number(input.wait_request_count ?? input.humanWaitCount ?? input.human_wait) : humanWait;
   const executor = truncate(input.executor || input.assigned_agent || input.agent || '', 60);
   const resultPost = truncate(input.result_post || input.resultPOST || input.result_post_status || '', 120);
   const executionPath = truncate(input.execution_path || input.executionPath || '', 180);
+  const route = truncate(input.route || input.execution_route || 'zero-confirm', 40);
   const rawCheck = [
     summary,
     notes,
@@ -153,6 +157,7 @@ function buildSafeResultText(input = {}) {
     executor,
     resultPost,
     executionPath,
+    route,
   ].join('\n');
   if (hasSecretLikeText(rawCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
@@ -189,10 +194,17 @@ function buildSafeResultText(input = {}) {
     yes_count: yesCount,
     copy_count: copyCount,
     human_wait: humanWait,
+    approval_request_count: approvalRequestCount,
+    manual_paste_count: manualPasteCount,
+    wait_request_count: waitRequestCount,
     yesCount,
     copyCount,
     humanWait,
+    approvalRequestCount,
+    manualPasteCount,
+    waitRequestCount,
     executor: executor || 'Codex',
+    route,
     result_post: resultPost || 'POST /api/work-orders/result 200',
     execution_path: executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
   };
@@ -265,7 +277,11 @@ function normalizeWorkOrderResultRecord(record) {
     human_wait: Number.isFinite(Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount))
       ? Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount)
       : 0,
+    approval_request_count: Number.isFinite(Number(record.approval_request_count ?? record.yesCount ?? record.yes_count)) ? Number(record.approval_request_count ?? record.yesCount ?? record.yes_count) : 0,
+    manual_paste_count: Number.isFinite(Number(record.manual_paste_count ?? record.copyCount ?? record.copy_count)) ? Number(record.manual_paste_count ?? record.copyCount ?? record.copy_count) : 0,
+    wait_request_count: Number.isFinite(Number(record.wait_request_count ?? record.humanWaitCount ?? record.human_wait)) ? Number(record.wait_request_count ?? record.humanWaitCount ?? record.human_wait) : 0,
     executor: truncate(record.executor || record.assigned_agent || record.agent || 'Codex', 60),
+    route: truncate(record.route || record.execution_route || 'zero-confirm', 40),
     result_post: truncate(record.result_post || record.resultPOST || 'POST /api/work-orders/result 200', 120),
     execution_path: truncate(record.execution_path || record.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision', 180),
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
@@ -309,10 +325,17 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     yes_count: latestResult.yes_count,
     copy_count: latestResult.copy_count,
     human_wait: latestResult.human_wait,
+    approval_request_count: latestResult.approval_request_count,
+    manual_paste_count: latestResult.manual_paste_count,
+    wait_request_count: latestResult.wait_request_count,
     yesCount: latestResult.yes_count,
     copyCount: latestResult.copy_count,
     humanWait: latestResult.human_wait,
+    approvalRequestCount: latestResult.approval_request_count,
+    manualPasteCount: latestResult.manual_paste_count,
+    waitRequestCount: latestResult.wait_request_count,
     executor: latestResult.executor,
+    route: latestResult.route,
     result_post: latestResult.result_post,
     execution_path: latestResult.execution_path,
     result_timestamp: latestResult.timestamp,
@@ -369,6 +392,8 @@ function recordWorkOrderResult(input = {}, options = {}) {
   if (!approvalId) throw new Error('work_order_id が必要です。');
   const sourceTargetRepo = normalizeText(sourceWorkOrder.target_repo || latestHandoffWorkOrder?.target_repo || latestApprovedWorkOrder?.target_repo || '');
   if (sourceTargetRepo !== HANDOFF_TARGET_REPO) throw new Error('target_repo は KOSAME Dev Orchestra のみです。');
+  const sourceRoute = normalizeText(sourceWorkOrder.route || sourceWorkOrder.execution_route || latestHandoffWorkOrder?.route || latestApprovedWorkOrder?.route || 'zero-confirm');
+  if (sourceRoute && sourceRoute !== 'zero-confirm') throw new Error('route は zero-confirm のみです。');
   if (latestApprovedWorkOrder && approvalId !== normalizeText(latestApprovedWorkOrder.approval_id || latestApprovedWorkOrder.work_order_id || '')) {
     throw new Error('work_order_id が承認済みの作業票と一致しません。');
   }
@@ -393,10 +418,14 @@ function recordWorkOrderResult(input = {}, options = {}) {
     human_gate_required: sourceWorkOrder.human_gate_required !== false
       && latestApprovedWorkOrder?.requires_human_confirmation !== false,
     executor: truncate(sourceWorkOrder.executor || sourceWorkOrder.assigned_agent || sourceWorkOrder.agent || latestApprovedWorkOrder?.agent || 'Codex', 60),
+    route: truncate(sourceRoute || 'zero-confirm', 40),
     ...safeFields,
     yes_count: safeFields.yes_count,
     copy_count: safeFields.copy_count,
     human_wait: safeFields.human_wait,
+    approval_request_count: safeFields.approval_request_count,
+    manual_paste_count: safeFields.manual_paste_count,
+    wait_request_count: safeFields.wait_request_count,
     result_post: safeFields.result_post,
     execution_path: safeFields.execution_path,
     source: truncate(input.source || sourceWorkOrder.source || 'kosame-console', 40),

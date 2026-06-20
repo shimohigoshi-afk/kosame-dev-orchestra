@@ -85,7 +85,9 @@ async function main() {
     if (res.statusCode === 200 && res.body && res.body.ok) {
       process.stdout.write(`✅ KOSAME Console に結果を送信しました (${host}:${port})\n`);
       const dec = res.body.latestWorkOrderDecision;
-      if (dec) process.stdout.write(`判定: ${dec.decision_status || '—'}\n`);
+      if (dec) {
+        process.stdout.write(`判定: ${dec.decision_status || '—'} / route: ${dec.route || 'zero-confirm'} / 承認要求回数: ${dec.approval_request_count ?? dec.yes_count ?? 0} / 手動貼付回数: ${dec.manual_paste_count ?? dec.copy_count ?? 0} / 待機要求回数: ${dec.wait_request_count ?? dec.human_wait ?? 0}\n`);
+      }
     } else {
       process.stderr.write(`❌ 送信失敗: ${res.statusCode} ${JSON.stringify(res.body)}\n`);
       process.exit(1);

@@ -22,16 +22,20 @@ function clamp(text, maxLength = 160) {
 
 function summarizeDecision(decision) {
   const current = decision && typeof decision === 'object' ? decision : {};
+  const approvalCount = Number.isFinite(Number(current.approval_request_count ?? current.yes_count)) ? Number(current.approval_request_count ?? current.yes_count) : 0;
+  const manualPasteCount = Number.isFinite(Number(current.manual_paste_count ?? current.copy_count)) ? Number(current.manual_paste_count ?? current.copy_count) : 0;
+  const waitCount = Number.isFinite(Number(current.wait_request_count ?? current.human_wait)) ? Number(current.wait_request_count ?? current.human_wait) : 0;
   const parts = [
     `status=${normalizeText(current.decision_status || current.nextRecommendedAction || 'wait_for_result')}`,
     `next=${normalizeText(current.nextRecommendedAction || 'wait_for_result')}`,
     `executor=${normalizeText(current.executor || current.assigned_agent || 'Codex')}`,
+    `route=${normalizeText(current.route || 'zero-confirm')}`,
     `resultPOST=${normalizeText(current.result_post || current.resultPOST || 'POST /api/work-orders/result 200')}`,
     `humanGate=${current.human_gate_required ? 'yes' : 'no'}`,
     `commitTagPush=${current.commit_tag_push_allowed ? 'candidate' : 'hold'}`,
-    `yesCount=${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}`,
-    `copyCount=${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}`,
-    `humanWait=${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}`,
+    `承認要求回数=${approvalCount}`,
+    `手動貼付回数=${manualPasteCount}`,
+    `待機要求回数=${waitCount}`,
   ];
   const reason = clamp(current.reason || current.summary || '', 120);
   if (reason) parts.push(`reason=${reason}`);
@@ -137,6 +141,13 @@ function buildWorkOrderResultDecision(input = {}) {
     || 'POST /api/work-orders/result 200',
     120
   );
+  const route = clamp(
+    latestWorkOrderResult?.route
+    || latestHandoffWorkOrder?.route
+    || latestApprovedWorkOrder?.route
+    || 'zero-confirm',
+    40
+  );
   const executionPath = clamp(
     latestWorkOrderResult?.execution_path
     || latestWorkOrderResult?.executionPath
@@ -165,11 +176,15 @@ function buildWorkOrderResultDecision(input = {}) {
     required_next_work: hasResult ? base.required_next_work : base.required_next_work,
     activity_status: hasResult ? base.activity_status : base.activity_status,
     executor,
+    route,
     result_post: resultPost,
     execution_path: executionPath,
     yes_count: Number.isFinite(Number(latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.yes_count) : 0,
     copy_count: Number.isFinite(Number(latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.copy_count) : 0,
     human_wait: Number.isFinite(Number(latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.human_wait) : 0,
+    approval_request_count: Number.isFinite(Number(latestWorkOrderResult?.approval_request_count ?? latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.approval_request_count ?? latestWorkOrderResult.yes_count) : 0,
+    manual_paste_count: Number.isFinite(Number(latestWorkOrderResult?.manual_paste_count ?? latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.manual_paste_count ?? latestWorkOrderResult.copy_count) : 0,
+    wait_request_count: Number.isFinite(Number(latestWorkOrderResult?.wait_request_count ?? latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.wait_request_count ?? latestWorkOrderResult.human_wait) : 0,
   };
 
   decision.summary = summarizeDecision(decision);

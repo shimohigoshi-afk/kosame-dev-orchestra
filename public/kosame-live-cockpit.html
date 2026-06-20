@@ -194,11 +194,16 @@ body {
   position: relative;
   z-index: 1;
 }
-.chat-outer { order: 4; }
-.support-details-outer { order: 5; }
-.footer { order: 6; }
+.chat-outer { order: 9; }
+.support-details-outer { order: 10; }
+.footer { order: 11; }
 .project-registry-shell { order: 2; display: grid; gap: 14px; }
-.active-task-board { order: 3; }
+.ai-roster-shell { order: 3; }
+.active-task-board { order: 4; }
+.handoff-result-strip { order: 5; }
+.shell-activity-strip { order: 6; }
+.runner-stream-strip { order: 7; }
+.agent-feed-strip { order: 8; }
 .chat-panel {
   scroll-margin-top: 20px;
 }
@@ -1885,10 +1890,15 @@ h1 {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
   .project-registry-shell { order: 2; }
-  .active-task-board { order: 3; }
-  .chat-outer { order: 4; }
-.support-details-outer { order: 5; }
-  .footer { order: 6; }
+  .ai-roster-shell { order: 3; }
+  .active-task-board { order: 4; }
+  .handoff-result-strip { order: 5; }
+  .shell-activity-strip { order: 6; }
+  .runner-stream-strip { order: 7; }
+  .agent-feed-strip { order: 8; }
+  .chat-outer { order: 9; }
+  .support-details-outer { order: 10; }
+  .footer { order: 11; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -1988,48 +1998,10 @@ h1 {
               </div>
             </div>
 
-        <div class="task-board-section">
-          <details class="chat-section-details" id="shell-agent-activity-details">
-            <summary class="chat-section-summary">SHELL AGENT ACTIVITY <span aria-hidden="true" style="display:none">実行状況</span></summary>
-            <div class="chat-section-body">
-              <div class="task-board-meta small">ローカル activity log 由来 / 読み取り専用</div>
-              <div id="shell-agent-activity" class="shell-agent-activity-feed"></div>
-            </div>
-          </details>
-        </div>
-
-        <div class="task-board-section">
-          <h3 class="task-board-section-title">ACTIVE RUNNER STREAM <span aria-hidden="true" style="display:none">NEXT TASK FEED</span></h3>
-          <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
-          <div class="task-motion-grid" style="margin-top:10px">
-            <div class="subpanel task-motion-panel">
-              <h3>RUNNING</h3>
-              <div id="feed-running" class="stack">読み込み中...</div>
-            </div>
-            <div class="subpanel task-motion-panel">
-              <h3>WAITING FOR AI</h3>
-              <div id="feed-waiting" class="stack">読み込み中...</div>
-            </div>
-            <div class="subpanel task-motion-panel">
-              <h3>HUMAN GATE READY</h3>
-              <div id="feed-human-gate" class="stack">読み込み中...</div>
-            </div>
-            <div class="subpanel task-motion-panel">
-              <h3>NEXT UP</h3>
-              <div id="feed-selected" class="stack">読み込み中...</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="task-board-section">
-          <h3 class="task-board-section-title">AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></h3>
-          <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
-          <div id="agent-event-feed" class="agent-event-feed"></div>
-        </div>
       </article>
     </section>
 
-    <!-- Handoff & Result (order 3) -->
+    <!-- Handoff & Result (order 5) -->
     <section class="handoff-result-strip" id="handoff-result-strip" style="margin-top:8px">
       <article class="panel">
         <h2>HANDOFF &amp; RESULT</h2>
@@ -2065,6 +2037,54 @@ h1 {
       </article>
     </section>
 
+    <!-- Shell Agent Activity (order 6) -->
+    <section class="shell-activity-strip" id="shell-activity-strip" style="margin-top:8px">
+      <article class="panel">
+        <details class="chat-section-details" id="shell-agent-activity-details">
+          <summary class="chat-section-summary">SHELL AGENT ACTIVITY <span aria-hidden="true" style="display:none">実行状況</span></summary>
+          <div class="chat-section-body">
+            <div class="task-board-meta small">ローカル activity log 由来 / 読み取り専用</div>
+            <div id="shell-agent-activity" class="shell-agent-activity-feed"></div>
+          </div>
+        </details>
+      </article>
+    </section>
+
+    <!-- Active Runner Stream (order 7) -->
+    <section class="runner-stream-strip" id="runner-stream-strip" style="margin-top:8px">
+      <article class="panel">
+        <h2 class="task-board-section-title">ACTIVE RUNNER STREAM <span aria-hidden="true" style="display:none">NEXT TASK FEED</span></h2>
+        <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
+        <div class="task-motion-grid" style="margin-top:10px">
+          <div class="subpanel task-motion-panel">
+            <h3>RUNNING</h3>
+            <div id="feed-running" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel task-motion-panel">
+            <h3>WAITING FOR AI</h3>
+            <div id="feed-waiting" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel task-motion-panel">
+            <h3>HUMAN GATE READY</h3>
+            <div id="feed-human-gate" class="stack">読み込み中...</div>
+          </div>
+          <div class="subpanel task-motion-panel">
+            <h3>NEXT UP</h3>
+            <div id="feed-selected" class="stack">読み込み中...</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Agent Event Feed (order 8) -->
+    <section class="agent-feed-strip" id="agent-feed-strip" style="margin-top:8px">
+      <article class="panel">
+        <h2 class="task-board-section-title">AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></h2>
+        <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
+        <div id="agent-event-feed" class="agent-event-feed"></div>
+      </article>
+    </section>
+
     <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
       <article class="panel project-strip-panel">
         <h2>PROJECT STRIP</h2>
@@ -2086,8 +2106,12 @@ h1 {
 
     <section class="ai-roster-shell" style="margin-top:14px">
       <article class="panel ai-roster-panel">
-        <h2>AI ROSTER</h2>
-        <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>
+        <details class="chat-section-details" id="ai-roster-details" open>
+          <summary class="chat-section-summary">AI ROSTER</summary>
+          <div class="chat-section-body">
+            <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>
+          </div>
+        </details>
       </article>
     </section>
 

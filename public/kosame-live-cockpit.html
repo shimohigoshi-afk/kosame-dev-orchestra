@@ -448,6 +448,27 @@ h1 {
   from { opacity: 0.6; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.project-focus-collapse { border: none; }
+.project-focus-collapse-toggle {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: block;
+  border-radius: 8px;
+  padding: 2px 4px;
+  transition: background 0.15s;
+}
+.project-focus-collapse-toggle::-webkit-details-marker { display: none; }
+.project-focus-collapse-toggle:hover { background: rgba(255,255,255,0.04); }
+.project-focus-collapse-toggle::after {
+  content: '▾';
+  float: right;
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 1.8;
+  transition: transform 0.2s;
+}
+.project-focus-collapse[open] > .project-focus-collapse-toggle::after { content: '▴'; }
 .project-focus-head {
   display: flex;
   flex-wrap: wrap;
@@ -2009,11 +2030,15 @@ h1 {
       </article>
 
       <article class="panel project-focus-panel" id="project-focus-card">
-        <div class="project-focus-head">
-          <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
-          <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
-        </div>
-        <div id="project-focus" class="project-focus-shell"></div>
+        <details class="project-focus-collapse" id="project-focus-collapse">
+          <summary class="project-focus-collapse-toggle">
+            <div class="project-focus-head">
+              <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
+              <div class="small" id="project-focus-subtitle" style="color:var(--muted);letter-spacing:0.08em;text-transform:uppercase">selected project</div>
+            </div>
+          </summary>
+          <div id="project-focus" class="project-focus-shell" style="margin-top:12px"></div>
+        </details>
       </article>
     </section>
 
@@ -4977,6 +5002,9 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `必要な次作業: ${current.required_next_work || '—'}`,
     `review gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
     `commit/tag/push可否: ${current.commit_tag_push_allowed ? 'commit候補 / commit前review' : '保留'}`,
+    `yesCount: ${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}`,
+    `copyCount: ${Number.isFinite(Number(current.copy_count)) ? Number(current.copy_count) : 0}`,
+    `humanWait: ${Number.isFinite(Number(current.human_wait)) ? Number(current.human_wait) : 0}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';

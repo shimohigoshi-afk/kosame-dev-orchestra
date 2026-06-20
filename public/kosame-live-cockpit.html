@@ -2050,8 +2050,10 @@ h1 {
     <!-- Handoff & Result (order 5) -->
     <section class="handoff-result-strip" id="handoff-result-strip" style="margin-top:8px">
       <article class="panel">
-        <h2>HANDOFF &amp; RESULT</h2>
-        <div id="work-order-approval-status" class="small" style="margin: 0 0 6px;color:var(--muted)"></div>
+        <details class="support-details" id="handoff-result-outer-details">
+          <summary>HANDOFF &amp; RESULT</summary>
+          <div class="support-details-body" style="padding:0 0 4px">
+        <div id="work-order-approval-status" class="small" style="margin: 6px 14px 6px;color:var(--muted)"></div>
         <details class="chat-section-details" id="handoff-inbox-details">
           <summary class="chat-section-summary">Handoff Inbox Bridge</summary>
           <div class="chat-section-body">
@@ -2092,6 +2094,8 @@ h1 {
           <div class="chat-section-body">
             <div id="work-order-run-history-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
             <div id="work-order-run-history-panel" class="work-order-run-history-panel"></div>
+          </div>
+        </details>
           </div>
         </details>
       </article>

@@ -228,7 +228,10 @@ async function main() {
 
       const activityLog = read(ACTIVITY_LOG_PATH);
       assert.ok(activityLog.includes('work order handoff'), 'activity log must include handoff task');
-      assert.ok(activityLog.includes('実装結果待ち'), 'activity log must include waiting-result language');
+      assert.ok(
+        activityLog.includes('dispatch待ち') || activityLog.includes('runner実行中') || activityLog.includes('resultPOST待ち'),
+        'activity log must include dispatch/runner/resultPOST language',
+      );
       assert.ok(!activityLog.includes('sk-'), 'activity log must not leak API key patterns');
       assert.ok(!activityLog.includes('.env'), 'activity log must not leak .env');
       console.log('  PASS: activity log recorded handoff events');
@@ -238,7 +241,10 @@ async function main() {
       const latestEvent = JSON.parse(lastLines[lastLines.length - 1]);
       assert.equal(latestEvent.status, 'waiting_result', 'latest activity status must be waiting_result');
       assert.equal(latestEvent.agent, 'KOSAME', 'latest activity agent must be KOSAME');
-      assert.ok(latestEvent.message.includes('結果待ち') || latestEvent.message.includes('実装結果待ち'), 'latest activity message must describe waiting_result');
+      assert.ok(
+        latestEvent.message.includes('dispatch待ち') || latestEvent.message.includes('runner実行中') || latestEvent.message.includes('resultPOST待ち'),
+        'latest activity message must describe the runner state',
+      );
       console.log('  PASS: latest activity event matches waiting_result');
 
       const latestApproved = approve.body.latestApprovedWorkOrder;

@@ -817,7 +817,6 @@
     "smoke:v113-1-2": "node smoke/v113-1-2-repeatability-gate-smoke.js",
     "smoke:v113-2-0": "node smoke/v113-2-0-zero-confirm-route-lockdown-smoke.js",
     "smoke:v113-3-3": "node smoke/v113-3-3-layout-collapse-smoke.js",
-    "smoke:v113-3-3": "node smoke/v113-3-3-layout-collapse-smoke.js",
     "smoke:v113-3-1": "node smoke/v113-3-1-orchestra-evidence-gate-smoke.js",
     "smoke:v113-3-1:handoff-result-collapse": "node smoke/v113-3-1-handoff-result-outer-collapse-smoke.js",
     "smoke:v113-3-1:orchestra-evidence": "node smoke/v113-3-1-orchestra-evidence-gate-smoke.js",

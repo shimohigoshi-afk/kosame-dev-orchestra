@@ -71,7 +71,7 @@ async function main() {
   assert.ok(chatSource.includes('resolveWorkOrderTarget'), 'chat server must resolve target repo');
   assert.ok(chatSource.includes('git status -sb'), 'work order prompt must mention git status -sb');
   assert.ok(chatSource.includes('git add . / git add -Aは禁止'), 'work order prompt must deny git add . / git add -A');
-  assert.ok(chatSource.includes('Secret/.env/credentials/API keyを読まない'), 'work order prompt must deny secret reads');
+  assert.ok(chatSource.includes('機密情報・環境変数ファイル・認証情報・APIキーは読まない'), 'work order prompt must deny secret reads');
   assert.ok(chatSource.includes('外部APIを呼ばない'), 'work order prompt must deny external API calls');
   console.log('  PASS: chat server work order safety wiring');
 
@@ -114,13 +114,13 @@ async function main() {
       assert.equal(sales.body.human_gate_required, true, 'sales dx work order must require human gate');
       assert.ok(sales.body.work_order, 'sales dx work order must be included');
       assert.equal(sales.body.work_order.agent, 'Codex', 'work order agent must be Codex');
-      assert.equal(sales.body.work_order.target_repo, '/home/lavie/repos/transcriber', 'sales dx must route to transcriber repo');
+      assert.equal(sales.body.work_order.target_repo, '/home/lavie/repos/kosame-sales-dx', 'sales dx must route to kosame-sales-dx repo');
       assert.equal(sales.body.work_order.requires_human_confirmation, true, 'work order must require human confirmation');
       assert.ok(/Sales DX|v0\.3\.1/.test(sales.body.work_order.title), 'work order title must reflect the request');
-      assert.ok(sales.body.work_order.prompt.includes('cd /home/lavie/repos/transcriber'), 'prompt must start from target repo');
+      assert.ok(sales.body.work_order.prompt.includes('cd /home/lavie/repos/kosame-sales-dx'), 'prompt must start from target repo');
       assert.ok(sales.body.work_order.prompt.includes('commit/tag/pushは未実行で止める'), 'prompt must include stop condition');
       assert.ok(sales.body.work_order.prompt.includes('git add . / git add -Aは禁止'), 'prompt must include git add restriction');
-      assert.ok(sales.body.work_order.prompt.includes('Secret/.env/credentials/API keyを読まない'), 'prompt must include secret restriction');
+      assert.ok(sales.body.work_order.prompt.includes('機密情報・環境変数ファイル・認証情報・APIキーは読まない'), 'prompt must include secret restriction');
       assert.ok(sales.body.work_order.prompt.includes('外部APIを呼ばない'), 'prompt must include external API restriction');
       assert.ok(sales.body.work_order.prompt.includes('対象repo以外を触らない'), 'prompt must include repo boundary restriction');
       assert.ok(sales.body.work_order.prompt.includes('git status -sb'), 'prompt must include git status -sb');

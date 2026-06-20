@@ -28,6 +28,7 @@ const SECRET_PATTERNS = [
 ];
 const PROMPT_SAFE_LINES = [
   /Secret\/\.env\/credentials\/API keyを読まない/i,
+  /機密情報.*環境変数ファイル.*認証情報.*APIキーは読まない/i,
   /git add \. \/ git add -Aは禁止/i,
   /commit\/tag\/pushは未実行で止める/i,
   /外部APIを呼ばない/i,

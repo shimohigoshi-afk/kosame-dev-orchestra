@@ -137,20 +137,20 @@ async function main() {
       assert.equal(salesDraft.statusCode, 200, 'sales draft must return 200');
       assert.equal(salesDraft.body.ok, true, 'sales draft must be ok');
       assert.ok(salesDraft.body.work_order, 'sales draft must include work_order');
-      assert.equal(salesDraft.body.work_order.target_repo, '/home/lavie/repos/transcriber', 'sales draft must route to transcriber');
+      assert.equal(salesDraft.body.work_order.target_repo, '/home/lavie/repos/kosame-sales-dx', 'sales draft must route to Sales DX registry path');
 
       const salesApprove = await requestJson(port, '/api/work-orders/approve', {
         work_order: salesDraft.body.work_order,
       });
       assert.equal(salesApprove.statusCode, 200, 'sales approval must return 200');
       assert.equal(salesApprove.body.ok, true, 'sales approval must be ok');
-      assert.equal(salesApprove.body.approval.target_repo, '/home/lavie/repos/transcriber', 'sales approval target repo must be transcriber');
+      assert.equal(salesApprove.body.approval.target_repo, '/home/lavie/repos/kosame-sales-dx', 'sales approval target repo must be Sales DX registry path');
 
       const salesSnapshot = await requestJson(port, '/api/snapshot', null, 'GET');
       assert.equal(salesSnapshot.statusCode, 200, 'sales snapshot must return 200');
       assert.ok(salesSnapshot.body.latestApprovedWorkOrder, 'sales snapshot must include latestApprovedWorkOrder');
-      assert.equal(salesSnapshot.body.latestApprovedWorkOrder.target_repo, '/home/lavie/repos/transcriber', 'shared snapshot must surface latest Sales DX approval');
-      assert.ok(!salesSnapshot.body.latestHandoffWorkOrder || salesSnapshot.body.latestHandoffWorkOrder.target_repo !== '/home/lavie/repos/transcriber', 'handoff queue must not include Sales DX / transcriber work orders');
+      assert.equal(salesSnapshot.body.latestApprovedWorkOrder.target_repo, '/home/lavie/repos/kosame-sales-dx', 'shared snapshot must surface latest Sales DX approval');
+      assert.ok(!salesSnapshot.body.latestHandoffWorkOrder || salesSnapshot.body.latestHandoffWorkOrder.target_repo !== '/home/lavie/repos/kosame-sales-dx', 'handoff queue must not include Sales DX work orders');
       console.log('  PASS: shared snapshot keeps Sales DX approval while handoff queue stays Dev Orchestra only');
 
       const draft = await requestJson(port, '/api/chat', {
@@ -179,7 +179,7 @@ async function main() {
       assert.ok(handoffGet.body.latestHandoffWorkOrder, 'handoff GET must include latestHandoffWorkOrder');
       assert.equal(handoffGet.body.latestHandoffWorkOrder.status, 'ready_to_handoff', 'approved work order should surface as ready_to_handoff');
       assert.equal(handoffGet.body.latestHandoffWorkOrder.target_repo, '/home/lavie/kosame-dev-orchestra', 'handoff GET must target dev orchestra');
-      assert.notEqual(handoffGet.body.latestHandoffWorkOrder.target_repo, '/home/lavie/repos/transcriber', 'handoff GET must exclude Sales DX / transcriber approvals');
+      assert.notEqual(handoffGet.body.latestHandoffWorkOrder.target_repo, '/home/lavie/repos/kosame-sales-dx', 'handoff GET must exclude Sales DX approvals');
       console.log('  PASS: handoff queue is surfaced');
 
       const handoff = await requestJson(port, '/api/work-orders/handoff', {

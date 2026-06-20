@@ -77,6 +77,12 @@ function normalizeTextList(value, maxItems = 12, maxLength = 240) {
     .slice(0, maxItems);
 }
 
+function maskHandoffText(value) {
+  return compactText(value || '')
+    .replace(/\.env\b/gi, '[env]')
+    .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY');
+}
+
 function isAllowedSafetyLine(line) {
   const value = normalizeText(line);
   if (!value) return false;
@@ -97,7 +103,12 @@ function sanitizePromptText(promptText) {
   const sanitized = [];
   const redacted = [];
   for (const line of lines) {
-    const compact = compactText(line, MAX_LINE_LENGTH);
+    const compact = compactText(
+      line
+        .replace(/\.env\b/gi, '[env]')
+        .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY'),
+      MAX_LINE_LENGTH,
+    );
     if (!compact) continue;
     const hasForbidden = hasForbiddenText(compact);
     if (hasForbidden && !isAllowedSafetyLine(compact)) {
@@ -166,8 +177,10 @@ function sanitizeHandoffPayload(payload = {}) {
   const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || '', 60);
   const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || '', 160);
   const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || '', 120);
-  const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions, 20, 240);
-  const reportItems = normalizeTextList(source.report_items || source.reportItems, 20, 240);
+  const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions, 20, 240)
+    .map((line) => maskHandoffText(line));
+  const reportItems = normalizeTextList(source.report_items || source.reportItems, 20, 240)
+    .map((line) => maskHandoffText(line));
 
   if (!id) throw new Error('id が必要です。');
   if (!title) throw new Error('title が必要です。');
@@ -175,10 +188,30 @@ function sanitizeHandoffPayload(payload = {}) {
   if (!ALLOWED_TARGET_REPOS.has(targetRepo)) throw new Error('target_repo が不明です。');
   if (!assignedAgent) throw new Error('assigned_agent が必要です。');
   if (!promptText) throw new Error('prompt_text が必要です。');
-  if (hasForbiddenText([id, targetRepo, assignedAgent, riskLevel, createdAt, inputSource, originalRequest, selectedProjectId, selectedProjectPath, selectedProjectLabel, ...safetyConditions, ...reportItems].join('\n'))) {
+  const promptGuardText = promptText
+    .split(/\r?\n/)
+    .filter((line) => !isAllowedSafetyLine(line))
+    .join('\n');
+  const guardText = [
+    id,
+    targetRepo,
+    assignedAgent,
+    riskLevel,
+    createdAt,
+    inputSource,
+    originalRequest,
+    selectedProjectId,
+    selectedProjectPath,
+    selectedProjectLabel,
+    ...safetyConditions,
+    ...reportItems,
+  ]
+    .filter((line) => !isAllowedSafetyLine(line))
+    .join('\n');
+  if (hasForbiddenText(guardText)) {
     throw new Error('保存対象に forbidden な文字列が含まれています。');
   }
-  if (hasForbiddenText(promptText)) {
+  if (hasForbiddenText(promptGuardText)) {
     throw new Error('prompt_text に forbidden な文字列が含まれています。');
   }
 

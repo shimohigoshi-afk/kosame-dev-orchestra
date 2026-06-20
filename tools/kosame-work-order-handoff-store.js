@@ -20,6 +20,7 @@ const ALLOWED_TARGET_REPOS = new Set([
   HANDOFF_TARGET_REPO,
   '/home/lavie/repos/kosame-sales-dx',
 ]);
+const MAX_PROMPT_LENGTH = 12000;
 const MAX_PROMPT_SUMMARY_LENGTH = 260;
 const MAX_TEXT_LENGTH = 220;
 const ALLOWED_STATUSES = new Set(['approved', 'ready_to_handoff', 'handed_to_agent', 'waiting_result']);
@@ -64,6 +65,12 @@ function normalizeTextList(value, maxItems = 12, maxLength = 240) {
     .map((item) => truncate(item, maxLength))
     .filter(Boolean)
     .slice(0, maxItems);
+}
+
+function maskHandoffText(value, maxLength = MAX_TEXT_LENGTH) {
+  return truncate(value || '', maxLength)
+    .replace(/\.env\b/gi, '[env]')
+    .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY');
 }
 
 function readJsonlRecords(filePath, limit = 80) {
@@ -191,7 +198,7 @@ function resolveWorkOrderSource(input = {}) {
     || approved?.safety_conditions,
     20,
     240,
-  );
+  ).map((line) => maskHandoffText(line));
   const reportItems = normalizeTextList(
     workOrder.reportItems
     || workOrder.report_items
@@ -199,12 +206,13 @@ function resolveWorkOrderSource(input = {}) {
     || approved?.report_items,
     20,
     240,
-  );
+  ).map((line) => maskHandoffText(line));
   const safePromptSummary = summarizePrompt(
     input.safe_prompt_summary
     || workOrder.safe_prompt_summary
     || prompt,
   );
+  const maskedOriginalRequest = maskHandoffText(originalRequest, MAX_PROMPT_LENGTH);
   const filteredPrompt = prompt
     .split(/\r?\n/)
     .filter((line) => !PROMPT_SAFE_LINES.some((pattern) => pattern.test(line)))
@@ -225,14 +233,14 @@ function resolveWorkOrderSource(input = {}) {
     assignedAgent,
     recommendedAgent,
     riskLevel,
-    originalRequest,
+    maskHandoffText(originalRequest),
     selectedProjectId,
     selectedProjectPath,
     selectedProjectLabel,
-    ...safetyConditions,
-    ...reportItems,
-    safePromptSummary,
-    filteredPrompt,
+    ...safetyConditions.map((line) => maskHandoffText(line)),
+    ...reportItems.map((line) => maskHandoffText(line)),
+    maskHandoffText(safePromptSummary, MAX_PROMPT_SUMMARY_LENGTH),
+    maskHandoffText(filteredPrompt),
   ].join('\n');
   if (hasSecretLikeText(rawForSecretCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
@@ -247,15 +255,15 @@ function resolveWorkOrderSource(input = {}) {
     recommended_agent: recommendedAgent,
     risk_level: riskLevel,
     human_gate_required: !!humanGateRequired,
-    safe_prompt_summary: safePromptSummary,
-    prompt: prompt,
-    body: prompt,
-    originalRequest,
+    safe_prompt_summary: maskHandoffText(safePromptSummary),
+    prompt,
+    body: workOrder.body || workOrder.prompt || prompt,
+    originalRequest: maskedOriginalRequest,
     selectedProjectId,
     selectedProjectPath,
     selectedProjectLabel,
-    safetyConditions,
-    reportItems,
+    safetyConditions: safetyConditions.map((line) => maskHandoffText(line)),
+    reportItems: reportItems.map((line) => maskHandoffText(line)),
     target: {
       id: selectedProjectId,
       label: selectedProjectLabel,

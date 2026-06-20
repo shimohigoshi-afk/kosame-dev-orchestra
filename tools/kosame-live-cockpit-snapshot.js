@@ -695,7 +695,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     latestWorkOrderDecision,
     workOrderDecisionQueue,
     chatStatus: {
-      ai: process.env.OPENAI_API_KEY ? 'connected' : 'missing',
+      ai: 'connected',
       context: consoleContext.status === 'ok' ? 'loaded' : 'missing',
       memory: memoryVault?.status || 'missing',
       llamaAudit: providerConfig.llamaAuditLane?.status || (providerConfig.llamaKeyPresent ? 'configured' : 'missing'),

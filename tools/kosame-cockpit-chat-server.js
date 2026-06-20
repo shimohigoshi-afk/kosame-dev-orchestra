@@ -69,6 +69,7 @@ const LEGACY_WORK_ORDER_TARGETS = [
 ];
 const WORK_ORDER_REQUEST_PATTERNS = [
   /作業票.*(作って|作成|生成)/i,
+  /作業票化/i,
   /work order/i,
   /codex.*(投げ|渡).*指示/i,
   /投げる指示を?作って/i,
@@ -621,7 +622,7 @@ function resolveWorkOrderTarget(input, snapshotSummary) {
     normalizeContent(input.context),
   ].filter(Boolean).join(' ');
 
-  for (const target of LEGACY_WORK_ORDER_TARGETS) {
+  for (const target of WORK_ORDER_TARGETS) {
     if (target.hints.test(haystack)) {
       return target;
     }
@@ -635,6 +636,9 @@ function stripWorkOrderLead(text) {
   if (!value) return '';
   return value
     .replace(/^(Sales DX|KOSAME Console|Dev Orchestra|営業DX|transcriber)\s*/i, '')
+    .replace(/^の/, '')
+    .replace(/\s*(を|の|に)?(作業票化して|作業票化|作業票にして)\s*$/i, '')
+    .replace(/\s*[をのに]\s*$/, '')
     .replace(/^(の)?(作業票|次の作業票|次の作業)\s*(を|の)?\s*(作って|作成して|生成して|ください|お願い|お願いします)?$/i, '')
     .trim();
 }
@@ -649,9 +653,9 @@ function buildWorkOrderTitle(input, target) {
     parts.push(lead);
   }
 
-  if (versionMatch) {
+  if (versionMatch && !(lead && lead.includes(versionMatch[0]))) {
     parts.push(versionMatch[0]);
-  } else if (target && target.label) {
+  } else if (!versionMatch && target && target.label && !(lead && lead.toLowerCase().includes((target.label || '').toLowerCase()))) {
     parts.push(target.label);
   }
 
@@ -675,7 +679,7 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '安全条件:',
     '- commit/tag/pushは未実行で止める',
     '- git add . / git add -Aは禁止',
-    '- Secret/.env/credentials/API keyを読まない',
+    '- 機密情報・環境変数ファイル・認証情報・APIキーは読まない',
     '- 外部APIを呼ばない',
     '- 対象repo以外を触らない',
     '',

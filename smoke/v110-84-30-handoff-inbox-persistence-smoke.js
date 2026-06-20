@@ -97,9 +97,13 @@ function requestOptions(port, pathname) {
 function assertNoLeak(text, label, options = {}) {
   assert.ok(typeof text === 'string', `${label} must be text`);
   assert.ok(!text.includes(SECRET_SENTINEL), `${label} must not leak sentinel`);
-  if (options.forbidSensitiveWords) {
+  if (options.forbidRawSensitiveWords) {
     assert.ok(!text.includes('.env'), `${label} must not leak .env`);
-    assert.ok(!/\bsecret\b/i.test(text), `${label} must not leak secret words`);
+    assert.ok(!/\bcredentials?\b/i.test(text), `${label} must not leak credentials words`);
+    assert.ok(!/\btoken\b/i.test(text), `${label} must not leak token words`);
+    assert.ok(!/\bpassword\b/i.test(text), `${label} must not leak password words`);
+    assert.ok(!/\bauthorization\b/i.test(text), `${label} must not leak authorization words`);
+    assert.ok(!/\bbearer\b/i.test(text), `${label} must not leak bearer words`);
   }
 }
 
@@ -228,8 +232,8 @@ async function runServerCycle(serverFactory, handoffDir) {
 
     const latestMarkdown = read(response.body.latestPath);
     const queueJsonl = read(response.body.queuePath);
-    assertNoLeak(latestMarkdown, 'latest.md', { forbidSensitiveWords: true });
-    assertNoLeak(queueJsonl, 'queue.jsonl', { forbidSensitiveWords: true });
+    assertNoLeak(latestMarkdown, 'latest.md', { forbidRawSensitiveWords: true });
+    assertNoLeak(queueJsonl, 'queue.jsonl', { forbidRawSensitiveWords: true });
     assert.ok(latestMarkdown.includes('originalRequest:'), 'latest.md must keep originalRequest');
     assert.ok(latestMarkdown.includes('target_path:'), 'latest.md must keep target_path');
     assert.ok(latestMarkdown.includes('agent:'), 'latest.md must keep agent');

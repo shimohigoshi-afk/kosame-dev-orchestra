@@ -13,6 +13,7 @@ const MAX_TEXT_LENGTH = 220;
 const ALLOWED_TARGET_REPOS = new Set([
   '/home/lavie/repos/transcriber',
   '/home/lavie/kosame-dev-orchestra',
+  '/home/lavie/repos/kosame-sales-dx',
 ]);
 const SECRET_PATTERNS = [
   /sk-[A-Za-z0-9_-]{8,}/i,
@@ -43,6 +44,18 @@ function truncate(text, maxLength = MAX_TEXT_LENGTH) {
   if (!value) return '';
   if (!Number.isFinite(maxLength) || maxLength <= 0 || value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
+function normalizeTextList(value, maxItems = 12, maxLength = 240) {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(/\r?\n/)
+      : [];
+  return source
+    .map((item) => truncate(item, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function hasSecretLikeText(value) {
@@ -91,8 +104,20 @@ function sanitizeApprovalWorkOrder(input = {}) {
   const agent = truncate(workOrder.agent, 60);
   const targetRepo = normalizeText(workOrder.target_repo);
   const riskLevel = truncate(workOrder.risk_level || 'low', 24);
-  const prompt = normalizeText(workOrder.prompt);
+  const prompt = normalizeText(workOrder.body || workOrder.prompt);
+  const originalRequest = truncate(workOrder.originalRequest || workOrder.original_request || '', 12000);
+  const selectedProjectId = truncate(workOrder.selectedProjectId || workOrder.selected_project_id || '', 60);
+  const selectedProjectPath = normalizeText(workOrder.selectedProjectPath || workOrder.selected_project_path || '');
+  const selectedProjectLabel = truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120);
+  const safetyConditions = normalizeTextList(workOrder.safetyConditions || workOrder.safety_conditions, 20, 240);
+  const reportItems = normalizeTextList(workOrder.reportItems || workOrder.report_items, 20, 240);
+  const body = truncate(workOrder.body || workOrder.prompt || '', MAX_PROMPT_LENGTH);
   const requiresHumanConfirmation = workOrder.requires_human_confirmation !== false;
+  const promptSource = [prompt, originalRequest, body]
+    .map((block) => String(block || '').split(/\r?\n/))
+    .flat()
+    .filter((line) => !PROMPT_SAFE_LINES.some((pattern) => pattern.test(line)))
+    .join('\n');
 
   if (!title) throw new Error('title が必要です。');
   if (!agent) throw new Error('agent が必要です。');
@@ -101,11 +126,18 @@ function sanitizeApprovalWorkOrder(input = {}) {
   if (!prompt) throw new Error('prompt が必要です。');
   if (prompt.length > MAX_PROMPT_LENGTH) throw new Error('prompt が長すぎます。');
 
-  const promptForSecretCheck = prompt
-    .split(/\r?\n/)
-    .filter((line) => !PROMPT_SAFE_LINES.some((pattern) => pattern.test(line)))
-    .join('\n');
-  const rawText = [title, agent, targetRepo, riskLevel, promptForSecretCheck].join('\n');
+  const rawText = [
+    title,
+    agent,
+    targetRepo,
+    riskLevel,
+    selectedProjectId,
+    selectedProjectPath,
+    selectedProjectLabel,
+    ...safetyConditions,
+    ...reportItems,
+    promptSource,
+  ].join('\n');
   if (hasSecretLikeText(rawText)) {
     throw new Error('secret っぽい内容は保存できません。');
   }
@@ -116,6 +148,18 @@ function sanitizeApprovalWorkOrder(input = {}) {
     target_repo: targetRepo,
     risk_level: riskLevel,
     prompt,
+    body,
+    originalRequest,
+    selectedProjectId,
+    selectedProjectPath,
+    selectedProjectLabel,
+    safetyConditions,
+    reportItems,
+    target: {
+      id: selectedProjectId,
+      label: selectedProjectLabel,
+      path: targetRepo,
+    },
     requires_human_confirmation: !!requiresHumanConfirmation,
   };
 }
@@ -141,6 +185,24 @@ function normalizeApprovedWorkOrder(record) {
     target_repo: targetRepo,
     risk_level: riskLevel,
     prompt,
+    body: truncate(workOrder.body || workOrder.prompt || prompt, MAX_PROMPT_LENGTH),
+    originalRequest: truncate(workOrder.originalRequest || workOrder.original_request || '', 12000),
+    selectedProjectId: truncate(workOrder.selectedProjectId || workOrder.selected_project_id || '', 60),
+    selectedProjectPath: normalizeText(workOrder.selectedProjectPath || workOrder.selected_project_path || ''),
+    selectedProjectLabel: truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120),
+    safetyConditions: normalizeTextList(workOrder.safetyConditions || workOrder.safety_conditions, 20, 240),
+    reportItems: normalizeTextList(workOrder.reportItems || workOrder.report_items, 20, 240),
+    target: workOrder.target && typeof workOrder.target === 'object'
+      ? {
+          id: truncate(workOrder.target.id || workOrder.target.projectId || '', 60),
+          label: truncate(workOrder.target.label || workOrder.target.name || '', 120),
+          path: normalizeText(workOrder.target.path || workOrder.target.repo || targetRepo),
+        }
+      : {
+          id: truncate(workOrder.selectedProjectId || workOrder.selected_project_id || '', 60),
+          label: truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120),
+          path: targetRepo,
+        },
     requires_human_confirmation: true,
     source: truncate(record.source || 'kosame-console', 40),
   };
@@ -201,6 +263,14 @@ function approveWorkOrder(input = {}, options = {}) {
       target_repo: workOrder.target_repo,
       risk_level: workOrder.risk_level,
       prompt: workOrder.prompt,
+      body: workOrder.body,
+      originalRequest: workOrder.originalRequest,
+      selectedProjectId: workOrder.selectedProjectId,
+      selectedProjectPath: workOrder.selectedProjectPath,
+      selectedProjectLabel: workOrder.selectedProjectLabel,
+      safetyConditions: workOrder.safetyConditions,
+      reportItems: workOrder.reportItems,
+      target: workOrder.target,
       requires_human_confirmation: workOrder.requires_human_confirmation,
     },
     latestApprovedWorkOrder: normalizeApprovedWorkOrder(record),

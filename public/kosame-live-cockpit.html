@@ -2254,6 +2254,40 @@ let notificationInitialized = false;
 let agentEventFeedExpanded = false;
 let workOrderResultDraft = null;
 
+function getLatestAssistantWorkOrderDraft() {
+  for (let index = chatHistory.length - 1; index >= 0; index -= 1) {
+    const msg = chatHistory[index];
+    if (!msg || msg.role !== 'assistant' || !msg.work_order) continue;
+    const draft = msg.work_order;
+    return {
+      ...draft,
+      prompt: draft.prompt || draft.body || '',
+      body: draft.body || draft.prompt || '',
+      originalRequest: draft.originalRequest || draft.original_request || '',
+      selectedProjectId: draft.selectedProjectId || draft.selected_project_id || '',
+      selectedProjectPath: draft.selectedProjectPath || draft.selected_project_path || '',
+      selectedProjectLabel: draft.selectedProjectLabel || draft.selected_project_label || '',
+      safetyConditions: Array.isArray(draft.safetyConditions || draft.safety_conditions)
+        ? (draft.safetyConditions || draft.safety_conditions)
+        : [],
+      reportItems: Array.isArray(draft.reportItems || draft.report_items)
+        ? (draft.reportItems || draft.report_items)
+        : [],
+      target: draft.target && typeof draft.target === 'object'
+        ? {
+            ...draft.target,
+            path: draft.target.path || draft.selectedProjectPath || draft.selected_project_path || draft.target_repo || '',
+          }
+        : {
+            id: draft.selectedProjectId || draft.selected_project_id || '',
+            label: draft.selectedProjectLabel || draft.selected_project_label || '',
+            path: draft.selectedProjectPath || draft.selected_project_path || draft.target_repo || '',
+          },
+    };
+  }
+  return null;
+}
+
 const NOTIFICATION_STORAGE_KEY = 'kosame.cockpit.notificationSoundEnabled';
 const NOTIFICATION_MODE_KEY = 'kosame.cockpit.notificationMode';
 const HANDOFF_INBOX_LAST_STATUS_KEY = 'kosame.cockpit.handoffInbox.lastStatus';
@@ -2721,10 +2755,14 @@ function getProjectStripItems(snapshot) {
 
 function getSelectedProject(snapshot) {
   const projects = getProjectStripItems(snapshot);
-  const selected = projects.find((project) => project && (project.selected || project.id === selectedProjectId || project.id === (snapshot.projectStrip && snapshot.projectStrip.selectedProjectId)));
+  const selectedId = selectedProjectId
+    || (snapshot.projectStrip && snapshot.projectStrip.selectedProjectId)
+    || snapshot.selectedProjectId
+    || '';
+  const selected = projects.find((project) => project && project.id === selectedId);
   if (selected) return selected;
-  if (snapshot.devOrchestra && selectedProjectId === 'dev-orchestra') return snapshot.devOrchestra;
-  if (snapshot.salesDx && selectedProjectId === 'sales-dx') return snapshot.salesDx;
+  if (snapshot.devOrchestra && selectedId === 'dev-orchestra') return snapshot.devOrchestra;
+  if (snapshot.salesDx && selectedId === 'sales-dx') return snapshot.salesDx;
   return projects[0] || snapshot.devOrchestra || snapshot.salesDx || null;
 }
 
@@ -3192,6 +3230,7 @@ function renderProjectRegistry(snapshot) {
     : (Array.isArray(snapshot.projects) && snapshot.projects.length ? snapshot.projects : fallbackProjects);
   const selectedId = selectedProjectId
     || (snapshot.projectStrip && snapshot.projectStrip.selectedProjectId)
+    || snapshot.selectedProjectId
     || (projects[0] && projects[0].id)
     || 'dev-orchestra';
   selectedProjectId = selectedId;
@@ -3201,7 +3240,7 @@ function renderProjectRegistry(snapshot) {
   for (const [index, project] of projects.entries()) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `project-strip-item ${project.selected || project.id === selectedId ? 'selected' : ''} ${project.runningCount > 0 ? 'running' : ''}`;
+    button.className = `project-strip-item ${project.id === selectedId ? 'selected' : ''} ${project.runningCount > 0 ? 'running' : ''}`;
     button.dataset.projectId = project.id || `project-${index}`;
 
     const head = document.createElement('div');
@@ -3217,7 +3256,7 @@ function renderProjectRegistry(snapshot) {
     titleWrap.appendChild(status);
     const badge = document.createElement('span');
     badge.className = `status-badge ${projectStatusTone(project)}`;
-    badge.textContent = project.selected || project.id === selectedId ? 'selected' : project.availability && project.availability !== 'available' ? project.availability : project.health || 'monitoring';
+    badge.textContent = project.id === selectedId ? 'selected' : project.availability && project.availability !== 'available' ? project.availability : project.health || 'monitoring';
     head.appendChild(titleWrap);
     head.appendChild(badge);
     button.appendChild(head);
@@ -3227,7 +3266,7 @@ function renderProjectRegistry(snapshot) {
     const line1 = document.createElement('div');
     line1.textContent = `${project.repoPath || '—'}`;
     const line2 = document.createElement('div');
-    line2.textContent = `${project.type || 'unknown'} / ${project.selected ? 'selected' : 'available'}`;
+    line2.textContent = `${project.type || 'unknown'} / ${project.id === selectedId ? 'selected' : 'available'}`;
     const line3 = document.createElement('div');
     line3.textContent = formatTokyoTimestamp(project.lastUpdatedAt || project.lastUpdatedLabel || '') || '—';
     meta.appendChild(line1);
@@ -4023,7 +4062,7 @@ function renderWorkOrderCard(workOrder) {
   const prompt = document.createElement('textarea');
   prompt.className = 'chat-work-order-prompt';
   prompt.readOnly = true;
-  prompt.value = workOrder.prompt || '';
+  prompt.value = workOrder.body || workOrder.prompt || '';
   promptSection.appendChild(prompt);
 
   const actions = document.createElement('div');
@@ -4079,8 +4118,24 @@ function getCurrentWorkOrderHandoff(snapshot = latestSnapshot || {}) {
     recommended_agent: latestApproved.agent || '',
     risk_level: latestApproved.risk_level || 'low',
     human_gate_required: latestApproved.requires_human_confirmation !== false,
-    safe_prompt_summary: latestApproved.prompt || '',
-    prompt: latestApproved.prompt || '',
+    safe_prompt_summary: latestApproved.body || latestApproved.prompt || '',
+    prompt: latestApproved.prompt || latestApproved.body || '',
+    body: latestApproved.body || latestApproved.prompt || '',
+    originalRequest: latestApproved.originalRequest || latestApproved.original_request || '',
+    selectedProjectId: latestApproved.selectedProjectId || latestApproved.selected_project_id || '',
+    selectedProjectPath: latestApproved.selectedProjectPath || latestApproved.selected_project_path || '',
+    selectedProjectLabel: latestApproved.selectedProjectLabel || latestApproved.selected_project_label || '',
+    safetyConditions: Array.isArray(latestApproved.safetyConditions || latestApproved.safety_conditions)
+      ? (latestApproved.safetyConditions || latestApproved.safety_conditions)
+      : [],
+    reportItems: Array.isArray(latestApproved.reportItems || latestApproved.report_items)
+      ? (latestApproved.reportItems || latestApproved.report_items)
+      : [],
+    target: latestApproved.target || {
+      id: latestApproved.selectedProjectId || latestApproved.selected_project_id || '',
+      label: latestApproved.selectedProjectLabel || latestApproved.selected_project_label || '',
+      path: latestApproved.target_repo || '',
+    },
     source: 'approval',
   };
 }
@@ -4179,7 +4234,8 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
   const prompt = document.createElement('textarea');
   prompt.className = 'chat-work-order-prompt';
   prompt.readOnly = true;
-  prompt.value = (snapshot.latestApprovedWorkOrder && snapshot.latestApprovedWorkOrder.prompt)
+  prompt.value = (snapshot.latestApprovedWorkOrder && (snapshot.latestApprovedWorkOrder.body || snapshot.latestApprovedWorkOrder.prompt))
+    || current.body
     || current.prompt
     || current.safe_prompt_summary
     || '';
@@ -4228,9 +4284,10 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
   const riskLevel = String(current.risk_level || 'low').trim() || 'low';
   const humanGateRequired = current.human_gate_required !== false;
   const promptText = String(
-    current.prompt
+    current.body
+    || current.prompt
     || current.safe_prompt_summary
-    || (snapshot.latestApprovedWorkOrder && snapshot.latestApprovedWorkOrder.prompt) || ''
+    || (snapshot.latestApprovedWorkOrder && (snapshot.latestApprovedWorkOrder.body || snapshot.latestApprovedWorkOrder.prompt)) || ''
   ).trim();
   const id = String(current.work_order_id || current.approval_id || current.handoff_id || current.id || '').trim();
   if (!id || !title || !targetRepo || !promptText) return null;
@@ -4242,6 +4299,13 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
     risk_level: riskLevel,
     human_gate_required: humanGateRequired,
     prompt_text: promptText,
+    body: String(current.body || current.prompt || '').trim(),
+    original_request: String(current.originalRequest || current.original_request || '').trim(),
+    selected_project_id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
+    selected_project_path: String(current.selectedProjectPath || current.selected_project_path || '').trim(),
+    selected_project_label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
+    safety_conditions: Array.isArray(current.safetyConditions || current.safety_conditions) ? (current.safetyConditions || current.safety_conditions) : [],
+    report_items: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
     created_at: String(current.created_at || current.timestamp || snapshot.generatedAt || new Date().toISOString()).trim(),
     source: 'kosame_console',
   };
@@ -4952,11 +5016,15 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
 
 function buildChatPayload(userText, confirmationContext) {
   const selectedProject = getSelectedProject(latestSnapshot || {});
+  const latestDraft = getLatestAssistantWorkOrderDraft();
   const trimmedMessage = (userText || '').trim();
   const trimmedContext = (confirmationContext || latestSnapshot?.consoleContextSummary || '').trim();
   const payload = {
     message: trimmedMessage,
     project: selectedProject ? (selectedProject.id || selectedProject.name || selectedProject.shortName || selectedProject.statusTitle || '') : '',
+    selectedProjectId: selectedProject ? (selectedProject.id || '') : '',
+    selectedProjectPath: selectedProject ? (selectedProject.repoPath || selectedProject.path || '') : '',
+    selectedProjectLabel: selectedProject ? (selectedProject.name || selectedProject.shortName || selectedProject.statusTitle || '') : '',
     context: trimmedContext.slice(0, 800),
   };
   if (confirmationContext) payload.confirmationContext = trimmedContext.slice(0, 800);
@@ -4964,6 +5032,7 @@ function buildChatPayload(userText, confirmationContext) {
     payload.contextSummary = String(latestSnapshot.consoleContextSummary || '').slice(0, 800);
     payload.contextStatus = latestSnapshot.consoleContextStatus || 'ok';
   }
+  if (latestDraft) payload.workOrderDraft = latestDraft;
   return payload;
 }
 

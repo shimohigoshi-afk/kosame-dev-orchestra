@@ -19,6 +19,7 @@ const {
   saveHandoffInbox,
   sanitizeHandoffPayload,
 } = require('../tools/kosame-codex-handoff-bridge-server');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -67,7 +68,7 @@ function assertNoLeak(text, label) {
 }
 
 function assertPackageWiring() {
-  assert.equal(pkg.version, '110.84.27', `package version must be 110.84.27 (got ${pkg.version})`);
+  assert.ok(isVersionAtLeast(pkg.version, '110.84.28'), `package version must be 110.84.28+ compatible (got ${pkg.version})`);
   assert.ok(pkg.scripts['smoke:v110-84-27'], 'smoke:v110-84-27 must exist');
   assert.ok(pkg.scripts['handoff:bridge'], 'handoff:bridge must exist');
   assert.ok(pkg.scripts['handoff:latest'], 'handoff:latest must exist');

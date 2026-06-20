@@ -12,6 +12,10 @@ const DEFAULT_HANDOFF_DIR = path.join(ROOT, '.kosame-handoff');
 const DEFAULT_PORT = 18345;
 const DEFAULT_HOST = '127.0.0.1';
 const HANDOFF_TARGET_REPO = '/home/lavie/kosame-dev-orchestra';
+const ALLOWED_TARGET_REPOS = new Set([
+  HANDOFF_TARGET_REPO,
+  '/home/lavie/repos/kosame-sales-dx',
+]);
 const QUEUE_FILENAME = 'queue.jsonl';
 const LATEST_FILENAME = 'latest.md';
 const MAX_TEXT_LENGTH = 6000;
@@ -59,6 +63,18 @@ function compactText(value, maxLength = MAX_TEXT_LENGTH) {
   if (!text) return '';
   if (!Number.isFinite(maxLength) || maxLength <= 0 || text.length <= maxLength) return text;
   return `${text.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
+function normalizeTextList(value, maxItems = 12, maxLength = 240) {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(/\r?\n/)
+      : [];
+  return source
+    .map((item) => compactText(item, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function isAllowedSafetyLine(line) {
@@ -143,17 +159,23 @@ function sanitizeHandoffPayload(payload = {}) {
   const humanGateRequired = !!source.human_gate_required;
   const createdAt = compactText(source.created_at || source.createdAt || new Date().toISOString(), 40);
   const inputSource = compactText(source.source || 'kosame_console', 40);
-  const promptInput = source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? '';
+  const promptInput = source.body ?? source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? '';
   const promptInfo = sanitizePromptText(promptInput);
   const promptText = compactText(promptInfo.promptText, MAX_TEXT_LENGTH);
+  const originalRequest = compactText(source.original_request || source.originalRequest || '', MAX_TEXT_LENGTH);
+  const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || '', 60);
+  const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || '', 160);
+  const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || '', 120);
+  const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions, 20, 240);
+  const reportItems = normalizeTextList(source.report_items || source.reportItems, 20, 240);
 
   if (!id) throw new Error('id が必要です。');
   if (!title) throw new Error('title が必要です。');
   if (!targetRepo) throw new Error('target_repo が必要です。');
-  if (targetRepo !== HANDOFF_TARGET_REPO) throw new Error('target_repo は KOSAME Dev Orchestra のみです。');
+  if (!ALLOWED_TARGET_REPOS.has(targetRepo)) throw new Error('target_repo が不明です。');
   if (!assignedAgent) throw new Error('assigned_agent が必要です。');
   if (!promptText) throw new Error('prompt_text が必要です。');
-  if (hasForbiddenText([id, targetRepo, assignedAgent, riskLevel, createdAt, inputSource].join('\n'))) {
+  if (hasForbiddenText([id, targetRepo, assignedAgent, riskLevel, createdAt, inputSource, originalRequest, selectedProjectId, selectedProjectPath, selectedProjectLabel, ...safetyConditions, ...reportItems].join('\n'))) {
     throw new Error('保存対象に forbidden な文字列が含まれています。');
   }
   if (hasForbiddenText(promptText)) {
@@ -167,6 +189,13 @@ function sanitizeHandoffPayload(payload = {}) {
     assigned_agent: assignedAgent,
     risk_level: riskLevel,
     human_gate_required: humanGateRequired,
+    original_request: originalRequest,
+    selected_project_id: selectedProjectId,
+    selected_project_path: selectedProjectPath,
+    selected_project_label: selectedProjectLabel,
+    safety_conditions: safetyConditions,
+    report_items: reportItems,
+    body: promptText,
     prompt_text: promptText,
     created_at: createdAt,
     source: inputSource,
@@ -176,6 +205,8 @@ function sanitizeHandoffPayload(payload = {}) {
 
 function buildLatestMarkdown(entry) {
   const safe = sanitizeHandoffPayload(entry);
+  const safetyConditions = Array.isArray(safe.safety_conditions) ? safe.safety_conditions : [];
+  const reportItems = Array.isArray(safe.report_items) ? safe.report_items : [];
   return [
     '# Codex Handoff Inbox',
     '',
@@ -187,8 +218,20 @@ function buildLatestMarkdown(entry) {
     `- human_gate_required: ${safe.human_gate_required ? 'true' : 'false'}`,
     `- created_at: ${safe.created_at}`,
     `- source: ${safe.source}`,
+    safe.original_request ? `- original_request: ${safe.original_request}` : null,
+    safe.selected_project_id ? `- selected_project_id: ${safe.selected_project_id}` : null,
+    safe.selected_project_path ? `- selected_project_path: ${safe.selected_project_path}` : null,
+    safe.selected_project_label ? `- selected_project_label: ${safe.selected_project_label}` : null,
     safe.redacted_count ? `- redacted_count: ${safe.redacted_count}` : null,
     '',
+    safetyConditions.length ? '## safety_conditions' : null,
+    safetyConditions.length ? '' : null,
+    ...safetyConditions.map((line) => `- ${line}`),
+    safetyConditions.length ? '' : null,
+    reportItems.length ? '## report_items' : null,
+    reportItems.length ? '' : null,
+    ...reportItems.map((line) => `- ${line}`),
+    reportItems.length ? '' : null,
     '## prompt_text',
     '',
     '```text',

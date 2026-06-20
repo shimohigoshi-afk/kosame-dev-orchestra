@@ -16,6 +16,10 @@ const {
 const DEFAULT_HANDOFF_LOG_PATH = path.join(os.homedir(), '.kosame', 'work-order-handoffs.jsonl');
 const HANDOFF_LOG_PATH_ENV = 'KOSAME_WORK_ORDER_HANDOFF_LOG_PATH';
 const HANDOFF_TARGET_REPO = '/home/lavie/kosame-dev-orchestra';
+const ALLOWED_TARGET_REPOS = new Set([
+  HANDOFF_TARGET_REPO,
+  '/home/lavie/repos/kosame-sales-dx',
+]);
 const MAX_PROMPT_SUMMARY_LENGTH = 260;
 const MAX_TEXT_LENGTH = 220;
 const ALLOWED_STATUSES = new Set(['approved', 'ready_to_handoff', 'handed_to_agent', 'waiting_result']);
@@ -48,6 +52,18 @@ function truncate(text, maxLength = MAX_TEXT_LENGTH) {
   if (!value) return '';
   if (!Number.isFinite(maxLength) || maxLength <= 0 || value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
+function normalizeTextList(value, maxItems = 12, maxLength = 240) {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(/\r?\n/)
+      : [];
+  return source
+    .map((item) => truncate(item, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function readJsonlRecords(filePath, limit = 80) {
@@ -136,7 +152,54 @@ function resolveWorkOrderSource(input = {}) {
   const riskLevel = truncate(workOrder.risk_level || approved?.risk_level || 'low', 24);
   const humanGateRequired = workOrder.requires_human_confirmation !== false
     && approved?.requires_human_confirmation !== false;
-  const prompt = normalizeText(workOrder.prompt || approved?.prompt || '');
+  const prompt = normalizeText(workOrder.body || workOrder.prompt || approved?.body || approved?.prompt || '');
+  const originalRequest = truncate(
+    workOrder.originalRequest
+    || workOrder.original_request
+    || approved?.originalRequest
+    || approved?.original_request
+    || '',
+    12000,
+  );
+  const selectedProjectId = truncate(
+    workOrder.selectedProjectId
+    || workOrder.selected_project_id
+    || approved?.selectedProjectId
+    || approved?.selected_project_id
+    || '',
+    60,
+  );
+  const selectedProjectPath = normalizeText(
+    workOrder.selectedProjectPath
+    || workOrder.selected_project_path
+    || approved?.selectedProjectPath
+    || approved?.selected_project_path
+    || '',
+  );
+  const selectedProjectLabel = truncate(
+    workOrder.selectedProjectLabel
+    || workOrder.selected_project_label
+    || approved?.selectedProjectLabel
+    || approved?.selected_project_label
+    || '',
+    120,
+  );
+  const safetyConditions = normalizeTextList(
+    workOrder.safetyConditions
+    || workOrder.safety_conditions
+    || approved?.safetyConditions
+    || approved?.safety_conditions,
+    20,
+    240,
+  );
+  const reportItems = normalizeTextList(
+    workOrder.reportItems
+    || workOrder.report_items
+    || approved?.reportItems
+    || approved?.report_items,
+    20,
+    240,
+  );
   const safePromptSummary = summarizePrompt(
     input.safe_prompt_summary
     || workOrder.safe_prompt_summary
@@ -150,7 +213,7 @@ function resolveWorkOrderSource(input = {}) {
   if (!approvalId) throw new Error('approval_id または work_order_id が必要です。');
   if (!title) throw new Error('title が必要です。');
   if (!targetRepo) throw new Error('target_repo が必要です。');
-  if (targetRepo !== HANDOFF_TARGET_REPO) throw new Error('target_repo は KOSAME Dev Orchestra のみです。');
+  if (!ALLOWED_TARGET_REPOS.has(targetRepo)) throw new Error('target_repo が不明です。');
   if (!assignedAgent) throw new Error('assigned_agent が必要です。');
   if (!safePromptSummary) throw new Error('safe prompt summary が必要です。');
   if (prompt && hasSecretLikePromptText(filteredPrompt)) {
@@ -162,6 +225,12 @@ function resolveWorkOrderSource(input = {}) {
     assignedAgent,
     recommendedAgent,
     riskLevel,
+    originalRequest,
+    selectedProjectId,
+    selectedProjectPath,
+    selectedProjectLabel,
+    ...safetyConditions,
+    ...reportItems,
     safePromptSummary,
     filteredPrompt,
   ].join('\n');
@@ -180,6 +249,18 @@ function resolveWorkOrderSource(input = {}) {
     human_gate_required: !!humanGateRequired,
     safe_prompt_summary: safePromptSummary,
     prompt: prompt,
+    body: prompt,
+    originalRequest,
+    selectedProjectId,
+    selectedProjectPath,
+    selectedProjectLabel,
+    safetyConditions,
+    reportItems,
+    target: {
+      id: selectedProjectId,
+      label: selectedProjectLabel,
+      path: targetRepo,
+    },
     source: truncate(input.source || workOrder.source || approved?.source || 'kosame-console', 40),
   };
 }
@@ -189,7 +270,7 @@ function normalizeWorkOrderHandoffRecord(record) {
   const status = normalizeText(record.status || record.handoff_status || '').toLowerCase();
   if (!ALLOWED_STATUSES.has(status)) return null;
   const targetRepo = normalizeText(record.target_repo || '');
-  if (targetRepo !== HANDOFF_TARGET_REPO) return null;
+  if (!ALLOWED_TARGET_REPOS.has(targetRepo)) return null;
   const title = truncate(record.title || '', 120);
   const assignedAgent = truncate(record.assigned_agent || record.agent || '', 60);
   const recommendedAgent = truncate(record.recommended_agent || record.agent || assignedAgent, 60);
@@ -208,6 +289,25 @@ function normalizeWorkOrderHandoffRecord(record) {
     risk_level: truncate(record.risk_level || 'low', 24),
     human_gate_required: record.human_gate_required !== false,
     safe_prompt_summary: safePromptSummary,
+    prompt: normalizeText(record.prompt || record.body || ''),
+    body: normalizeText(record.body || record.prompt || ''),
+    originalRequest: truncate(record.originalRequest || record.original_request || '', 12000),
+    selectedProjectId: truncate(record.selectedProjectId || record.selected_project_id || '', 60),
+    selectedProjectPath: normalizeText(record.selectedProjectPath || record.selected_project_path || ''),
+    selectedProjectLabel: truncate(record.selectedProjectLabel || record.selected_project_label || '', 120),
+    safetyConditions: normalizeTextList(record.safetyConditions || record.safety_conditions, 20, 240),
+    reportItems: normalizeTextList(record.reportItems || record.report_items, 20, 240),
+    target: record.target && typeof record.target === 'object'
+      ? {
+          id: truncate(record.target.id || record.target.projectId || '', 60),
+          label: truncate(record.target.label || record.target.name || '', 120),
+          path: normalizeText(record.target.path || record.target.repo || targetRepo),
+        }
+      : {
+          id: truncate(record.selectedProjectId || record.selected_project_id || '', 60),
+          label: truncate(record.selectedProjectLabel || record.selected_project_label || '', 120),
+          path: targetRepo,
+        },
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
     updated_at: normalizeText(record.updated_at || record.timestamp || record.created_at || ''),
     source: truncate(record.source || 'kosame-console', 40),
@@ -227,8 +327,20 @@ function synthesizeLatestHandoff(latestApprovedWorkOrder) {
     recommended_agent: latestApprovedWorkOrder.agent,
     risk_level: latestApprovedWorkOrder.risk_level,
     human_gate_required: latestApprovedWorkOrder.requires_human_confirmation !== false,
-    safe_prompt_summary: summarizePrompt(latestApprovedWorkOrder.prompt),
+    safe_prompt_summary: summarizePrompt(latestApprovedWorkOrder.body || latestApprovedWorkOrder.prompt),
     prompt: latestApprovedWorkOrder.prompt,
+    body: latestApprovedWorkOrder.body || latestApprovedWorkOrder.prompt,
+    originalRequest: latestApprovedWorkOrder.originalRequest || latestApprovedWorkOrder.original_request || '',
+    selectedProjectId: latestApprovedWorkOrder.selectedProjectId || latestApprovedWorkOrder.selected_project_id || '',
+    selectedProjectPath: latestApprovedWorkOrder.selectedProjectPath || latestApprovedWorkOrder.selected_project_path || '',
+    selectedProjectLabel: latestApprovedWorkOrder.selectedProjectLabel || latestApprovedWorkOrder.selected_project_label || '',
+    safetyConditions: latestApprovedWorkOrder.safetyConditions || latestApprovedWorkOrder.safety_conditions || [],
+    reportItems: latestApprovedWorkOrder.reportItems || latestApprovedWorkOrder.report_items || [],
+    target: latestApprovedWorkOrder.target || {
+      id: latestApprovedWorkOrder.selectedProjectId || latestApprovedWorkOrder.selected_project_id || '',
+      label: latestApprovedWorkOrder.selectedProjectLabel || latestApprovedWorkOrder.selected_project_label || '',
+      path: latestApprovedWorkOrder.target_repo,
+    },
     timestamp: latestApprovedWorkOrder.approved_at || latestApprovedWorkOrder.timestamp || '',
     updated_at: latestApprovedWorkOrder.approved_at || latestApprovedWorkOrder.timestamp || '',
     source: latestApprovedWorkOrder.source || 'kosame-console',
@@ -243,7 +355,7 @@ function readLatestWorkOrderHandoff(options = {}) {
   const records = readJsonlRecords(handoffLogPath, Number(options.limit || 80));
   const normalizedRecords = records
     .map(normalizeWorkOrderHandoffRecord)
-    .filter((record) => record && record.target_repo === HANDOFF_TARGET_REPO)
+    .filter((record) => record && ALLOWED_TARGET_REPOS.has(record.target_repo))
     .sort((a, b) => String(a.timestamp || a.updated_at || '').localeCompare(String(b.timestamp || b.updated_at || '')));
   const latestRecorded = normalizedRecords.length ? normalizedRecords[normalizedRecords.length - 1] : null;
   const latestApproved = readLatestApprovedWorkOrder({
@@ -286,6 +398,15 @@ function recordWorkOrderHandoff(input = {}, options = {}) {
     risk_level: source.risk_level,
     human_gate_required: source.human_gate_required,
     safe_prompt_summary: source.safe_prompt_summary,
+    prompt: source.prompt,
+    body: source.body,
+    originalRequest: source.originalRequest,
+    selectedProjectId: source.selectedProjectId,
+    selectedProjectPath: source.selectedProjectPath,
+    selectedProjectLabel: source.selectedProjectLabel,
+    safetyConditions: source.safetyConditions,
+    reportItems: source.reportItems,
+    target: source.target,
     source: source.source,
   };
 

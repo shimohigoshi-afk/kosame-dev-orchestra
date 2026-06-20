@@ -33,13 +33,36 @@ const SECRET_PATTERNS = [
 const WORK_ORDER_TARGETS = [
   {
     label: 'Sales DX',
+    repo: '/home/lavie/repos/kosame-sales-dx',
+    legacyRepo: '/home/lavie/repos/transcriber',
+    selectedProjectId: 'sales-dx',
+    selectedProjectPath: '/home/lavie/repos/kosame-sales-dx',
+    riskLevel: 'medium',
+    hints: /sales dx|kosame-sales-dx|営業dx/i,
+  },
+  {
+    label: 'KOSAME Console',
+    repo: '/home/lavie/kosame-dev-orchestra',
+    selectedProjectId: 'dev-orchestra',
+    selectedProjectPath: '/home/lavie/kosame-dev-orchestra',
+    riskLevel: 'low',
+    hints: /kosame console|dev orchestra|kosame dev orchestra/i,
+  },
+];
+const LEGACY_WORK_ORDER_TARGETS = [
+  {
+    label: 'Sales DX',
     repo: '/home/lavie/repos/transcriber',
+    selectedProjectId: 'sales-dx',
+    selectedProjectPath: '/home/lavie/repos/transcriber',
     riskLevel: 'medium',
     hints: /sales dx|transcriber|営業dx/i,
   },
   {
     label: 'KOSAME Console',
     repo: '/home/lavie/kosame-dev-orchestra',
+    selectedProjectId: 'dev-orchestra',
+    selectedProjectPath: '/home/lavie/kosame-dev-orchestra',
     riskLevel: 'low',
     hints: /kosame console|dev orchestra|kosame dev orchestra/i,
   },
@@ -571,14 +594,34 @@ function detectWorkOrderIntent(message) {
   return WORK_ORDER_REQUEST_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+function resolveTargetFromSelection(input) {
+  const selectedProjectPath = normalizeContent(input.selectedProjectPath || input.selected_project_path || input.target_repo || input.targetRepo);
+  const selectedProjectId = normalizeContent(input.selectedProjectId || input.selected_project_id);
+  const selectedProjectLabel = normalizeContent(input.selectedProjectLabel || input.selected_project_label || input.project);
+  const selectionHint = [selectedProjectPath, selectedProjectId, selectedProjectLabel].filter(Boolean).join(' ').toLowerCase();
+
+  if (/kosame-sales-dx|sales dx/i.test(selectionHint) || selectedProjectId === 'sales-dx' || selectedProjectPath === '/home/lavie/repos/kosame-sales-dx') {
+    return WORK_ORDER_TARGETS[0];
+  }
+  if (/kosame-dev-orchestra|dev orchestra|kosame console/i.test(selectionHint) || selectedProjectId === 'dev-orchestra' || selectedProjectPath === '/home/lavie/kosame-dev-orchestra') {
+    return WORK_ORDER_TARGETS[1];
+  }
+  return null;
+}
+
 function resolveWorkOrderTarget(input, snapshotSummary) {
+  const selectedTarget = resolveTargetFromSelection(input);
+  if (selectedTarget) {
+    return selectedTarget;
+  }
+
   const haystack = [
     normalizeContent(input.project),
     normalizeContent(input.message),
     normalizeContent(input.context),
   ].filter(Boolean).join(' ');
 
-  for (const target of WORK_ORDER_TARGETS) {
+  for (const target of LEGACY_WORK_ORDER_TARGETS) {
     if (target.hints.test(haystack)) {
       return target;
     }
@@ -636,6 +679,9 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '- 外部APIを呼ばない',
     '- 対象repo以外を触らない',
     '',
+    '保持項目:',
+    '- originalRequest / target / agent / risk / safetyConditions / reportItems / body',
+    '',
     '報告項目:',
     '- 変更ファイル一覧',
     '- /api/chat の仕様',
@@ -655,8 +701,37 @@ function buildWorkOrderReply(input, snapshotSummary) {
     };
   }
 
-  const title = buildWorkOrderTitle(input, target);
+  const draft = input.workOrderDraft && typeof input.workOrderDraft === 'object' ? input.workOrderDraft : null;
+  const title = truncate(draft && draft.title ? draft.title : buildWorkOrderTitle(input, target), 80);
   const prompt = buildWorkOrderPrompt(input, target, title, snapshotSummary);
+  const originalRequest = normalizeContent(
+    draft && (draft.originalRequest || draft.original_request)
+      ? (draft.originalRequest || draft.original_request)
+      : input.message,
+  );
+  const body = normalizeContent(draft && (draft.body || draft.prompt) ? (draft.body || draft.prompt) : prompt) || prompt;
+  const selectedProjectPath = normalizeContent(
+    draft && (draft.selectedProjectPath || draft.selected_project_path)
+      ? (draft.selectedProjectPath || draft.selected_project_path)
+      : input.selectedProjectPath || input.selected_project_path || target.repo,
+  ) || target.repo;
+  const selectedProjectId = normalizeContent(
+    draft && (draft.selectedProjectId || draft.selected_project_id)
+      ? (draft.selectedProjectId || draft.selected_project_id)
+      : input.selectedProjectId || input.selected_project_id || target.selectedProjectId || '',
+  ) || target.selectedProjectId || '';
+  const selectedProjectLabel = truncate(
+    draft && (draft.selectedProjectLabel || draft.selected_project_label)
+      ? (draft.selectedProjectLabel || draft.selected_project_label)
+      : input.selectedProjectLabel || input.selected_project_label || target.label || '',
+    120,
+  );
+  const safetyConditions = Array.isArray(draft && (draft.safetyConditions || draft.safety_conditions))
+    ? draft.safetyConditions || draft.safety_conditions
+    : [];
+  const reportItems = Array.isArray(draft && (draft.reportItems || draft.report_items))
+    ? draft.reportItems || draft.report_items
+    : [];
 
   return {
     reply: `${title} の作業票ドラフトを作りました。確認してから Codex に貼ってください☂️`,
@@ -668,7 +743,19 @@ function buildWorkOrderReply(input, snapshotSummary) {
       target_repo: target.repo,
       risk_level: target.riskLevel,
       requires_human_confirmation: true,
-      prompt,
+      prompt: body,
+      body,
+      originalRequest,
+      selectedProjectId,
+      selectedProjectPath,
+      selectedProjectLabel,
+      safetyConditions,
+      reportItems,
+      target: {
+        id: selectedProjectId,
+        label: selectedProjectLabel || target.label,
+        path: selectedProjectPath || target.repo,
+      },
     },
   };
 }
@@ -750,6 +837,10 @@ function normalizeChatRequest(body) {
     contextSummary: normalized.contextSummary || context,
     confirmationContext: normalized.confirmationContext,
     contextValues: normalized.contextValues,
+    selectedProjectId: normalizeContent(source.selectedProjectId || source.selected_project_id),
+    selectedProjectPath: normalizeContent(source.selectedProjectPath || source.selected_project_path),
+    selectedProjectLabel: normalizeContent(source.selectedProjectLabel || source.selected_project_label),
+    workOrderDraft: source.workOrderDraft && typeof source.workOrderDraft === 'object' ? source.workOrderDraft : null,
   };
 }
 
@@ -798,6 +889,10 @@ async function handleChatRequest(body) {
     workOrderDecisionQueue: Array.isArray(source.workOrderDecisionQueue) ? source.workOrderDecisionQueue : [],
     latestApprovedWorkOrder: source.latestApprovedWorkOrder || null,
     latestHandoffWorkOrder: source.latestHandoffWorkOrder || null,
+    workOrderDraft: source.workOrderDraft || null,
+    selectedProjectId: normalized.selectedProjectId || '',
+    selectedProjectPath: normalized.selectedProjectPath || '',
+    selectedProjectLabel: normalized.selectedProjectLabel || '',
   }, contextSummary);
 
   const result = {

@@ -24,7 +24,8 @@ function readHtml() {
 
 function targetRepoToProject(targetRepo) {
   if (targetRepo === '/home/lavie/kosame-dev-orchestra') return 'KOSAME Dev Orchestra';
-  if (targetRepo === '/home/lavie/repos/transcriber') return 'Transcriber';
+  if (targetRepo === '/home/lavie/repos/kosame-sales-dx') return 'Sales DX';
+  if (targetRepo === '/home/lavie/repos/transcriber') return 'Sales DX';
   return 'KOSAME Project';
 }
 

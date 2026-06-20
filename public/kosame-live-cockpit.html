@@ -5124,6 +5124,148 @@ function buildChatPayload(userText, confirmationContext) {
   return payload;
 }
 
+function getChatInputText() {
+  const input = document.getElementById('chat-input');
+  return input ? String(input.value || '').trim() : '';
+}
+
+function getWorkOrderResultInputContext(snapshot = latestSnapshot || {}) {
+  const current = getCurrentWorkOrderResult(snapshot);
+  if (!current) return null;
+  return {
+    work_order_id: String(current.work_order_id || current.approval_id || current.handoff_id || '').trim(),
+    title: String(current.title || '').trim(),
+    target_repo: String(current.target_repo || '').trim(),
+    assigned_agent: String(current.assigned_agent || current.recommended_agent || 'Codex').trim() || 'Codex',
+    risk_level: String(current.risk_level || 'low').trim() || 'low',
+    human_gate_required: current.human_gate_required !== false,
+  };
+}
+
+function parseResultPasteLines(text) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function detectResultPasteStatus(text) {
+  const normalized = String(text || '').toLowerCase();
+  const hasNeedFix = /needs?[_\s-]?fix|修正依頼|修正が必要|要修正/.test(normalized);
+  const hasFailure = /(?:^|\b)(fail|failed|failure|error|broken|✗|×)(?:\b|$)/i.test(text) || /smoke.*fail|verify.*fail/.test(normalized);
+  const hasSuccess = /(?:^|\b)(pass|passed|success|succeeded|complete|completed|done|完了)(?:\b|$)/i.test(text) || /smoke.*pass|verify.*pass/.test(normalized);
+
+  if (hasNeedFix) return 'needs_fix';
+  if (hasFailure) return 'failed';
+  if (hasSuccess) return 'success';
+  return '';
+}
+
+function detectWorkOrderResultPaste(text, snapshot = latestSnapshot || {}) {
+  const current = getWorkOrderResultInputContext(snapshot);
+  if (!current) return null;
+  const rawText = String(text || '').trim();
+  if (!rawText) return null;
+  const lines = parseResultPasteLines(rawText);
+  const hasSignals = /result_status\s*[:=]/i.test(rawText)
+    || /smoke_result\s*[:=]/i.test(rawText)
+    || /verify_result\s*[:=]/i.test(rawText)
+    || /nextRecommendedAction\s*[:=]/i.test(rawText)
+    || /changed[_\s-]?files\s*[:=]/i.test(rawText)
+    || /(?:^|\b)(smoke|verify|result|commit|push|tag|PASS|FAIL)(?:\b|$)/i.test(rawText);
+  if (!hasSignals && lines.length < 2) return null;
+
+  const resultStatus = detectResultPasteStatus(rawText) || 'success';
+  const smokeResult = /smoke.*fail|fail.*smoke/i.test(rawText) ? 'FAIL'
+    : /smoke.*pass|pass.*smoke|smoke.*passed/i.test(rawText) ? 'PASS'
+      : /smoke_result\s*[:=]\s*pass/i.test(rawText) ? 'PASS'
+        : /smoke_result\s*[:=]\s*fail/i.test(rawText) ? 'FAIL'
+          : 'unknown';
+  const verifyResult = /verify.*fail|fail.*verify/i.test(rawText) ? 'FAIL'
+    : /verify.*pass|pass.*verify|verify.*passed/i.test(rawText) ? 'PASS'
+      : /verify_result\s*[:=]\s*pass/i.test(rawText) ? 'PASS'
+        : /verify_result\s*[:=]\s*fail/i.test(rawText) ? 'FAIL'
+          : 'unknown';
+  const changedFiles = lines
+    .filter((line) => /(?:^|[\s*>\-])(?:[\w./-]+\.(?:js|ts|tsx|jsx|html|md|json|yml|yaml|css|scss|mjs|cjs|sh))$/i.test(line) || /(?:changed[_\s-]?files|files|変更ファイル)/i.test(line))
+    .map((line) => line.replace(/^(?:changed[_\s-]?files|files|変更ファイル)\s*[:：-]?\s*/i, '').trim())
+    .filter(Boolean)
+    .slice(0, 20);
+  const summaryLines = lines
+    .filter((line) => !/^(?:#|```)/.test(line))
+    .filter((line) => !/^(?:PASS|FAIL|✓|✗|×)$/i.test(line))
+    .slice(0, 4);
+  const resultSummary = summaryLines.length
+    ? summaryLines.join(' / ')
+    : `${current.title || '作業票'} の貼り戻しを受領しました。`;
+
+  return {
+    work_order_id: current.work_order_id,
+    result_status: resultStatus,
+    result_summary: resultSummary,
+    changed_files: changedFiles,
+    smoke_result: smokeResult,
+    verify_result: verifyResult,
+    notes: rawText.slice(0, 400),
+  };
+}
+
+async function submitWorkOrderResultPaste(text) {
+  const statusNode = document.getElementById('work-order-result-status');
+  const current = getWorkOrderResultInputContext(latestSnapshot || {});
+  const parsed = detectWorkOrderResultPaste(text, latestSnapshot || {});
+  if (!current || !parsed) {
+    throw new Error('貼り戻し結果を判定できませんでした。');
+  }
+
+  if (statusNode) statusNode.textContent = '結果を Result Decision Panel に渡しています...';
+  const response = await fetch('/api/work-orders/result', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...parsed,
+      work_order_id: current.work_order_id,
+    }),
+  });
+  const data = await response.json();
+  if (!data.ok) {
+    throw new Error(data.error || '結果の保存に失敗しました。');
+  }
+
+  if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
+  latestSnapshot.latestWorkOrderResult = data.latestWorkOrderResult || latestSnapshot.latestWorkOrderResult || null;
+  latestSnapshot.latestHandoffWorkOrder = data.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+  latestSnapshot.latestWorkOrderDecision = data.latestWorkOrderDecision || latestSnapshot.latestWorkOrderDecision || null;
+  latestSnapshot.workOrderResultQueue = latestSnapshot.latestWorkOrderResult ? [latestSnapshot.latestWorkOrderResult] : [];
+  latestSnapshot.workOrderDecisionQueue = latestSnapshot.latestWorkOrderDecision ? [latestSnapshot.latestWorkOrderDecision] : [];
+  renderWorkOrderResultPanel(latestSnapshot);
+  renderResultDecisionPanel(latestSnapshot);
+  renderHandoffInboxBridge(latestSnapshot);
+  renderWorkOrderHandoffQueue(latestSnapshot);
+  renderLatestApprovedWorkOrder(latestSnapshot);
+  renderChatStatusBadges(latestSnapshot || {});
+  if (statusNode) {
+    statusNode.textContent = `結果: ${formatWorkOrderResultStatusLabel(data.latestWorkOrderResult && data.latestWorkOrderResult.result_status)} / 次の判断: ${data.nextRecommendedAction || 'review'}`;
+  }
+  const input = document.getElementById('chat-input');
+  if (input) input.value = '';
+  updateChatSummarizeButtonLabel();
+}
+
+function updateChatSummarizeButtonLabel() {
+  const sumBtn = document.getElementById('chat-summarize');
+  if (!sumBtn) return;
+  const text = getChatInputText();
+  const paste = detectWorkOrderResultPaste(text, latestSnapshot || {});
+  if (paste) {
+    sumBtn.textContent = '結果を判定へ渡す';
+    sumBtn.title = '貼り戻し結果を Result Decision Panel に保存します';
+  } else {
+    sumBtn.textContent = '確認待ちを要約';
+    sumBtn.title = 'Codex の確認待ちを要約します';
+  }
+}
+
 function buildConfirmationContext(bridge) {
   const parts = [];
   if (bridge.editSummary && bridge.editSummary.length) {
@@ -5242,6 +5384,7 @@ async function loadSnapshot() {
     renderWorkOrderResultPanel(snapshot);
     renderResultDecisionPanel(snapshot);
     renderChatAssistPanel(snapshot);
+    updateChatSummarizeButtonLabel();
     maybeNotifyFromSnapshot(snapshot);
     renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
@@ -5272,6 +5415,7 @@ renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
+updateChatSummarizeButtonLabel();
 loadSnapshot();
 setInterval(loadSnapshot, 30000);
 
@@ -5282,6 +5426,14 @@ if (chatProceedButton) {
     if (!input) return;
     const t = input.value.trim() || 'この方針で進めてください。';
     input.value = t;
+    const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
+    if (resultPaste) {
+      submitWorkOrderResultPaste(t).catch((error) => {
+        const statusEl = document.getElementById('chat-status');
+        if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+      });
+      return;
+    }
     sendChatMessage(t, null);
   });
 }
@@ -5290,6 +5442,14 @@ const chatSendBtn = document.getElementById('chat-send');
 if (chatSendBtn) {
   chatSendBtn.addEventListener('click', () => {
     const t = document.getElementById('chat-input').value.trim();
+    const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
+    if (resultPaste) {
+      submitWorkOrderResultPaste(t).catch((error) => {
+        const statusEl = document.getElementById('chat-status');
+        if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+      });
+      return;
+    }
     sendChatMessage(t, null);
   });
 
@@ -5297,20 +5457,51 @@ if (chatSendBtn) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       const t = document.getElementById('chat-input').value.trim();
+      const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
+      if (resultPaste) {
+        submitWorkOrderResultPaste(t).catch((error) => {
+          const statusEl = document.getElementById('chat-status');
+          if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+        });
+        return;
+      }
       sendChatMessage(t, null);
     }
   });
 }
 
-document.getElementById('chat-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    const t = document.getElementById('chat-input').value.trim();
-    sendChatMessage(t, null);
-  }
-});
+const chatInputNode = document.getElementById('chat-input');
+if (chatInputNode) {
+  chatInputNode.addEventListener('input', () => {
+    updateChatSummarizeButtonLabel();
+  });
+  chatInputNode.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const t = document.getElementById('chat-input').value.trim();
+      const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
+      if (resultPaste) {
+        submitWorkOrderResultPaste(t).catch((error) => {
+          const statusEl = document.getElementById('chat-status');
+          if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+        });
+        return;
+      }
+      sendChatMessage(t, null);
+    }
+  });
+}
 
 document.getElementById('chat-summarize').addEventListener('click', () => {
+  const inputText = getChatInputText();
+  const resultPaste = detectWorkOrderResultPaste(inputText, latestSnapshot || {});
+  if (resultPaste) {
+    submitWorkOrderResultPaste(inputText).catch((error) => {
+      const statusEl = document.getElementById('chat-status');
+      if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+    });
+    return;
+  }
   if (!latestBridge || !latestBridge.detected) {
     chatHistory.push({ role: 'assistant', content: '現在、Codexの確認待ちは検知されていません。' });
     renderChatThread();

@@ -182,6 +182,10 @@ function assertStaticWiring() {
   assert.ok(html.includes('work-order-result-decision-status'), 'HTML must include decision status area');
   assert.ok(html.includes('chat-work-order-decision-line'), 'HTML must include decision line wiring');
   assert.ok(html.includes('work-order-result-panel'), 'HTML must keep result intake panel');
+  assert.ok(html.includes('結果を判定へ渡す'), 'HTML must expose paste-to-decision action');
+  assert.ok(html.includes('detectWorkOrderResultPaste'), 'HTML must detect pasted result text');
+  assert.ok(html.includes('submitWorkOrderResultPaste'), 'HTML must submit pasted result text');
+  assert.ok(html.includes('updateChatSummarizeButtonLabel'), 'HTML must update summarize button label based on pasted results');
   assert.ok(html.includes('notificationSoundEnabled'), 'HTML must keep notification wiring');
   assert.ok(html.includes('chat-llama-audit-badge'), 'HTML must keep llama audit badge');
   assert.ok(!html.includes('sound-hint-legacy'), 'HTML must not keep legacy sound hint');

@@ -19,7 +19,7 @@ const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { readLatestApprovedWorkOrder } = require('./kosame-work-order-approval-store');
 const { readLatestWorkOrderHandoff } = require('./kosame-work-order-handoff-store');
-const { readLatestWorkOrderResult } = require('./kosame-work-order-result-store');
+const { readLatestWorkOrderResult, readWorkOrderResultHistory } = require('./kosame-work-order-result-store');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { getConfig: getProviderConfig } = require('../providers/provider-config');
 
@@ -588,6 +588,12 @@ function collectLiveCockpitSnapshot(options = {}) {
     approvalLimit: options.workOrderApprovalLimit,
     latestHandoffWorkOrder: latestWorkOrderHandoff.latestHandoffWorkOrder || null,
   });
+  const workOrderResultHistory = readWorkOrderResultHistory({
+    workOrderApprovalLogPath: options.workOrderApprovalLogPath,
+    workOrderResultLogPath: options.workOrderResultLogPath,
+    approvalLimit: options.workOrderApprovalLimit,
+    limit: options.workOrderResultHistoryLimit || 3,
+  });
   const mergedLatestHandoffWorkOrder = latestWorkOrderResult.latestHandoffWorkOrder
     || latestWorkOrderHandoff.latestHandoffWorkOrder
     || null;
@@ -712,6 +718,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderHandoffQueue: mergedWorkOrderHandoffQueue,
     latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
     workOrderResultQueue: latestWorkOrderResult.latestWorkOrderResult ? [latestWorkOrderResult.latestWorkOrderResult] : [],
+    workOrderResultHistory: workOrderResultHistory.items || [],
     latestWorkOrderDecision,
     workOrderDecisionQueue,
     confirmationBridge: options.confirmationBridge || null,
@@ -760,6 +767,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     workOrderHandoffQueue: mergedWorkOrderHandoffQueue,
     latestWorkOrderResult: latestWorkOrderResult.latestWorkOrderResult,
     workOrderResultQueue: latestWorkOrderResult.latestWorkOrderResult ? [latestWorkOrderResult.latestWorkOrderResult] : [],
+    workOrderResultHistory: workOrderResultHistory.items || [],
     latestWorkOrderDecision,
     workOrderDecisionQueue,
     chatStatus: {

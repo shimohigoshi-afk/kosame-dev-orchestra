@@ -55,6 +55,31 @@ function readJsonlRecords(filePath, limit = 80) {
   }
 }
 
+function readWorkOrderResultHistory(options = {}) {
+  const resultLogPath = getResultLogPath(options);
+  const approvalLogPath = options.workOrderApprovalLogPath
+    || process.env[APPROVAL_LOG_PATH_ENV]
+    || DEFAULT_APPROVAL_LOG_PATH;
+  const limit = Number(options.limit || 3);
+  const targetRepoFilter = normalizeText(options.targetRepo || options.target_repo || HANDOFF_TARGET_REPO);
+  const records = readJsonlRecords(resultLogPath, Number.isFinite(limit) && limit > 0 ? limit : 3);
+  const items = records
+    .map(normalizeWorkOrderResultRecord)
+    .filter((record) => record && (!targetRepoFilter || record.target_repo === targetRepoFilter))
+    .sort((a, b) => String(a.timestamp || a.updated_at || '').localeCompare(String(b.timestamp || b.updated_at || '')))
+    .map((record, index) => ({
+      ...record,
+      run_number: index + 1,
+      runNumber: index + 1,
+    }));
+  return {
+    ok: true,
+    resultLogPath,
+    approvalLogPath,
+    items,
+  };
+}
+
 function getResultLogPath(options = {}) {
   return path.resolve(String(
     options.workOrderResultLogPath
@@ -397,6 +422,7 @@ module.exports = {
   normalizeResultStatus,
   normalizeWorkOrderResultRecord,
   normalizeChangedFiles,
+  readWorkOrderResultHistory,
   readLatestWorkOrderResult,
   recordWorkOrderResult,
 };

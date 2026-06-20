@@ -1052,6 +1052,20 @@ h1 {
   display: grid;
   gap: 10px;
 }
+.work-order-run-history-panel {
+  margin: 0 0 4px;
+  display: grid;
+  gap: 10px;
+}
+.work-order-run-history-empty {
+  border: 1px dashed rgba(125,211,252,0.18);
+  background: rgba(125,211,252,0.04);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
 .work-order-result-status-row {
   display: flex;
   flex-wrap: wrap;
@@ -2064,6 +2078,13 @@ h1 {
           <div class="chat-section-body">
             <div id="work-order-result-decision-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
             <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="run-history-details">
+          <summary class="chat-section-summary">RUN HISTORY</summary>
+          <div class="chat-section-body">
+            <div id="work-order-run-history-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-run-history-panel" class="work-order-run-history-panel"></div>
           </div>
         </details>
       </article>
@@ -5071,6 +5092,73 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
+  const node = document.getElementById('work-order-run-history-panel');
+  const statusNode = document.getElementById('work-order-run-history-status');
+  if (!node || !statusNode) return;
+  node.innerHTML = '';
+
+  const history = Array.isArray(snapshot.workOrderResultHistory) ? snapshot.workOrderResultHistory : [];
+  if (!history.length) {
+    statusNode.textContent = 'Run History: まだ run はありません。';
+    const empty = document.createElement('div');
+    empty.className = 'work-order-run-history-empty';
+    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / status / yesCount / copyCount / humanWait / resultPOST / decision status / timestamp を表示します。';
+    node.appendChild(empty);
+    return;
+  }
+
+  statusNode.textContent = `Run History: ${history.length} run`;
+  history.forEach((run, index) => {
+    const card = document.createElement('div');
+    card.className = 'chat-work-order-card is-approved';
+
+    const head = document.createElement('div');
+    head.className = 'chat-work-order-head';
+    const title = document.createElement('div');
+    title.className = 'chat-work-order-title';
+    title.textContent = `Run ${run.run_number || index + 1}`;
+    head.appendChild(title);
+    const badge = document.createElement('span');
+    badge.className = 'chat-work-order-badge';
+    badge.textContent = formatDecisionStatusLabel(run.decision_status || 'wait_for_result');
+    head.appendChild(badge);
+    card.appendChild(head);
+
+    const meta = document.createElement('div');
+    meta.className = 'chat-work-order-meta';
+    [
+      ['run', run.run_number || index + 1],
+      ['work order id', run.work_order_id || '—'],
+      ['executor', run.executor || 'Codex'],
+      ['status', run.result_status || 'unknown'],
+    ].forEach(([label, value]) => {
+      const chip = document.createElement('span');
+      chip.textContent = `${label}: ${value}`;
+      meta.appendChild(chip);
+    });
+    card.appendChild(meta);
+
+    const lines = document.createElement('div');
+    lines.className = 'chat-work-order-decision-lines';
+    [
+      `timestamp: ${run.timestamp || run.updated_at || '—'}`,
+      `yesCount: ${Number.isFinite(Number(run.yes_count)) ? Number(run.yes_count) : 0}`,
+      `copyCount: ${Number.isFinite(Number(run.copy_count)) ? Number(run.copy_count) : 0}`,
+      `humanWait: ${Number.isFinite(Number(run.human_wait)) ? Number(run.human_wait) : 0}`,
+      `resultPOST: ${run.result_post || 'POST /api/work-orders/result 200'}`,
+      `decision status: ${run.decision_status || 'wait_for_result'}`,
+    ].forEach((textLine) => {
+      const line = document.createElement('div');
+      line.className = 'chat-work-order-decision-line';
+      line.textContent = textLine;
+      lines.appendChild(line);
+    });
+    card.appendChild(lines);
+    node.appendChild(card);
+  });
+}
+
 async function handleWorkOrderHandoffAction(action, buttonNode) {
   const current = getCurrentWorkOrderHandoff(latestSnapshot || {});
   if (!current || !buttonNode) return;
@@ -5727,6 +5815,7 @@ async function loadSnapshot() {
     renderWorkOrderHandoffQueue(snapshot);
     renderWorkOrderResultPanel(snapshot);
     renderResultDecisionPanel(snapshot);
+    renderWorkOrderRunHistory(snapshot);
     renderChatAssistPanel(snapshot);
     updateChatSummarizeButtonLabel();
     maybeNotifyFromSnapshot(snapshot);
@@ -5759,6 +5848,7 @@ renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
+renderWorkOrderRunHistory({});
 updateChatSummarizeButtonLabel();
 document.querySelectorAll('.chat-section-details').forEach((details) => {
   details.open = false;

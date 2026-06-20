@@ -132,12 +132,22 @@ function summarizeWorkOrderResult(workOrderResult) {
   const smoke = normalizeText(result.smoke_result || 'unknown');
   const verify = normalizeText(result.verify_result || 'unknown');
   const next = normalizeText(result.nextRecommendedAction || 'review');
+  const executor = normalizeText(result.executor || result.assigned_agent || 'Codex');
+  const resultPost = normalizeText(result.result_post || result.resultPOST || 'POST /api/work-orders/result 200');
+  const yesCount = Number.isFinite(Number(result.yes_count ?? result.yesCount)) ? Number(result.yes_count ?? result.yesCount) : 0;
+  const copyCount = Number.isFinite(Number(result.copy_count ?? result.copyCount)) ? Number(result.copy_count ?? result.copyCount) : 0;
+  const humanWait = Number.isFinite(Number(result.human_wait ?? result.humanWait)) ? Number(result.human_wait ?? result.humanWait) : 0;
   const changedFiles = Array.isArray(result.changed_files) ? result.changed_files.slice(0, 3).map((item) => normalizeText(item)).filter(Boolean) : [];
   const parts = [
     `status=${status}`,
     `smoke=${smoke}`,
     `verify=${verify}`,
     `next=${next}`,
+    `executor=${executor}`,
+    `resultPOST=${resultPost}`,
+    `yesCount=${yesCount}`,
+    `copyCount=${copyCount}`,
+    `humanWait=${humanWait}`,
   ];
   if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');

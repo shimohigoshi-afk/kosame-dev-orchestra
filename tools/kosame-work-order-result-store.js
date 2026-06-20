@@ -116,12 +116,18 @@ function buildSafeResultText(input = {}) {
   const humanWait = Number.isFinite(Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount))
     ? Number(input.human_wait ?? input.humanWait ?? input.human_wait_count ?? input.humanWaitCount)
     : 0;
+  const executor = truncate(input.executor || input.assigned_agent || input.agent || '', 60);
+  const resultPost = truncate(input.result_post || input.resultPOST || input.result_post_status || '', 120);
+  const executionPath = truncate(input.execution_path || input.executionPath || '', 180);
   const rawCheck = [
     summary,
     notes,
     changedFiles.join('\n'),
     smoke,
     verify,
+    executor,
+    resultPost,
+    executionPath,
   ].join('\n');
   if (hasSecretLikeText(rawCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
@@ -161,6 +167,9 @@ function buildSafeResultText(input = {}) {
     yesCount,
     copyCount,
     humanWait,
+    executor: executor || 'Codex',
+    result_post: resultPost || 'POST /api/work-orders/result 200',
+    execution_path: executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
   };
 }
 
@@ -231,6 +240,9 @@ function normalizeWorkOrderResultRecord(record) {
     human_wait: Number.isFinite(Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount))
       ? Number(record.human_wait ?? record.humanWait ?? record.human_wait_count ?? record.humanWaitCount)
       : 0,
+    executor: truncate(record.executor || record.assigned_agent || record.agent || 'Codex', 60),
+    result_post: truncate(record.result_post || record.resultPOST || 'POST /api/work-orders/result 200', 120),
+    execution_path: truncate(record.execution_path || record.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision', 180),
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
     updated_at: normalizeText(record.updated_at || record.timestamp || record.created_at || ''),
     source: truncate(record.source || 'kosame-console', 40),
@@ -275,6 +287,9 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     yesCount: latestResult.yes_count,
     copyCount: latestResult.copy_count,
     humanWait: latestResult.human_wait,
+    executor: latestResult.executor,
+    result_post: latestResult.result_post,
+    execution_path: latestResult.execution_path,
     result_timestamp: latestResult.timestamp,
     result_record: latestResult,
   };
@@ -352,10 +367,13 @@ function recordWorkOrderResult(input = {}, options = {}) {
     risk_level: truncate(sourceWorkOrder.risk_level || latestApprovedWorkOrder?.risk_level || 'low', 24),
     human_gate_required: sourceWorkOrder.human_gate_required !== false
       && latestApprovedWorkOrder?.requires_human_confirmation !== false,
+    executor: truncate(sourceWorkOrder.executor || sourceWorkOrder.assigned_agent || sourceWorkOrder.agent || latestApprovedWorkOrder?.agent || 'Codex', 60),
     ...safeFields,
     yes_count: safeFields.yes_count,
     copy_count: safeFields.copy_count,
     human_wait: safeFields.human_wait,
+    result_post: safeFields.result_post,
+    execution_path: safeFields.execution_path,
     source: truncate(input.source || sourceWorkOrder.source || 'kosame-console', 40),
   };
 

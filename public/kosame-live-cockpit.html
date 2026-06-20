@@ -4775,6 +4775,8 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
     ['target', current.target_repo || '—'],
     ['risk', current.risk_level || '—'],
     ['status', current.status || 'waiting_result'],
+    ['executor', current.executor || current.assigned_agent || current.recommended_agent || 'Codex'],
+    ['resultPOST', current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
     chip.textContent = `${label}: ${value}`;
@@ -4793,6 +4795,9 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
     `実装結果: ${savedResultStatus}`,
     `smoke: ${current.smoke_result || 'unknown'}`,
     `verify: ${current.verify_result || 'unknown'}`,
+    `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
+    `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
+    `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
     `changed files: ${current.changed_files_summary || (Array.isArray(current.changed_files) ? current.changed_files.join(' | ') : '—')}`,
     `nextRecommendedAction: ${decisionNext}`,
   ];
@@ -5000,6 +5005,8 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     ['target', current.target_repo || '—'],
     ['risk', current.risk_level || '—'],
     ['human gate', current.human_gate_required ? 'required' : 'optional'],
+    ['executor', current.executor || current.assigned_agent || 'Codex'],
+    ['resultPOST', current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
     chip.textContent = `${label}: ${value}`;
@@ -5012,6 +5019,9 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   [
     `判定ステータス: ${current.decision_status || 'wait_for_result'}`,
     `nextRecommendedAction: ${current.nextRecommendedAction || 'wait_for_result'}`,
+    `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
+    `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
+    `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
     `理由: ${current.reason || '—'}`,
     `必要な次作業: ${current.required_next_work || '—'}`,
     `review gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
@@ -5254,10 +5264,21 @@ function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
       : '採用済みの作業票はまだありません。';
     return;
   }
+  const executor = result && (result.executor || result.assigned_agent)
+    ? (result.executor || result.assigned_agent)
+    : (handoff && (handoff.executor || handoff.assigned_agent || handoff.recommended_agent))
+      || approved.agent
+      || 'Codex';
+  const resultPost = result && (result.result_post || result.resultPOST)
+    ? (result.result_post || result.resultPOST)
+    : 'resultPOST待ち';
+  const executionPath = result && (result.execution_path || result.executionPath)
+    ? (result.execution_path || result.executionPath)
+    : 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision';
   const resultText = result && result.work_order_id && String(result.work_order_id) === String(approved.approval_id || approved.work_order_id || '')
-    ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'}`
+    ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'} / executor: ${executor} / resultPOST: ${resultPost}`
     : '';
-  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}${resultText}`;
+  node.textContent = `最新の採用済み作業票: ${approved.title || '—'} / ${approved.target_repo || '—'} / ${handoff ? formatHandoffStatusLabel(handoff.status || 'ready_to_handoff') : 'ready_to_handoff'}${resultText} / execution: ${executionPath}`;
 }
 
 async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {

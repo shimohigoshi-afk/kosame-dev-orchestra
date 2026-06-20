@@ -44,12 +44,17 @@ function buildResultActivityMessage(decision, title, agent) {
   const safeTitle = String(title || '作業票').trim();
   const safeAgent = String(agent || '担当AI').trim() || '担当AI';
   const decisionStatus = String(decision && decision.decision_status || decision && decision.nextRecommendedAction || 'wait_for_result').trim();
+  const executor = String(decision && decision.executor || safeAgent || '担当AI').trim() || '担当AI';
+  const resultPost = String(decision && decision.result_post || decision && decision.resultPOST || 'POST /api/work-orders/result 200').trim() || 'POST /api/work-orders/result 200';
+  const yesCount = Number.isFinite(Number(decision && decision.yes_count)) ? Number(decision.yes_count) : 0;
+  const copyCount = Number.isFinite(Number(decision && decision.copy_count)) ? Number(decision.copy_count) : 0;
+  const humanWait = Number.isFinite(Number(decision && decision.human_wait)) ? Number(decision.human_wait) : 0;
   const messages = {
-    ready_for_commit: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は commit候補です。commit前reviewです。`,
-    ready_for_review: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は review待ちです。smoke / verify を確認してください。`,
-    request_fix: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。修正依頼が必要です。`,
-    stop_and_investigate: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。原因調査が必要です。`,
-    wait_for_result: `${safeTitle} は結果待ちです。`,
+    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
+    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
+    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
+    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
+    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / resultPOST: ${resultPost} / yesCount: ${yesCount} / copyCount: ${copyCount} / humanWait: ${humanWait}`,
   };
   return messages[decisionStatus] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
 }
@@ -82,6 +87,7 @@ function createLiveCockpitServer(options = {}) {
         workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
         workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
         workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+        shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
         confirmationBridge,
       });
       res.writeHead(200, {
@@ -179,6 +185,7 @@ function createLiveCockpitServer(options = {}) {
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
             workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
             workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+            shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
             confirmationBridge: detectConfirmation(),
           });
           const latestApproved = snapshot.latestApprovedWorkOrder || null;
@@ -261,6 +268,7 @@ function createLiveCockpitServer(options = {}) {
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
             workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
             workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+            shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
             confirmationBridge,
           });
           const consoleContext = buildConsoleContextSummary(snapshot);
@@ -403,6 +411,7 @@ function createLiveCockpitServer(options = {}) {
             workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
             workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
             workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+            shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
             confirmationBridge: detectConfirmation(),
           });
           const latestHandoff = snapshot.latestHandoffWorkOrder || null;

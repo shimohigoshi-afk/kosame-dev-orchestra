@@ -25,6 +25,8 @@ function summarizeDecision(decision) {
   const parts = [
     `status=${normalizeText(current.decision_status || current.nextRecommendedAction || 'wait_for_result')}`,
     `next=${normalizeText(current.nextRecommendedAction || 'wait_for_result')}`,
+    `executor=${normalizeText(current.executor || current.assigned_agent || 'Codex')}`,
+    `resultPOST=${normalizeText(current.result_post || current.resultPOST || 'POST /api/work-orders/result 200')}`,
     `humanGate=${current.human_gate_required ? 'yes' : 'no'}`,
     `commitTagPush=${current.commit_tag_push_allowed ? 'candidate' : 'hold'}`,
     `yesCount=${Number.isFinite(Number(current.yes_count)) ? Number(current.yes_count) : 0}`,
@@ -119,6 +121,29 @@ function buildWorkOrderResultDecision(input = {}) {
   const targetRepo = clamp(workOrder.target_repo || latestWorkOrderResult?.target_repo || latestHandoffWorkOrder?.target_repo || latestApprovedWorkOrder?.target_repo || '', 120);
   const assignedAgent = clamp(workOrder.assigned_agent || workOrder.recommended_agent || latestWorkOrderResult?.assigned_agent || latestHandoffWorkOrder?.assigned_agent || latestApprovedWorkOrder?.agent || latestApprovedWorkOrder?.recommended_agent || 'Codex', 60);
   const riskLevel = clamp(workOrder.risk_level || latestWorkOrderResult?.risk_level || latestHandoffWorkOrder?.risk_level || latestApprovedWorkOrder?.risk_level || 'low', 24);
+  const executor = clamp(
+    latestWorkOrderResult?.executor
+    || latestHandoffWorkOrder?.executor
+    || latestApprovedWorkOrder?.agent
+    || assignedAgent
+    || 'Codex',
+    60
+  );
+  const resultPost = clamp(
+    latestWorkOrderResult?.result_post
+    || latestWorkOrderResult?.resultPOST
+    || latestWorkOrderResult?.result_post_status
+    || latestHandoffWorkOrder?.result_post
+    || 'POST /api/work-orders/result 200',
+    120
+  );
+  const executionPath = clamp(
+    latestWorkOrderResult?.execution_path
+    || latestWorkOrderResult?.executionPath
+    || latestHandoffWorkOrder?.execution_path
+    || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
+    180
+  );
   const humanGateRequired = latestWorkOrderResult
     ? latestWorkOrderResult.human_gate_required !== false
     : latestHandoffWorkOrder
@@ -139,6 +164,9 @@ function buildWorkOrderResultDecision(input = {}) {
     reason: hasResult ? base.reason : base.reason,
     required_next_work: hasResult ? base.required_next_work : base.required_next_work,
     activity_status: hasResult ? base.activity_status : base.activity_status,
+    executor,
+    result_post: resultPost,
+    execution_path: executionPath,
     yes_count: Number.isFinite(Number(latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.yes_count) : 0,
     copy_count: Number.isFinite(Number(latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.copy_count) : 0,
     human_wait: Number.isFinite(Number(latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.human_wait) : 0,

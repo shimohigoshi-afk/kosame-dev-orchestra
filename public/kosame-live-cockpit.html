@@ -194,17 +194,17 @@ body {
   position: relative;
   z-index: 1;
 }
-.chat-outer { order: 9; }
-.support-details-outer { order: 10; }
+.chat-outer { order: 4; }
+.support-details-outer { order: 12; }
 .footer { order: 13; }
 .project-registry-shell { order: 2; display: grid; gap: 14px; }
-.ai-roster-shell { order: 3; }
-.active-task-board { order: 4; }
+.ai-roster-shell { order: 9; }
+.active-task-board { order: 3; }
 .handoff-result-strip { order: 5; }
-.shell-activity-strip { order: 6; }
-.runner-stream-strip { order: 7; }
-.agent-feed-strip { order: 8; }
-.dev-orchestra-focus-section { order: 11; }
+.shell-activity-strip { order: 10; }
+.runner-stream-strip { order: 6; }
+.agent-feed-strip { order: 7; }
+.dev-orchestra-focus-section { order: 8; }
 .assist-menu-strip { order: 11; }
 .chat-panel {
   scroll-margin-top: 20px;
@@ -1906,16 +1906,16 @@ h1 {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
   .project-registry-shell { order: 2; }
-  .active-task-board { order: 4; }
-  .chat-outer { order: 9; }
+  .active-task-board { order: 3; }
+  .chat-outer { order: 4; }
   .handoff-result-strip { order: 5; }
-  .runner-stream-strip { order: 7; }
-  .agent-feed-strip { order: 8; }
-  .dev-orchestra-focus-section { order: 11; }
-  .ai-roster-shell { order: 3; }
-  .shell-activity-strip { order: 6; }
+  .runner-stream-strip { order: 6; }
+  .agent-feed-strip { order: 7; }
+  .dev-orchestra-focus-section { order: 8; }
+  .ai-roster-shell { order: 9; }
+  .shell-activity-strip { order: 10; }
   .assist-menu-strip { order: 11; }
-  .support-details-outer { order: 10; }
+  .support-details-outer { order: 12; }
   .footer { order: 13; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
@@ -2010,7 +2010,7 @@ h1 {
     <!-- AI ROSTER (order 3, collapsible open) -->
     <section class="ai-roster-shell" style="margin-top:14px">
       <article class="panel ai-roster-panel">
-        <details class="chat-section-details" id="ai-roster-details" open>
+        <details class="chat-section-details" id="ai-roster-details">
           <summary class="chat-section-summary">AI ROSTER</summary>
           <div class="chat-section-body">
             <div id="ai-roster" class="ai-roster" aria-label="AI Roster"></div>

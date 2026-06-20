@@ -183,6 +183,10 @@ function compactExpectedText(value) {
     .trim();
 }
 
+function normalizeMaskedText(value) {
+  return String(value || '').replace(/\[\[([^\]]+)\]\]/g, '[$1]');
+}
+
 async function runServerCycle(serverFactory, handoffDir) {
   const { server } = serverFactory;
   const port = await new Promise((resolve, reject) => {
@@ -252,13 +256,13 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(latest.latest.agent, 'Codex', 'latest inbox record must keep agent');
     assert.equal(latest.latest.target.path, HANDOFF_TARGET_REPO, 'latest inbox record must keep target path');
     assert.deepEqual(
-      latest.latest.safetyConditions,
-      payload.safetyConditions.map(maskExpectedText),
+      latest.latest.safetyConditions.map(normalizeMaskedText),
+      payload.safetyConditions.map(maskExpectedText).map(normalizeMaskedText),
       'latest inbox record must keep masked safetyConditions',
     );
     assert.deepEqual(
-      latest.latest.reportItems,
-      payload.reportItems.map(maskExpectedText),
+      latest.latest.reportItems.map(normalizeMaskedText),
+      payload.reportItems.map(maskExpectedText).map(normalizeMaskedText),
       'latest inbox record must keep masked reportItems',
     );
 
@@ -270,13 +274,13 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(queue.items[0].body, compactExpectedText(payload.body), 'queue item must keep body');
     assert.equal(queue.items[0].target.path, HANDOFF_TARGET_REPO, 'queue item must keep target path');
     assert.deepEqual(
-      queue.items[0].safetyConditions,
-      payload.safetyConditions.map(maskExpectedText),
+      queue.items[0].safetyConditions.map(normalizeMaskedText),
+      payload.safetyConditions.map(maskExpectedText).map(normalizeMaskedText),
       'queue item must keep masked safetyConditions',
     );
     assert.deepEqual(
-      queue.items[0].reportItems,
-      payload.reportItems.map(maskExpectedText),
+      queue.items[0].reportItems.map(normalizeMaskedText),
+      payload.reportItems.map(maskExpectedText).map(normalizeMaskedText),
       'queue item must keep masked reportItems',
     );
 

@@ -165,6 +165,18 @@ function makeAdoptedPayload() {
   };
 }
 
+function maskExpectedText(value) {
+  return String(value || '')
+    .replace(/\bSecret\b/gi, '[secret]')
+    .replace(/\.env\b/gi, '[env]')
+    .replace(/\bcredentials?\b/gi, '[credentials]')
+    .replace(/\btoken\b/gi, '[token]')
+    .replace(/\bpassword\b/gi, '[password]')
+    .replace(/\bauthorization\b/gi, '[authorization]')
+    .replace(/\bbearer\b/gi, '[bearer]')
+    .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY');
+}
+
 async function runServerCycle(serverFactory, handoffDir) {
   const { server } = serverFactory;
   const port = await new Promise((resolve, reject) => {
@@ -198,7 +210,11 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(sanitized.agent, 'Codex', 'payload agent must be preserved');
     assert.equal(sanitized.target.path, HANDOFF_TARGET_REPO, 'payload target.path must preserve Dev Orchestra');
     assert.equal(sanitized.originalRequest, payload.originalRequest, 'payload originalRequest must be preserved');
-    assert.deepEqual(sanitized.safetyConditions, payload.safetyConditions, 'payload safetyConditions must be preserved');
+    assert.deepEqual(
+      sanitized.safetyConditions,
+      payload.safetyConditions.map(maskExpectedText),
+      'payload safetyConditions must be preserved with safety masking',
+    );
     assert.deepEqual(sanitized.reportItems, payload.reportItems, 'payload reportItems must be preserved');
 
     const response = await requestJson(port, '/api/handoff', payload, 'POST');
@@ -229,6 +245,16 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(latest.latest.body, payload.body, 'latest inbox record must keep body');
     assert.equal(latest.latest.agent, 'Codex', 'latest inbox record must keep agent');
     assert.equal(latest.latest.target.path, HANDOFF_TARGET_REPO, 'latest inbox record must keep target path');
+    assert.deepEqual(
+      latest.latest.safetyConditions,
+      payload.safetyConditions.map(maskExpectedText),
+      'latest inbox record must keep masked safetyConditions',
+    );
+    assert.deepEqual(
+      latest.latest.reportItems,
+      payload.reportItems.map(maskExpectedText),
+      'latest inbox record must keep masked reportItems',
+    );
 
     const queue = readHandoffQueue({ handoffDir });
     assert.equal(queue.count, 1, 'readHandoffQueue count must be 1');
@@ -237,6 +263,16 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(queue.items[0].originalRequest, payload.originalRequest, 'queue item must keep originalRequest');
     assert.equal(queue.items[0].body, payload.body, 'queue item must keep body');
     assert.equal(queue.items[0].target.path, HANDOFF_TARGET_REPO, 'queue item must keep target path');
+    assert.deepEqual(
+      queue.items[0].safetyConditions,
+      payload.safetyConditions.map(maskExpectedText),
+      'queue item must keep masked safetyConditions',
+    );
+    assert.deepEqual(
+      queue.items[0].reportItems,
+      payload.reportItems.map(maskExpectedText),
+      'queue item must keep masked reportItems',
+    );
 
     return { port, response, latest, queue };
   } finally {

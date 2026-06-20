@@ -1550,6 +1550,7 @@ h1 {
 }
 .support-details > summary {
   cursor: pointer;
+  user-select: none;
   list-style: none;
   display: flex;
   align-items: center;
@@ -1558,9 +1559,20 @@ h1 {
   color: var(--muted);
   font-size: 12px;
   letter-spacing: 0.07em;
+  transition: color 0.15s, background 0.15s;
+  border-radius: 14px;
+}
+.support-details[open] > summary {
+  border-radius: 14px 14px 0 0;
+  color: var(--fg, #e8e8e8);
+  background: rgba(255,255,255,0.04);
+}
+.support-details > summary:hover {
+  color: var(--fg, #e8e8e8);
+  background: rgba(255,255,255,0.05);
 }
 .support-details > summary::-webkit-details-marker { display: none; }
-.support-details > summary::after { content: '▾'; color: var(--accent); }
+.support-details > summary::after { content: '▾'; color: var(--accent); transition: transform 0.2s; }
 .support-details[open] > summary::after { content: '▴'; }
 .support-details-body { padding: 0 14px 14px; }
 

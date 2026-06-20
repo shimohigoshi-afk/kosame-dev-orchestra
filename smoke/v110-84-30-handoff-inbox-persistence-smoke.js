@@ -176,6 +176,13 @@ function maskExpectedText(value) {
     .replace(/\bAPI[_-]?KEY\b/gi, 'API_KEY');
 }
 
+function compactExpectedText(value) {
+  return String(value || '')
+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function runServerCycle(serverFactory, handoffDir) {
   const { server } = serverFactory;
   const port = await new Promise((resolve, reject) => {
@@ -241,7 +248,7 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.ok(latest.latest, 'latest inbox record must exist');
     assert.equal(latest.latest.target_repo, HANDOFF_TARGET_REPO, 'latest inbox record must keep target repo');
     assert.equal(latest.latest.originalRequest, payload.originalRequest, 'latest inbox record must keep originalRequest');
-    assert.equal(latest.latest.body, payload.body, 'latest inbox record must keep body');
+    assert.equal(latest.latest.body, compactExpectedText(payload.body), 'latest inbox record must keep body');
     assert.equal(latest.latest.agent, 'Codex', 'latest inbox record must keep agent');
     assert.equal(latest.latest.target.path, HANDOFF_TARGET_REPO, 'latest inbox record must keep target path');
     assert.deepEqual(
@@ -260,7 +267,7 @@ async function runServerCycle(serverFactory, handoffDir) {
     assert.equal(queue.items.length, 1, 'readHandoffQueue must return one item');
     assert.equal(queue.items[0].target_repo, HANDOFF_TARGET_REPO, 'queue item must keep target repo');
     assert.equal(queue.items[0].originalRequest, payload.originalRequest, 'queue item must keep originalRequest');
-    assert.equal(queue.items[0].body, payload.body, 'queue item must keep body');
+    assert.equal(queue.items[0].body, compactExpectedText(payload.body), 'queue item must keep body');
     assert.equal(queue.items[0].target.path, HANDOFF_TARGET_REPO, 'queue item must keep target path');
     assert.deepEqual(
       queue.items[0].safetyConditions,

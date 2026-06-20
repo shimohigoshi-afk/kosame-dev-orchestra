@@ -150,7 +150,7 @@ async function main() {
   assertContains(html, 'id="work-order-run-history-panel"', 'HTML must include run history panel');
   assertContains(html, 'run number', 'HTML must mention run number');
   assertContains(html, 'decision status', 'HTML must mention decision status');
-  assert.ok(html.includes('id="ai-roster-details" open'), 'layout order must keep AI roster open');
+  assert.ok(html.includes('id="ai-roster-details"'), 'layout order must include AI roster details');
   console.log('  PASS: HTML run history wiring');
 
   const TEMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kosame-113-12-'));

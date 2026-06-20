@@ -2,6 +2,7 @@
 'use strict';
 
 const { buildWorkOrderResultDecision, summarizeDecision } = require('./kosame-work-order-result-decision');
+const { summarizeOrchestraEvidence } = require('./kosame-orchestra-evidence');
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -146,6 +147,11 @@ function summarizeWorkOrderResult(workOrderResult) {
   const retryCount = Number.isFinite(Number(result.retry_count ?? result.retryCount)) ? Number(result.retry_count ?? result.retryCount) : 0;
   const recovered = !!result.recovered;
   const changedFiles = Array.isArray(result.changed_files) ? result.changed_files.slice(0, 3).map((item) => normalizeText(item)).filter(Boolean) : [];
+  const orchestraEvidence = result.orchestra_evidence && typeof result.orchestra_evidence === 'object'
+    ? summarizeOrchestraEvidence(result.orchestra_evidence)
+    : result.router_decision || result.routerDecision || result.assigned_lanes || result.lane_statuses
+      ? summarizeOrchestraEvidence(result)
+      : '';
   const parts = [
     `status=${status}`,
     `smoke=${smoke}`,
@@ -162,6 +168,7 @@ function summarizeWorkOrderResult(workOrderResult) {
     `retryCount=${retryCount}`,
     `recovered=${recovered ? 'yes' : 'no'}`,
   ];
+  if (orchestraEvidence) parts.push(orchestraEvidence);
   if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');
   if (summary) parts.push(`summary=${summary}`);
@@ -179,6 +186,11 @@ function summarizeWorkOrderDecision(workOrderDecision) {
 
 function summarizeOperationsBoard(board) {
   const current = board && typeof board === 'object' ? board : {};
+  const orchestraEvidence = current.orchestra_evidence && typeof current.orchestra_evidence === 'object'
+    ? summarizeOrchestraEvidence(current.orchestra_evidence)
+    : current.routerDecision || current.router_decision || current.assignedLanes || current.assigned_lanes || current.laneStatuses || current.lane_statuses
+      ? summarizeOrchestraEvidence(current)
+      : '';
   return [
     `zero-confirm=${normalizeText(current.route || 'zero-confirm')}`,
     `executor=${normalizeText(current.executor || 'claude-zero-confirm')}`,
@@ -199,6 +211,7 @@ function summarizeOperationsBoard(board) {
     `latestDecision=${normalizeText(current.latestDecision || 'wait_for_result')}`,
     `latestTag=${normalizeText(current.latestTag || '—')}`,
     `latestCommit=${normalizeText(current.latestCommit || '—')}`,
+    orchestraEvidence,
   ].join(' / ');
 }
 
@@ -416,6 +429,14 @@ function buildConsoleContextSummary(snapshot) {
     lines.push(`latestCommit=${latestCommit}`);
   }
 
+  const orchestraEvidence = snapshot.latestWorkOrderDecision?.orchestra_evidence
+    || snapshot.latestWorkOrderResult?.orchestra_evidence
+    || snapshot.operationsBoard?.orchestra_evidence
+    || null;
+  if (orchestraEvidence) {
+    lines.push(`orchestraEvidence=${summarizeOrchestraEvidence(orchestraEvidence)}`);
+  }
+
   lines.push(`releaseTag=v${currentVersion}`);
   lines.push('excluded=redacted sensitive categories');
 
@@ -430,6 +451,7 @@ function buildConsoleContextSummary(snapshot) {
 
 module.exports = {
   buildConsoleContextSummary,
+  summarizeOrchestraEvidence,
   summarizeOperationsBoard,
   summarizeShellActivity,
   summarizeWorkOrderHandoff,

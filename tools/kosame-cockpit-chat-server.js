@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOWN, assertNoZeroConfirmRequests } = require('./kosame-prompt-lint');
+const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 
@@ -654,6 +655,9 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
   const contextLines = [];
   if (normalizeContent(input.message)) contextLines.push(`ユーザー要望: ${normalizeContent(input.message)}`);
   if (normalizeContent(snapshotSummary)) contextLines.push(`参考コンテキスト: ${normalizeContent(snapshotSummary)}`);
+  const orchestraEvidence = buildOrchestraEvidence({
+    router_decision: 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first',
+  });
 
   return [
     AUTO_YES_CONTRACT,
@@ -680,7 +684,10 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '',
     '保持項目:',
     '- executor / route / autoResponder / promptClassifier / policyKernel / promptFirewall / safetyStopDetector',
+    '- routerDecision / assignedLanes / laneStatuses / orchestraEvidence',
     '- originalRequest / target / agent / risk / safetyConditions / reportItems / body',
+    '- PM Lane / Implementation Lane / Safety Lane / Executor Policy Lane / Prompt Firewall Lane / Auto-Responder Lane / Audit Lane / Smoke Lane / Verify Lane / UI/Console Lane / Result Decision Lane / Release Lane',
+    `- Orchestra証跡: ${orchestraEvidence.summary}`,
     '',
     '報告項目:',
     '- 変更ファイル一覧',
@@ -739,10 +746,27 @@ function buildWorkOrderReply(input, snapshotSummary) {
   const reportItems = Array.isArray(draft && (draft.reportItems || draft.report_items))
     ? draft.reportItems || draft.report_items
     : [];
+  const orchestraEvidence = buildOrchestraEvidence({
+    router_decision: 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first',
+    assigned_lanes: [
+      'PM Lane',
+      'Implementation Lane',
+      'Safety Lane',
+      'Executor Policy Lane',
+      'Prompt Firewall Lane',
+      'Auto-Responder Lane',
+      'Audit Lane',
+      'Smoke Lane',
+      'Verify Lane',
+      'UI/Console Lane',
+      'Result Decision Lane',
+      'Release Lane',
+    ],
+  });
 
   return {
-    reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が自動でディスパッチします。`,
-    suggested_action: '採用すると、KOSAME Runner / dispatch watcher が zero-confirm で自動ディスパッチします。',
+    reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が自動でディスパッチします。Orchestra証跡を Run History / Result Decision / Operations Board に残します。`,
+    suggested_action: '採用すると、KOSAME Runner / dispatch watcher が zero-confirm で自動ディスパッチします。Orchestra証跡も記録されます。',
     human_gate_required: true,
     work_order: {
       title,
@@ -763,6 +787,14 @@ function buildWorkOrderReply(input, snapshotSummary) {
       resultDecisionRequired: true,
       operationsBoardRequired: true,
       executionCommand: 'claude --dangerously-skip-permissions -p',
+      router_decision: orchestraEvidence.router_decision,
+      routerDecision: orchestraEvidence.router_decision,
+      assigned_lanes: orchestraEvidence.assigned_lanes,
+      assignedLanes: orchestraEvidence.assigned_lanes,
+      lane_statuses: orchestraEvidence.lane_statuses,
+      laneStatuses: orchestraEvidence.lane_statuses,
+      orchestra_evidence: orchestraEvidence,
+      orchestraEvidence,
       target_repo: target.repo,
       risk_level: target.riskLevel,
       requires_human_confirmation: true,

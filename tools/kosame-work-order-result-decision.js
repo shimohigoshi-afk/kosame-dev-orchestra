@@ -28,6 +28,17 @@ function summarizeDecision(decision) {
   const autoApprovedCount = Number.isFinite(Number(current.auto_approved_count ?? current.autoApprovedCount)) ? Number(current.auto_approved_count ?? current.autoApprovedCount) : 0;
   const autoBlockedCount = Number.isFinite(Number(current.auto_blocked_count ?? current.autoBlockedCount)) ? Number(current.auto_blocked_count ?? current.autoBlockedCount) : 0;
   const retryCount = Number.isFinite(Number(current.retry_count ?? current.retryCount)) ? Number(current.retry_count ?? current.retryCount) : 0;
+  const routerDecision = normalizeText(current.router_decision || current.routerDecision || current.orchestra_evidence?.router_decision || '');
+  const assignedLanes = Array.isArray(current.assigned_lanes)
+    ? current.assigned_lanes.join(' | ')
+    : Array.isArray(current.orchestra_evidence?.assigned_lanes)
+      ? current.orchestra_evidence.assigned_lanes.join(' | ')
+      : '';
+  const laneStatuses = Array.isArray(current.lane_statuses)
+    ? current.lane_statuses.map((lane) => `${lane.label || lane.id || 'lane'}=${lane.status || 'active'}`).join(' / ')
+    : Array.isArray(current.orchestra_evidence?.lane_statuses)
+      ? current.orchestra_evidence.lane_statuses.map((lane) => `${lane.label || lane.id || 'lane'}=${lane.status || 'active'}`).join(' / ')
+      : '';
   const parts = [
     `status=${normalizeText(current.decision_status || current.nextRecommendedAction || 'wait_for_result')}`,
     `next=${normalizeText(current.nextRecommendedAction || 'wait_for_result')}`,
@@ -43,6 +54,9 @@ function summarizeDecision(decision) {
     `自動遮断回数=${autoBlockedCount}`,
     `retryCount=${retryCount}`,
   ];
+  if (routerDecision) parts.push(`routerDecision=${routerDecision}`);
+  if (assignedLanes) parts.push(`assignedLanes=${assignedLanes}`);
+  if (laneStatuses) parts.push(`laneStatuses=${laneStatuses}`);
   const reason = clamp(current.reason || current.summary || '', 120);
   if (reason) parts.push(`reason=${reason}`);
   const required = clamp(current.required_next_work || '', 80);
@@ -174,7 +188,15 @@ function buildWorkOrderResultDecision(input = {}) {
       ? latestHandoffWorkOrder.human_gate_required !== false
       : latestApprovedWorkOrder
         ? latestApprovedWorkOrder.requires_human_confirmation !== false
-        : base.human_gate_required;
+    : base.human_gate_required;
+  const orchestraEvidence = latestWorkOrderResult?.orchestra_evidence
+    || latestHandoffWorkOrder?.orchestra_evidence
+    || latestApprovedWorkOrder?.orchestra_evidence
+    || {
+      router_decision: input.router_decision || input.routerDecision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first',
+      assigned_lanes: Array.isArray(input.assigned_lanes) ? input.assigned_lanes : [],
+      lane_statuses: Array.isArray(input.lane_statuses) ? input.lane_statuses : [],
+    };
 
   const decision = {
     title,
@@ -203,6 +225,13 @@ function buildWorkOrderResultDecision(input = {}) {
     retry_count: Number.isFinite(Number(latestWorkOrderResult?.retry_count ?? latestWorkOrderResult?.retryCount)) ? Number(latestWorkOrderResult.retry_count ?? latestWorkOrderResult.retryCount) : 0,
     recovered: !!(latestWorkOrderResult?.recovered || latestHandoffWorkOrder?.recovered),
     prompt_type: promptType,
+    orchestra_evidence: orchestraEvidence,
+    router_decision: normalizeText(orchestraEvidence.router_decision || input.router_decision || input.routerDecision || ''),
+    routerDecision: normalizeText(orchestraEvidence.router_decision || input.routerDecision || input.router_decision || ''),
+    assigned_lanes: Array.isArray(orchestraEvidence.assigned_lanes) ? orchestraEvidence.assigned_lanes : [],
+    assignedLanes: Array.isArray(orchestraEvidence.assigned_lanes) ? orchestraEvidence.assigned_lanes : [],
+    lane_statuses: Array.isArray(orchestraEvidence.lane_statuses) ? orchestraEvidence.lane_statuses : [],
+    laneStatuses: Array.isArray(orchestraEvidence.lane_statuses) ? orchestraEvidence.lane_statuses : [],
   };
 
   decision.summary = summarizeDecision(decision);

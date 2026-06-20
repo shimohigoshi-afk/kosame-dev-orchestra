@@ -196,7 +196,7 @@ body {
 }
 .chat-outer { order: 9; }
 .support-details-outer { order: 10; }
-.footer { order: 11; }
+.footer { order: 13; }
 .project-registry-shell { order: 2; display: grid; gap: 14px; }
 .ai-roster-shell { order: 3; }
 .active-task-board { order: 4; }
@@ -204,6 +204,8 @@ body {
 .shell-activity-strip { order: 6; }
 .runner-stream-strip { order: 7; }
 .agent-feed-strip { order: 8; }
+.dev-orchestra-focus-section { order: 11; }
+.assist-menu-strip { order: 11; }
 .chat-panel {
   scroll-margin-top: 20px;
 }
@@ -1904,15 +1906,17 @@ h1 {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
   .project-registry-shell { order: 2; }
-  .ai-roster-shell { order: 3; }
   .active-task-board { order: 4; }
+  .chat-outer { order: 9; }
   .handoff-result-strip { order: 5; }
-  .shell-activity-strip { order: 6; }
   .runner-stream-strip { order: 7; }
   .agent-feed-strip { order: 8; }
-  .chat-outer { order: 9; }
+  .dev-orchestra-focus-section { order: 11; }
+  .ai-roster-shell { order: 3; }
+  .shell-activity-strip { order: 6; }
+  .assist-menu-strip { order: 11; }
   .support-details-outer { order: 10; }
-  .footer { order: 11; }
+  .footer { order: 13; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -1986,7 +1990,10 @@ h1 {
         <h2>PROJECT STRIP</h2>
         <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
       </article>
+    </section>
 
+    <!-- DEV ORCHESTRA STATUS (order 8) -->
+    <section class="dev-orchestra-focus-section" id="dev-orchestra-focus-section" style="margin-top:8px">
       <article class="panel project-focus-panel" id="project-focus-card">
         <details class="project-focus-collapse" id="project-focus-collapse">
           <summary class="project-focus-collapse-toggle">
@@ -2117,35 +2124,43 @@ h1 {
     <!-- Active Runner Stream (order 7) -->
     <section class="runner-stream-strip" id="runner-stream-strip" style="margin-top:8px">
       <article class="panel">
-        <h2 class="task-board-section-title">ACTIVE RUNNER STREAM <span aria-hidden="true" style="display:none">NEXT TASK FEED</span></h2>
-        <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
-        <div class="task-motion-grid" style="margin-top:10px">
-          <div class="subpanel task-motion-panel">
-            <h3>RUNNING</h3>
-            <div id="feed-running" class="stack">読み込み中...</div>
+        <details class="support-details" id="runner-stream-details">
+          <summary>ACTIVE RUNNER STREAM <span aria-hidden="true" style="display:none">NEXT TASK FEED</span></summary>
+          <div class="support-details-body" style="padding:0 0 8px">
+            <div class="task-board-meta small">最終 feed: <span id="feed-last-generated">—</span></div>
+            <div class="task-motion-grid" style="margin-top:10px">
+              <div class="subpanel task-motion-panel">
+                <h3>RUNNING</h3>
+                <div id="feed-running" class="stack">読み込み中...</div>
+              </div>
+              <div class="subpanel task-motion-panel">
+                <h3>WAITING FOR AI</h3>
+                <div id="feed-waiting" class="stack">読み込み中...</div>
+              </div>
+              <div class="subpanel task-motion-panel">
+                <h3>HUMAN GATE READY</h3>
+                <div id="feed-human-gate" class="stack">読み込み中...</div>
+              </div>
+              <div class="subpanel task-motion-panel">
+                <h3>NEXT UP</h3>
+                <div id="feed-selected" class="stack">読み込み中...</div>
+              </div>
+            </div>
           </div>
-          <div class="subpanel task-motion-panel">
-            <h3>WAITING FOR AI</h3>
-            <div id="feed-waiting" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel task-motion-panel">
-            <h3>HUMAN GATE READY</h3>
-            <div id="feed-human-gate" class="stack">読み込み中...</div>
-          </div>
-          <div class="subpanel task-motion-panel">
-            <h3>NEXT UP</h3>
-            <div id="feed-selected" class="stack">読み込み中...</div>
-          </div>
-        </div>
+        </details>
       </article>
     </section>
 
     <!-- Agent Event Feed (order 8) -->
     <section class="agent-feed-strip" id="agent-feed-strip" style="margin-top:8px">
       <article class="panel">
-        <h2 class="task-board-section-title">AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></h2>
-        <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
-        <div id="agent-event-feed" class="agent-event-feed"></div>
+        <details class="support-details" id="agent-feed-details">
+          <summary>AGENT SHORT CONVERSATION FEED <span aria-hidden="true" style="display:none">AGENT EVENT FEED</span></summary>
+          <div class="support-details-body" style="padding:0 0 8px">
+            <div class="task-board-meta small">テンプレート: START / RUNNING / VERIFY / VERIFY_PASS / HUMAN_GATE / DONE / ERROR / WAITING / BLOCKED</div>
+            <div id="agent-event-feed" class="agent-event-feed"></div>
+          </div>
+        </details>
       </article>
     </section>
 
@@ -2183,6 +2198,14 @@ h1 {
           <div class="chat-btn chat-command-ghost" id="chat-summarize">dispatch待ちを要約</div>
           <div class="small" style="color:var(--muted)">Enterで送信 / Shift+Enterで改行</div>
         </div>
+        <span aria-hidden="true" style="display:none">この内容で進める</span>
+        <span aria-hidden="true" style="display:none">この案で進める</span>
+      </article>
+    </section>
+
+    <!-- 補助メニュー (order 11) -->
+    <section class="assist-menu-strip" id="assist-menu-strip" style="margin-top:8px">
+      <article class="panel">
         <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル">
           <summary class="chat-assist-shell-summary">補助メニュー</summary>
           <div class="chat-assist-shell-body">
@@ -2204,8 +2227,6 @@ h1 {
             </div>
           </div>
         </details>
-        <span aria-hidden="true" style="display:none">この内容で進める</span>
-        <span aria-hidden="true" style="display:none">この案で進める</span>
       </article>
     </section>
 
@@ -5043,6 +5064,24 @@ function formatZeroConfirmCounterLabel(value) {
   return Number.isFinite(Number(value)) ? Number(value) : 0;
 }
 
+function formatOrchestraLaneList(value) {
+  if (Array.isArray(value) && value.length) return value.join(' | ');
+  return '—';
+}
+
+function formatOrchestraLaneStatuses(value) {
+  if (!Array.isArray(value) || !value.length) return '—';
+  return value.map((lane) => `${lane.label || lane.id || 'lane'}=${lane.status || 'active'}`).join(' / ');
+}
+
+function getOrchestraEvidence(current = {}) {
+  return current.orchestra_evidence || {
+    router_decision: current.router_decision || current.routerDecision || '',
+    assigned_lanes: Array.isArray(current.assigned_lanes) ? current.assigned_lanes : Array.isArray(current.assignedLanes) ? current.assignedLanes : [],
+    lane_statuses: Array.isArray(current.lane_statuses) ? current.lane_statuses : Array.isArray(current.laneStatuses) ? current.laneStatuses : [],
+  };
+}
+
 function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-result-decision-panel');
   const statusNode = document.getElementById('work-order-result-decision-status');
@@ -5054,6 +5093,7 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     statusNode.textContent = 'Result Decision: まだ判定対象はありません。';
     return;
   }
+  const orchestraEvidence = getOrchestraEvidence(current);
 
   statusNode.textContent = `Result Decision: ${current.title || '—'} / ${formatDecisionStatusLabel(current.decision_status || 'wait_for_result')}`;
 
@@ -5082,6 +5122,7 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     ['human gate', current.human_gate_required ? 'required' : 'optional'],
     ['executor', current.executor || current.assigned_agent || 'Codex'],
     ['resultPOST', current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'],
+    ['router', orchestraEvidence.router_decision || current.router_decision || current.routerDecision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
     chip.textContent = `${label}: ${value}`;
@@ -5109,6 +5150,9 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `自動遮断回数: ${formatZeroConfirmCounterLabel(current.auto_blocked_count ?? current.autoBlockedCount)}`,
     `retryCount: ${formatZeroConfirmCounterLabel(current.retry_count ?? current.retryCount)}`,
     `recovered: ${(current.recovered || false) ? 'yes' : 'no'}`,
+    `router decision: ${orchestraEvidence.router_decision || current.router_decision || current.routerDecision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'}`,
+    `assigned lanes: ${formatOrchestraLaneList(orchestraEvidence.assigned_lanes || current.assigned_lanes || current.assignedLanes)}`,
+    `lane statuses: ${formatOrchestraLaneStatuses(orchestraEvidence.lane_statuses || current.lane_statuses || current.laneStatuses)}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';
@@ -5132,6 +5176,7 @@ function renderOperationsBoard(snapshot = latestSnapshot || {}) {
   node.innerHTML = '';
 
   const board = snapshot.operationsBoard || {};
+  const orchestraEvidence = board.orchestra_evidence || {};
   statusNode.textContent = board.summary || 'Operations Board: まだ利用可能な状態ではありません。';
 
   const card = document.createElement('div');
@@ -5163,6 +5208,7 @@ function renderOperationsBoard(snapshot = latestSnapshot || {}) {
     ['startupAudit', board.startupAudit || 'PASS'],
     ['queue', board.queueHealth || 'ok'],
     ['watcher', board.watcherStatus || 'unknown'],
+    ['router', board.routerDecision || orchestraEvidence.router_decision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
     chip.textContent = `${label}: ${value}`;
@@ -5181,6 +5227,8 @@ function renderOperationsBoard(snapshot = latestSnapshot || {}) {
     `latest decision: ${board.latestDecision || 'wait_for_result'}`,
     `latest tag: ${board.latestTag || '—'}`,
     `latest commit: ${board.latestCommit || '—'}`,
+    `assigned lanes: ${formatOrchestraLaneList(board.assignedLanes || orchestraEvidence.assigned_lanes)}`,
+    `lane statuses: ${formatOrchestraLaneStatuses(board.laneStatuses || orchestraEvidence.lane_statuses)}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';
@@ -5202,7 +5250,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     statusNode.textContent = 'Run History: まだ run はありません。';
     const empty = document.createElement('div');
     empty.className = 'work-order-run-history-empty';
-    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / 自動YES回数 / 自動遮断回数 / retryCount / recovered / resultPOST / decision status / timestamp を表示します。';
+    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / 自動YES回数 / 自動遮断回数 / retryCount / recovered / resultPOST / decision status / router decision / assigned lanes / lane statuses / timestamp を表示します。';
     node.appendChild(empty);
     return;
   }
@@ -5242,6 +5290,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
 
     const lines = document.createElement('div');
     lines.className = 'chat-work-order-decision-lines';
+    const orchestraEvidence = run.orchestra_evidence || {};
     [
       `timestamp: ${run.timestamp || run.updated_at || '—'}`,
       `承認要求回数: ${formatZeroConfirmCounterLabel(run.approval_request_count ?? run.yes_count)}`,
@@ -5253,6 +5302,9 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
       `recovered: ${(run.recovered || false) ? 'yes' : 'no'}`,
       `resultPOST: ${run.result_post || 'POST /api/work-orders/result 200'}`,
       `decision status: ${run.decision_status || 'wait_for_result'}`,
+      `router decision: ${run.router_decision || orchestraEvidence.router_decision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'}`,
+      `assigned lanes: ${formatOrchestraLaneList(run.assigned_lanes || orchestraEvidence.assigned_lanes)}`,
+      `lane statuses: ${formatOrchestraLaneStatuses(run.lane_statuses || orchestraEvidence.lane_statuses)}`,
     ].forEach((textLine) => {
       const line = document.createElement('div');
       line.className = 'chat-work-order-decision-line';

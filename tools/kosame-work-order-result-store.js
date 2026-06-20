@@ -16,6 +16,10 @@ const {
   buildWorkOrderResultDecision,
   normalizeOutcome,
 } = require('./kosame-work-order-result-decision');
+const {
+  buildOrchestraEvidence,
+  summarizeOrchestraEvidence,
+} = require('./kosame-orchestra-evidence');
 
 const DEFAULT_RESULT_LOG_PATH = path.join(os.homedir(), '.kosame', 'work-order-results.jsonl');
 const RESULT_LOG_PATH_ENV = 'KOSAME_WORK_ORDER_RESULT_LOG_PATH';
@@ -154,6 +158,7 @@ function buildSafeResultText(input = {}) {
   const retryCount = Number.isFinite(Number(input.retry_count ?? input.retryCount)) ? Number(input.retry_count ?? input.retryCount) : 0;
   const recovered = !!input.recovered;
   const resultPostRetryCount = Number.isFinite(Number(input.result_post_retry_count ?? input.resultPostRetryCount)) ? Number(input.result_post_retry_count ?? input.resultPostRetryCount) : 0;
+  const orchestraEvidence = buildOrchestraEvidence(input.orchestra_evidence || input.orchestraEvidence || input);
   const rawCheck = [
     summary,
     notes,
@@ -220,6 +225,13 @@ function buildSafeResultText(input = {}) {
     result_post_retry_count: resultPostRetryCount,
     result_post: resultPost || 'POST /api/work-orders/result 200',
     execution_path: executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
+    orchestra_evidence: orchestraEvidence,
+    router_decision: truncate(input.router_decision || input.routerDecision || orchestraEvidence.router_decision, 200),
+    routerDecision: truncate(input.routerDecision || input.router_decision || orchestraEvidence.router_decision, 200),
+    assigned_lanes: orchestraEvidence.assigned_lanes,
+    assignedLanes: orchestraEvidence.assigned_lanes,
+    lane_statuses: orchestraEvidence.lane_statuses,
+    laneStatuses: orchestraEvidence.lane_statuses,
   };
 }
 
@@ -235,6 +247,7 @@ function normalizeWorkOrderResultRecord(record) {
   if (!workOrderId || !title || !assignedAgent) return null;
   const smoke = normalizeOutcome(record.smoke_result);
   const verify = normalizeOutcome(record.verify_result);
+  const orchestraEvidence = buildOrchestraEvidence(record.orchestra_evidence || record);
   const decision = buildWorkOrderResultDecision({
     latestWorkOrderResult: {
       result_status: status,
@@ -302,6 +315,13 @@ function normalizeWorkOrderResultRecord(record) {
     route: truncate(record.route || record.execution_route || 'zero-confirm', 40),
     result_post: truncate(record.result_post || record.resultPOST || 'POST /api/work-orders/result 200', 120),
     execution_path: truncate(record.execution_path || record.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision', 180),
+    orchestra_evidence: orchestraEvidence,
+    router_decision: truncate(record.router_decision || record.routerDecision || orchestraEvidence.router_decision, 200),
+    routerDecision: truncate(record.routerDecision || record.router_decision || orchestraEvidence.router_decision, 200),
+    assigned_lanes: Array.isArray(record.assigned_lanes) ? record.assigned_lanes : orchestraEvidence.assigned_lanes,
+    assignedLanes: Array.isArray(record.assignedLanes) ? record.assignedLanes : Array.isArray(record.assigned_lanes) ? record.assigned_lanes : orchestraEvidence.assigned_lanes,
+    lane_statuses: Array.isArray(record.lane_statuses) ? record.lane_statuses : orchestraEvidence.lane_statuses,
+    laneStatuses: Array.isArray(record.laneStatuses) ? record.laneStatuses : Array.isArray(record.lane_statuses) ? record.lane_statuses : orchestraEvidence.lane_statuses,
     timestamp: normalizeText(record.timestamp || record.created_at || ''),
     updated_at: normalizeText(record.updated_at || record.timestamp || record.created_at || ''),
     source: truncate(record.source || 'kosame-console', 40),
@@ -367,6 +387,13 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     prompt_type: latestResult.prompt_type,
     result_post: latestResult.result_post,
     execution_path: latestResult.execution_path,
+    orchestra_evidence: latestResult.orchestra_evidence,
+    router_decision: latestResult.router_decision,
+    routerDecision: latestResult.routerDecision || latestResult.router_decision,
+    assigned_lanes: latestResult.assigned_lanes,
+    assignedLanes: latestResult.assignedLanes || latestResult.assigned_lanes,
+    lane_statuses: latestResult.lane_statuses,
+    laneStatuses: latestResult.laneStatuses || latestResult.lane_statuses,
     result_timestamp: latestResult.timestamp,
     result_record: latestResult,
   };
@@ -431,6 +458,7 @@ function recordWorkOrderResult(input = {}, options = {}) {
   }
 
   const safeFields = buildSafeResultText(input);
+  const orchestraEvidence = safeFields.orchestra_evidence || buildOrchestraEvidence(input.orchestra_evidence || input);
   const now = new Date().toISOString();
   const record = {
     result_id: crypto.randomUUID(),
@@ -463,6 +491,13 @@ function recordWorkOrderResult(input = {}, options = {}) {
     prompt_type: safeFields.prompt_type,
     result_post: safeFields.result_post,
     execution_path: safeFields.execution_path,
+    orchestra_evidence: orchestraEvidence,
+    router_decision: safeFields.router_decision,
+    routerDecision: safeFields.routerDecision,
+    assigned_lanes: safeFields.assigned_lanes,
+    assignedLanes: safeFields.assignedLanes,
+    lane_statuses: safeFields.lane_statuses,
+    laneStatuses: safeFields.laneStatuses,
     source: truncate(input.source || sourceWorkOrder.source || 'kosame-console', 40),
   };
 

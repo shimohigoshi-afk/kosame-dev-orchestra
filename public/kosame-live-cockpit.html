@@ -1576,6 +1576,44 @@ h1 {
 .support-details[open] > summary::after { content: '▴'; }
 .support-details-body { padding: 0 14px 14px; }
 
+/* ===== Chat section collapsible details ===== */
+.chat-section-details {
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+}
+.chat-section-details > summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.15s, background 0.15s;
+  border-radius: 10px;
+}
+.chat-section-details[open] > summary {
+  border-radius: 10px 10px 0 0;
+  color: var(--fg, #e8e8e8);
+  background: rgba(255,255,255,0.04);
+}
+.chat-section-details > summary:hover {
+  color: var(--fg, #e8e8e8);
+  background: rgba(255,255,255,0.05);
+}
+.chat-section-details > summary::-webkit-details-marker { display: none; }
+.chat-section-details > summary::after { content: '▾'; color: var(--accent); transition: transform 0.2s; }
+.chat-section-details[open] > summary::after { content: '▴'; }
+.chat-section-body { padding: 0 0 8px; }
+
 /* ===== Running task animation ===== */
 .running-task-wrapper {
   position: relative;
@@ -1940,12 +1978,27 @@ h1 {
           <span id="chat-llama-audit-badge" class="chat-status-badge warn">Llama audit: missing</span>
         </div>
         <div id="work-order-approval-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
-        <div id="work-order-handoff-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
-        <div id="handoff-inbox-status" class="small" style="margin: -4px 0 10px;color:var(--muted)"></div>
-        <div id="handoff-inbox-panel" class="handoff-inbox-panel"></div>
-        <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
-        <div id="work-order-result-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
-        <div id="work-order-result-panel" class="work-order-result-panel"></div>
+        <details class="chat-section-details" id="handoff-inbox-details">
+          <summary class="chat-section-summary">Handoff Inbox Bridge</summary>
+          <div class="chat-section-body">
+            <div id="handoff-inbox-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="handoff-inbox-panel" class="handoff-inbox-panel"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="handoff-queue-details">
+          <summary class="chat-section-summary">HANDOFF QUEUE</summary>
+          <div class="chat-section-body">
+            <div id="work-order-handoff-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-handoff-queue" class="work-order-handoff-queue"></div>
+          </div>
+        </details>
+        <details class="chat-section-details" id="work-order-result-details">
+          <summary class="chat-section-summary">WORK ORDER RESULT</summary>
+          <div class="chat-section-body">
+            <div id="work-order-result-status" class="small" style="margin: 6px 12px 6px;color:var(--muted)"></div>
+            <div id="work-order-result-panel" class="work-order-result-panel"></div>
+          </div>
+        </details>
         <div id="work-order-result-decision-status" class="small" style="margin: 0 0 10px;color:var(--muted)"></div>
         <div id="work-order-result-decision-panel" class="work-order-decision-panel"></div>
         <div id="chat-thread" class="chat-thread"></div>

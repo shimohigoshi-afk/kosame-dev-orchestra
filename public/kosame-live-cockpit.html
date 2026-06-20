@@ -5071,21 +5071,73 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
   buttonNode.textContent = '採用中...';
   statusNode.textContent = '採用処理中です...';
   try {
-    const response = await fetch('/api/work-orders/approve', {
+    // Step 1: Approve
+    const approveRes = await fetch('/api/work-orders/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ work_order: workOrder }),
     });
-    const data = await response.json();
-    if (!data.ok) {
-      throw new Error(data.error || '承認に失敗しました。');
+    const approveData = await approveRes.json();
+    if (!approveData.ok) {
+      throw new Error(approveData.error || '承認に失敗しました。');
     }
     workOrder.approval_state = 'approved';
     workOrder.approval_label = '採用済み / dispatch待ち';
-    workOrder.approval_record = data.approval || data.latestApprovedWorkOrder || null;
+    workOrder.approval_record = approveData.approval || approveData.latestApprovedWorkOrder || null;
     if (!latestSnapshot || typeof latestSnapshot !== 'object') latestSnapshot = {};
-    latestSnapshot.latestApprovedWorkOrder = data.latestApprovedWorkOrder || data.approval || workOrder.approval_record || null;
-    statusNode.textContent = '採用済み / dispatch待ち';
+    latestSnapshot.latestApprovedWorkOrder = approveData.latestApprovedWorkOrder || approveData.approval || workOrder.approval_record || null;
+    statusNode.textContent = '採用済み → Handoff記録中...';
+    buttonNode.textContent = '自動ディスパッチ中...';
+
+    // Step 2: Auto-record handoff (no separate button click needed)
+    const approved = latestSnapshot.latestApprovedWorkOrder;
+    if (approved) {
+      try {
+        const handoffRes = await fetch('/api/work-orders/handoff', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'handed_to_agent',
+            work_order_id: approved.approval_id || '',
+            assigned_agent: approved.agent || workOrder.agent || 'Codex',
+            work_order: approved,
+          }),
+        });
+        const handoffData = await handoffRes.json();
+        if (handoffData.ok) {
+          latestSnapshot.latestHandoffWorkOrder = handoffData.latestHandoffWorkOrder || latestSnapshot.latestHandoffWorkOrder || null;
+        }
+      } catch { /* best-effort: handoff failure does not block UI */ }
+
+      // Step 3: Auto-save to Handoff Inbox (for codex:watch dispatch)
+      statusNode.textContent = '採用済み → Inbox保存中...';
+      try {
+        const inboxPayload = buildHandoffInboxPayload(latestSnapshot);
+        if (inboxPayload) {
+          const bridgeUrl = buildHandoffInboxBridgeUrl('/api/handoff');
+          const inboxRes = await fetch(bridgeUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            cache: 'no-store',
+            body: JSON.stringify(inboxPayload),
+          });
+          const inboxData = await inboxRes.json();
+          if (inboxData.ok) {
+            writeHandoffInboxBridgeState({
+              lastStatus: 'success',
+              lastSentAt: inboxData.saved_at || new Date().toISOString(),
+              lastTargetUrl: bridgeUrl,
+              lastPath: inboxData.latestPath || '',
+              lastHandoffDir: inboxData.handoffDir || '',
+              lastError: '',
+            });
+          }
+        }
+      } catch { /* best-effort: inbox failure does not block UI */ }
+    }
+
+    statusNode.textContent = '採用済み / 自動ディスパッチ済み';
     buttonNode.textContent = '採用済み';
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);

@@ -1,6 +1,7 @@
 # Runtime outputs (auto-generated, never commit)
 dispatch-result-*.json
 .kosame-handoff/
+.claude/settings.local.json
 
 # Executor dummy artifacts
 *executor-dummy*

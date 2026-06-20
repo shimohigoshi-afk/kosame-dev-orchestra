@@ -32,6 +32,32 @@ const REQUIRED_SAFETY_KEYWORDS = [
   '対象repo以外を触らない',
 ];
 
+// Injected prefix that guarantees required safety keywords are present in every dispatch prompt.
+// The work order body (from latest.md) may be compacted/truncated and lose the tail conditions,
+// so the watcher always prepends these conditions itself.
+const DISPATCH_SAFETY_PREAMBLE = [
+  '# KOSAME自動ディスパッチ',
+  '',
+  '必須安全条件:',
+  '- 機密情報・環境変数ファイル・認証情報・APIキーは読まない',
+  '- 外部APIを呼ばない',
+  '- 対象repo以外を触らない',
+  '',
+].join('\n');
+
+const DISPATCH_RESULT_SUFFIX = [
+  '',
+  '---',
+  '上記作業票に従って実装してください。完了後に必ず以下フォーマットで結果を出力してください:',
+  'KOSAME_RESULT_BEGIN',
+  '{"result_status":"success","smoke_result":"PASS","verify_result":"PASS","result_summary":"完了"}',
+  'KOSAME_RESULT_END',
+].join('\n');
+
+function buildDispatchPrompt(workOrderMd) {
+  return `${DISPATCH_SAFETY_PREAMBLE}## 作業票\n\n${workOrderMd}${DISPATCH_RESULT_SUFFIX}`;
+}
+
 function readQueueCount(handoffDir) {
   const p = path.join(handoffDir, QUEUE_FILENAME);
   if (!fs.existsSync(p)) return 0;
@@ -140,12 +166,13 @@ function runClaude(prompt, timeoutMs) {
 }
 
 async function dispatchWorkOrder(entry, handoffDir, options) {
-  const prompt = readLatestMd(handoffDir) || entry.prompt || entry.body || '';
-  if (!prompt.trim()) {
+  const workOrderMd = readLatestMd(handoffDir) || entry.prompt || entry.body || '';
+  if (!workOrderMd.trim()) {
     process.stderr.write('[watcher] No prompt in latest.md\n');
     return;
   }
 
+  const prompt = buildDispatchPrompt(workOrderMd);
   const safety = safetyPreFlight(prompt);
   if (!safety.ok) {
     process.stderr.write(`[watcher] ⛔ SAFETY STOP — ${safety.reason}\n`);
@@ -242,6 +269,7 @@ module.exports = {
   readLatestEntry,
   dispatchWorkOrder,
   safetyPreFlight,
+  buildDispatchPrompt,
   DISPATCH_SAFETY_STOP_PATTERNS,
   REQUIRED_SAFETY_KEYWORDS,
 };

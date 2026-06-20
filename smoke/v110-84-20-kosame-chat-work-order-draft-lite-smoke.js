@@ -61,7 +61,7 @@ async function main() {
   assert.ok(html.includes('chat-work-order-card'), 'HTML must include work order card markup');
   assert.ok(html.includes('chat-work-order-prompt'), 'HTML must include prompt textarea for copy area');
   assert.ok(html.includes('コピー用'), 'HTML must include copy label');
-  assert.ok(html.includes('human gate required'), 'HTML must show human gate status for work orders');
+  assert.ok(html.includes('review gate required'), 'HTML must show review gate status for work orders');
   assert.ok(html.includes('work_order: data.work_order || null'), 'HTML must keep work order pass-through from API response');
   console.log('  PASS: HTML work order UI wiring');
 

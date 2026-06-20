@@ -153,7 +153,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     return;
   }
 
-  process.stdout.write(`[watcher] Claude dispatch: ${entry.title || entry.id || '?'}\n`);
+  process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'}\n`);
 
   let claudeResult;
   try {
@@ -178,7 +178,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   };
 
   if (!extracted) {
-    process.stdout.write('[watcher] No KOSAME_RESULT block in output, using defaults\n');
+      process.stdout.write('[watcher] No KOSAME_RESULT block in output, using defaults\n');
   }
 
   try {
@@ -212,7 +212,7 @@ async function main() {
 
   process.stdout.write(`[watcher] Watching ${handoffDir}\n`);
   process.stdout.write(`[watcher] Posting results → http://${host}:${port}\n`);
-  process.stdout.write('[watcher] Codex Runner起動 — Approve→Handoffで自動ディスパッチ / Claudeはreview/audit専用\n');
+  process.stdout.write('[watcher] KOSAME Runner起動 — dispatch watcherが自動ディスパッチ / Claudeはreview/audit専用\n');
 
   let lastCount = readQueueCount(handoffDir);
   let dispatching = false;

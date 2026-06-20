@@ -1956,7 +1956,7 @@ h1 {
           </div>
         </div>
         <div class="chat-command-secondary">
-          <div class="chat-btn chat-command-ghost" id="chat-summarize">確認待ちを要約</div>
+          <div class="chat-btn chat-command-ghost" id="chat-summarize">dispatch待ちを要約</div>
           <div class="small" style="color:var(--muted)">Enterで送信 / Shift+Enterで改行</div>
         </div>
         <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル">
@@ -2147,7 +2147,7 @@ h1 {
             <summary>CONFIRMATION BRIDGE</summary>
             <div class="support-details-body">
               <article class="panel" id="cb-panel" style="transition:border-color 0.3s">
-                <p class="lead">Codexの確認待ち状態をread-onlyで監視します。Codexへのキー入力は送信しません。</p>
+                <p class="lead">KOSAME Runnerのdispatch状態をread-onlyで監視します。入力は内部ルーターへ送られます。</p>
                 <div id="cb-badge-row">読み込み中...</div>
                 <div id="cb-body" style="display:none">
                   <div class="stack" style="margin-top:14px">
@@ -4076,7 +4076,7 @@ function renderWorkOrderCard(workOrder) {
 
   const gate = document.createElement('span');
   gate.className = 'chat-work-order-flag';
-  gate.textContent = workOrder.requires_human_confirmation ? 'human gate required' : 'human gate optional';
+  gate.textContent = workOrder.requires_human_confirmation ? 'review gate required' : 'review gate optional';
   meta.appendChild(gate);
   card.appendChild(meta);
 
@@ -4245,7 +4245,7 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
 
   const gate = document.createElement('span');
   gate.className = 'chat-work-order-flag';
-  gate.textContent = current.human_gate_required ? 'human gate required' : 'human gate optional';
+  gate.textContent = current.human_gate_required ? 'review gate required' : 'review gate optional';
   meta.appendChild(gate);
   card.appendChild(meta);
 
@@ -4456,7 +4456,7 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   const current = buildHandoffInboxPayload(snapshot);
   const bridgeState = readHandoffInboxBridgeState();
   const bridgeUrl = readHandoffInboxBridgeUrl();
-  const currentStatus = current ? (current.human_gate_required ? 'human gate required' : 'human gate optional') : '送信待機中';
+  const currentStatus = current ? (current.human_gate_required ? 'review gate required' : 'review gate optional') : '送信待機中';
   const statusBits = [
     `送信先: ${bridgeUrl}`,
     current ? `候補: ${current.title || '—'} / ${currentStatus}` : 'まだ送信可能な作業票はありません。',
@@ -4585,7 +4585,7 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   });
   const gate = document.createElement('span');
   gate.className = 'chat-work-order-flag';
-  gate.textContent = current.human_gate_required ? 'human gate required' : 'human gate optional';
+  gate.textContent = current.human_gate_required ? 'review gate required' : 'review gate optional';
   meta.appendChild(gate);
   card.appendChild(meta);
 
@@ -4821,8 +4821,8 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `nextRecommendedAction: ${current.nextRecommendedAction || 'wait_for_result'}`,
     `理由: ${current.reason || '—'}`,
     `必要な次作業: ${current.required_next_work || '—'}`,
-    `human gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
-    `commit/tag/push可否: ${current.commit_tag_push_allowed ? 'commit候補 / 人間承認待ち' : '保留'}`,
+    `review gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
+    `commit/tag/push可否: ${current.commit_tag_push_allowed ? 'commit候補 / commit前review' : '保留'}`,
   ].forEach((textLine) => {
     const line = document.createElement('div');
     line.className = 'chat-work-order-decision-line';
@@ -5041,7 +5041,7 @@ function resolveWorkOrderApprovalState(workOrder) {
   }
   return {
     status: 'pending',
-    label: '承認待ち',
+    label: 'dispatch待ち',
     record: null,
   };
 }
@@ -5270,7 +5270,7 @@ function updateChatSummarizeButtonLabel() {
   if (!sumBtn) return;
   const text = getChatInputText();
   if (detectWorkOrderRequest(text)) {
-    sumBtn.textContent = '確認待ちを要約';
+    sumBtn.textContent = 'dispatch待ちを要約';
     sumBtn.title = '作業票要求は通常の送信で処理します';
     return;
   }
@@ -5279,8 +5279,8 @@ function updateChatSummarizeButtonLabel() {
     sumBtn.textContent = '結果を判定へ渡す';
     sumBtn.title = '貼り戻し結果を Result Decision Panel に保存します';
   } else {
-    sumBtn.textContent = '確認待ちを要約';
-    sumBtn.title = 'Codex の確認待ちを要約します';
+    sumBtn.textContent = 'dispatch待ちを要約';
+    sumBtn.title = 'dispatch待ちの状態を要約します';
   }
 }
 
@@ -5422,7 +5422,7 @@ async function loadSnapshot() {
     renderChatAssistPanel(snapshot);
     updateChatSummarizeButtonLabel();
     maybeNotifyFromSnapshot(snapshot);
-    renderList(document.getElementById('human-gate'), snapshot.humanGate || [], '人間承認待ち項目はありません。');
+    renderList(document.getElementById('human-gate'), snapshot.humanGate || [], 'review gate項目はありません。');
     renderList(document.getElementById('warnings'), snapshot.warnings || [], '警告はありません。');
     text(
       document.getElementById('recent-summary'),
@@ -5511,7 +5511,7 @@ document.getElementById('chat-summarize').addEventListener('click', () => {
     return;
   }
   if (!latestBridge || !latestBridge.detected) {
-    chatHistory.push({ role: 'assistant', content: '現在、Codexの確認待ちは検知されていません。' });
+    chatHistory.push({ role: 'assistant', content: '現在、dispatch対象は検知されていません。' });
     renderChatThread();
     return;
   }

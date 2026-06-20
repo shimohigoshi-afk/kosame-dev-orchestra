@@ -32,12 +32,12 @@ function targetRepoToProject(targetRepo) {
 function buildHandoffActivityMessage(status, title) {
   const safeTitle = String(title || '作業票').trim();
   const messages = {
-    approved: `${safeTitle} を承認しました。引き継ぎ準備中です。`,
-    ready_to_handoff: `${safeTitle} は引き継ぎ準備完了です。`,
-    handed_to_agent: `${safeTitle} を Codexへ渡しました。実装結果待ちです。`,
-    waiting_result: `${safeTitle} を担当AIへ渡しました。実装結果待ちです。`,
+    approved: `${safeTitle} を承認しました。dispatch待ちです。`,
+    ready_to_handoff: `${safeTitle} は dispatch待ちです。`,
+    handed_to_agent: `${safeTitle} を KOSAME Runner へ渡しました。runner実行中です。`,
+    waiting_result: `${safeTitle} は runner実行中です。resultPOST待ちです。`,
   };
-  return messages[status] || `${safeTitle} の引き継ぎ状態を更新しました。`;
+  return messages[status] || `${safeTitle} の dispatch 状態を更新しました。`;
 }
 
 function buildResultActivityMessage(decision, title, agent) {
@@ -45,7 +45,7 @@ function buildResultActivityMessage(decision, title, agent) {
   const safeAgent = String(agent || '担当AI').trim() || '担当AI';
   const decisionStatus = String(decision && decision.decision_status || decision && decision.nextRecommendedAction || 'wait_for_result').trim();
   const messages = {
-    ready_for_commit: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は commit候補です。人間承認待ちです。`,
+    ready_for_commit: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は commit候補です。commit前reviewです。`,
     ready_for_review: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。判定は review待ちです。smoke / verify を確認してください。`,
     request_fix: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。修正依頼が必要です。`,
     stop_and_investigate: `${safeTitle} の実装結果を ${safeAgent} から受け取りました。原因調査が必要です。`,
@@ -126,7 +126,7 @@ function createLiveCockpitServer(options = {}) {
               project: targetRepoToProject(ap.target_repo),
               status: 'human_gate',
               task: ap.title || '作業票採用',
-              message: `作業票を採用しました。Codexへ貼り付け待ちです。${riskPart}`,
+              message: `作業票を採用しました。dispatch待ちです。${riskPart}`,
             });
             activityLogged = true;
           } catch {

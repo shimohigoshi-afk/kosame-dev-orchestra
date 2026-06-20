@@ -139,7 +139,7 @@ function buildWorkOrderResultDecision(input = {}) {
   };
 
   decision.summary = summarizeDecision(decision);
-  decision.commit_tag_push_state = decision.commit_tag_push_allowed ? 'commit候補 / 人間承認待ち' : decision.decision_status === 'wait_for_result' ? '結果待ち' : '保留';
+  decision.commit_tag_push_state = decision.commit_tag_push_allowed ? 'commit候補 / commit前review' : decision.decision_status === 'wait_for_result' ? '結果待ち' : '保留';
   decision.display_status = decision.decision_status;
   return decision;
 }

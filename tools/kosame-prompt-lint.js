@@ -69,9 +69,17 @@ const AUTO_YES_CONTRACT = [
   '',
 ].join('\n');
 
+const COMPLETE_RUN_FIRST_POLICY = [
+  '【Complete-Run First Policy】',
+  '- work order採用 → dispatch → runner実行 → lint → smoke → verify → 必要なら自動再修正 → resultPOST → Result Decision Panel更新 → commit候補/ready_for_commit → 最終結果報告',
+  '- 懸念点は質問ではなく検証ルート(lint / smoke / verify / diff確認 / dryRun / negative assertion / Actions確認 / safetyPreFlight)で潰す',
+  '- Safety Stop 以外の YES確認 / 貼り戻し依頼 / コピペ依頼を出さない',
+].join('\n');
+
 module.exports = {
   HUMAN_WAIT_PATTERNS,
   AUTO_YES_CONTRACT,
+  COMPLETE_RUN_FIRST_POLICY,
   lintForHumanWait,
   assertNoHumanWait,
   isInSafetyStopContext,

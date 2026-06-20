@@ -5161,11 +5161,24 @@ function detectResultPasteStatus(text) {
   return '';
 }
 
+function detectWorkOrderRequest(text) {
+  const rawText = String(text || '').trim();
+  if (!rawText) return false;
+  return [
+    /作業票.*(作って|作成して|作成|生成して|生成)/i,
+    /作業票化(?:して|してください|してほしい|してね|お願いします)?/i,
+    /作業票を?(?:作って|作成して|作成|生成して|生成)/i,
+    /次の作業票/i,
+    /work order(?: request)?/i,
+  ].some((pattern) => pattern.test(rawText));
+}
+
 function detectWorkOrderResultPaste(text, snapshot = latestSnapshot || {}) {
   const current = getWorkOrderResultInputContext(snapshot);
   if (!current) return null;
   const rawText = String(text || '').trim();
   if (!rawText) return null;
+  if (detectWorkOrderRequest(rawText)) return null;
   const lines = parseResultPasteLines(rawText);
   const hasSignals = /result_status\s*[:=]/i.test(rawText)
     || /smoke_result\s*[:=]/i.test(rawText)
@@ -5256,6 +5269,11 @@ function updateChatSummarizeButtonLabel() {
   const sumBtn = document.getElementById('chat-summarize');
   if (!sumBtn) return;
   const text = getChatInputText();
+  if (detectWorkOrderRequest(text)) {
+    sumBtn.textContent = '確認待ちを要約';
+    sumBtn.title = '作業票要求は通常の送信で処理します';
+    return;
+  }
   const paste = detectWorkOrderResultPaste(text, latestSnapshot || {});
   if (paste) {
     sumBtn.textContent = '結果を判定へ渡す';
@@ -5344,6 +5362,24 @@ async function sendChatMessage(userText, confirmationContext) {
   }
 }
 
+function submitPrioritizedChatInput(text) {
+  const rawText = String(text || '').trim();
+  if (!rawText) return;
+  if (detectWorkOrderRequest(rawText)) {
+    sendChatMessage(rawText, null);
+    return;
+  }
+  const resultPaste = detectWorkOrderResultPaste(rawText, latestSnapshot || {});
+  if (resultPaste) {
+    submitWorkOrderResultPaste(rawText).catch((error) => {
+      const statusEl = document.getElementById('chat-status');
+      if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+    });
+    return;
+  }
+  sendChatMessage(rawText, null);
+}
+
 async function loadSnapshot() {
   try {
     const response = await fetch(state.endpoint, { cache: 'no-store' });
@@ -5426,15 +5462,7 @@ if (chatProceedButton) {
     if (!input) return;
     const t = input.value.trim() || 'この方針で進めてください。';
     input.value = t;
-    const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
-    if (resultPaste) {
-      submitWorkOrderResultPaste(t).catch((error) => {
-        const statusEl = document.getElementById('chat-status');
-        if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-      });
-      return;
-    }
-    sendChatMessage(t, null);
+    submitPrioritizedChatInput(t);
   });
 }
 
@@ -5442,30 +5470,14 @@ const chatSendBtn = document.getElementById('chat-send');
 if (chatSendBtn) {
   chatSendBtn.addEventListener('click', () => {
     const t = document.getElementById('chat-input').value.trim();
-    const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
-    if (resultPaste) {
-      submitWorkOrderResultPaste(t).catch((error) => {
-        const statusEl = document.getElementById('chat-status');
-        if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-      });
-      return;
-    }
-    sendChatMessage(t, null);
+    submitPrioritizedChatInput(t);
   });
 
   chatSendBtn.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       const t = document.getElementById('chat-input').value.trim();
-      const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
-      if (resultPaste) {
-        submitWorkOrderResultPaste(t).catch((error) => {
-          const statusEl = document.getElementById('chat-status');
-          if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-        });
-        return;
-      }
-      sendChatMessage(t, null);
+      submitPrioritizedChatInput(t);
     }
   });
 }
@@ -5479,21 +5491,17 @@ if (chatInputNode) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const t = document.getElementById('chat-input').value.trim();
-      const resultPaste = detectWorkOrderResultPaste(t, latestSnapshot || {});
-      if (resultPaste) {
-        submitWorkOrderResultPaste(t).catch((error) => {
-          const statusEl = document.getElementById('chat-status');
-          if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-        });
-        return;
-      }
-      sendChatMessage(t, null);
+      submitPrioritizedChatInput(t);
     }
   });
 }
 
 document.getElementById('chat-summarize').addEventListener('click', () => {
   const inputText = getChatInputText();
+  if (detectWorkOrderRequest(inputText)) {
+    submitPrioritizedChatInput(inputText);
+    return;
+  }
   const resultPaste = detectWorkOrderResultPaste(inputText, latestSnapshot || {});
   if (resultPaste) {
     submitWorkOrderResultPaste(inputText).catch((error) => {

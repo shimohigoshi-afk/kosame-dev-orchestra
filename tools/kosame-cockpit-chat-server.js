@@ -776,7 +776,7 @@ function detectIntent(message) {
 
 function buildLocalReply(input, snapshotSummary) {
   const intent = detectIntent(input.message);
-  const message = truncate(input.message, 80);
+  const message = normalizeContent(input.message);
 
   if (detectWorkOrderIntent(message) || (intent === 'proceed' && resolveWorkOrderTarget(input, snapshotSummary))) {
     return buildWorkOrderReply(input, snapshotSummary);

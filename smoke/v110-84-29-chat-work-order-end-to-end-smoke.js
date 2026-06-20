@@ -25,6 +25,7 @@ async function main() {
   assert.ok(chatSource.includes('WORK_ORDER_TARGETS'), 'chat server must use WORK_ORDER_TARGETS for message-based resolution');
   assert.ok(chatSource.match(/for.*WORK_ORDER_TARGETS.*hints\.test/s), 'resolveWorkOrderTarget must iterate WORK_ORDER_TARGETS');
   assert.ok(!chatSource.match(/for.*LEGACY_WORK_ORDER_TARGETS.*hints\.test/s), 'resolveWorkOrderTarget must not fall back to LEGACY_WORK_ORDER_TARGETS');
+  assert.ok(!chatSource.includes('truncate(input.message, 80)'), 'chat server must not truncate before work order intent detection');
   assert.ok(chatSource.includes('機密情報・環境変数ファイル・認証情報・APIキーは読まない'), 'safety condition must use Japanese-only terms');
   assert.ok(!chatSource.includes("'- Secret/.env"), 'safety condition must not use English .env literal');
   console.log('  PASS: chat server source wiring');
@@ -42,6 +43,8 @@ async function main() {
   assert.equal(detectWorkOrderIntent('営業DXのv0.3.0を作業票化して'), true, '作業票化 must be detected as work order intent');
   assert.equal(detectWorkOrderIntent('作業票化してください'), true, '作業票化して must be detected');
   assert.equal(detectWorkOrderIntent('営業DXの作業票を作って'), true, 'traditional pattern must still work');
+  const exactRequest = 'Codex結果を貼り戻した時に、通常チャット応答ではなく、Result Decision Panelの判定ステータスが実際に更新されるようにする作業票を作業票化して';
+  assert.equal(detectWorkOrderIntent(exactRequest), true, 'exact result-paste request must be detected as work order intent');
 
   // Target resolution uses new repo (not transcriber)
   const salesTarget = resolveWorkOrderTarget({ message: '営業DXのv0.3.0を作業票化して' });
@@ -61,6 +64,19 @@ async function main() {
   assert.ok(!r.work_order.body.match(/\bcredentials?\b/i), 'work order body must not contain English credentials');
   assert.equal(r.human_gate_required, true, 'human gate must be required');
   console.log('  PASS: chat → work order end-to-end (target:', r.work_order.target_repo, ')');
+
+  const exactReply = await handleChatRequest({
+    message: exactRequest,
+    project: 'KOSAME Console',
+  });
+  assert.equal(exactReply.ok, true, 'exact request chat must respond ok');
+  assert.ok(exactReply.work_order, 'exact request must create a work order draft');
+  assert.equal(exactReply.work_order.agent, 'Codex', 'exact request work order agent must be Codex');
+  assert.equal(exactReply.work_order.target_repo, '/home/lavie/kosame-dev-orchestra', 'exact request work order must target KOSAME Dev Orchestra');
+  assert.ok(exactReply.work_order.originalRequest.includes('作業票化して'), 'originalRequest must preserve the request text');
+  assert.ok(exactReply.work_order.body.includes('作業票化して'), 'body must preserve the request text');
+  assert.ok(!/短く整理して返しますね/.test(exactReply.reply), 'exact request must not fall back to general chat');
+  console.log('  PASS: exact work order request generates KOSAME Dev Orchestra draft');
 
   // Title is clean (no trailing particles or doubled version)
   assert.ok(r.work_order.title === 'v0.3.0' || /v0\.3\.0/.test(r.work_order.title), `title must contain version (got: ${r.work_order.title})`);

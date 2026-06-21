@@ -129,6 +129,12 @@ const llamaAuditLane = {
   apiKeyStatus: llamaKeyPresent ? "configured" : "missing",
 };
 
+const arbiterConfig = {
+  primary: 'claude',
+  fallback: 'gpt',
+  userFacing: 'kosame-gpt',
+};
+
 function getConfig() {
   return {
     liveCallsRequested,
@@ -147,10 +153,11 @@ function getConfig() {
     deepseekLiveEnabled,
     llamaAuditLane,
     lightweightRoutingPolicy,
+    arbiterConfig,
     reason: liveCallsActuallyEnabled
       ? "live calls gate open (key presence required per provider)"
       : "live calls disabled — KOSAME_AGENT_LIVE_CALLS_ENABLED or KOSAME_AGENT_ALLOW_ONE_SHOT_LIVE_CALL not set to true",
   };
 }
 
-module.exports = { getConfig };
+module.exports = { getConfig, arbiterConfig };

@@ -1,0 +1,97 @@
+{
+  "agents": {
+    "KOSAME": {
+      "display": "KOSAME",
+      "model": "gpt",
+      "color": "#00bcd4",
+      "emoji": ["☂️", "💙"],
+      "role": "user-facing",
+      "description": "じゅんやさん窓口エージェント（GPT駆動）"
+    },
+    "DIRECTOR": {
+      "display": "DIRECTOR",
+      "model": "claude",
+      "color": "#00bcd4",
+      "emoji": ["☂️", "💙"],
+      "role": "arbiter-primary",
+      "description": "主裁定エージェント（Claude駆動）"
+    },
+    "DIRECTOR_FALLBACK": {
+      "display": "DIRECTOR(GPT)",
+      "model": "gpt",
+      "color": "#10a37f",
+      "emoji": ["☂️", "💙"],
+      "role": "arbiter-fallback",
+      "description": "裁定フォールバック（GPT駆動）fallback時のみ"
+    },
+    "GPT": {
+      "display": "GPT",
+      "model": "gpt",
+      "color": "#10a37f",
+      "emoji": [],
+      "role": "worker",
+      "description": "作業エージェント（絵文字なし）"
+    },
+    "Claude": {
+      "display": "Claude",
+      "model": "claude",
+      "color": "#D97757",
+      "emoji": ["🔍", "🧡"],
+      "role": "quality",
+      "emojiRule": "完了時🔍 / たまに🧡",
+      "description": "品質エージェント"
+    },
+    "Gemini": {
+      "display": "Gemini",
+      "model": "gemini",
+      "color": "#EA4335",
+      "emoji": ["❤️"],
+      "emojiRule": "完了時❤️",
+      "role": "worker",
+      "description": "作業エージェント（完了時❤️）"
+    },
+    "Grok": {
+      "display": "Grok",
+      "model": "grok",
+      "color": "#8899aa",
+      "emoji": ["…"],
+      "emojiRule": "語尾に…のみ",
+      "role": "worker",
+      "description": "作業エージェント（語尾に…）"
+    },
+    "DeepSeek": {
+      "display": "DeepSeek",
+      "model": "deepseek",
+      "color": "#4D6BFE",
+      "emoji": [],
+      "role": "worker",
+      "description": "作業エージェント（絵文字なし）"
+    },
+    "Llama": {
+      "display": "Llama",
+      "model": "llama",
+      "color": "#6e57d2",
+      "emoji": [],
+      "closing": "以上。",
+      "emojiRule": "必ず「以上。」で締める",
+      "role": "worker",
+      "description": "作業エージェント（以上。で締める）"
+    }
+  },
+  "arbiter": {
+    "primary": "claude",
+    "fallback": "gpt",
+    "userFacing": "kosame-gpt"
+  },
+  "messageStyle": {
+    "nameBold": true,
+    "nameColored": true,
+    "bodyColor": "#ddd",
+    "politeBase": true,
+    "typingDelayMs": 40
+  },
+  "callMode": {
+    "normal": "template",
+    "error": "api"
+  }
+}

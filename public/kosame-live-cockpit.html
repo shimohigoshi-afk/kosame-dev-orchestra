@@ -1824,8 +1824,10 @@ h1 {
 .asl-entry { margin: 0; padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
 .asl-ts { color: #4a4a6a; }
 .asl-msg { color: #ddd; }
-.asl-agent-KOSAME   { color: #00bcd4; font-weight: bold; }
-.asl-agent-GPT      { color: #10a37f; font-weight: bold; }
+.asl-agent-KOSAME       { color: #00bcd4; font-weight: bold; }
+.asl-agent-DIRECTOR     { color: #00bcd4; font-weight: bold; }
+.asl-agent-DIRECTOR-GPT { color: #10a37f; font-weight: bold; }
+.asl-agent-GPT          { color: #10a37f; font-weight: bold; }
 .asl-agent-Claude   { color: #D97757; font-weight: bold; }
 .asl-agent-Gemini   { color: #EA4335; font-weight: bold; }
 .asl-agent-Grok     { color: #8899aa; font-weight: bold; }
@@ -6205,13 +6207,15 @@ if (chatCalloutButton) {
 // ===== Agent Stream Log =====
 (function() {
   var ASL_AGENTS = {
-    KOSAME:   'asl-agent-KOSAME',
-    GPT:      'asl-agent-GPT',
-    Claude:   'asl-agent-Claude',
-    Gemini:   'asl-agent-Gemini',
-    Grok:     'asl-agent-Grok',
-    DeepSeek: 'asl-agent-DeepSeek',
-    Llama:    'asl-agent-Llama',
+    'KOSAME':        'asl-agent-KOSAME',
+    'DIRECTOR':      'asl-agent-DIRECTOR',
+    'DIRECTOR(GPT)': 'asl-agent-DIRECTOR-GPT',
+    'GPT':           'asl-agent-GPT',
+    'Claude':        'asl-agent-Claude',
+    'Gemini':        'asl-agent-Gemini',
+    'Grok':          'asl-agent-Grok',
+    'DeepSeek':      'asl-agent-DeepSeek',
+    'Llama':         'asl-agent-Llama',
   };
 
   function aslTs() {
@@ -6260,7 +6264,7 @@ if (chatCalloutButton) {
 
   var ASL_DEMO = [
     { agent: 'KOSAME',   msg: '☂️ じゅんやさん、本日のタスクを確認しました。処理を開始します。' },
-    { agent: 'GPT',      msg: '作業票を精査。優先度順に3件処理する。' },
+    { agent: 'DIRECTOR', msg: '作業票を精査しました。優先度順に3件処理いたします。' },
     { agent: 'Claude',   msg: '…実装内容を確認しました。テストケースに漏れがないか確認します。' },
     { agent: 'Gemini',   msg: 'あれー！ このAPIレスポンス、想定と違います！ すぐ確認します！' },
     { agent: 'Grok',     msg: 'この仕様、少し曖昧な気がしますが…' },

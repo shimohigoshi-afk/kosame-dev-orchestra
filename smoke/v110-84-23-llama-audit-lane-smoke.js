@@ -66,8 +66,8 @@ async function main() {
   assert.ok(html.includes('chatStatusState.llamaAudit'), 'render path must track chatStatusState.llamaAudit');
   // "configured"/"missing" values scoped to the badge update call, not loose HTML presence
   assert.ok(
-    html.includes("chatStatusState.llamaAudit === 'configured' ? 'configured' : 'missing'"),
-    "badge update call must map llamaAudit to 'configured'/'missing' — prevents false-positive on unrelated text"
+    html.includes("chatStatusState.llamaAudit === 'configured' ? 'OK' : 'missing'"),
+    "badge update call must map llamaAudit to 'OK'/'missing' when configured — prevents false-positive on unrelated text"
   );
   console.log('  PASS: HTML wiring (scoped to badge element and render path)');
 

@@ -3076,7 +3076,7 @@ function renderChatStatusBadges(snapshot = {}) {
   setStatusBadge('chat-ai-badge', 'AI', chatStatusState.ai === 'connected' ? 'connected' : 'missing', chatStatusState.ai === 'connected' ? 'ok' : 'warn');
   setStatusBadge('chat-context-badge', 'Context', chatStatusState.context === 'loaded' ? 'loaded' : 'missing', chatStatusState.context === 'loaded' ? 'ok' : 'warn');
   setStatusBadge('chat-memory-badge', 'Memory', chatStatusState.memory === 'ready' ? 'ready' : chatStatusState.memory === 'warning' ? 'warning' : 'missing', chatStatusState.memory === 'ready' ? 'ok' : chatStatusState.memory === 'warning' ? 'warn' : 'warn');
-  setStatusBadge('chat-llama-audit-badge', 'Llama audit', chatStatusState.llamaAudit === 'configured' ? 'configured' : 'missing', chatStatusState.llamaAudit === 'configured' ? 'ok' : 'warn');
+  setStatusBadge('chat-llama-audit-badge', 'Llama audit', chatStatusState.llamaAudit === 'configured' ? 'OK' : 'missing', chatStatusState.llamaAudit === 'configured' ? 'ok' : 'warn');
   updateNotificationUI();
 }
 

@@ -11,3 +11,6 @@ dispatch-result-*.json
 node_modules/
 node/
 package-lock.json
+
+# Secret keys (never commit)
+.env

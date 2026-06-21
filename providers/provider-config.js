@@ -27,8 +27,8 @@ const deepseekKeyPresent =
   process.env.DEEPSEEK_API_KEY.length > 0;
 
 const llamaKeyPresent =
-  typeof process.env.LLAMA_API_KEY === "string" &&
-  process.env.LLAMA_API_KEY.length > 0;
+  (typeof process.env.LLAMA_API_KEY === "string" && process.env.LLAMA_API_KEY.length > 0) ||
+  (typeof process.env.GROQ_API_KEY  === "string" && process.env.GROQ_API_KEY.length  > 0);
 
 const MAX_TOKENS_CAP = 1000;
 const TIMEOUT_MS_CAP = 30000;

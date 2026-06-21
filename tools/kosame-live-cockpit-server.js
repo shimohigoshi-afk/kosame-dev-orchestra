@@ -3,6 +3,11 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+// Load .env before any module reads process.env at init time
+try {
+  const _el = require('node:fs').readFileSync(path.resolve(__dirname, '..', '.env'), 'utf8').split('\n');
+  for (const _l of _el) { const _m = _l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/); if (_m && !(_m[1] in process.env)) process.env[_m[1]] = _m[2].trim(); }
+} catch (_) { /* .env is optional */ }
 const http = require('node:http');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');

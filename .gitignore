@@ -14,3 +14,6 @@ package-lock.json
 
 # Secret keys (never commit)
 .env
+
+# Runner queue runtime state and logs
+.kosame-runner/

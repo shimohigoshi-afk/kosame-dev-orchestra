@@ -582,12 +582,9 @@ function buildSummaryReply(input, snapshotSummary) {
   };
 }
 
-function buildGeneralReply(input) {
-  const projectLabel = truncate(input.project, 40);
+function buildGeneralReply(_input) {
   return {
-    reply: projectLabel
-      ? `${projectLabel} の件、内容を受け取りました。短く整理して返しますね。`
-      : '内容を受け取りました。短く整理して返しますね。',
+    reply: 'ご依頼を受け取りました。AIが応答を生成しています…',
     suggested_action: '目的・対象・制約を短く送る。',
   };
 }
@@ -927,7 +924,10 @@ async function handleChatRequest(body) {
   const requestAt = new Date().toISOString();
   const source = body && typeof body === 'object' ? body : {};
   const normalized = normalizeChatRequest(source);
-  const message = normalizeContent(normalized.message);
+  // Allow empty message when file is attached — synthesize a default
+  const rawMessage = normalizeContent(normalized.message);
+  const hasAttachments = (normalized.attachments || []).length > 0;
+  const message = rawMessage || (hasAttachments ? '添付ファイルを解析してください。' : '');
   const project = normalizeContent(normalized.project);
   const context = normalizeContent(normalized.context);
   const contextSummary = normalizeContent(source.contextSummary || source.context || normalized.contextSummary);
@@ -1018,8 +1018,29 @@ async function handleChatRequest(body) {
         augmentedMessage += `\n\n[添付: ${att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
       }
     }
-    if (detectedUrls.length && !attachments.length) {
-      augmentedMessage += `\n\n[URL検出: ${detectedUrls.join(', ')}]\nこのページをクローンして実装してください。`;
+    // Fetch actual URL content for detected URLs
+    if (detectedUrls.length) {
+      try {
+        const { analyzeUrl } = require('./kosame-url-fetcher');
+        const urlResult = await analyzeUrl(detectedUrls[0]);
+        if (urlResult.loginRequired) {
+          augmentedMessage += `\n\n[${urlResult.url}]\nログインが必要なページは取得できません。`;
+        } else if (urlResult.isYouTube && urlResult.youtubeTranscript) {
+          augmentedMessage += `\n\n[YouTube動画: ${urlResult.url}]\n--- 字幕テキスト ---\n${urlResult.youtubeTranscript}\n---\nこの動画の内容を元に実装してください。`;
+        } else if (urlResult.isYouTube) {
+          augmentedMessage += `\n\n[YouTube動画: ${urlResult.url}]\n字幕を取得できませんでした。URLを元に内容を推測して対応してください。`;
+        } else if (urlResult.text) {
+          const titlePart = urlResult.title ? `タイトル: ${urlResult.title}\n` : '';
+          augmentedMessage += `\n\n[ページ内容: ${urlResult.url}]\n${titlePart}--- ページテキスト ---\n${urlResult.text}\n---\nこのページをクローンして実装してください。`;
+        } else if (urlResult.error) {
+          augmentedMessage += `\n\n[URL取得失敗: ${urlResult.url}] ${urlResult.error}`;
+        } else {
+          augmentedMessage += `\n\n[URL: ${urlResult.url}]\nこのページを参考に実装してください。`;
+        }
+        process.stderr.write(`[url-fetch] ${urlResult.url} loginRequired=${urlResult.loginRequired} isYouTube=${urlResult.isYouTube} hasText=${!!urlResult.text}\n`);
+      } catch (urlErr) {
+        augmentedMessage += `\n\n[URL取得エラー: ${detectedUrls[0]}] ${urlErr && urlErr.message ? urlErr.message : String(urlErr)}`;
+      }
     }
 
     let gptMessages;

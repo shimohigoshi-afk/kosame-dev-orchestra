@@ -2253,7 +2253,7 @@ h1 {
               <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
               <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
               <div class="chat-input-with-btn">
-                <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付">📎</button>
+                <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付"><svg width="16" height="20" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 8.5V18C20 22.418 16.418 26 12 26C7.582 26 4 22.418 4 18V6C4 3.239 6.239 1 9 1C11.761 1 14 3.239 14 6V17C14 18.657 12.657 20 11 20C9.343 20 8 18.657 8 17V7.5H10V17C10 17.552 10.448 18 11 18C11.552 18 12 17.552 12 17V6C12 4.343 10.657 3 9 3C7.343 3 6 4.343 6 6V18C6 21.314 8.686 24 12 24C15.314 24 18 21.314 18 18V8.5H20Z" fill="#00bcd4"/></svg></button>
                 <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4" multiple style="display:none" aria-hidden="true">
@@ -6053,24 +6053,28 @@ function buildConfirmationContext(bridge) {
 }
 
 async function sendChatMessage(userText, confirmationContext) {
-  if (!userText && !confirmationContext) return;
+  // Allow send when files are attached even without text
+  if (!userText && !confirmationContext && !_chatAttachments.length) return;
   const sendBtn = document.getElementById('chat-send');
   const input = document.getElementById('chat-input');
   const statusEl = document.getElementById('chat-status');
 
+  // Synthesize message text when files attached without explicit text
+  const msgText = (userText || '').trim() || (_chatAttachments.length ? '添付ファイルを解析してください。' : '');
+
   // Build augmented display text (file names + URL hint shown in chat bubble)
   let displayText = userText || '';
-  if (userText && _chatAttachments.length) {
+  if (_chatAttachments.length) {
     const fileNames = _chatAttachments.map(function(a){return a.name;}).join(', ');
-    displayText = displayText + '\n\n📎 ' + fileNames;
+    displayText = (displayText ? displayText + '\n\n' : '') + '📎 ' + fileNames;
   }
-  const _detectedUrls = detectUrlsInText(userText || '');
-  if (userText && _detectedUrls.length && !_chatAttachments.length) {
-    displayText = displayText + '\n\n🔗 ページ解析＆クローン実装リクエスト';
+  const _detectedUrls = detectUrlsInText(msgText);
+  if (_detectedUrls.length && !_chatAttachments.length) {
+    displayText = displayText + (displayText ? '\n\n' : '') + '🔗 ページ解析＆クローン実装リクエスト';
   }
 
-  if (userText) {
-    chatHistory.push({ role: 'user', content: displayText });
+  if (displayText || msgText) {
+    chatHistory.push({ role: 'user', content: displayText || msgText });
     input.value = '';
   }
   hideChatCallout();
@@ -6087,7 +6091,7 @@ async function sendChatMessage(userText, confirmationContext) {
 
   try {
     const payload = {
-      ...buildChatPayload(userText || '', confirmationContext),
+      ...buildChatPayload(msgText, confirmationContext),
     };
     // Overwrite attachments with the snapshot taken before clearing
     if (_pendingAttachments.length) {
@@ -6158,18 +6162,21 @@ async function sendChatMessage(userText, confirmationContext) {
 
 function submitPrioritizedChatInput(text) {
   const rawText = String(text || '').trim();
-  if (!rawText) return;
-  if (detectWorkOrderRequest(rawText)) {
+  // Allow file-only sends (no text but files attached)
+  if (!rawText && !_chatAttachments.length) return;
+  if (rawText && detectWorkOrderRequest(rawText)) {
     sendChatMessage(rawText, null);
     return;
   }
-  const resultPaste = detectWorkOrderResultPaste(rawText, latestSnapshot || {});
-  if (resultPaste) {
-    submitWorkOrderResultPaste(rawText).catch((error) => {
-      const statusEl = document.getElementById('chat-status');
-      if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-    });
-    return;
+  if (rawText) {
+    const resultPaste = detectWorkOrderResultPaste(rawText, latestSnapshot || {});
+    if (resultPaste) {
+      submitWorkOrderResultPaste(rawText).catch((error) => {
+        const statusEl = document.getElementById('chat-status');
+        if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
+      });
+      return;
+    }
   }
   sendChatMessage(rawText, null);
 }

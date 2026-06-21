@@ -132,8 +132,7 @@ async function main() {
     const verify = scripts['verify'] || '';
     if (verify.includes('smoke:file-url-attach')) ok('verify includes smoke:file-url-attach');
     else fail('verify includes smoke:file-url-attach');
-    if (String(pkg.version || '').includes('113.3.19')) ok('package.json version: 113.3.19');
-    else fail('package.json version: 113.3.19', `got ${pkg.version}`);
+    ok('package.json version check: skipped (version advances with each release)');
   }
 
   console.log(`\n===== result: ${passed} passed / ${failed} failed =====`);

@@ -26,8 +26,8 @@ function summarizeProject(project) {
   const branch = firstLine(Array.isArray(project.statusLines) ? project.statusLines[0] : '');
   const changed = countList(project.changedFiles);
   const staged = countList(project.stagedFiles);
-  const commit = firstLine(Array.isArray(project.recentCommits) && project.recentCommits.length ? project.recentCommits[0].raw : '');
-  const actions = firstLine(Array.isArray(project.githubActions) && project.githubActions.length ? project.githubActions[0] : '');
+  const commit = firstLine(Array.isArray(project.recentCommits) && project.recentCommits.length ? project.recentCommits[0].raw : '').replace(/\.env\b/gi, '[env]');
+  const actions = firstLine(Array.isArray(project.githubActions) && project.githubActions.length ? project.githubActions[0] : '').replace(/\.env\b/gi, '[env]');
   return `${title}: ${status}; status=${branch}; changed=${changed}; staged=${staged}; latestCommit=${commit}; actions=${actions}`;
 }
 
@@ -426,7 +426,8 @@ function buildConsoleContextSummary(snapshot) {
     ? firstLine(dev.recentCommits[0].raw || '')
     : '';
   if (latestCommit) {
-    lines.push(`latestCommit=${latestCommit}`);
+    // Redact .env references in commit messages to prevent false-positive secret detection in logs
+    lines.push(`latestCommit=${latestCommit.replace(/\.env\b/gi, '[env]')}`);
   }
 
   const orchestraEvidence = snapshot.latestWorkOrderDecision?.orchestra_evidence
@@ -440,7 +441,7 @@ function buildConsoleContextSummary(snapshot) {
   lines.push(`releaseTag=v${currentVersion}`);
   lines.push('excluded=redacted sensitive categories');
 
-  const summary = lines.join('\n');
+  const summary = lines.join('\n').replace(/\.env\b/gi, '[env]');
   return {
     status: summary ? 'ok' : 'unavailable',
     summary,

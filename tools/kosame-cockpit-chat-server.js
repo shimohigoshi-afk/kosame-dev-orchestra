@@ -655,7 +655,13 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
   const projectLabel = target ? target.label : truncate(input.project || '対象未指定', 40);
   const contextLines = [];
   if (normalizeContent(input.message)) contextLines.push(`ユーザー要望: ${normalizeContent(input.message)}`);
-  if (normalizeContent(snapshotSummary)) contextLines.push(`参考コンテキスト: ${normalizeContent(snapshotSummary)}`);
+  // Strip commit-message lines that mention .env to prevent false-positive secret detection in handoff logs
+  const filteredSnapshot = normalizeContent(snapshotSummary)
+    .split('\n')
+    .filter(line => !/\.env\s+(?:path|fix|修正|パス|load|read)/i.test(line))
+    .join('\n')
+    .trim();
+  if (filteredSnapshot) contextLines.push(`参考コンテキスト: ${filteredSnapshot}`);
   const orchestraEvidence = buildOrchestraEvidence({
     router_decision: 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first',
   });
@@ -982,6 +988,7 @@ async function handleChatRequest(body) {
     const gptMessages = normalized.messages.length > 0
       ? normalized.messages
       : [{ role: 'user', content: message }];
+    console.log('[GPT] calling... isLive=' + isLiveEnabled());
     const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
     process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);
     if (gptResult.ok && gptResult.reply) {

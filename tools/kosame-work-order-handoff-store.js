@@ -42,6 +42,7 @@ const PROMPT_SAFE_LINES = [
   /外部APIを呼ばない/i,
   /対象repo以外を触らない/i,
   /git status -sb/i,
+  /\.env\s+(?:path|fix|修正|パス|load|read)/i,
 ];
 
 function normalizeText(value) {

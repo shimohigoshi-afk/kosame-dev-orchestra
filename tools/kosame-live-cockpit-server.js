@@ -278,6 +278,7 @@ function createLiveCockpitServer(options = {}) {
         return;
       }
       parseJsonBody(req, (parsed) => {
+        console.log('[CHAT] received:', String(parsed && parsed.message || '').slice(0, 80));
         let contextSummary = '';
         let contextStatus = 'unavailable';
         let snapshot = null;
@@ -637,9 +638,15 @@ function createLiveCockpitServer(options = {}) {
 }
 
 function main() {
+  const _envPath = path.resolve(__dirname, '..', '.env');
+  const _keyPresent = typeof process.env.OPENAI_API_KEY === 'string' && process.env.OPENAI_API_KEY.length > 0;
+  const _liveEnabled = process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED;
+  console.log(`[SERVER] .env: ${_envPath}`);
+  console.log(`[SERVER] KEY_PRESENT=${_keyPresent} LIVE_CALLS_ENABLED=${_liveEnabled}`);
   const { server, port, host } = createLiveCockpitServer();
   server.listen(port, host, () => {
     console.log(`☂️ KOSAME Console listening on http://${host}:${port}`);
+    _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'SERVER', msg: `起動 KEY_PRESENT=${_keyPresent} LIVE_CALLS_ENABLED=${_liveEnabled}` });
   });
 }
 

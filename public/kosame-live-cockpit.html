@@ -195,6 +195,7 @@ body {
   z-index: 1;
 }
 .chat-outer { order: 4; }
+.agent-stream-log-strip { order: 4; }
 .support-details-outer { order: 12; }
 .footer { order: 13; }
 .project-registry-shell { order: 2; display: grid; gap: 14px; }
@@ -1932,6 +1933,7 @@ h1 {
   .project-registry-shell { order: 2; }
   .active-task-board { order: 3; }
   .chat-outer { order: 4; }
+  .agent-stream-log-strip { order: 4; }
   .handoff-result-strip { order: 5; }
   .runner-stream-strip { order: 6; }
   .agent-feed-strip { order: 7; }
@@ -2046,35 +2048,35 @@ h1 {
     <!-- Active Task Board (order 4) -->
     <section class="active-task-board" id="active-task-board" style="margin-top:14px">
       <article class="panel">
-        <div class="task-board-title-row">
-          <h2>ACTIVE TASK STRIP <span aria-hidden="true" style="display:none">ACTIVE TASK BOARD</span></h2>
-          <div class="small" style="color:var(--muted);letter-spacing:0.12em;text-transform:uppercase">ACTIVE RUNNER / 最優先: 実行中タスク</div>
-        </div>
-        <p class="lead">今ほんとうに動いているものを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
-
+        <details class="support-details" id="active-task-strip-details" style="margin-top:0">
+          <summary>ACTIVE TASK STRIP <span aria-hidden="true" style="display:none">ACTIVE TASK BOARD</span></summary>
+          <div class="support-details-body">
+            <div class="small" style="color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px">ACTIVE RUNNER / 最優先: 実行中タスク</div>
+            <p class="lead">今ほんとうに動いているものを主役にしつつ、次の一手と保存状態だけを軽く見渡せるように整理しています。</p>
             <div class="task-board-counts task-board-summary">
               <div class="task-count-card">
                 <div class="task-count-label">次にやる候補</div>
-            <div class="task-count-value" id="feed-selected-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">実行中</div>
-            <div class="task-count-value" id="feed-running-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">Human Gate待ち</div>
-            <div class="task-count-value" id="feed-human-gate-count">—</div>
-          </div>
-          <div class="task-count-card">
-            <div class="task-count-label">Blocked</div>
-            <div class="task-count-value" id="feed-blocked-count">—</div>
-          </div>
+                <div class="task-count-value" id="feed-selected-count">—</div>
+              </div>
+              <div class="task-count-card">
+                <div class="task-count-label">実行中</div>
+                <div class="task-count-value" id="feed-running-count">—</div>
+              </div>
+              <div class="task-count-card">
+                <div class="task-count-label">Human Gate待ち</div>
+                <div class="task-count-value" id="feed-human-gate-count">—</div>
+              </div>
+              <div class="task-count-card">
+                <div class="task-count-label">Blocked</div>
+                <div class="task-count-value" id="feed-blocked-count">—</div>
+              </div>
               <div class="task-count-card">
                 <div class="task-count-label">Auto Save</div>
                 <div class="task-count-value" id="vault-status-chip">—</div>
               </div>
             </div>
-
+          </div>
+        </details>
       </article>
     </section>
 
@@ -2188,6 +2190,17 @@ h1 {
       </article>
     </section>
 
+    <!-- AGENT STREAM LOG (チャット入力欄の直上) -->
+    <section class="agent-stream-log-strip" id="agent-stream-log-strip" style="margin-top:8px">
+      <article class="panel">
+        <details class="support-details" id="agent-stream-log-details" open style="margin-top:0">
+          <summary>AGENT STREAM LOG</summary>
+          <div class="support-details-body">
+            <div class="agent-stream-log-body" id="agent-stream-log" aria-live="polite"></div>
+          </div>
+        </details>
+      </article>
+    </section>
     <section class="chat-outer" style="margin-top:10px">
       <article class="panel chat-panel" id="chat-panel">
         <h2>KOSAME CHAT</h2>
@@ -2212,13 +2225,6 @@ h1 {
             </div>
           </div>
         </div>
-        <!-- AGENT STREAM LOG -->
-        <details class="chat-section-details" id="agent-stream-log-details" open style="margin-top:8px;margin-bottom:8px">
-          <summary class="chat-section-summary">AGENT STREAM LOG</summary>
-          <div style="padding:6px 10px 10px">
-            <div class="agent-stream-log-body" id="agent-stream-log" aria-live="polite"></div>
-          </div>
-        </details>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
           <div class="chat-primary-row">
             <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。"></textarea>
@@ -2263,8 +2269,10 @@ h1 {
 
     <section class="support-details-outer" style="margin-top:14px">
       <article class="panel">
-        <h2>COLLAPSED DETAILS <span aria-hidden="true" style="display:none">Collapsed Details</span></h2>
-        <div class="support-details-stack">
+        <details class="support-details" id="collapsed-details-wrapper" style="margin-top:0">
+          <summary>COLLAPSED DETAILS <span aria-hidden="true" style="display:none">Collapsed Details</span></summary>
+          <div class="support-details-body">
+            <div class="support-details-stack">
           <details class="support-details task-board-details" id="autosave-support">
             <summary>AUTO SAVE / TASK VAULT</summary>
             <div class="support-details-body">
@@ -2470,7 +2478,9 @@ h1 {
               </div>
             </div>
           </details>
-        </div>
+            </div>
+          </div>
+        </details>
       </article>
     </section>
   </div>
@@ -6162,6 +6172,35 @@ const chatCalloutButton = document.getElementById('chat-callout-jump');
 if (chatCalloutButton) {
   chatCalloutButton.addEventListener('click', scrollToChatPanel);
 }
+
+// ===== Active Task Strip Auto-Collapse =====
+(function() {
+  var ATS_COUNT_IDS = ['feed-selected-count','feed-running-count','feed-human-gate-count','feed-blocked-count'];
+  function syncActiveTaskStrip() {
+    var details = document.getElementById('active-task-strip-details');
+    if (!details) return;
+    var anyActive = ATS_COUNT_IDS.some(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return false;
+      var v = parseInt(el.textContent.trim(), 10);
+      return !isNaN(v) && v > 0;
+    });
+    details.open = anyActive;
+  }
+  function watchATSCounts() {
+    var observer = new MutationObserver(syncActiveTaskStrip);
+    ATS_COUNT_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) observer.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+    syncActiveTaskStrip();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', watchATSCounts);
+  } else {
+    watchATSCounts();
+  }
+})();
 
 // ===== Agent Stream Log =====
 (function() {

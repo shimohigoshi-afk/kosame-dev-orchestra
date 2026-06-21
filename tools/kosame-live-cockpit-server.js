@@ -9,6 +9,7 @@ try {
   for (const _l of _el) { const _m = _l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/); if (_m && !(_m[1] in process.env)) process.env[_m[1]] = _m[2].trim(); }
 } catch (_) { /* .env is optional */ }
 const http = require('node:http');
+const { spawn } = require('node:child_process');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
@@ -77,6 +78,19 @@ function parseJsonBody(req, callback) {
     try { parsed = JSON.parse(body || '{}'); } catch { /* ignore */ }
     callback(parsed);
   });
+}
+
+const _sseClients = new Set();
+const _sseLog = [];
+const _SSE_LOG_MAX = 100;
+
+function _emitRunnerSSE(event, data) {
+  const line = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  _sseLog.push({ event, data });
+  if (_sseLog.length > _SSE_LOG_MAX) _sseLog.shift();
+  for (const client of _sseClients) {
+    try { client.write(line); } catch (_) { _sseClients.delete(client); }
+  }
 }
 
 function createLiveCockpitServer(options = {}) {
@@ -511,6 +525,83 @@ function createLiveCockpitServer(options = {}) {
             'X-Content-Type-Options': 'nosniff',
           });
           res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'invalid work order result' }));
+        }
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/runner-stream') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Content-Type-Options': 'nosniff',
+      });
+      res.write(`event: connected\ndata: ${JSON.stringify({ ts: new Date().toISOString() })}\n\n`);
+      for (const e of _sseLog) {
+        res.write(`event: ${e.event}\ndata: ${JSON.stringify(e.data)}\n\n`);
+      }
+      _sseClients.add(res);
+      req.on('close', () => { _sseClients.delete(res); });
+      return;
+    }
+
+    if (url.pathname === '/api/runner-dispatch') {
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      parseJsonBody(req, (parsed) => {
+        try {
+          const ticketId = `chat-${Date.now()}`;
+          const promptText = String(parsed.prompt_text || parsed.message || '').trim();
+          const title = String(parsed.title || promptText || 'KOSAME Chat Dispatch').slice(0, 80);
+          const targetRepo = String(parsed.target_repo || '').trim() || ROOT;
+          const payload = {
+            id: ticketId,
+            title,
+            prompt_text: promptText,
+            target_repo: targetRepo,
+            assigned_agent: String(parsed.assigned_agent || 'Codex').trim(),
+            risk_level: String(parsed.risk_level || 'low').trim(),
+            human_gate_required: false,
+            source: 'kosame-chat-dispatch',
+            created_at: new Date().toISOString(),
+          };
+          saveHandoffInbox(payload, { handoffDir: options.handoffDir });
+          _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[dispatch] ${ticketId} — ${title}` });
+          const child = spawn(process.execPath, [path.join(__dirname, 'kosame-runner-queue.js')], {
+            cwd: ROOT,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: process.env,
+          });
+          child.stdout.on('data', (chunk) => {
+            String(chunk).split('\n').filter(Boolean).forEach(line => {
+              _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
+            });
+          });
+          child.stderr.on('data', (chunk) => {
+            String(chunk).split('\n').filter(Boolean).forEach(line => {
+              _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
+            });
+          });
+          child.on('close', (code) => {
+            _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: code, ticketId, title });
+          });
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: true, ticketId, title }));
+        } catch (error) {
+          res.writeHead(400, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          res.end(JSON.stringify({ ok: false, error: error && error.message ? error.message : 'dispatch failed' }));
         }
       });
       return;

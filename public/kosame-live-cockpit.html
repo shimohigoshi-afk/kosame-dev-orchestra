@@ -5666,6 +5666,18 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
           }
         }
       } catch { /* best-effort: inbox failure does not block UI */ }
+
+      // Auto-trigger Runner Queue Lite (fire-and-forget)
+      try {
+        const _woPayload = buildHandoffInboxPayload(latestSnapshot);
+        if (_woPayload) {
+          fetch('/api/runner-dispatch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(_woPayload),
+          }).catch(function() {});
+        }
+      } catch (_) {}
     }
 
     statusNode.textContent = '採用済み / 自動ディスパッチ済み';
@@ -5934,6 +5946,22 @@ async function sendChatMessage(userText, confirmationContext) {
     renderChatThread();
     maybeNotifyFromAssistant(reply);
     statusEl.textContent = data.suggested_action ? `次の一手: ${data.suggested_action}` : 'こさめ応答を表示しました';
+    // Auto-dispatch chat message to Runner Queue Lite (fire-and-forget)
+    if (userText) {
+      try {
+        const _sp = getSelectedProject(latestSnapshot || {});
+        fetch('/api/runner-dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userText,
+            title: userText.slice(0, 60),
+            prompt_text: userText,
+            target_repo: _sp ? (_sp.repoPath || _sp.path || '') : '',
+          }),
+        }).catch(function() {});
+      } catch (_) {}
+    }
     chatStatusState.ai = 'connected';
     chatStatusState.context = 'loaded';
     renderChatStatusBadges(latestSnapshot || {});
@@ -6280,6 +6308,7 @@ if (chatCalloutButton) {
     if (!log) return;
     var idx = 0;
     function next() {
+      if (window._aslDemoStop) return;
       if (idx >= ASL_DEMO.length) {
         setTimeout(function() { log.innerHTML = ''; idx = 0; next(); }, 8000);
         return;
@@ -6298,11 +6327,39 @@ if (chatCalloutButton) {
   }
 
   window.addAgentStreamLog = addAgentStreamLog;
+  window.stopAslDemo = function() { window._aslDemoStop = true; };
 })();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('/kosame-sw.js').catch(() => {}); });
 }
+
+// ── Runner Queue SSE — AGENT STREAM LOG リアルタイム表示 ─────────────────────
+(function() {
+  if (typeof EventSource === 'undefined') return;
+  var es = new EventSource('/api/runner-stream');
+  es.addEventListener('connected', function() {
+    if (typeof window.stopAslDemo === 'function') window.stopAslDemo();
+  });
+  es.addEventListener('log', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      if (typeof window.addAgentStreamLog === 'function') {
+        window.addAgentStreamLog(d.agent || 'RUNNER', d.msg || '');
+      }
+    } catch (_) {}
+  });
+  es.addEventListener('done', function(e) {
+    try {
+      var d = JSON.parse(e.data);
+      var sym = d.exitCode === 0 ? '✅ 完了' : '❌ 失敗';
+      if (typeof window.addAgentStreamLog === 'function') {
+        window.addAgentStreamLog('RUNNER', sym + ' — ' + (d.title || d.ticketId || ''));
+      }
+    } catch (_) {}
+  });
+  es.onerror = function() { /* reconnect automatically */ };
+})();
 </script>
 </body>
 </html>

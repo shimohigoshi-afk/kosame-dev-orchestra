@@ -83,7 +83,7 @@ async function main() {
     checkContains("html: addAgentStreamLog called on SSE event", htmlSrc, /addEventListener\('log'[\s\S]{0,200}addAgentStreamLog/);
     checkContains("html: window.stopAslDemo exposed", htmlSrc, "window.stopAslDemo = function()");
     checkContains("html: _aslDemoStop guard in demo loop", htmlSrc, "window._aslDemoStop");
-    checkContains("html: auto-dispatch POST /api/runner-dispatch in sendChatMessage", htmlSrc, /sendChatMessage[\s\S]{0,2000}runner-dispatch/);
+    checkContains("html: auto-dispatch POST /api/runner-dispatch in sendChatMessage", htmlSrc, /sendChatMessage[\s\S]{0,4000}runner-dispatch/);
     checkContains("html: auto-dispatch in approve flow", htmlSrc, /採用済み.*[Rr]unner[\s\S]{0,500}runner-dispatch|runner-dispatch[\s\S]{0,500}採用済み/s);
     checkContains("html: #agent-stream-log div present", htmlSrc, 'id="agent-stream-log"');
     checkContains("html: aria-live on agent-stream-log", htmlSrc, 'aria-live="polite"');

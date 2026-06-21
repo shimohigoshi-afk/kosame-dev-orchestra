@@ -120,6 +120,19 @@ function normalizeMessageBody(source) {
     if (candidate) contextValues.push(candidate);
   }
 
+  const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
+  const attachments = rawAttachments.slice(0, 5).map((a) => ({
+    name: String(a.name || '').slice(0, 200),
+    ext: String(a.ext || '').slice(0, 10).toLowerCase(),
+    size: Number.isFinite(Number(a.size)) ? Number(a.size) : 0,
+    mimeType: String(a.mimeType || 'application/octet-stream').slice(0, 80),
+    textContent: typeof a.textContent === 'string' ? a.textContent.slice(0, 6000) : null,
+    base64DataUrl: typeof a.base64DataUrl === 'string' ? a.base64DataUrl.slice(0, 1200000) : null,
+  }));
+
+  const rawDetectedUrls = Array.isArray(body.detectedUrls) ? body.detectedUrls : [];
+  const detectedUrls = rawDetectedUrls.slice(0, 3).map((u) => String(u || '').slice(0, 300)).filter(Boolean);
+
   return {
     messages: normalizedMessages,
     project: normalizeContent(body.project),
@@ -127,6 +140,8 @@ function normalizeMessageBody(source) {
     contextSummary: normalizeContent(body.contextSummary || body.snapshotSummary || body.consoleContextSummary || body.stateContext).slice(0, MAX_CONTEXT_LENGTH),
     confirmationContext: normalizeContent(body.confirmationContext),
     contextValues,
+    attachments,
+    detectedUrls,
   };
 }
 
@@ -903,6 +918,8 @@ function normalizeChatRequest(body) {
     selectedProjectPath: normalizeContent(source.selectedProjectPath || source.selected_project_path),
     selectedProjectLabel: normalizeContent(source.selectedProjectLabel || source.selected_project_label),
     workOrderDraft: source.workOrderDraft && typeof source.workOrderDraft === 'object' ? source.workOrderDraft : null,
+    attachments: normalized.attachments,
+    detectedUrls: normalized.detectedUrls,
   };
 }
 
@@ -985,9 +1002,40 @@ async function handleChatRequest(body) {
     const keyPresent = isKeyPresent();
     const liveFlag = process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED;
     process.stderr.write(`[chat-gpt] keyPresent=${keyPresent} LIVE_CALLS_ENABLED=${liveFlag} isLive=${isLiveEnabled()}\n`);
-    const gptMessages = normalized.messages.length > 0
-      ? normalized.messages
-      : [{ role: 'user', content: message }];
+
+    // Build augmented messages with attachment content
+    const attachments = normalized.attachments || [];
+    const detectedUrls = normalized.detectedUrls || [];
+    let augmentedMessage = message;
+    const imageParts = [];
+
+    for (const att of attachments) {
+      if (att.base64DataUrl && (att.ext === '.png' || att.ext === '.jpg' || att.ext === '.jpeg')) {
+        imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
+      } else if (att.textContent) {
+        augmentedMessage += `\n\n--- 添付ファイル: ${att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
+      } else {
+        augmentedMessage += `\n\n[添付: ${att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
+      }
+    }
+    if (detectedUrls.length && !attachments.length) {
+      augmentedMessage += `\n\n[URL検出: ${detectedUrls.join(', ')}]\nこのページをクローンして実装してください。`;
+    }
+
+    let gptMessages;
+    if (imageParts.length) {
+      const textPart = { type: 'text', text: augmentedMessage };
+      const userContent = [textPart, ...imageParts];
+      const baseMessages = normalized.messages.length > 1 ? normalized.messages.slice(0, -1) : [];
+      gptMessages = [...baseMessages, { role: 'user', content: userContent }];
+    } else {
+      gptMessages = normalized.messages.length > 0
+        ? normalized.messages.map((m, i) => i === normalized.messages.length - 1 && m.role === 'user'
+            ? { role: 'user', content: augmentedMessage }
+            : m)
+        : [{ role: 'user', content: augmentedMessage }];
+    }
+
     console.log('[GPT] calling... isLive=' + isLiveEnabled());
     const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
     process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);

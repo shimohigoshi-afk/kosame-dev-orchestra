@@ -72,7 +72,7 @@ async function callKosameGPT(messages, opts = {}) {
   const timeoutMs = Math.min(Number.isFinite(Number(opts.timeoutMs)) ? Number(opts.timeoutMs) : CHAT_TIMEOUT_MS, 30000);
 
   const msgArray = Array.isArray(messages) && messages.length > 0
-    ? messages.filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
+    ? messages.filter(m => m && typeof m.role === 'string' && (typeof m.content === 'string' || Array.isArray(m.content)))
     : [];
   if (!msgArray.length) {
     return { ok: false, reply: null, dryRun: false, reason: 'no valid messages to send' };

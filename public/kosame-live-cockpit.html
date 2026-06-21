@@ -1876,6 +1876,26 @@ h1 {
 .chat-btn#chat-send { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); font-weight: 700; }
 .chat-btn#chat-send:hover { background: rgba(125,211,252,0.2); }
 
+/* File attachment UI */
+.chat-input-wrapper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.chat-input-with-btn { display: flex; align-items: flex-start; gap: 6px; }
+.chat-input-with-btn textarea { flex: 1; min-width: 0; }
+.chat-attach-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; margin-top: 2px; }
+.chat-attach-btn:hover { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); }
+.chat-attach-btn.has-files { border-color: rgba(125,211,252,0.5); background: rgba(125,211,252,0.1); }
+.chat-attachments-preview { display: flex; flex-wrap: wrap; gap: 5px; }
+.chat-attach-chip { display: flex; align-items: center; gap: 5px; background: rgba(125,211,252,0.08); border: 1px solid rgba(125,211,252,0.22); border-radius: 8px; padding: 4px 7px 4px 5px; font-size: 12px; max-width: 200px; }
+.chat-attach-chip-thumb { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.chat-attach-chip-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.chat-attach-chip-info { min-width: 0; flex: 1; }
+.chat-attach-chip-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.chat-attach-chip-meta { color: var(--muted); font-size: 10px; }
+.chat-attach-chip-preview { color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.chat-attach-remove { background: none; border: none; cursor: pointer; color: var(--muted); padding: 0 0 0 2px; font-size: 14px; line-height: 1; }
+.chat-attach-remove:hover { color: var(--text); }
+.chat-url-banner { background: rgba(125,211,252,0.07); border: 1px solid rgba(125,211,252,0.2); border-radius: 7px; padding: 5px 10px; font-size: 12px; color: rgba(125,211,252,0.85); display: flex; align-items: center; gap: 5px; }
+.chat-drop-highlight .chat-input-with-btn textarea { border-color: rgba(125,211,252,0.55) !important; background: rgba(125,211,252,0.06) !important; }
+
 /* API Cost section */
 .api-cost-outer { order: 7; }
 
@@ -2229,7 +2249,15 @@ h1 {
         </div>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
           <div class="chat-primary-row">
-            <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。"></textarea>
+            <div class="chat-input-wrapper" id="chat-input-wrapper">
+              <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
+              <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
+              <div class="chat-input-with-btn">
+                <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付">📎</button>
+                <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
+              </div>
+              <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.mp4" multiple style="display:none" aria-hidden="true">
+            </div>
             <button type="button" class="chat-primary-btn" id="chat-proceed">この方針で進める</button>
           </div>
         </div>
@@ -5698,6 +5726,121 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
   }
 }
 
+// ─── File attachment state ──────────────────────────────────────────────────
+var _chatAttachments = [];
+var _ATTACH_MAX = 5;
+var _ATTACH_TEXT_EXTS = { '.md': true, '.txt': true };
+var _ATTACH_IMAGE_EXTS = { '.png': true, '.jpg': true, '.jpeg': true };
+var _ATTACH_FILE_ICONS = { '.md': '📄', '.txt': '📄', '.docx': '📝', '.pptx': '📊', '.xlsx': '📊', '.mp4': '🎬', '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️' };
+var _ATTACH_ALLOWED_EXTS = { '.md': true, '.txt': true, '.docx': true, '.pptx': true, '.xlsx': true, '.png': true, '.jpg': true, '.jpeg': true, '.mp4': true };
+
+function _attachExt(name) {
+  var m = String(name || '').match(/(\.[^.]+)$/);
+  return m ? m[1].toLowerCase() : '';
+}
+function _attachIcon(name) { return _ATTACH_FILE_ICONS[_attachExt(name)] || '📎'; }
+function _attachLabel(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+}
+function _readFileAs(file, mode) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function() { resolve(String(reader.result || '')); };
+    reader.onerror = function() { resolve(''); };
+    if (mode === 'text') reader.readAsText(file, 'utf-8');
+    else reader.readAsDataURL(file);
+  });
+}
+async function _processAttachFile(file) {
+  var ext = _attachExt(file.name);
+  var isImage = !!_ATTACH_IMAGE_EXTS[ext];
+  var isText = !!_ATTACH_TEXT_EXTS[ext];
+  var att = {
+    id: 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    name: file.name, ext: ext, size: file.size,
+    mimeType: file.type || 'application/octet-stream',
+    textContent: null, base64DataUrl: null, textPreview: null,
+  };
+  if (isImage) {
+    att.base64DataUrl = await _readFileAs(file, 'dataurl');
+  } else if (isText) {
+    var t = await _readFileAs(file, 'text');
+    att.textContent = t.slice(0, 8000);
+    att.textPreview = t.split('\n').map(function(l){return l.trim();}).filter(Boolean).slice(0, 3).join(' / ');
+  } else {
+    var t2 = await _readFileAs(file, 'text');
+    att.textContent = t2.slice(0, 4000);
+    att.textPreview = 'バイナリファイル (' + ext + ')';
+  }
+  return att;
+}
+async function addChatAttachments(files) {
+  var fileList = Array.from(files || []);
+  for (var i = 0; i < fileList.length && _chatAttachments.length < _ATTACH_MAX; i++) {
+    var f = fileList[i];
+    if (!_ATTACH_ALLOWED_EXTS[_attachExt(f.name)]) continue;
+    var att = await _processAttachFile(f);
+    _chatAttachments.push(att);
+  }
+  renderAttachmentPreviews();
+}
+function removeAttachment(id) {
+  _chatAttachments = _chatAttachments.filter(function(a){return a.id !== id;});
+  renderAttachmentPreviews();
+}
+function renderAttachmentPreviews() {
+  var container = document.getElementById('chat-attachments-preview');
+  var btn = document.getElementById('chat-attach-btn');
+  if (!container) return;
+  if (!_chatAttachments.length) {
+    container.hidden = true; container.innerHTML = '';
+    if (btn) btn.classList.remove('has-files');
+    return;
+  }
+  if (btn) btn.classList.add('has-files');
+  container.hidden = false;
+  container.innerHTML = _chatAttachments.map(function(att) {
+    var icon = att.base64DataUrl
+      ? '<img class="chat-attach-chip-thumb" src="' + att.base64DataUrl + '" alt="' + att.name + '">'
+      : '<span class="chat-attach-chip-icon">' + _attachIcon(att.name) + '</span>';
+    var preview = att.textPreview
+      ? '<div class="chat-attach-chip-preview">' + att.textPreview.slice(0, 60).replace(/</g,'&lt;') + '</div>' : '';
+    return '<div class="chat-attach-chip">' + icon +
+      '<div class="chat-attach-chip-info">' +
+        '<div class="chat-attach-chip-name">' + att.name.replace(/</g,'&lt;') + '</div>' +
+        '<div class="chat-attach-chip-meta">' + att.ext + ' · ' + _attachLabel(att.size) + '</div>' +
+        preview +
+      '</div>' +
+      '<button type="button" class="chat-attach-remove" data-remove-id="' + att.id + '" aria-label="削除">×</button>' +
+    '</div>';
+  }).join('');
+  container.querySelectorAll('[data-remove-id]').forEach(function(b) {
+    b.addEventListener('click', function(){removeAttachment(b.dataset.removeId);});
+  });
+}
+
+// ─── URL detection ──────────────────────────────────────────────────────────
+var _URL_PATTERN = /https?:\/\/[^\s<>"']{8,}/gi;
+function detectUrlsInText(text) {
+  var m = String(text || '').match(_URL_PATTERN);
+  return m ? Array.from(new Set(m)) : [];
+}
+function updateUrlDetectionBanner(text) {
+  var banner = document.getElementById('chat-url-detected');
+  var textEl = document.getElementById('chat-url-text');
+  if (!banner) return;
+  var urls = detectUrlsInText(text);
+  if (urls.length) {
+    banner.hidden = false;
+    if (textEl) textEl.textContent = urls[0].slice(0, 70) + (urls[0].length > 70 ? '…' : '') + ' を検出 — 送信するとページ解析＆クローン実装します';
+  } else {
+    banner.hidden = true;
+    if (textEl) textEl.textContent = '';
+  }
+}
+
 function buildChatPayload(userText, confirmationContext) {
   const selectedProject = getSelectedProject(latestSnapshot || {});
   const latestDraft = getLatestAssistantWorkOrderDraft();
@@ -5717,6 +5860,17 @@ function buildChatPayload(userText, confirmationContext) {
     payload.contextStatus = latestSnapshot.consoleContextStatus || 'ok';
   }
   if (latestDraft) payload.workOrderDraft = latestDraft;
+  if (_chatAttachments.length) {
+    payload.attachments = _chatAttachments.map(function(att) {
+      return {
+        name: att.name, ext: att.ext, size: att.size, mimeType: att.mimeType,
+        textContent: att.textContent,
+        base64DataUrl: att.base64DataUrl ? att.base64DataUrl.slice(0, 1200000) : null,
+      };
+    });
+  }
+  var detectedUrls = detectUrlsInText(trimmedMessage);
+  if (detectedUrls.length) payload.detectedUrls = detectedUrls.slice(0, 3);
   return payload;
 }
 
@@ -5904,8 +6058,19 @@ async function sendChatMessage(userText, confirmationContext) {
   const input = document.getElementById('chat-input');
   const statusEl = document.getElementById('chat-status');
 
+  // Build augmented display text (file names + URL hint shown in chat bubble)
+  let displayText = userText || '';
+  if (userText && _chatAttachments.length) {
+    const fileNames = _chatAttachments.map(function(a){return a.name;}).join(', ');
+    displayText = displayText + '\n\n📎 ' + fileNames;
+  }
+  const _detectedUrls = detectUrlsInText(userText || '');
+  if (userText && _detectedUrls.length && !_chatAttachments.length) {
+    displayText = displayText + '\n\n🔗 ページ解析＆クローン実装リクエスト';
+  }
+
   if (userText) {
-    chatHistory.push({ role: 'user', content: userText });
+    chatHistory.push({ role: 'user', content: displayText });
     input.value = '';
   }
   hideChatCallout();
@@ -5914,10 +6079,26 @@ async function sendChatMessage(userText, confirmationContext) {
   statusEl.textContent = 'こさめ考え中…☂️';
   showTypingIndicator();
 
+  // Snapshot attachments then clear (so UI resets immediately)
+  const _pendingAttachments = _chatAttachments.slice();
+  _chatAttachments = [];
+  renderAttachmentPreviews();
+  updateUrlDetectionBanner('');
+
   try {
     const payload = {
       ...buildChatPayload(userText || '', confirmationContext),
     };
+    // Overwrite attachments with the snapshot taken before clearing
+    if (_pendingAttachments.length) {
+      payload.attachments = _pendingAttachments.map(function(att) {
+        return {
+          name: att.name, ext: att.ext, size: att.size, mimeType: att.mimeType,
+          textContent: att.textContent,
+          base64DataUrl: att.base64DataUrl ? att.base64DataUrl.slice(0, 1200000) : null,
+        };
+      });
+    }
 
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -6118,6 +6299,7 @@ const chatInputNode = document.getElementById('chat-input');
 if (chatInputNode) {
   chatInputNode.addEventListener('input', () => {
     updateChatSummarizeButtonLabel();
+    updateUrlDetectionBanner(chatInputNode.value);
   });
   chatInputNode.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -6125,6 +6307,39 @@ if (chatInputNode) {
       const t = document.getElementById('chat-input').value.trim();
       submitPrioritizedChatInput(t);
     }
+  });
+}
+
+// ─── File attachment: clip button + file input ──────────────────────────────
+const _chatAttachBtn = document.getElementById('chat-attach-btn');
+const _chatFileInput = document.getElementById('chat-file-input');
+if (_chatAttachBtn && _chatFileInput) {
+  _chatAttachBtn.addEventListener('click', function() { _chatFileInput.click(); });
+  _chatFileInput.addEventListener('change', function() {
+    if (_chatFileInput.files && _chatFileInput.files.length) {
+      addChatAttachments(_chatFileInput.files);
+      _chatFileInput.value = '';
+    }
+  });
+}
+
+// ─── File attachment: drag & drop on input wrapper ──────────────────────────
+const _chatInputWrapper = document.getElementById('chat-input-wrapper');
+if (_chatInputWrapper) {
+  _chatInputWrapper.addEventListener('dragover', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    _chatInputWrapper.classList.add('chat-drop-highlight');
+  });
+  _chatInputWrapper.addEventListener('dragleave', function(e) {
+    if (!_chatInputWrapper.contains(e.relatedTarget)) {
+      _chatInputWrapper.classList.remove('chat-drop-highlight');
+    }
+  });
+  _chatInputWrapper.addEventListener('drop', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    _chatInputWrapper.classList.remove('chat-drop-highlight');
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) addChatAttachments(files);
   });
 }
 

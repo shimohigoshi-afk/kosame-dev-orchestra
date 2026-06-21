@@ -6,7 +6,7 @@
 
 const https = require('node:https');
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_TIMEOUT_MS = 10000;
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
 

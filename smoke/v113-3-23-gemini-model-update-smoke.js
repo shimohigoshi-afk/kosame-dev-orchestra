@@ -1,6 +1,6 @@
 'use strict';
 
-// Smoke test for v113.3.22: Gemini model updated to gemini-2.0-flash.
+// Smoke test for v113.3.23: Gemini model updated to gemini-2.5-flash.
 // Does NOT make live API calls. Does NOT read secrets.
 
 const fs = require('fs');
@@ -30,15 +30,15 @@ function checkNotContains(label, content, pattern) {
 }
 
 async function main() {
-  console.log('===== v113-3-22-gemini-model-update smoke =====');
-  console.log('Verifies: GEMINI_MODEL updated to gemini-2.0-flash');
+  console.log('===== v113-3-23-gemini-model-update smoke =====');
+  console.log('Verifies: GEMINI_MODEL updated to gemini-2.5-flash');
   console.log('');
 
   const geminiSrc = readFile('tools/kosame-gemini.js');
   if (!geminiSrc) { fail('kosame-gemini.js exists', 'file not found'); }
   else {
     ok('kosame-gemini.js exists');
-    checkContains('gemini: model is gemini-2.5-flash', geminiSrc, "gemini-2.5-flash");
+    checkContains('gemini: model is gemini-2.5-flash', geminiSrc, 'gemini-2.5-flash');
     checkNotContains('gemini: old model gemini-2.0-flash removed', geminiSrc, 'gemini-2.0-flash');
     checkContains('gemini: GEMINI_MODEL constant used in path', geminiSrc, 'GEMINI_MODEL');
   }
@@ -51,12 +51,13 @@ async function main() {
   } catch (e) { fail('package.json: parses as JSON', e.message); }
   if (pkg) {
     const scripts = pkg.scripts || {};
-    if (scripts['smoke:gemini-model-update']) ok('package.json: smoke:gemini-model-update exists');
-    else fail('package.json: smoke:gemini-model-update exists');
+    if (scripts['smoke:gemini-model-update-23']) ok('package.json: smoke:gemini-model-update-23 exists');
+    else fail('package.json: smoke:gemini-model-update-23 exists');
     const verify = scripts['verify'] || '';
-    if (verify.includes('smoke:gemini-model-update')) ok('verify includes smoke:gemini-model-update');
-    else fail('verify includes smoke:gemini-model-update');
-    ok('package.json version check: skipped (version advances with each release)');
+    if (verify.includes('smoke:gemini-model-update-23')) ok('verify includes smoke:gemini-model-update-23');
+    else fail('verify includes smoke:gemini-model-update-23');
+    if (String(pkg.version || '').includes('113.3.23')) ok('package.json version: 113.3.23');
+    else fail('package.json version: 113.3.23', `got ${pkg.version}`);
   }
 
   console.log(`\n===== result: ${passed} passed / ${failed} failed =====`);

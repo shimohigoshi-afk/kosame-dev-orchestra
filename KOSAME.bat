@@ -15,7 +15,10 @@ if %errorlevel% neq 0 (
     wsl --distribution Ubuntu --exec echo ok >nul 2>&1
     timeout /t 6 /nobreak >nul
 )
-echo  [1/3] WSL: 起動済み
+echo  [1/4] WSL: 起動済み
+
+:: ─── APIキーウィザード ────────────────────────────────────────────────────
+wsl -d Ubuntu bash -lc "cd ~/kosame-dev-orchestra && bash tools/kosame-api-key-wizard.sh"
 
 :: ─── cockpit:server 起動 ─────────────────────────────────────────────────
 echo  [2/4] cockpit:server を起動します...

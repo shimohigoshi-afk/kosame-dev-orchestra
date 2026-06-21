@@ -1080,6 +1080,31 @@ async function handleChatRequest(body) {
       gptMessages = [...sessionHistory, { role: 'user', content: augmentedMessage }];
     }
 
+    // Spec-to-Tasks: detect design doc intent and auto-generate work tickets
+    try {
+      const { detectSpecIntent, processSpec } = require('./kosame-spec-to-tasks');
+      const specIntent = detectSpecIntent(message, attachments);
+      if (specIntent.isSpec) {
+        process.stderr.write(`[spec-to-tasks] spec detected — running pipeline\n`);
+        const specResult = await processSpec({
+          message,
+          attachments,
+          projectPath: normalized.selectedProjectPath || '/home/lavie/kosame-dev-orchestra',
+        });
+        if (specResult.ok) {
+          const taskTitles = specResult.tasks.slice(0, 5).map((t, i) => `${i + 1}. ${t.title}`).join('\n');
+          result.reply = `設計書を受け付けました。作業票 ${specResult.savedCount} 件を生成してHandoff Inboxに保存しました。Runnerが自動実行します。\n\n生成された作業票:\n${taskTitles}${specResult.tasks.length > 5 ? `\n...他 ${specResult.tasks.length - 5} 件` : ''}\n\n完了したらAGENT STREAM LOGに「完成しました」と表示されます。`;
+          process.stderr.write(`[spec-to-tasks] pipeline ok — ${specResult.savedCount} tickets saved\n`);
+        } else {
+          result.reply = `設計書の処理に失敗しました: ${specResult.error || '不明なエラー'}`;
+          process.stderr.write(`[spec-to-tasks] pipeline failed: ${specResult.error}\n`);
+        }
+        return result;
+      }
+    } catch (specErr) {
+      process.stderr.write(`[spec-to-tasks] ERROR: ${specErr && specErr.message ? specErr.message : String(specErr)}\n`);
+    }
+
     console.log('[GPT] calling... isLive=' + isLiveEnabled());
     const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
     process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);

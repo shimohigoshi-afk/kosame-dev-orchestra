@@ -30,13 +30,9 @@ async function askGeminiAboutYouTube(url, timeoutMs = GEMINI_TIMEOUT_MS) {
   }
 
   const key = process.env.GEMINI_API_KEY;
+  const prompt = `この動画について教えて：${url}`;
   const body = JSON.stringify({
-    contents: [{
-      parts: [
-        { text: 'この動画の内容を詳しく教えてください。' },
-        { file_data: { mime_type: 'video/*', file_uri: url } },
-      ],
-    }],
+    contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { maxOutputTokens: 1000 },
   });
 
@@ -68,10 +64,12 @@ async function askGeminiAboutYouTube(url, timeoutMs = GEMINI_TIMEOUT_MS) {
         if (done) return;
         done = true;
         clearTimeout(timer);
+        process.stderr.write('[Gemini] response received\n');
         try {
           const data = JSON.parse(raw);
           const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
           if (text) {
+            process.stderr.write(`[Gemini] response: ${text.slice(0, 100)}\n`);
             process.stderr.write('[Gemini] done\n');
             resolve({ text, error: null, timedOut: false });
           } else {
@@ -94,6 +92,7 @@ async function askGeminiAboutYouTube(url, timeoutMs = GEMINI_TIMEOUT_MS) {
       resolve({ text: null, error: e.message, timedOut: false });
     });
 
+    process.stderr.write('[Gemini] request sent\n');
     req.write(body);
     req.end();
   });

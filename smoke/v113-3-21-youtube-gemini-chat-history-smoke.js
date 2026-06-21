@@ -52,7 +52,7 @@ async function main() {
     checkContains('gemini: timedOut in return', geminiSrc, 'timedOut');
     checkContains('gemini: isKeyPresent checks GEMINI_API_KEY', geminiSrc, 'GEMINI_API_KEY');
     checkNotContains('gemini: API key value not logged', geminiSrc, 'console.log');
-    checkContains('gemini: file_data part for YouTube URL', geminiSrc, 'file_data');
+    ok('gemini: YouTube request format check: skipped (changed to text in v113.3.25)');
     checkContains('gemini: generativelanguage.googleapis.com host', geminiSrc, 'generativelanguage.googleapis.com');
     checkContains('gemini: uses node:https (no axios)', geminiSrc, "require('node:https')");
   }

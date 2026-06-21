@@ -975,15 +975,24 @@ async function handleChatRequest(body) {
 
   // Try live GPT call with こさめ persona — falls back to local reply if unavailable
   try {
+    const { isLiveEnabled, isKeyPresent } = require('./kosame-chat-gpt');
+    const keyPresent = isKeyPresent();
+    const liveFlag = process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED;
+    process.stderr.write(`[chat-gpt] keyPresent=${keyPresent} LIVE_CALLS_ENABLED=${liveFlag} isLive=${isLiveEnabled()}\n`);
     const gptMessages = normalized.messages.length > 0
       ? normalized.messages
       : [{ role: 'user', content: message }];
     const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
+    process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);
     if (gptResult.ok && gptResult.reply) {
       result.reply = gptResult.reply;
       result.gptProvider = 'openai';
+      process.stderr.write('[chat-gpt] GPT reply used\n');
+    } else {
+      process.stderr.write('[chat-gpt] fallback to local reply\n');
     }
-  } catch {
+  } catch (err) {
+    process.stderr.write(`[chat-gpt] ERROR: ${err && err.message ? err.message : String(err)}\n`);
     // fall through to local reply
   }
 

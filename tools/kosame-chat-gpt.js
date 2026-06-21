@@ -26,10 +26,12 @@ function loadProviderConfig() {
   catch { return {}; }
 }
 
+function isKeyPresent() {
+  return typeof process.env.OPENAI_API_KEY === 'string' && process.env.OPENAI_API_KEY.length > 0;
+}
+
 function isLiveEnabled() {
-  const keyPresent = typeof process.env.OPENAI_API_KEY === 'string' && process.env.OPENAI_API_KEY.length > 0;
-  const liveEnabled = process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED === 'true';
-  return keyPresent && liveEnabled;
+  return isKeyPresent() && process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED === 'true';
 }
 
 function getModel() {
@@ -127,6 +129,7 @@ async function callKosameGPT(messages, opts = {}) {
 module.exports = {
   callKosameGPT,
   isLiveEnabled,
+  isKeyPresent,
   loadPersona,
   loadProviderConfig,
   getModel,

@@ -129,11 +129,11 @@ function decideTaskRoute(taskPacket) {
     return {
       success: true,
       dryRun: true,
-      recommendedOwner: "kosame_pm",
-      reason: `Unknown task kind "${kind}" — escalating to PM for triage`,
-      humanApprovalRequired: false,
-      blocked: false,
-      nextAction: "PM to triage and assign appropriate owner",
+      recommendedOwner: "human",
+      reason: `Unknown task kind "${kind}" — blocked pending Human Approval (Safety Stop: unrecognised kind)`,
+      humanApprovalRequired: true,
+      blocked: true,
+      nextAction: "Obtain Human Approval before proceeding with unknown task kind",
     };
   }
 

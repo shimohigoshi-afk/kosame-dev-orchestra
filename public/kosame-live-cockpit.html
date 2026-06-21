@@ -5729,6 +5729,16 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
 // ─── File attachment state ──────────────────────────────────────────────────
 var _chatAttachments = [];
 var _ATTACH_MAX = 5;
+
+// ─── Chat session ID (persisted in localStorage for conversation history) ───
+var _chatSessionId = (function() {
+  var STORAGE_KEY = 'kosame_chat_session_id';
+  var existing = localStorage.getItem(STORAGE_KEY);
+  if (existing && /^[a-zA-Z0-9_-]{16,64}$/.test(existing)) return existing;
+  var id = 'sess-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  try { localStorage.setItem(STORAGE_KEY, id); } catch (_) {}
+  return id;
+}());
 var _ATTACH_TEXT_EXTS = { '.md': true, '.txt': true };
 var _ATTACH_IMAGE_EXTS = { '.png': true, '.jpg': true, '.jpeg': true };
 var _ATTACH_FILE_ICONS = { '.md': '📄', '.txt': '📄', '.docx': '📝', '.pptx': '📊', '.xlsx': '📊', '.mp4': '🎬', '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️' };
@@ -5871,6 +5881,7 @@ function buildChatPayload(userText, confirmationContext) {
   }
   var detectedUrls = detectUrlsInText(trimmedMessage);
   if (detectedUrls.length) payload.detectedUrls = detectedUrls.slice(0, 3);
+  if (_chatSessionId) payload.sessionId = _chatSessionId;
   return payload;
 }
 

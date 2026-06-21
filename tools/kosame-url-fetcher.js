@@ -8,6 +8,7 @@ const https = require('node:https');
 const http = require('node:http');
 
 const FETCH_TIMEOUT_MS = 9000;
+const YOUTUBE_TIMEOUT_MS = 5000;
 const MAX_BODY_BYTES = 600000;
 const MAX_REDIRECTS = 4;
 
@@ -100,26 +101,29 @@ function extractYouTubeVideoId(url) {
   return m ? m[1] : null;
 }
 
-async function fetchYouTubeTranscript(videoId, timeoutMs = FETCH_TIMEOUT_MS) {
-  const page = await _fetchRaw(`https://www.youtube.com/watch?v=${videoId}`, timeoutMs);
-  if (!page.ok || !page.text) return null;
+async function _doFetchYouTubeTranscript(videoId, perReqTimeoutMs) {
+  const page = await _fetchRaw(`https://www.youtube.com/watch?v=${videoId}`, perReqTimeoutMs);
+  if (!page.ok || !page.text) return { transcript: null, title: null, error: page.error || 'page fetch failed' };
+
+  const titleMatch = page.text.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
+  const title = titleMatch ? htmlToText(titleMatch[1]).replace(/\s*[-–]\s*YouTube$/i, '').trim().slice(0, 120) : null;
 
   const pmMatch = page.text.match(/ytInitialPlayerResponse\s*=\s*(\{[\s\S]{0,300000}?\});(?:\s*(?:var |<\/script>))/);
-  if (!pmMatch) return null;
+  if (!pmMatch) return { transcript: null, title };
 
   let playerData;
-  try { playerData = JSON.parse(pmMatch[1]); } catch { return null; }
+  try { playerData = JSON.parse(pmMatch[1]); } catch { return { transcript: null, title }; }
 
   const tracks = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-  if (!Array.isArray(tracks) || !tracks.length) return null;
+  if (!Array.isArray(tracks) || !tracks.length) return { transcript: null, title };
 
   const track = tracks.find((t) => t.languageCode === 'ja')
     || tracks.find((t) => t.languageCode === 'en')
     || tracks[0];
-  if (!track?.baseUrl) return null;
+  if (!track?.baseUrl) return { transcript: null, title };
 
-  const xmlFetch = await _fetchRaw(`${track.baseUrl}&fmt=json3`, timeoutMs);
-  if (!xmlFetch.ok || !xmlFetch.text) return null;
+  const xmlFetch = await _fetchRaw(`${track.baseUrl}&fmt=json3`, perReqTimeoutMs);
+  if (!xmlFetch.ok || !xmlFetch.text) return { transcript: null, title };
 
   try {
     const data = JSON.parse(xmlFetch.text);
@@ -127,8 +131,27 @@ async function fetchYouTubeTranscript(videoId, timeoutMs = FETCH_TIMEOUT_MS) {
       .filter((e) => Array.isArray(e.segs))
       .map((e) => e.segs.map((s) => s.utf8 || '').join('').trim())
       .filter(Boolean);
-    return lines.join(' ').slice(0, 8000) || null;
-  } catch { return null; }
+    return { transcript: lines.join(' ').slice(0, 8000) || null, title };
+  } catch { return { transcript: null, title }; }
+}
+
+async function fetchYouTubeTranscript(videoId, timeoutMs = YOUTUBE_TIMEOUT_MS) {
+  process.stderr.write('[YouTube] fetching captions...\n');
+  const timedOutResult = { transcript: null, title: null, timedOut: true };
+  const totalTimeoutPromise = new Promise((resolve) => setTimeout(() => resolve(timedOutResult), timeoutMs));
+  let result;
+  try {
+    result = await Promise.race([totalTimeoutPromise, _doFetchYouTubeTranscript(videoId, timeoutMs)]);
+    if (result.timedOut) {
+      process.stderr.write('[YouTube] timeout\n');
+    } else {
+      process.stderr.write(`[YouTube] done transcript=${!!result.transcript} title=${!!result.title}\n`);
+    }
+  } catch (e) {
+    process.stderr.write(`[YouTube] error: ${e && e.message ? e.message : String(e)}\n`);
+    result = { transcript: null, title: null, error: e && e.message ? e.message : String(e) };
+  }
+  return result;
 }
 
 function _looksLoginRequired(html, statusCode) {
@@ -156,14 +179,17 @@ function _looksLoginRequired(html, statusCode) {
 async function analyzeUrl(url, timeoutMs = FETCH_TIMEOUT_MS) {
   const result = {
     url, text: null, title: null, youtubeTranscript: null,
-    isYouTube: false, loginRequired: false, error: null,
+    isYouTube: false, loginRequired: false, timedOut: false, error: null,
   };
 
   if (isYouTubeUrl(url)) {
     result.isYouTube = true;
     const videoId = extractYouTubeVideoId(url);
     if (videoId) {
-      result.youtubeTranscript = await fetchYouTubeTranscript(videoId, timeoutMs);
+      const ytResult = await fetchYouTubeTranscript(videoId, YOUTUBE_TIMEOUT_MS);
+      result.youtubeTranscript = ytResult.transcript || null;
+      result.title = ytResult.title || null;
+      result.timedOut = !!ytResult.timedOut;
     }
     return result;
   }

@@ -17,3 +17,6 @@ package-lock.json
 
 # Runner queue runtime state and logs
 .kosame-runner/
+
+# Chat session history (user conversation data, never commit)
+.kosame-sessions/

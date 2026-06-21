@@ -133,6 +133,10 @@ function normalizeMessageBody(source) {
   const rawDetectedUrls = Array.isArray(body.detectedUrls) ? body.detectedUrls : [];
   const detectedUrls = rawDetectedUrls.slice(0, 3).map((u) => String(u || '').slice(0, 300)).filter(Boolean);
 
+  const sessionId = typeof body.sessionId === 'string'
+    ? body.sessionId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || null
+    : null;
+
   return {
     messages: normalizedMessages,
     project: normalizeContent(body.project),
@@ -142,6 +146,7 @@ function normalizeMessageBody(source) {
     contextValues,
     attachments,
     detectedUrls,
+    sessionId,
   };
 }
 
@@ -917,6 +922,7 @@ function normalizeChatRequest(body) {
     workOrderDraft: source.workOrderDraft && typeof source.workOrderDraft === 'object' ? source.workOrderDraft : null,
     attachments: normalized.attachments,
     detectedUrls: normalized.detectedUrls,
+    sessionId: normalized.sessionId || null,
   };
 }
 
@@ -1006,6 +1012,7 @@ async function handleChatRequest(body) {
     // Build augmented messages with attachment content
     const attachments = normalized.attachments || [];
     const detectedUrls = normalized.detectedUrls || [];
+    const sessionId = normalized.sessionId || null;
     let augmentedMessage = message;
     const imageParts = [];
 
@@ -1018,28 +1025,47 @@ async function handleChatRequest(body) {
         augmentedMessage += `\n\n[添付: ${att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
       }
     }
-    // Fetch actual URL content for detected URLs
+    // Fetch URL content — YouTube via Gemini, other pages via html scrape
     if (detectedUrls.length) {
       try {
-        const { analyzeUrl } = require('./kosame-url-fetcher');
-        const urlResult = await analyzeUrl(detectedUrls[0]);
-        if (urlResult.loginRequired) {
-          augmentedMessage += `\n\n[${urlResult.url}]\nログインが必要なページは取得できません。`;
-        } else if (urlResult.isYouTube && urlResult.youtubeTranscript) {
-          augmentedMessage += `\n\n[YouTube動画: ${urlResult.url}]\n--- 字幕テキスト ---\n${urlResult.youtubeTranscript}\n---\nこの動画の内容を元に実装してください。`;
-        } else if (urlResult.isYouTube) {
-          augmentedMessage += `\n\n[YouTube動画: ${urlResult.url}]\n字幕を取得できませんでした。URLを元に内容を推測して対応してください。`;
-        } else if (urlResult.text) {
-          const titlePart = urlResult.title ? `タイトル: ${urlResult.title}\n` : '';
-          augmentedMessage += `\n\n[ページ内容: ${urlResult.url}]\n${titlePart}--- ページテキスト ---\n${urlResult.text}\n---\nこのページをクローンして実装してください。`;
-        } else if (urlResult.error) {
-          augmentedMessage += `\n\n[URL取得失敗: ${urlResult.url}] ${urlResult.error}`;
+        const { isYouTubeUrl } = require('./kosame-url-fetcher');
+        if (isYouTubeUrl(detectedUrls[0])) {
+          const { askGeminiAboutYouTube } = require('./kosame-gemini');
+          const geminiResult = await askGeminiAboutYouTube(detectedUrls[0]);
+          if (geminiResult.text) {
+            augmentedMessage += `\n\n[YouTube動画: ${detectedUrls[0]}]\n--- Gemini解析結果 ---\n${geminiResult.text.slice(0, 4000)}\n---\nこの動画の内容を元に対応してください。`;
+          } else {
+            augmentedMessage += `\n\n[YouTube動画: ${detectedUrls[0]}]\nGeminiによる動画解析に失敗しました。URLを元に推測して対応してください。`;
+          }
+          process.stderr.write(`[url-fetch] ${detectedUrls[0]} isYouTube=true gemini=${!!geminiResult.text}\n`);
         } else {
-          augmentedMessage += `\n\n[URL: ${urlResult.url}]\nこのページを参考に実装してください。`;
+          const { analyzeUrl } = require('./kosame-url-fetcher');
+          const urlResult = await analyzeUrl(detectedUrls[0]);
+          if (urlResult.loginRequired) {
+            augmentedMessage += `\n\n[${urlResult.url}]\nログインが必要なページは取得できません。`;
+          } else if (urlResult.text) {
+            const titlePart = urlResult.title ? `タイトル: ${urlResult.title}\n` : '';
+            augmentedMessage += `\n\n[ページ内容: ${urlResult.url}]\n${titlePart}--- ページテキスト ---\n${urlResult.text}\n---\nこのページをクローンして実装してください。`;
+          } else if (urlResult.error) {
+            augmentedMessage += `\n\n[URL取得失敗: ${urlResult.url}] ${urlResult.error}`;
+          } else {
+            augmentedMessage += `\n\n[URL: ${urlResult.url}]\nこのページを参考に実装してください。`;
+          }
+          process.stderr.write(`[url-fetch] ${urlResult.url} loginRequired=${urlResult.loginRequired} isYouTube=false hasText=${!!urlResult.text}\n`);
         }
-        process.stderr.write(`[url-fetch] ${urlResult.url} loginRequired=${urlResult.loginRequired} isYouTube=${urlResult.isYouTube} hasText=${!!urlResult.text}\n`);
       } catch (urlErr) {
         augmentedMessage += `\n\n[URL取得エラー: ${detectedUrls[0]}] ${urlErr && urlErr.message ? urlErr.message : String(urlErr)}`;
+      }
+    }
+
+    // Load session history (last 19 messages) and prepend to GPT messages
+    let sessionHistory = [];
+    if (sessionId) {
+      try {
+        const { getSessionForGPT } = require('./kosame-chat-sessions');
+        sessionHistory = getSessionForGPT(sessionId, 19);
+      } catch (sessErr) {
+        process.stderr.write(`[sessions] load error: ${sessErr.message}\n`);
       }
     }
 
@@ -1047,14 +1073,9 @@ async function handleChatRequest(body) {
     if (imageParts.length) {
       const textPart = { type: 'text', text: augmentedMessage };
       const userContent = [textPart, ...imageParts];
-      const baseMessages = normalized.messages.length > 1 ? normalized.messages.slice(0, -1) : [];
-      gptMessages = [...baseMessages, { role: 'user', content: userContent }];
+      gptMessages = [...sessionHistory, { role: 'user', content: userContent }];
     } else {
-      gptMessages = normalized.messages.length > 0
-        ? normalized.messages.map((m, i) => i === normalized.messages.length - 1 && m.role === 'user'
-            ? { role: 'user', content: augmentedMessage }
-            : m)
-        : [{ role: 'user', content: augmentedMessage }];
+      gptMessages = [...sessionHistory, { role: 'user', content: augmentedMessage }];
     }
 
     console.log('[GPT] calling... isLive=' + isLiveEnabled());
@@ -1064,6 +1085,17 @@ async function handleChatRequest(body) {
       result.reply = gptResult.reply;
       result.gptProvider = 'openai';
       process.stderr.write('[chat-gpt] GPT reply used\n');
+      if (sessionId) {
+        try {
+          const { appendToSession } = require('./kosame-chat-sessions');
+          appendToSession(sessionId, [
+            { role: 'user', content: message },
+            { role: 'assistant', content: gptResult.reply },
+          ]);
+        } catch (sessErr) {
+          process.stderr.write(`[sessions] save error: ${sessErr.message}\n`);
+        }
+      }
     } else {
       process.stderr.write('[chat-gpt] fallback to local reply\n');
     }

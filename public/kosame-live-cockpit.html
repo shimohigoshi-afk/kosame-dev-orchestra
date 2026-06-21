@@ -1808,6 +1808,30 @@ h1 {
 /* ===== Typing indicator ===== */
 .chat-typing-indicator[hidden] { display: none; }
 .chat-typing-indicator { margin-bottom: 0; }
+/* ===== Agent Stream Log ===== */
+.agent-stream-log-body {
+  height: 200px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.22);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.65;
+  scroll-behavior: smooth;
+}
+.asl-entry { margin: 0; padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
+.asl-ts { color: #4a4a6a; }
+.asl-msg { color: #ddd; }
+.asl-agent-KOSAME   { color: #00bcd4; font-weight: bold; }
+.asl-agent-GPT      { color: #10a37f; font-weight: bold; }
+.asl-agent-Claude   { color: #D97757; font-weight: bold; }
+.asl-agent-Gemini   { color: #EA4335; font-weight: bold; }
+.asl-agent-Grok     { color: #8899aa; font-weight: bold; }
+.asl-agent-DeepSeek { color: #4D6BFE; font-weight: bold; }
+.asl-agent-Llama    { color: #6e57d2; font-weight: bold; }
+@keyframes asl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.asl-cursor { animation: asl-blink 1s step-end infinite; color: #666; }
 .typing-dots {
   display: flex;
   align-items: center;
@@ -2188,6 +2212,13 @@ h1 {
             </div>
           </div>
         </div>
+        <!-- AGENT STREAM LOG -->
+        <details class="chat-section-details" id="agent-stream-log-details" open style="margin-top:8px;margin-bottom:8px">
+          <summary class="chat-section-summary">AGENT STREAM LOG</summary>
+          <div style="padding:6px 10px 10px">
+            <div class="agent-stream-log-body" id="agent-stream-log" aria-live="polite"></div>
+          </div>
+        </details>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
           <div class="chat-primary-row">
             <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。"></textarea>
@@ -6131,6 +6162,100 @@ const chatCalloutButton = document.getElementById('chat-callout-jump');
 if (chatCalloutButton) {
   chatCalloutButton.addEventListener('click', scrollToChatPanel);
 }
+
+// ===== Agent Stream Log =====
+(function() {
+  var ASL_AGENTS = {
+    KOSAME:   'asl-agent-KOSAME',
+    GPT:      'asl-agent-GPT',
+    Claude:   'asl-agent-Claude',
+    Gemini:   'asl-agent-Gemini',
+    Grok:     'asl-agent-Grok',
+    DeepSeek: 'asl-agent-DeepSeek',
+    Llama:    'asl-agent-Llama',
+  };
+
+  function aslTs() {
+    var d = new Date();
+    return d.toTimeString().slice(0, 8);
+  }
+
+  function addAgentStreamLog(agent, message) {
+    var log = document.getElementById('agent-stream-log');
+    if (!log) return 0;
+    var cls = ASL_AGENTS[agent] || 'asl-agent-KOSAME';
+    var entry = document.createElement('div');
+    entry.className = 'asl-entry';
+    var ts = document.createElement('span');
+    ts.className = 'asl-ts';
+    ts.textContent = '[' + aslTs() + '] ';
+    var agentSpan = document.createElement('span');
+    agentSpan.className = cls;
+    agentSpan.textContent = agent + ': ';
+    var msgSpan = document.createElement('span');
+    msgSpan.className = 'asl-msg';
+    var cursor = document.createElement('span');
+    cursor.className = 'asl-cursor';
+    cursor.textContent = '|';
+    entry.appendChild(ts);
+    entry.appendChild(agentSpan);
+    entry.appendChild(msgSpan);
+    entry.appendChild(cursor);
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+    var chars = Array.from(message);
+    var i = 0;
+    function next() {
+      if (i >= chars.length) {
+        cursor.style.display = 'none';
+        log.scrollTop = log.scrollHeight;
+        return;
+      }
+      msgSpan.textContent += chars[i++];
+      log.scrollTop = log.scrollHeight;
+      setTimeout(next, 40);
+    }
+    setTimeout(next, 40);
+    return chars.length * 40 + 40;
+  }
+
+  var ASL_DEMO = [
+    { agent: 'KOSAME',   msg: '☂️ じゅんやさん、本日のタスクを確認しました。処理を開始します。' },
+    { agent: 'GPT',      msg: '作業票を精査。優先度順に3件処理する。' },
+    { agent: 'Claude',   msg: '…実装内容を確認しました。テストケースに漏れがないか確認します。' },
+    { agent: 'Gemini',   msg: 'あれー！ このAPIレスポンス、想定と違います！ すぐ確認します！' },
+    { agent: 'Grok',     msg: 'この仕様、少し曖昧な気がしますが…' },
+    { agent: 'DeepSeek', msg: '処理完了。' },
+    { agent: 'Llama',    msg: 'テストカバレッジ不足。追加6件が必要。以上。' },
+    { agent: 'Claude',   msg: 'テストカバレッジ確認が完了しました。問題ありません。🔍' },
+    { agent: 'Gemini',   msg: '確認完了！仕様と一致していました！ ❤️' },
+    { agent: 'KOSAME',   msg: '☂️ 全エージェントの報告を受け取りました。じゅんやさん、いかがでしょうか？ 💙' },
+  ];
+
+  function runAslDemo() {
+    var log = document.getElementById('agent-stream-log');
+    if (!log) return;
+    var idx = 0;
+    function next() {
+      if (idx >= ASL_DEMO.length) {
+        setTimeout(function() { log.innerHTML = ''; idx = 0; next(); }, 8000);
+        return;
+      }
+      var item = ASL_DEMO[idx++];
+      var ms = addAgentStreamLog(item.agent, item.msg) || 600;
+      setTimeout(next, ms + 600);
+    }
+    next();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(runAslDemo, 1500); });
+  } else {
+    setTimeout(runAslDemo, 1500);
+  }
+
+  window.addAgentStreamLog = addAgentStreamLog;
+})();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('/kosame-sw.js').catch(() => {}); });

@@ -7,7 +7,8 @@
 const https = require('node:https');
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_TIMEOUT_MS = 10000;
+const GEMINI_TIMEOUT_MS = 30000;
+const GEMINI_KEY_CHECK_TIMEOUT_MS = 5000;
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
 
 function isKeyPresent() {
@@ -98,4 +99,60 @@ async function askGeminiAboutYouTube(url, timeoutMs = GEMINI_TIMEOUT_MS) {
   });
 }
 
-module.exports = { askGeminiAboutYouTube, isKeyPresent, GEMINI_TIMEOUT_MS };
+/**
+ * Validate GEMINI_API_KEY by calling the models list endpoint.
+ * Logs [Gemini] API key valid / invalid at startup.
+ * @returns {Promise<void>}
+ */
+async function checkGeminiApiKey() {
+  if (!isKeyPresent()) {
+    process.stderr.write('[Gemini] API key invalid: GEMINI_API_KEY not set\n');
+    return;
+  }
+  const key = process.env.GEMINI_API_KEY;
+  return new Promise((resolve) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (!done) {
+        done = true;
+        req.destroy();
+        process.stderr.write('[Gemini] API key invalid: timeout\n');
+        resolve();
+      }
+    }, GEMINI_KEY_CHECK_TIMEOUT_MS);
+
+    const req = https.request({
+      hostname: GEMINI_HOST,
+      path: `/v1beta/models?key=${key}`,
+      method: 'GET',
+    }, (res) => {
+      res.resume();
+      res.on('end', () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (res.statusCode === 200) {
+          process.stderr.write('[Gemini] API key valid\n');
+        } else {
+          process.stderr.write(`[Gemini] API key invalid: HTTP ${res.statusCode}\n`);
+        }
+        resolve();
+      });
+    });
+
+    req.on('error', (e) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      process.stderr.write(`[Gemini] API key invalid: ${e.message}\n`);
+      resolve();
+    });
+
+    req.end();
+  });
+}
+
+// Run key validation at module load (non-blocking)
+checkGeminiApiKey().catch(() => {});
+
+module.exports = { askGeminiAboutYouTube, checkGeminiApiKey, isKeyPresent, GEMINI_TIMEOUT_MS };

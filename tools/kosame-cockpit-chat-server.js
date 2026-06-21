@@ -10,6 +10,8 @@ const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 const { callKosameGPT } = require('./kosame-chat-gpt');
+// Trigger Gemini key check at server startup (non-blocking)
+require('./kosame-gemini');
 
 const PERSONA_PATH = path.join(__dirname, '..', 'config', 'kosame-cockpit-chat-persona.md');
 const CHAT_EVENTS_PATH = path.join(os.homedir(), '.kosame', 'kosame-chat-events.jsonl');

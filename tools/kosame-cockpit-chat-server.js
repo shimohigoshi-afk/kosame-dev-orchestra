@@ -9,6 +9,7 @@ const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOW
 const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
+const { callKosameGPT } = require('./kosame-chat-gpt');
 
 const PERSONA_PATH = path.join(__dirname, '..', 'config', 'kosame-cockpit-chat-persona.md');
 const CHAT_EVENTS_PATH = path.join(os.homedir(), '.kosame', 'kosame-chat-events.jsonl');
@@ -970,6 +971,20 @@ async function handleChatRequest(body) {
 
   if (replyPacket.work_order) {
     result.work_order = replyPacket.work_order;
+  }
+
+  // Try live GPT call with こさめ persona — falls back to local reply if unavailable
+  try {
+    const gptMessages = normalized.messages.length > 0
+      ? normalized.messages
+      : [{ role: 'user', content: message }];
+    const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
+    if (gptResult.ok && gptResult.reply) {
+      result.reply = gptResult.reply;
+      result.gptProvider = 'openai';
+    }
+  } catch {
+    // fall through to local reply
   }
 
   appendChatEvent({

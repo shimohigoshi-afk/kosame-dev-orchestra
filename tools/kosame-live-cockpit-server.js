@@ -318,6 +318,12 @@ function createLiveCockpitServer(options = {}) {
           latestApprovedWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestApprovedWorkOrder ? snapshot.latestApprovedWorkOrder : null,
           latestHandoffWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestHandoffWorkOrder ? snapshot.latestHandoffWorkOrder : null,
         }).then((result) => {
+          // Stream chat reply to AGENT STREAM LOG via SSE
+          if (result && result.ok && result.reply) {
+            try {
+              _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'KOSAME', msg: result.reply });
+            } catch (_) {}
+          }
           const statusCode = result && result.ok === false ? 400 : 200;
           res.writeHead(statusCode, {
             'Content-Type': 'application/json; charset=utf-8',

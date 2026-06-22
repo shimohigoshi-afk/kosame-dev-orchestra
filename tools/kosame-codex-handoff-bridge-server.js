@@ -6,6 +6,14 @@ const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {
+  buildAttachmentManifest,
+  buildSafeHandoffAttachmentSummary,
+  lintHandoffTextOnly,
+  sanitizeAttachmentForHandoff,
+  stripBase64Payloads,
+} = require('./kosame-attachment-store');
+const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_HANDOFF_DIR = path.join(ROOT, '.kosame-handoff');
@@ -102,7 +110,8 @@ function hasForbiddenText(text) {
 }
 
 function sanitizePromptText(promptText) {
-  const lines = normalizeText(promptText)
+  const strippedSource = stripBase64Payloads(promptText).text;
+  const lines = normalizeText(strippedSource)
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
     .filter(Boolean);
@@ -203,11 +212,32 @@ function sanitizeHandoffPayload(payload = {}) {
   const inputSource = compactText(source.source || workOrder.source || 'kosame_console', 40);
   const promptInput = source.body ?? source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? workOrder.body ?? workOrder.prompt_text ?? workOrder.prompt ?? workOrder.safe_prompt_summary ?? '';
   const promptInfo = sanitizePromptText(promptInput);
-  const promptText = compactText(promptInfo.promptText, MAX_TEXT_LENGTH);
   const originalRequest = compactText(source.original_request || source.originalRequest || workOrder.original_request || workOrder.originalRequest || '', MAX_TEXT_LENGTH);
   const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || workOrder.selected_project_id || workOrder.selectedProjectId || '', 60);
   const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || workOrder.selected_project_path || workOrder.selectedProjectPath || '', 160);
   const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || workOrder.selected_project_label || workOrder.selectedProjectLabel || '', 120);
+  const rawAttachments = Array.isArray(source.attachments)
+    ? source.attachments
+    : Array.isArray(workOrder.attachments)
+      ? workOrder.attachments
+      : [];
+  const attachments = rawAttachments
+    .slice(0, 20)
+    .map((attachment, index) => sanitizeAttachmentForHandoff(attachment, {
+      workOrderId: id,
+      createdAt,
+      attachmentIndex: index + 1,
+    }));
+  const attachmentIds = attachments.map((att) => compactText(att.attachmentId || att.id || '', 120)).filter(Boolean);
+  const attachmentSummary = buildSafeHandoffAttachmentSummary({
+    workOrderId: id,
+    attachments,
+  });
+  const strippedPrompt = lintHandoffTextOnly(promptInfo.promptText, attachments);
+  const promptText = compactText(
+    [strippedPrompt.text, attachmentSummary.length ? '## attachments' : '', ...attachmentSummary].filter(Boolean).join('\n'),
+    MAX_TEXT_LENGTH,
+  );
   const safetyConditions = normalizeTextList(source.safety_conditions || source.safetyConditions || workOrder.safety_conditions || workOrder.safetyConditions, 20, 240)
     .map((line) => maskHandoffText(line));
   const reportItems = normalizeTextList(source.report_items || source.reportItems || workOrder.report_items || workOrder.reportItems, 20, 240)
@@ -230,23 +260,17 @@ function sanitizeHandoffPayload(payload = {}) {
   if (!ALLOWED_TARGET_REPOS.has(targetRepo)) throw new Error('target_repo が不明です。');
   if (!assignedAgent) throw new Error('assigned_agent が必要です。');
   if (!promptText) throw new Error('prompt_text が必要です。');
-  const promptGuardText = promptText
-    .split(/\r?\n/)
-    .filter((line) => !isAllowedSafetyLine(line))
-    .join('\n');
+  const promptGuardText = stripBase64Payloads(promptText).text
+    .replace(/\s*##\s+attachments\b[\s\S]*$/i, '')
+    .trim();
+  const attachmentSummaryForGuard = attachmentSummary.filter((line) => !/storedPath:/i.test(line));
   const guardText = [
-    id,
-    targetRepo,
-    assignedAgent,
-    riskLevel,
-    createdAt,
-    inputSource,
+    title,
     originalRequest,
-    selectedProjectId,
-    selectedProjectPath,
-    selectedProjectLabel,
     ...safetyConditions,
     ...reportItems,
+    ...attachmentSummaryForGuard,
+    maskHandoffText(promptGuardText, MAX_TEXT_LENGTH),
   ]
     .filter((line) => !isAllowedSafetyLine(line))
     .join('\n');
@@ -279,6 +303,19 @@ function sanitizeHandoffPayload(payload = {}) {
     created_at: createdAt,
     source: inputSource,
     target,
+    attachments,
+    attachment_count: attachments.length,
+    attachmentCount: attachments.length,
+    attachment_ids: attachmentIds,
+    attachmentIds,
+    attachment_manifest_path: compactText(source.attachment_manifest_path || source.attachmentManifestPath || workOrder.attachment_manifest_path || workOrder.attachmentManifestPath || '', 160),
+    attachmentManifestPath: compactText(source.attachment_manifest_path || source.attachmentManifestPath || workOrder.attachment_manifest_path || workOrder.attachmentManifestPath || '', 160),
+    attachment_dir: compactText(source.attachment_dir || source.attachmentDir || workOrder.attachment_dir || workOrder.attachmentDir || '', 160),
+    attachmentDir: compactText(source.attachment_dir || source.attachmentDir || workOrder.attachment_dir || workOrder.attachmentDir || '', 160),
+    has_image_attachments: attachments.some((att) => att.kind === 'image'),
+    hasImageAttachments: attachments.some((att) => att.kind === 'image'),
+    attachment_summary: attachmentSummary,
+    attachmentSummary,
     redacted_count: promptInfo.redactedCount,
   };
 }
@@ -287,6 +324,7 @@ function buildLatestMarkdown(entry) {
   const safe = sanitizeHandoffPayload(entry);
   const safetyConditions = Array.isArray(safe.safety_conditions) ? safe.safety_conditions : [];
   const reportItems = Array.isArray(safe.report_items) ? safe.report_items : [];
+  const attachments = Array.isArray(safe.attachments) ? safe.attachments : [];
   return [
     '# Codex Handoff Inbox',
     '',
@@ -307,6 +345,10 @@ function buildLatestMarkdown(entry) {
     safe.target ? `- target_id: ${safe.target.id || ''}` : null,
     safe.target ? `- target_label: ${safe.target.label || ''}` : null,
     safe.target ? `- target_path: ${safe.target.path || ''}` : null,
+    attachments.length ? `- attachment_count: ${attachments.length}` : null,
+    Array.isArray(safe.attachment_ids) && safe.attachment_ids.length ? `- attachment_ids: ${safe.attachment_ids.join(', ')}` : null,
+    safe.attachment_manifest_path ? `- attachment_manifest_path: ${safe.attachment_manifest_path}` : null,
+    safe.attachment_dir ? `- attachment_dir: ${safe.attachment_dir}` : null,
     safe.redacted_count ? `- redacted_count: ${safe.redacted_count}` : null,
     '',
     safetyConditions.length ? '## safety_conditions' : null,
@@ -317,6 +359,19 @@ function buildLatestMarkdown(entry) {
     reportItems.length ? '' : null,
     ...reportItems.map((line) => `- ${line}`),
     reportItems.length ? '' : null,
+    attachments.length ? '## attachments' : null,
+    attachments.length ? '' : null,
+    ...attachments.flatMap((att) => [
+      `- attachmentId: ${att.attachmentId}`,
+      `  - originalName: ${att.originalName}`,
+      `  - displayName: ${att.displayName || att.originalName}`,
+      `  - mimeType: ${att.mimeType}`,
+      `  - size: ${att.size}`,
+      `  - kind: ${att.kind}`,
+      `  - storedPath: ${att.storedPath}`,
+      `  - sha256: ${att.sha256}`,
+    ]),
+    attachments.length ? '' : null,
     '## prompt_text',
     '',
     '```text',
@@ -333,12 +388,56 @@ function saveHandoffInbox(payload = {}, options = {}) {
   const latestPath = getLatestPath({ handoffDir });
   const now = new Date().toISOString();
   const safe = sanitizeHandoffPayload(payload);
+  const rawAttachments = Array.isArray(payload.attachments)
+    ? payload.attachments
+    : Array.isArray(payload.work_order && payload.work_order.attachments)
+      ? payload.work_order.attachments
+      : Array.isArray(payload.latestApprovedWorkOrder && payload.latestApprovedWorkOrder.attachments)
+        ? payload.latestApprovedWorkOrder.attachments
+        : [];
+  const attachmentManifest = rawAttachments.length
+    ? buildAttachmentManifest(
+        safe.id || safe.work_order_id || safe.approval_id || `work-order-${Date.now()}`,
+        rawAttachments,
+        {
+          workOrderId: safe.id || safe.work_order_id || safe.approval_id || '',
+          attachmentDir: path.join(handoffDir, 'attachments', String(safe.id || safe.work_order_id || safe.approval_id || 'work-order').replace(/[^\w.-]+/g, '_')),
+          createdAt: now,
+        },
+      )
+    : null;
+  if (attachmentManifest) {
+    appendPipelineStageEvent({
+      stage: 'attachments.manifest.saved',
+      status: 'success',
+      workOrderId: safe.id || safe.work_order_id || safe.approval_id || '',
+      attachmentCount: attachmentManifest.attachments.length,
+      attachmentIds: attachmentManifest.attachments.map((att) => att.attachmentId),
+      manifestPath: attachmentManifest.manifestPath,
+      route: 'handoff',
+      timestamp: now,
+      message: `attachment manifest saved at ${attachmentManifest.manifestPath}`,
+    }, { agent: 'Runner', task: 'attachments.manifest.saved' });
+  }
   const record = {
     ...safe,
     saved_at: now,
     created_at: safe.created_at || now,
     source: 'kosame_console',
   };
+  if (attachmentManifest) {
+    record.attachment_manifest_path = attachmentManifest.manifestPath;
+    record.attachmentManifestPath = attachmentManifest.manifestPath;
+    record.attachment_dir = attachmentManifest.attachmentDir;
+    record.attachmentDir = attachmentManifest.attachmentDir;
+    record.attachment_ids = attachmentManifest.attachments.map((att) => att.attachmentId);
+    record.attachmentIds = record.attachment_ids;
+    record.attachments = attachmentManifest.attachments;
+    record.attachment_count = attachmentManifest.attachments.length;
+    record.attachmentCount = attachmentManifest.attachments.length;
+    record.attachment_summary = buildSafeHandoffAttachmentSummary(attachmentManifest);
+    record.attachmentSummary = record.attachment_summary;
+  }
   ensureDir(handoffDir);
   fs.appendFileSync(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
   fs.writeFileSync(latestPath, buildLatestMarkdown(record), 'utf8');
@@ -349,6 +448,8 @@ function saveHandoffInbox(payload = {}, options = {}) {
     queuePath,
     saved_at: now,
     latestHandoff: record,
+    attachmentManifestPath: record.attachment_manifest_path || '',
+    attachmentIds: Array.isArray(record.attachment_ids) ? record.attachment_ids : [],
   };
 }
 

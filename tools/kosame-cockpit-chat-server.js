@@ -10,6 +10,7 @@ const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 const { callKosameGPT } = require('./kosame-chat-gpt');
+const { appendPipelineStageEvent, formatPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 // Trigger Gemini key check at server startup (non-blocking)
 require('./kosame-gemini');
 
@@ -124,12 +125,19 @@ function normalizeMessageBody(source) {
 
   const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
   const attachments = rawAttachments.slice(0, 5).map((a) => ({
+    attachmentId: String(a.attachmentId || a.id || '').slice(0, 80),
     name: String(a.name || '').slice(0, 200),
+    displayName: String(a.displayName || a.name || '').slice(0, 200),
     ext: String(a.ext || '').slice(0, 10).toLowerCase(),
     size: Number.isFinite(Number(a.size)) ? Number(a.size) : 0,
     mimeType: String(a.mimeType || 'application/octet-stream').slice(0, 80),
     textContent: typeof a.textContent === 'string' ? a.textContent.slice(0, 6000) : null,
     base64DataUrl: typeof a.base64DataUrl === 'string' ? a.base64DataUrl.slice(0, 1200000) : null,
+    kind: /image\//i.test(String(a.mimeType || '')) || ['.png', '.jpg', '.jpeg', '.webp'].includes(String(a.ext || '').toLowerCase())
+      ? 'image'
+      : typeof a.textContent === 'string'
+        ? 'text'
+        : 'binary',
   }));
 
   const rawDetectedUrls = Array.isArray(body.detectedUrls) ? body.detectedUrls : [];
@@ -841,6 +849,43 @@ function buildWorkOrderReply(input, snapshotSummary) {
   };
 }
 
+function formatSpecPipelineFailureReply(specResult) {
+  const errorStage = String(specResult && (specResult.errorStage || specResult.stage || 'spec-to-tasks.pipeline')).trim() || 'spec-to-tasks.pipeline';
+  const errorCode = String(specResult && (specResult.errorCode || 'SPEC_PIPELINE_FAILED')).trim() || 'SPEC_PIPELINE_FAILED';
+  const errorMessage = String(specResult && (specResult.errorMessage || specResult.error || 'pipeline failed')).trim() || 'pipeline failed';
+  const workOrderId = String(specResult && (specResult.workOrderId || specResult.work_order_id || '')).trim();
+  const attachmentCount = Number.isFinite(Number(specResult && specResult.attachmentCount)) ? Number(specResult.attachmentCount) : 0;
+  const attachmentIds = Array.isArray(specResult && specResult.attachmentIds) ? specResult.attachmentIds.filter(Boolean).join(', ') : '';
+  const manifestPath = String(specResult && (specResult.manifestPath || specResult.attachmentManifestPath || '')).trim();
+  const route = String(specResult && specResult.route || 'spec-to-tasks').trim() || 'spec-to-tasks';
+  const lines = [
+    '設計書の処理に失敗しました:',
+    `stage=${errorStage}`,
+    `code=${errorCode}`,
+    `message=${errorMessage}`,
+    workOrderId ? `workOrderId=${workOrderId}` : null,
+    `attachmentCount=${attachmentCount}`,
+    attachmentIds ? `attachmentIds=${attachmentIds}` : null,
+    manifestPath ? `manifestPath=${manifestPath}` : null,
+    `route=${route}`,
+  ].filter(Boolean);
+  return {
+    reply: lines.join('\n'),
+    error_details: {
+      errorStage,
+      errorCode,
+      errorMessage,
+      workOrderId,
+      attachmentCount,
+      attachmentIds: Array.isArray(specResult && specResult.attachmentIds) ? specResult.attachmentIds : [],
+      manifestPath,
+      route,
+      timestamp: String(specResult && specResult.timestamp || new Date().toISOString()),
+      stageHistory: Array.isArray(specResult && specResult.stageHistory) ? specResult.stageHistory : [],
+    },
+  };
+}
+
 function detectIntent(message) {
   const text = normalizeContent(message);
   if (!text) return 'empty';
@@ -940,6 +985,29 @@ async function handleChatRequest(body) {
   const context = normalizeContent(normalized.context);
   const contextSummary = normalizeContent(source.contextSummary || source.context || normalized.contextSummary);
   const directText = [message, project].filter(Boolean).join(' ');
+  const attachmentIds = (normalized.attachments || []).map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean);
+  appendPipelineStageEvent({
+    stage: 'chat.received',
+    status: 'running',
+    workOrderId: '',
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route: 'chat',
+    timestamp: requestAt,
+    message: `KOSAME: 受信した入力を受け付けました☂️`,
+  }, { agent: 'KOSAME', task: 'chat.received' });
+  if (attachmentIds.length) {
+    appendPipelineStageEvent({
+      stage: 'attachments.received',
+      status: 'running',
+      workOrderId: '',
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      route: 'chat',
+      timestamp: requestAt,
+      message: `KOSAME: 添付${attachmentIds.length}件を受け取りました☂️`,
+    }, { agent: 'KOSAME', task: 'attachments.received' });
+  }
 
   if (!message) {
     return {
@@ -1027,7 +1095,7 @@ async function handleChatRequest(body) {
           if (geminiKeyPresent()) {
             const imgResult = await analyzeImageWithGemini(att.base64DataUrl, att.name);
             if (imgResult.text) {
-              augmentedMessage += `\n\n--- 添付画像: ${att.name} (Gemini解析) ---\n${imgResult.text.slice(0, 3000)}\n---`;
+              augmentedMessage += `\n\n--- 添付画像: ${att.displayName || att.name} (Gemini解析) ---\n${imgResult.text.slice(0, 3000)}\n---`;
               process.stderr.write(`[chat-img] Gemini analyzed ${att.name} (${imgResult.text.length} chars)\n`);
             } else {
               imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
@@ -1042,9 +1110,9 @@ async function handleChatRequest(body) {
           process.stderr.write(`[chat-img] error: ${imgErr.message} — using GPT Vision for ${att.name}\n`);
         }
       } else if (att.textContent) {
-        augmentedMessage += `\n\n--- 添付ファイル: ${att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
+        augmentedMessage += `\n\n--- 添付ファイル: ${att.displayName || att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
       } else {
-        augmentedMessage += `\n\n[添付: ${att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
+        augmentedMessage += `\n\n[添付: ${att.displayName || att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
       }
     }
     // Fetch URL content — YouTube via Gemini, other pages via html scrape
@@ -1106,18 +1174,64 @@ async function handleChatRequest(body) {
       const specIntent = detectSpecIntent(message, attachments);
       if (specIntent.isSpec) {
         process.stderr.write(`[spec-to-tasks] spec detected — running pipeline\n`);
+        appendPipelineStageEvent({
+          stage: 'spec-to-tasks.started',
+          status: 'running',
+          workOrderId: '',
+          attachmentCount: attachmentIds.length,
+          attachmentIds,
+          route: 'spec-to-tasks',
+          timestamp: requestAt,
+          message: 'DIRECTOR: 作業票化を開始します☂️',
+        }, { agent: 'DIRECTOR', task: 'spec-to-tasks.started' });
         const specResult = await processSpec({
           message,
           attachments,
           projectPath: normalized.selectedProjectPath || '/home/lavie/kosame-dev-orchestra',
+          handoffDir: source.handoffDir || source.handoff_dir || '',
         });
         if (specResult.ok) {
+          const stageHistory = Array.isArray(specResult.stageHistory) ? specResult.stageHistory : [];
           const taskTitles = specResult.tasks.slice(0, 5).map((t, i) => `${i + 1}. ${t.title}`).join('\n');
           result.reply = `設計書を受け付けました。作業票 ${specResult.savedCount} 件を生成してHandoff Inboxに保存しました。Runnerが自動実行します。\n\n生成された作業票:\n${taskTitles}${specResult.tasks.length > 5 ? `\n...他 ${specResult.tasks.length - 5} 件` : ''}\n\n完了したらAGENT STREAM LOGに「完成しました」と表示されます。`;
+          result.error_details = null;
+          result.pipeline_trace = stageHistory;
           process.stderr.write(`[spec-to-tasks] pipeline ok — ${specResult.savedCount} tickets saved\n`);
+          appendPipelineStageEvent({
+            stage: 'result.decision.updated',
+            status: 'success',
+            workOrderId: specResult.workOrderId || specResult.tasks?.[0]?.id || '',
+            attachmentCount: Number.isFinite(Number(specResult.attachmentCount)) ? Number(specResult.attachmentCount) : attachmentIds.length,
+            attachmentIds: Array.isArray(specResult.attachmentIds) ? specResult.attachmentIds : attachmentIds,
+            manifestPath: specResult.manifestPath || '',
+            route: specResult.route || 'spec-to-tasks',
+            timestamp: new Date().toISOString(),
+            message: 'Result Decision Panel へ更新できる状態です',
+          }, { agent: 'Runner', task: 'result.decision.updated' });
         } else {
-          result.reply = `設計書の処理に失敗しました: ${specResult.error || '不明なエラー'}`;
-          process.stderr.write(`[spec-to-tasks] pipeline failed: ${specResult.error}\n`);
+          const failure = formatSpecPipelineFailureReply(specResult);
+          result.ok = false;
+          result.reply = failure.reply;
+          result.error = `設計書の処理に失敗しました: ${failure.error_details.errorCode}`;
+          result.suggested_action = 'エラーを確認してください';
+          result.human_gate_required = true;
+          result.error_details = failure.error_details;
+          result.pipeline_trace = Array.isArray(specResult.stageHistory) ? specResult.stageHistory : [];
+          process.stderr.write(`[spec-to-tasks] pipeline failed: ${failure.error_details.errorStage} / ${failure.error_details.errorCode} / ${failure.error_details.errorMessage}\n`);
+          appendPipelineStageEvent({
+            stage: failure.error_details.errorStage,
+            status: 'failed',
+            errorStage: failure.error_details.errorStage,
+            errorCode: failure.error_details.errorCode,
+            errorMessage: failure.error_details.errorMessage,
+            workOrderId: failure.error_details.workOrderId,
+            attachmentCount: failure.error_details.attachmentCount,
+            attachmentIds: failure.error_details.attachmentIds,
+            manifestPath: failure.error_details.manifestPath,
+            route: failure.error_details.route,
+            timestamp: failure.error_details.timestamp,
+            message: failure.error_details.errorMessage,
+          }, { agent: 'Runner', task: failure.error_details.errorStage });
         }
         return result;
       }

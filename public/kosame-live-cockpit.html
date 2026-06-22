@@ -818,6 +818,38 @@ h1 {
 .chat-sound-details-body {
   padding: 0 10px 10px;
 }
+.chat-error-details {
+  margin-top: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.16);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+  padding: 8px 10px;
+}
+.chat-error-details summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--danger);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.chat-error-details summary::-webkit-details-marker { display: none; }
+.chat-error-details summary::after {
+  content: '▾';
+  float: right;
+  color: var(--danger);
+}
+.chat-error-details[open] summary::after {
+  content: '▴';
+}
+.chat-error-details pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #ffd3d3;
+}
 .timestamp {
   margin-top: 16px;
   color: var(--muted);
@@ -2258,7 +2290,7 @@ h1 {
                 <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（複数可・クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付"><svg width="16" height="20" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 8.5V18C20 22.418 16.418 26 12 26C7.582 26 4 22.418 4 18V6C4 3.239 6.239 1 9 1C11.761 1 14 3.239 14 6V17C14 18.657 12.657 20 11 20C9.343 20 8 18.657 8 17V7.5H10V17C10 17.552 10.448 18 11 18C11.552 18 12 17.552 12 17V6C12 4.343 10.657 3 9 3C7.343 3 6 4.343 6 6V18C6 21.314 8.686 24 12 24C15.314 24 18 21.314 18 18V8.5H20Z" fill="#00bcd4"/></svg><span id="chat-attach-count" class="chat-attach-count" aria-hidden="true"></span></button>
                 <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
               </div>
-              <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.webp,.mp4" multiple style="display:none" aria-hidden="true">
+              <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4" multiple style="display:none" aria-hidden="true">
             </div>
             <button type="button" class="chat-primary-btn" id="chat-proceed">この方針で進める</button>
           </div>
@@ -4382,6 +4414,28 @@ function renderChatThread() {
     body.textContent = msg.content;
     bubble.appendChild(header);
     bubble.appendChild(body);
+    if (msg.role === 'assistant' && msg.error_details) {
+      const details = document.createElement('details');
+      details.className = 'chat-error-details';
+      const summary = document.createElement('summary');
+      summary.textContent = '詳細';
+      details.appendChild(summary);
+      const pre = document.createElement('pre');
+      const fields = [
+        ['errorStage', msg.error_details.errorStage || '—'],
+        ['errorCode', msg.error_details.errorCode || '—'],
+        ['errorMessage', msg.error_details.errorMessage || '—'],
+        ['workOrderId', msg.error_details.workOrderId || '—'],
+        ['attachmentCount', Number.isFinite(Number(msg.error_details.attachmentCount)) ? String(msg.error_details.attachmentCount) : '0'],
+        ['attachmentIds', Array.isArray(msg.error_details.attachmentIds) ? msg.error_details.attachmentIds.join(', ') : '—'],
+        ['manifestPath', msg.error_details.manifestPath || '—'],
+        ['route', msg.error_details.route || '—'],
+        ['timestamp', msg.error_details.timestamp || '—'],
+      ];
+      pre.textContent = fields.map(([k, v]) => `${k}=${v}`).join('\n');
+      details.appendChild(pre);
+      bubble.appendChild(details);
+    }
     if (msg.role === 'assistant' && msg.work_order) {
       bubble.appendChild(renderWorkOrderCard(msg.work_order));
     }
@@ -4708,6 +4762,15 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
     safetyConditions: Array.isArray(current.safetyConditions || current.safety_conditions) ? (current.safetyConditions || current.safety_conditions) : [],
     report_items: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
     reportItems: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
+    attachments: Array.isArray(current.attachments) ? current.attachments : [],
+    attachment_count: Number.isFinite(Number(current.attachment_count ?? current.attachmentCount)) ? Number(current.attachment_count ?? current.attachmentCount) : (Array.isArray(current.attachments) ? current.attachments.length : 0),
+    attachmentCount: Number.isFinite(Number(current.attachment_count ?? current.attachmentCount)) ? Number(current.attachment_count ?? current.attachmentCount) : (Array.isArray(current.attachments) ? current.attachments.length : 0),
+    attachment_ids: Array.isArray(current.attachment_ids || current.attachmentIds) ? (current.attachment_ids || current.attachmentIds) : (Array.isArray(current.attachments) ? current.attachments.map((att) => att && (att.attachmentId || att.id || att.name || '')).filter(Boolean) : []),
+    attachmentIds: Array.isArray(current.attachment_ids || current.attachmentIds) ? (current.attachment_ids || current.attachmentIds) : (Array.isArray(current.attachments) ? current.attachments.map((att) => att && (att.attachmentId || att.id || att.name || '')).filter(Boolean) : []),
+    attachment_manifest_path: String(current.attachment_manifest_path || current.attachmentManifestPath || '').trim(),
+    attachmentManifestPath: String(current.attachment_manifest_path || current.attachmentManifestPath || '').trim(),
+    attachment_dir: String(current.attachment_dir || current.attachmentDir || '').trim(),
+    attachmentDir: String(current.attachment_dir || current.attachmentDir || '').trim(),
     target: {
       id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
       label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
@@ -5743,8 +5806,8 @@ var _chatSessionId = (function() {
 }());
 var _ATTACH_TEXT_EXTS = { '.md': true, '.txt': true };
 var _ATTACH_IMAGE_EXTS = { '.png': true, '.jpg': true, '.jpeg': true, '.webp': true };
-var _ATTACH_FILE_ICONS = { '.md': '📄', '.txt': '📄', '.docx': '📝', '.pptx': '📊', '.xlsx': '📊', '.mp4': '🎬', '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️', '.webp': '🖼️' };
-var _ATTACH_ALLOWED_EXTS = { '.md': true, '.txt': true, '.docx': true, '.pptx': true, '.xlsx': true, '.png': true, '.jpg': true, '.jpeg': true, '.webp': true, '.mp4': true };
+var _ATTACH_FILE_ICONS = { '.md': '📄', '.txt': '📄', '.docx': '📝', '.pptx': '📊', '.xlsx': '📊', '.pdf': '📕', '.mp4': '🎬', '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️', '.webp': '🖼️' };
+var _ATTACH_ALLOWED_EXTS = { '.md': true, '.txt': true, '.docx': true, '.pptx': true, '.xlsx': true, '.pdf': true, '.png': true, '.jpg': true, '.jpeg': true, '.webp': true, '.mp4': true };
 
 function _attachExt(name) {
   var m = String(name || '').match(/(\.[^.]+)$/);
@@ -5782,9 +5845,8 @@ async function _processAttachFile(file) {
     att.textContent = t.slice(0, 8000);
     att.textPreview = t.split('\n').map(function(l){return l.trim();}).filter(Boolean).slice(0, 3).join(' / ');
   } else {
-    var t2 = await _readFileAs(file, 'text');
-    att.textContent = t2.slice(0, 4000);
-    att.textPreview = 'バイナリファイル (' + ext + ')';
+    att.base64DataUrl = await _readFileAs(file, 'dataurl');
+    att.textPreview = 'バイナリ添付 (' + (att.mimeType || ext || 'file') + ')';
   }
   return att;
 }
@@ -5824,8 +5886,8 @@ function renderAttachmentPreviews() {
       ? '<div class="chat-attach-chip-preview">' + att.textPreview.slice(0, 60).replace(/</g,'&lt;') + '</div>' : '';
     return '<div class="chat-attach-chip">' + icon +
       '<div class="chat-attach-chip-info">' +
-        '<div class="chat-attach-chip-name">' + att.name.replace(/</g,'&lt;') + '</div>' +
-        '<div class="chat-attach-chip-meta">' + att.ext + ' · ' + _attachLabel(att.size) + '</div>' +
+        '<div class="chat-attach-chip-name">' + String(att.displayName || att.name).replace(/</g,'&lt;') + '</div>' +
+        '<div class="chat-attach-chip-meta">' + (att.mimeType || att.ext || 'application/octet-stream') + ' · ' + _attachLabel(att.size) + '</div>' +
         preview +
       '</div>' +
       '<button type="button" class="chat-attach-remove" data-remove-id="' + att.id + '" aria-label="削除">×</button>' +
@@ -5878,7 +5940,11 @@ function buildChatPayload(userText, confirmationContext) {
   if (_chatAttachments.length) {
     payload.attachments = _chatAttachments.map(function(att) {
       return {
-        name: att.name, ext: att.ext, size: att.size, mimeType: att.mimeType,
+        attachmentId: att.id,
+        name: att.name,
+        displayName: att.name,
+        ext: att.ext, size: att.size, mimeType: att.mimeType,
+        kind: att.base64DataUrl && /\.(png|jpg|jpeg|webp)$/i.test(att.ext || '') ? 'image' : (att.textContent ? 'text' : 'binary'),
         textContent: att.textContent,
         base64DataUrl: att.base64DataUrl ? att.base64DataUrl.slice(0, 1200000) : null,
       };
@@ -6113,7 +6179,11 @@ async function sendChatMessage(userText, confirmationContext) {
     if (_pendingAttachments.length) {
       payload.attachments = _pendingAttachments.map(function(att) {
         return {
-          name: att.name, ext: att.ext, size: att.size, mimeType: att.mimeType,
+          attachmentId: att.id,
+          name: att.name,
+          displayName: att.name,
+          ext: att.ext, size: att.size, mimeType: att.mimeType,
+          kind: att.base64DataUrl && /\.(png|jpg|jpeg|webp)$/i.test(att.ext || '') ? 'image' : (att.textContent ? 'text' : 'binary'),
           textContent: att.textContent,
           base64DataUrl: att.base64DataUrl ? att.base64DataUrl.slice(0, 1200000) : null,
         };
@@ -6129,7 +6199,7 @@ async function sendChatMessage(userText, confirmationContext) {
 
     if (!data.ok) {
       const errorText = data.error || '入力を確認してください。';
-      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}` });
+      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}`, error_details: data.error_details || null, pipeline_trace: data.pipeline_trace || [] });
       hideTypingIndicator();
       renderChatThread();
       statusEl.textContent = `エラー: ${errorText}`;
@@ -6142,6 +6212,8 @@ async function sendChatMessage(userText, confirmationContext) {
       content: reply,
       work_order: data.work_order || null,
       human_gate_required: !!data.human_gate_required,
+      error_details: data.error_details || null,
+      pipeline_trace: data.pipeline_trace || [],
     });
     hideTypingIndicator();
     renderChatThread();

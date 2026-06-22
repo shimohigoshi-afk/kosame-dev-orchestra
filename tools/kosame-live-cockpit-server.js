@@ -20,6 +20,7 @@ const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } 
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { saveHandoffInbox, readLatestHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
+const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -477,6 +478,21 @@ function createLiveCockpitServer(options = {}) {
             latestHandoffWorkOrder: result.latestHandoffWorkOrder || latestHandoff,
             latestApprovedWorkOrder: latestHandoff,
           });
+          appendPipelineStageEvent({
+            stage: 'result.decision.updated',
+            status: latestDecision.decision_status === 'ready_for_commit' || latestDecision.decision_status === 'ready_for_review'
+              ? 'success'
+              : latestDecision.decision_status === 'stop_and_investigate'
+                ? 'failed'
+                : 'running',
+            workOrderId: latestResult ? (latestResult.work_order_id || latestResult.approval_id || latestResult.handoff_id || '') : (latestHandoff.work_order_id || latestHandoff.approval_id || ''),
+            attachmentCount: Array.isArray(latestHandoff.attachments) ? latestHandoff.attachments.length : 0,
+            attachmentIds: Array.isArray(latestHandoff.attachments) ? latestHandoff.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+            manifestPath: String(latestHandoff.attachment_manifest_path || latestHandoff.attachmentManifestPath || ''),
+            route: String(latestDecision.route || latestHandoff.route || 'zero-confirm'),
+            timestamp: new Date().toISOString(),
+            message: `Result Decision updated: ${latestDecision.decision_status} / ${latestDecision.result_post || 'resultPOST待ち'}`,
+          }, { agent: 'KOSAME', task: 'result.decision.updated' });
           let activityLogged = false;
           try {
             if (latestResult) {
@@ -565,6 +581,17 @@ function createLiveCockpitServer(options = {}) {
           const promptText = String(parsed.prompt_text || parsed.message || '').trim();
           const title = String(parsed.title || promptText || 'KOSAME Chat Dispatch').slice(0, 80);
           const targetRepo = String(parsed.target_repo || '').trim() || ROOT;
+          appendPipelineStageEvent({
+            stage: 'runner.dispatch.started',
+            status: 'running',
+            workOrderId: ticketId,
+            attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
+            attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+            manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
+            route: 'zero-confirm',
+            timestamp: new Date().toISOString(),
+            message: `Runner dispatch を開始します: ${title}`,
+          }, { agent: 'RUNNER', task: 'runner.dispatch.started' });
           const payload = {
             id: ticketId,
             title,
@@ -594,6 +621,17 @@ function createLiveCockpitServer(options = {}) {
             });
           });
           child.on('close', (code) => {
+            appendPipelineStageEvent({
+              stage: 'runner.dispatch.completed',
+              status: code === 0 ? 'success' : 'failed',
+              workOrderId: ticketId,
+              attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
+              attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+              manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
+              route: 'zero-confirm',
+              timestamp: new Date().toISOString(),
+              message: code === 0 ? `Runner dispatch completed for ${ticketId}` : `Runner dispatch failed with exitCode=${code}`,
+            }, { agent: 'RUNNER', task: 'runner.dispatch.completed' });
             _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: code, ticketId, title });
           });
           res.writeHead(200, {

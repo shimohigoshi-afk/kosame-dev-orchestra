@@ -162,10 +162,15 @@ function buildSafeResultText(input = {}) {
   const executionHost = truncate(input.execution_host || input.executionHost || '', 60);
   const executionHostAllowed = input.execution_host_allowed ?? input.executionHostAllowed;
   const interactiveHostBlocked = input.interactive_host_blocked ?? input.interactiveHostBlocked;
+  const interactivePromptBlocked = input.interactive_prompt_blocked ?? input.interactivePromptBlocked;
   const noYesGateRuntime = input.no_yes_gate_runtime ?? input.noYesGateRuntime;
   const safeSpawnActive = input.safe_spawn_active ?? input.safeSpawnActive;
   const manualCodeUiAllowed = input.manual_code_ui_allowed ?? input.manualCodeUiAllowed;
   const officialRoute = truncate(input.official_route || input.officialRoute || '', 80);
+  const codexYesHellGuard = truncate(input.codex_yes_hell_guard || input.codexYesHellGuard || 'active', 32) || 'active';
+  const codexAutoApproveMode = truncate(input.codex_auto_approve_mode || input.codexAutoApproveMode || 'active', 32) || 'active';
+  const userYesRequired = input.user_yes_required ?? input.userYesRequired;
+  const safetyStopGuard = truncate(input.safety_stop_guard || input.safetyStopGuard || 'active', 32) || 'active';
   const route = truncate(input.route || input.execution_route || 'zero-confirm', 40);
   const promptType = truncate(input.prompt_type || input.promptType || '', 40);
   const promptOrigin = truncate(input.prompt_origin || input.promptOrigin || '', 60);
@@ -253,6 +258,8 @@ function buildSafeResultText(input = {}) {
     executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
     interactive_host_blocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
     interactiveHostBlocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    interactive_prompt_blocked: interactivePromptBlocked !== undefined ? !!interactivePromptBlocked : false,
+    interactivePromptBlocked: interactivePromptBlocked !== undefined ? !!interactivePromptBlocked : false,
     no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
@@ -261,6 +268,14 @@ function buildSafeResultText(input = {}) {
     manualCodeUiAllowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
     official_route: officialRoute || 'Console → Handoff → Runner',
     officialRoute: officialRoute || 'Console → Handoff → Runner',
+    codex_yes_hell_guard: codexYesHellGuard || 'active',
+    codexYesHellGuard: codexYesHellGuard || 'active',
+    codex_auto_approve_mode: codexAutoApproveMode || 'active',
+    codexAutoApproveMode: codexAutoApproveMode || 'active',
+    user_yes_required: userYesRequired !== undefined ? !!userYesRequired : false,
+    userYesRequired: userYesRequired !== undefined ? !!userYesRequired : false,
+    safety_stop_guard: safetyStopGuard || 'active',
+    safetyStopGuard: safetyStopGuard || 'active',
     orchestra_evidence: orchestraEvidence,
     router_decision: truncate(input.router_decision || input.routerDecision || orchestraEvidence.router_decision, 200),
     routerDecision: truncate(input.routerDecision || input.router_decision || orchestraEvidence.router_decision, 200),
@@ -298,10 +313,15 @@ function normalizeWorkOrderResultRecord(record) {
       execution_host: truncate(record.execution_host || record.executionHost || '', 60),
       execution_host_allowed: record.execution_host_allowed ?? record.executionHostAllowed,
       interactive_host_blocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
+      interactive_prompt_blocked: record.interactive_prompt_blocked ?? record.interactivePromptBlocked,
       no_yes_gate_runtime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
       safe_spawn_active: record.safe_spawn_active ?? record.safeSpawnActive,
       manual_code_ui_allowed: record.manual_code_ui_allowed ?? record.manualCodeUiAllowed,
       official_route: truncate(record.official_route || record.officialRoute || '', 80),
+      codex_yes_hell_guard: record.codex_yes_hell_guard ?? record.codexYesHellGuard,
+      codex_auto_approve_mode: record.codex_auto_approve_mode ?? record.codexAutoApproveMode,
+      user_yes_required: record.user_yes_required ?? record.userYesRequired,
+      safety_stop_guard: record.safety_stop_guard ?? record.safetyStopGuard,
       prompt_type: truncate(record.prompt_type || record.promptType || '', 40),
       prompt_origin: truncate(record.prompt_origin || record.promptOrigin || '', 60),
       blocked_reason: truncate(record.blocked_reason || record.blockedReason || '', 120),
@@ -368,6 +388,8 @@ function normalizeWorkOrderResultRecord(record) {
     executionHostAllowed: record.execution_host_allowed ?? record.executionHostAllowed,
     interactive_host_blocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
     interactiveHostBlocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
+    interactive_prompt_blocked: record.interactive_prompt_blocked ?? record.interactivePromptBlocked,
+    interactivePromptBlocked: record.interactive_prompt_blocked ?? record.interactivePromptBlocked,
     no_yes_gate_runtime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
     noYesGateRuntime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
     safe_spawn_active: record.safe_spawn_active ?? record.safeSpawnActive,
@@ -376,6 +398,14 @@ function normalizeWorkOrderResultRecord(record) {
     manualCodeUiAllowed: record.manual_code_ui_allowed ?? record.manualCodeUiAllowed,
     official_route: truncate(record.official_route || record.officialRoute || '', 80),
     officialRoute: truncate(record.official_route || record.officialRoute || '', 80),
+    codex_yes_hell_guard: record.codex_yes_hell_guard ?? record.codexYesHellGuard,
+    codexYesHellGuard: record.codex_yes_hell_guard ?? record.codexYesHellGuard,
+    codex_auto_approve_mode: record.codex_auto_approve_mode ?? record.codexAutoApproveMode,
+    codexAutoApproveMode: record.codex_auto_approve_mode ?? record.codexAutoApproveMode,
+    user_yes_required: record.user_yes_required ?? record.userYesRequired,
+    userYesRequired: record.user_yes_required ?? record.userYesRequired,
+    safety_stop_guard: record.safety_stop_guard ?? record.safetyStopGuard,
+    safetyStopGuard: record.safety_stop_guard ?? record.safetyStopGuard,
     orchestra_evidence: orchestraEvidence,
     router_decision: truncate(record.router_decision || record.routerDecision || orchestraEvidence.router_decision, 200),
     routerDecision: truncate(record.routerDecision || record.router_decision || orchestraEvidence.router_decision, 200),
@@ -454,6 +484,8 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     executionHostAllowed: latestResult.executionHostAllowed,
     interactive_host_blocked: latestResult.interactive_host_blocked,
     interactiveHostBlocked: latestResult.interactiveHostBlocked,
+    interactive_prompt_blocked: latestResult.interactive_prompt_blocked,
+    interactivePromptBlocked: latestResult.interactivePromptBlocked,
     no_yes_gate_runtime: latestResult.no_yes_gate_runtime,
     noYesGateRuntime: latestResult.noYesGateRuntime,
     safe_spawn_active: latestResult.safe_spawn_active,
@@ -462,6 +494,14 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     manualCodeUiAllowed: latestResult.manualCodeUiAllowed,
     official_route: latestResult.official_route,
     officialRoute: latestResult.officialRoute,
+    codex_yes_hell_guard: latestResult.codex_yes_hell_guard,
+    codexYesHellGuard: latestResult.codexYesHellGuard,
+    codex_auto_approve_mode: latestResult.codex_auto_approve_mode,
+    codexAutoApproveMode: latestResult.codexAutoApproveMode,
+    user_yes_required: latestResult.user_yes_required,
+    userYesRequired: latestResult.userYesRequired,
+    safety_stop_guard: latestResult.safety_stop_guard,
+    safetyStopGuard: latestResult.safetyStopGuard,
     orchestra_evidence: latestResult.orchestra_evidence,
     router_decision: latestResult.router_decision,
     routerDecision: latestResult.routerDecision || latestResult.router_decision,

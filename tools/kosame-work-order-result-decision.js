@@ -31,10 +31,15 @@ function summarizeDecision(decision) {
   const executionHost = normalizeText(current.execution_host || current.executionHost || '');
   const executionHostAllowed = current.execution_host_allowed ?? current.executionHostAllowed;
   const interactiveHostBlocked = current.interactive_host_blocked ?? current.interactiveHostBlocked;
+  const interactivePromptBlocked = current.interactive_prompt_blocked ?? current.interactivePromptBlocked;
   const noYesGateRuntime = current.no_yes_gate_runtime ?? current.noYesGateRuntime;
   const safeSpawnActive = current.safe_spawn_active ?? current.safeSpawnActive;
   const manualCodeUiAllowed = current.manual_code_ui_allowed ?? current.manualCodeUiAllowed;
   const officialRoute = normalizeText(current.official_route || current.officialRoute || '');
+  const codexYesHellGuard = normalizeText(current.codex_yes_hell_guard || current.codexYesHellGuard || 'active');
+  const codexAutoApproveMode = normalizeText(current.codex_auto_approve_mode || current.codexAutoApproveMode || 'active');
+  const userYesRequired = current.user_yes_required ?? current.userYesRequired;
+  const safetyStopGuard = normalizeText(current.safety_stop_guard || current.safetyStopGuard || 'active');
   const promptOrigin = normalizeText(current.prompt_origin || current.promptOrigin || '');
   const blockedReason = normalizeText(current.blocked_reason || current.blockedReason || '');
   const routerDecision = normalizeText(current.router_decision || current.routerDecision || current.orchestra_evidence?.router_decision || '');
@@ -57,10 +62,15 @@ function summarizeDecision(decision) {
     `executionHost=${executionHost || '—'}`,
     `executionHostAllowed=${executionHostAllowed !== false ? 'true' : 'false'}`,
     `interactiveHostBlocked=${interactiveHostBlocked ? 'true' : 'false'}`,
+    `interactivePromptBlocked=${interactivePromptBlocked ? 'true' : 'false'}`,
     `noYesGateRuntime=${noYesGateRuntime !== false ? 'true' : 'false'}`,
     `safeSpawnActive=${safeSpawnActive !== false ? 'true' : 'false'}`,
     `manualCodeUiAllowed=${manualCodeUiAllowed ? 'true' : 'false'}`,
     `officialRoute=${officialRoute || 'Console → Handoff → Runner'}`,
+    `codexYesHellGuard=${codexYesHellGuard || 'active'}`,
+    `codexAutoApproveMode=${codexAutoApproveMode || 'active'}`,
+    `userYesRequired=${userYesRequired ? 'true' : 'false'}`,
+    `safetyStopGuard=${safetyStopGuard || 'active'}`,
     `humanGate=${current.human_gate_required ? 'yes' : 'no'}`,
     `commitTagPush=${current.commit_tag_push_allowed ? 'candidate' : 'hold'}`,
     `承認要求回数=${approvalCount}`,
@@ -241,6 +251,12 @@ function buildWorkOrderResultDecision(input = {}) {
     ?? latestHandoffWorkOrder?.interactiveHostBlocked
     ?? latestApprovedWorkOrder?.interactive_host_blocked
     ?? latestApprovedWorkOrder?.interactiveHostBlocked;
+  const interactivePromptBlocked = latestWorkOrderResult?.interactive_prompt_blocked
+    ?? latestWorkOrderResult?.interactivePromptBlocked
+    ?? latestHandoffWorkOrder?.interactive_prompt_blocked
+    ?? latestHandoffWorkOrder?.interactivePromptBlocked
+    ?? latestApprovedWorkOrder?.interactive_prompt_blocked
+    ?? latestApprovedWorkOrder?.interactivePromptBlocked;
   const noYesGateRuntime = latestWorkOrderResult?.no_yes_gate_runtime
     ?? latestWorkOrderResult?.noYesGateRuntime
     ?? latestHandoffWorkOrder?.no_yes_gate_runtime
@@ -259,6 +275,39 @@ function buildWorkOrderResultDecision(input = {}) {
     ?? latestHandoffWorkOrder?.manualCodeUiAllowed
     ?? latestApprovedWorkOrder?.manual_code_ui_allowed
     ?? latestApprovedWorkOrder?.manualCodeUiAllowed;
+  const codexYesHellGuard = normalizeText(
+    latestWorkOrderResult?.codex_yes_hell_guard
+    || latestWorkOrderResult?.codexYesHellGuard
+    || latestHandoffWorkOrder?.codex_yes_hell_guard
+    || latestHandoffWorkOrder?.codexYesHellGuard
+    || latestApprovedWorkOrder?.codex_yes_hell_guard
+    || latestApprovedWorkOrder?.codexYesHellGuard
+    || 'active',
+  ) || 'active';
+  const codexAutoApproveMode = normalizeText(
+    latestWorkOrderResult?.codex_auto_approve_mode
+    || latestWorkOrderResult?.codexAutoApproveMode
+    || latestHandoffWorkOrder?.codex_auto_approve_mode
+    || latestHandoffWorkOrder?.codexAutoApproveMode
+    || latestApprovedWorkOrder?.codex_auto_approve_mode
+    || latestApprovedWorkOrder?.codexAutoApproveMode
+    || 'active',
+  ) || 'active';
+  const userYesRequired = latestWorkOrderResult?.user_yes_required
+    ?? latestWorkOrderResult?.userYesRequired
+    ?? latestHandoffWorkOrder?.user_yes_required
+    ?? latestHandoffWorkOrder?.userYesRequired
+    ?? latestApprovedWorkOrder?.user_yes_required
+    ?? latestApprovedWorkOrder?.userYesRequired;
+  const safetyStopGuard = normalizeText(
+    latestWorkOrderResult?.safety_stop_guard
+    || latestWorkOrderResult?.safetyStopGuard
+    || latestHandoffWorkOrder?.safety_stop_guard
+    || latestHandoffWorkOrder?.safetyStopGuard
+    || latestApprovedWorkOrder?.safety_stop_guard
+    || latestApprovedWorkOrder?.safetyStopGuard
+    || 'active',
+  ) || 'active';
   const officialRoute = clamp(
     latestWorkOrderResult?.official_route
     || latestWorkOrderResult?.officialRoute
@@ -336,6 +385,8 @@ function buildWorkOrderResultDecision(input = {}) {
     executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
     interactive_host_blocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
     interactiveHostBlocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    interactive_prompt_blocked: interactivePromptBlocked !== undefined ? !!interactivePromptBlocked : false,
+    interactivePromptBlocked: interactivePromptBlocked !== undefined ? !!interactivePromptBlocked : false,
     no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
@@ -344,6 +395,14 @@ function buildWorkOrderResultDecision(input = {}) {
     manualCodeUiAllowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
     official_route: officialRoute,
     officialRoute,
+    codex_yes_hell_guard: codexYesHellGuard,
+    codexYesHellGuard,
+    codex_auto_approve_mode: codexAutoApproveMode,
+    codexAutoApproveMode,
+    user_yes_required: userYesRequired !== undefined ? !!userYesRequired : false,
+    userYesRequired: userYesRequired !== undefined ? !!userYesRequired : false,
+    safety_stop_guard: safetyStopGuard,
+    safetyStopGuard,
     yes_count: Number.isFinite(Number(latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.yes_count) : 0,
     copy_count: Number.isFinite(Number(latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.copy_count) : 0,
     human_wait: Number.isFinite(Number(latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.human_wait) : 0,

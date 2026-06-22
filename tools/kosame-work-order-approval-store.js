@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { stripBase64Payloads } = require('./kosame-attachment-store');
 
 const DEFAULT_APPROVAL_LOG_PATH = path.join(os.homedir(), '.kosame', 'work-orders.jsonl');
 const APPROVAL_LOG_PATH_ENV = 'KOSAME_WORK_ORDER_APPROVAL_LOG_PATH';
@@ -106,8 +107,8 @@ function sanitizeApprovalWorkOrder(input = {}) {
   const agent = truncate(workOrder.agent, 60);
   const targetRepo = normalizeText(workOrder.target_repo);
   const riskLevel = truncate(workOrder.risk_level || 'low', 24);
-  const prompt = normalizeText(workOrder.body || workOrder.prompt);
-  const originalRequest = truncate(workOrder.originalRequest || workOrder.original_request || '', 12000);
+  const prompt = stripBase64Payloads(normalizeText(workOrder.body || workOrder.prompt)).text;
+  const originalRequest = truncate(stripBase64Payloads(workOrder.originalRequest || workOrder.original_request || '').text, 12000);
   const selectedProjectId = truncate(workOrder.selectedProjectId || workOrder.selected_project_id || '', 60);
   const selectedProjectPath = normalizeText(workOrder.selectedProjectPath || workOrder.selected_project_path || '');
   const selectedProjectLabel = truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120);
@@ -125,7 +126,7 @@ function sanitizeApprovalWorkOrder(input = {}) {
   const promptOrigin = truncate(workOrder.promptOrigin || '', 60);
   const blockedReason = truncate(workOrder.blockedReason || '', 120);
   const userInputRequired = workOrder.userInputRequired === true;
-  const body = truncate(workOrder.body || workOrder.prompt || '', MAX_PROMPT_LENGTH);
+  const body = truncate(stripBase64Payloads(workOrder.body || workOrder.prompt || '').text, MAX_PROMPT_LENGTH);
   const requiresHumanConfirmation = workOrder.requires_human_confirmation !== false;
   const promptSource = [prompt, originalRequest, body]
     .map((block) => String(block || '').split(/\r?\n/))
@@ -244,6 +245,11 @@ function normalizeApprovedWorkOrder(record) {
     safeSpawnActive: workOrder.safeSpawnActive !== false,
     manualCodeUiAllowed: workOrder.manualCodeUiAllowed === true,
     officialRoute: truncate(workOrder.officialRoute || 'Console → Handoff → Runner', 80),
+    codexYesHellGuard: workOrder.codexYesHellGuard || 'active',
+    codexAutoApproveMode: workOrder.codexAutoApproveMode || 'active',
+    userYesRequired: workOrder.userYesRequired === true,
+    interactivePromptBlocked: workOrder.interactivePromptBlocked === true,
+    safetyStopGuard: workOrder.safetyStopGuard || 'active',
     promptType: truncate(workOrder.promptType || '', 40),
     promptOrigin: truncate(workOrder.promptOrigin || '', 60),
     blockedReason: truncate(workOrder.blockedReason || '', 120),
@@ -317,6 +323,16 @@ function approveWorkOrder(input = {}, options = {}) {
     manual_code_ui_allowed: workOrder.manual_code_ui_allowed,
     officialRoute: workOrder.officialRoute,
     official_route: workOrder.official_route,
+    codexYesHellGuard: workOrder.codexYesHellGuard || 'active',
+    codex_yes_hell_guard: workOrder.codex_yes_hell_guard || workOrder.codexYesHellGuard || 'active',
+    codexAutoApproveMode: workOrder.codexAutoApproveMode || 'active',
+    codex_auto_approve_mode: workOrder.codex_auto_approve_mode || workOrder.codexAutoApproveMode || 'active',
+    userYesRequired: workOrder.userYesRequired === true,
+    user_yes_required: workOrder.user_yes_required === true,
+    interactivePromptBlocked: workOrder.interactivePromptBlocked === true,
+    interactive_prompt_blocked: workOrder.interactive_prompt_blocked === true,
+    safetyStopGuard: workOrder.safetyStopGuard || 'active',
+    safety_stop_guard: workOrder.safety_stop_guard || workOrder.safetyStopGuard || 'active',
     promptType: workOrder.promptType,
     prompt_type: workOrder.prompt_type,
     promptOrigin: workOrder.promptOrigin,
@@ -352,16 +368,26 @@ function approveWorkOrder(input = {}, options = {}) {
       reportItems: workOrder.reportItems,
       executionHost: workOrder.executionHost,
       executionSource: workOrder.executionSource,
-      executionHostAllowed: workOrder.executionHostAllowed,
-      interactiveHostBlocked: workOrder.interactiveHostBlocked,
-      noYesGateRuntime: workOrder.noYesGateRuntime,
-      safeSpawnActive: workOrder.safeSpawnActive,
-      manualCodeUiAllowed: workOrder.manualCodeUiAllowed,
-      officialRoute: workOrder.officialRoute,
-      promptType: workOrder.promptType,
+    executionHostAllowed: workOrder.executionHostAllowed,
+    interactiveHostBlocked: workOrder.interactiveHostBlocked,
+    noYesGateRuntime: workOrder.noYesGateRuntime,
+    safeSpawnActive: workOrder.safeSpawnActive,
+    manualCodeUiAllowed: workOrder.manualCodeUiAllowed,
+    officialRoute: workOrder.officialRoute,
+    codexYesHellGuard: workOrder.codexYesHellGuard,
+    codexAutoApproveMode: workOrder.codexAutoApproveMode,
+    userYesRequired: workOrder.userYesRequired,
+    interactivePromptBlocked: workOrder.interactivePromptBlocked,
+    safetyStopGuard: workOrder.safetyStopGuard,
+    promptType: workOrder.promptType,
       promptOrigin: workOrder.promptOrigin,
       blockedReason: workOrder.blockedReason,
       userInputRequired: workOrder.userInputRequired,
+      codexYesHellGuard: workOrder.codexYesHellGuard || 'active',
+      codexAutoApproveMode: workOrder.codexAutoApproveMode || 'active',
+      userYesRequired: workOrder.userYesRequired === true,
+      interactivePromptBlocked: workOrder.interactivePromptBlocked === true,
+      safetyStopGuard: workOrder.safetyStopGuard || 'active',
       target: workOrder.target,
       requires_human_confirmation: workOrder.requires_human_confirmation,
     },

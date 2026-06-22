@@ -17,6 +17,9 @@ const BLOCKED_EXECUTION_HOSTS = new Set([
 
 const OFFICIAL_ROUTE = 'Console → Handoff → Runner';
 const MANUAL_CODE_UI_ALLOWED = false;
+const CODEX_YES_HELL_GUARD = 'active';
+const CODEX_AUTO_APPROVE_MODE = 'active';
+const SAFETY_STOP_GUARD = 'active';
 
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -106,6 +109,7 @@ function classifyExecutionHost(input = {}) {
     executionHost,
     executionHostAllowed,
     interactiveHostBlocked,
+    interactivePromptBlocked: interactiveHostBlocked,
     blockedReason,
     executionSource,
     executionSourceAllowed: true,
@@ -114,6 +118,10 @@ function classifyExecutionHost(input = {}) {
     noYesGateRuntime: executionHostAllowed && !interactiveHostBlocked,
     safeSpawnActive: executionHost === 'safe-spawn' || explicitSafeSpawn,
     officialRoute: OFFICIAL_ROUTE,
+    codexYesHellGuard: CODEX_YES_HELL_GUARD,
+    codexAutoApproveMode: CODEX_AUTO_APPROVE_MODE,
+    userYesRequired: false,
+    safetyStopGuard: SAFETY_STOP_GUARD,
     runtimeInteractive,
     source: normalizeText(input.source || ''),
   };
@@ -136,10 +144,15 @@ function createBlockedExecutionHostResult(input = {}) {
     executionHost: host.executionHost,
     executionHostAllowed: host.executionHostAllowed,
     interactiveHostBlocked: host.interactiveHostBlocked,
+    interactivePromptBlocked: host.interactivePromptBlocked,
     noYesGateRuntime: host.noYesGateRuntime,
     safeSpawnActive: host.safeSpawnActive,
     manualCodeUiAllowed: host.manualCodeUiAllowed,
     officialRoute: host.officialRoute,
+    codexYesHellGuard: host.codexYesHellGuard,
+    codexAutoApproveMode: host.codexAutoApproveMode,
+    userYesRequired: host.userYesRequired,
+    safetyStopGuard: host.safetyStopGuard,
     executionSource: host.executionSource,
     executionSourceAllowed: host.executionSourceAllowed,
     executionSourceBlocked: host.executionSourceBlocked,
@@ -153,11 +166,16 @@ function summarizeExecutionHostGuard(input = {}) {
     `executionHost=${host.executionHost}`,
     `executionHostAllowed=${host.executionHostAllowed ? 'true' : 'false'}`,
     `interactiveHostBlocked=${host.interactiveHostBlocked ? 'true' : 'false'}`,
+    `interactivePromptBlocked=${host.interactivePromptBlocked ? 'true' : 'false'}`,
     `executionSource=${host.executionSource}`,
     `noYesGateRuntime=${host.noYesGateRuntime ? 'true' : 'false'}`,
     `safeSpawnActive=${host.safeSpawnActive ? 'true' : 'false'}`,
     `manualCodeUiAllowed=${host.manualCodeUiAllowed ? 'true' : 'false'}`,
     `officialRoute=${host.officialRoute}`,
+    `codexYesHellGuard=${host.codexYesHellGuard}`,
+    `codexAutoApproveMode=${host.codexAutoApproveMode}`,
+    `userYesRequired=${host.userYesRequired ? 'true' : 'false'}`,
+    `safetyStopGuard=${host.safetyStopGuard}`,
   ].join(' / ');
 }
 
@@ -166,6 +184,9 @@ module.exports = {
   BLOCKED_EXECUTION_HOSTS,
   OFFICIAL_ROUTE,
   MANUAL_CODE_UI_ALLOWED,
+  CODEX_YES_HELL_GUARD,
+  CODEX_AUTO_APPROVE_MODE,
+  SAFETY_STOP_GUARD,
   classifyExecutionSource,
   classifyExecutionHost,
   assertExecutionHostAllowed,

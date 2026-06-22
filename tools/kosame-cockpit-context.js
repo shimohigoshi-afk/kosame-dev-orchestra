@@ -139,10 +139,15 @@ function summarizeWorkOrderResult(workOrderResult) {
   const executionHost = normalizeText(result.execution_host || result.executionHost || '—');
   const executionHostAllowed = result.execution_host_allowed ?? result.executionHostAllowed;
   const interactiveHostBlocked = result.interactive_host_blocked ?? result.interactiveHostBlocked;
+  const interactivePromptBlocked = result.interactive_prompt_blocked ?? result.interactivePromptBlocked;
   const noYesGateRuntime = result.no_yes_gate_runtime ?? result.noYesGateRuntime;
   const safeSpawnActive = result.safe_spawn_active ?? result.safeSpawnActive;
   const manualCodeUiAllowed = result.manual_code_ui_allowed ?? result.manualCodeUiAllowed;
   const officialRoute = normalizeText(result.official_route || result.officialRoute || 'Console → Handoff → Runner');
+  const codexYesHellGuard = normalizeText(result.codex_yes_hell_guard || result.codexYesHellGuard || 'active') || 'active';
+  const codexAutoApproveMode = normalizeText(result.codex_auto_approve_mode || result.codexAutoApproveMode || 'active') || 'active';
+  const userYesRequired = result.user_yes_required ?? result.userYesRequired;
+  const safetyStopGuard = normalizeText(result.safety_stop_guard || result.safetyStopGuard || 'active') || 'active';
   const promptOrigin = normalizeText(result.prompt_origin || result.promptOrigin || '');
   const blockedReason = normalizeText(result.blocked_reason || result.blockedReason || '');
   const yesCount = Number.isFinite(Number(result.yes_count ?? result.yesCount)) ? Number(result.yes_count ?? result.yesCount) : 0;
@@ -172,10 +177,15 @@ function summarizeWorkOrderResult(workOrderResult) {
     `executionHost=${executionHost}`,
     `executionHostAllowed=${executionHostAllowed !== false ? 'true' : 'false'}`,
     `interactiveHostBlocked=${interactiveHostBlocked ? 'true' : 'false'}`,
+    `interactivePromptBlocked=${interactivePromptBlocked ? 'true' : 'false'}`,
     `noYesGateRuntime=${noYesGateRuntime !== false ? 'true' : 'false'}`,
     `safeSpawnActive=${safeSpawnActive !== false ? 'true' : 'false'}`,
     `manualCodeUiAllowed=${manualCodeUiAllowed ? 'true' : 'false'}`,
     `officialRoute=${officialRoute}`,
+    `codexYesHellGuard=${codexYesHellGuard}`,
+    `codexAutoApproveMode=${codexAutoApproveMode}`,
+    `userYesRequired=${userYesRequired ? 'true' : 'false'}`,
+    `safetyStopGuard=${safetyStopGuard}`,
     `承認要求回数=${approvalCount}`,
     `手動貼付回数=${manualPasteCount}`,
     `待機要求回数=${waitCount}`,
@@ -215,10 +225,15 @@ function summarizeOperationsBoard(board) {
     `executionHost=${normalizeText(current.executionHost || current.execution_host || '—')}`,
     `executionHostAllowed=${current.executionHostAllowed !== false ? 'true' : 'false'}`,
     `interactiveHostBlocked=${current.interactiveHostBlocked ? 'true' : 'false'}`,
+    `interactivePromptBlocked=${current.interactivePromptBlocked ? 'true' : 'false'}`,
     `noYesGateRuntime=${current.noYesGateRuntime !== false ? 'true' : 'false'}`,
     `safeSpawnActive=${current.safeSpawnActive !== false ? 'true' : 'false'}`,
     `manualCodeUiAllowed=${current.manualCodeUiAllowed ? 'true' : 'false'}`,
     `officialRoute=${normalizeText(current.officialRoute || current.official_route || 'Console → Handoff → Runner')}`,
+    `codexYesHellGuard=${normalizeText(current.codexYesHellGuard || current.codex_yes_hell_guard || 'active') || 'active'}`,
+    `codexAutoApproveMode=${normalizeText(current.codexAutoApproveMode || current.codex_auto_approve_mode || 'active') || 'active'}`,
+    `userYesRequired=${current.userYesRequired ? 'true' : 'false'}`,
+    `safetyStopGuard=${normalizeText(current.safetyStopGuard || current.safety_stop_guard || 'active') || 'active'}`,
     `policyKernel=${normalizeText(current.policyKernel || 'active')}`,
     `promptClassifier=${normalizeText(current.promptClassifier || 'active')}`,
     `autoResponder=${normalizeText(current.autoResponder || 'active')}`,

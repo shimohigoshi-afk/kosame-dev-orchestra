@@ -741,6 +741,40 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // Static file serving from public/ — prevents path traversal and serves correct MIME type
+    const _STATIC_MIME = {
+      '.html': 'text/html; charset=utf-8',
+      '.js': 'application/javascript; charset=utf-8',
+      '.css': 'text/css; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.webmanifest': 'application/manifest+json; charset=utf-8',
+      '.svg': 'image/svg+xml',
+      '.png': 'image/png',
+      '.ico': 'image/x-icon',
+    };
+    const _pubDir = path.join(ROOT, 'public');
+    const _reqFile = path.join(_pubDir, url.pathname);
+    const _reqResolved = path.resolve(_reqFile);
+    const _isInPublic = _reqResolved.startsWith(_pubDir + path.sep) || _reqResolved === _pubDir;
+    if (url.pathname !== '/' && _isInPublic && fs.existsSync(_reqResolved) && fs.statSync(_reqResolved).isFile()) {
+      const _ext = path.extname(_reqResolved).toLowerCase();
+      const _mime = _STATIC_MIME[_ext] || 'application/octet-stream';
+      try {
+        const _content = fs.readFileSync(_reqResolved);
+        res.writeHead(200, {
+          'Content-Type': _mime,
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        res.end(_content);
+      } catch (error) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end(`Error reading static file: ${error.message}`);
+      }
+      return;
+    }
+
+    // Default: serve kosame-live-cockpit.html for / and unknown paths
     try {
       const html = readHtml();
       res.writeHead(200, {

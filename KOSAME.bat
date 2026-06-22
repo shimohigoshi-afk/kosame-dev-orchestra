@@ -27,6 +27,7 @@ start "KOSAME cockpit:server" cmd /k "wsl -d Ubuntu bash -lc ""cd ~/kosame-dev-o
 :: ─── Runner watcher 起動 ─────────────────────────────────────────────────
 echo  [3/4] Runner watcher を起動します...
 start "KOSAME Runner watcher" cmd /k "wsl -d Ubuntu bash -lc ""cd ~/kosame-dev-orchestra && npm run runner:watch"""
+echo  [3/4] Codex YES地獄対策: active / official route: Console → Handoff → Runner
 
 :: ─── サーバー起動待ち（/healthz が応答するまで最大 60 秒） ──────────────
 echo  [4/4] サーバー起動確認中...

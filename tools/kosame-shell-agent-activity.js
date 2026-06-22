@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const DEFAULT_SHELL_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'shell-agent-activity.jsonl');
 const SHELL_ACTIVITY_LOG_PATH_ENV = 'KOSAME_SHELL_AGENT_ACTIVITY_LOG_PATH';
-const DEFAULT_LIMIT = 8;
+const DEFAULT_LIMIT = 20;
 const ALLOWED_STATUSES = new Set(['queued', 'running', 'editing', 'verifying', 'success', 'failed', 'human_gate', 'blocked', 'waiting', 'ready_to_handoff', 'handed_to_agent', 'waiting_result', 'review_ready', 'needs_attention', 'revision_needed']);
 const DANGEROUS_PATTERNS = [
   /sk-[A-Za-z0-9_-]{8,}/i,

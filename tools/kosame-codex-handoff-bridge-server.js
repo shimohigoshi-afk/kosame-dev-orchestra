@@ -212,7 +212,10 @@ function sanitizeHandoffPayload(payload = {}) {
   const inputSource = compactText(source.source || workOrder.source || 'kosame_console', 40);
   const promptInput = source.body ?? source.prompt_text ?? source.prompt ?? source.safe_prompt_summary ?? workOrder.body ?? workOrder.prompt_text ?? workOrder.prompt ?? workOrder.safe_prompt_summary ?? '';
   const promptInfo = sanitizePromptText(promptInput);
-  const originalRequest = compactText(source.original_request || source.originalRequest || workOrder.original_request || workOrder.originalRequest || '', MAX_TEXT_LENGTH);
+  const originalRequest = compactText(
+    stripBase64Payloads(source.original_request || source.originalRequest || workOrder.original_request || workOrder.originalRequest || '').text,
+    MAX_TEXT_LENGTH,
+  );
   const selectedProjectId = compactText(source.selected_project_id || source.selectedProjectId || workOrder.selected_project_id || workOrder.selectedProjectId || '', 60);
   const selectedProjectPath = compactText(source.selected_project_path || source.selectedProjectPath || workOrder.selected_project_path || workOrder.selectedProjectPath || '', 160);
   const selectedProjectLabel = compactText(source.selected_project_label || source.selectedProjectLabel || workOrder.selected_project_label || workOrder.selectedProjectLabel || '', 120);
@@ -246,10 +249,15 @@ function sanitizeHandoffPayload(payload = {}) {
   const executionSource = compactText(source.execution_source || source.executionSource || workOrder.execution_source || workOrder.executionSource || '', 60);
   const executionHostAllowed = source.execution_host_allowed ?? source.executionHostAllowed ?? workOrder.execution_host_allowed ?? workOrder.executionHostAllowed;
   const interactiveHostBlocked = source.interactive_host_blocked ?? source.interactiveHostBlocked ?? workOrder.interactive_host_blocked ?? workOrder.interactiveHostBlocked;
+  const interactivePromptBlocked = source.interactive_prompt_blocked ?? source.interactivePromptBlocked ?? workOrder.interactive_prompt_blocked ?? workOrder.interactivePromptBlocked;
   const noYesGateRuntime = source.no_yes_gate_runtime ?? source.noYesGateRuntime ?? workOrder.no_yes_gate_runtime ?? workOrder.noYesGateRuntime;
   const safeSpawnActive = source.safe_spawn_active ?? source.safeSpawnActive ?? workOrder.safe_spawn_active ?? workOrder.safeSpawnActive;
   const manualCodeUiAllowed = source.manual_code_ui_allowed ?? source.manualCodeUiAllowed ?? workOrder.manual_code_ui_allowed ?? workOrder.manualCodeUiAllowed;
   const officialRoute = compactText(source.official_route || source.officialRoute || workOrder.official_route || workOrder.officialRoute || 'Console → Handoff → Runner', 80);
+  const codexYesHellGuard = compactText(source.codex_yes_hell_guard || source.codexYesHellGuard || workOrder.codex_yes_hell_guard || workOrder.codexYesHellGuard || 'active', 32) || 'active';
+  const codexAutoApproveMode = compactText(source.codex_auto_approve_mode || source.codexAutoApproveMode || workOrder.codex_auto_approve_mode || workOrder.codexAutoApproveMode || 'active', 32) || 'active';
+  const userYesRequired = source.user_yes_required ?? source.userYesRequired ?? workOrder.user_yes_required ?? workOrder.userYesRequired;
+  const safetyStopGuard = compactText(source.safety_stop_guard || source.safetyStopGuard || workOrder.safety_stop_guard || workOrder.safetyStopGuard || 'active', 32) || 'active';
   const promptType = compactText(source.prompt_type || source.promptType || workOrder.prompt_type || workOrder.promptType || '', 40);
   const promptOrigin = compactText(source.prompt_origin || source.promptOrigin || workOrder.prompt_origin || workOrder.promptOrigin || '', 60);
   const blockedReason = compactText(source.blocked_reason || source.blockedReason || workOrder.blocked_reason || workOrder.blockedReason || '', 120);
@@ -318,6 +326,8 @@ function sanitizeHandoffPayload(payload = {}) {
     executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
     interactive_host_blocked: !!interactiveHostBlocked,
     interactiveHostBlocked: !!interactiveHostBlocked,
+    interactive_prompt_blocked: !!interactivePromptBlocked,
+    interactivePromptBlocked: !!interactivePromptBlocked,
     no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
     safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
@@ -326,6 +336,14 @@ function sanitizeHandoffPayload(payload = {}) {
     manualCodeUiAllowed: !!manualCodeUiAllowed,
     official_route: officialRoute,
     officialRoute,
+    codex_yes_hell_guard: codexYesHellGuard,
+    codexYesHellGuard,
+    codex_auto_approve_mode: codexAutoApproveMode,
+    codexAutoApproveMode,
+    user_yes_required: !!userYesRequired,
+    userYesRequired: !!userYesRequired,
+    safety_stop_guard: safetyStopGuard,
+    safetyStopGuard,
     prompt_type: promptType,
     promptType,
     prompt_origin: promptOrigin,
@@ -420,10 +438,15 @@ function buildLatestMarkdown(entry) {
     `- execution_source: ${safe.execution_source || '—'}`,
     `- execution_host_allowed: ${safe.execution_host_allowed ? 'true' : 'false'}`,
     `- interactive_host_blocked: ${safe.interactive_host_blocked ? 'true' : 'false'}`,
+    `- interactive_prompt_blocked: ${safe.interactive_prompt_blocked ? 'true' : 'false'}`,
     `- no_yes_gate_runtime: ${safe.no_yes_gate_runtime ? 'true' : 'false'}`,
     `- safe_spawn_active: ${safe.safe_spawn_active ? 'true' : 'false'}`,
     `- manual_code_ui_allowed: ${safe.manual_code_ui_allowed ? 'true' : 'false'}`,
     `- official_route: ${safe.official_route || 'Console → Handoff → Runner'}`,
+    `- codex_yes_hell_guard: ${safe.codex_yes_hell_guard || 'active'}`,
+    `- codex_auto_approve_mode: ${safe.codex_auto_approve_mode || 'active'}`,
+    `- user_yes_required: ${safe.user_yes_required ? 'true' : 'false'}`,
+    `- safety_stop_guard: ${safe.safety_stop_guard || 'active'}`,
     safe.prompt_type ? `- prompt_type: ${safe.prompt_type}` : null,
     safe.prompt_origin ? `- prompt_origin: ${safe.prompt_origin}` : null,
     safe.blocked_reason ? `- blocked_reason: ${safe.blocked_reason}` : null,
@@ -497,6 +520,8 @@ function saveHandoffInbox(payload = {}, options = {}) {
   record.executionHostAllowed = record.execution_host_allowed;
   record.interactive_host_blocked = !!safe.interactive_host_blocked;
   record.interactiveHostBlocked = record.interactive_host_blocked;
+  record.interactive_prompt_blocked = !!safe.interactive_prompt_blocked;
+  record.interactivePromptBlocked = record.interactive_prompt_blocked;
   record.no_yes_gate_runtime = safe.no_yes_gate_runtime !== undefined ? !!safe.no_yes_gate_runtime : true;
   record.noYesGateRuntime = record.no_yes_gate_runtime;
   record.safe_spawn_active = !!safe.safe_spawn_active;
@@ -505,6 +530,14 @@ function saveHandoffInbox(payload = {}, options = {}) {
   record.manualCodeUiAllowed = record.manual_code_ui_allowed;
   record.official_route = safe.official_route || safe.officialRoute || 'Console → Handoff → Runner';
   record.officialRoute = record.official_route;
+  record.codex_yes_hell_guard = safe.codex_yes_hell_guard || safe.codexYesHellGuard || 'active';
+  record.codexYesHellGuard = record.codex_yes_hell_guard;
+  record.codex_auto_approve_mode = safe.codex_auto_approve_mode || safe.codexAutoApproveMode || 'active';
+  record.codexAutoApproveMode = record.codex_auto_approve_mode;
+  record.user_yes_required = !!safe.user_yes_required;
+  record.userYesRequired = record.user_yes_required;
+  record.safety_stop_guard = safe.safety_stop_guard || safe.safetyStopGuard || 'active';
+  record.safetyStopGuard = record.safety_stop_guard;
   record.prompt_type = safe.prompt_type || safe.promptType || '';
   record.promptType = record.prompt_type;
   record.prompt_origin = safe.prompt_origin || safe.promptOrigin || '';

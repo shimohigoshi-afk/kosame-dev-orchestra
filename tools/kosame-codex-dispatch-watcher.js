@@ -288,6 +288,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   }
 
   process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'} / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR} / executionHost=kosame-runner / officialRoute=Console → Handoff → Runner\n`);
+  process.stdout.write('[watcher] Codex YES Hell Guard: active / codexAutoApproveMode: active / userYesRequired: false\n');
   appendPipelineStageEvent({
     stage: 'runner.dispatch.started',
     status: 'running',
@@ -319,6 +320,18 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       verify_result: 'unknown',
       executor: ZERO_CONFIRM_EXECUTOR,
       route: ZERO_CONFIRM_ROUTE,
+      execution_host: 'kosame-runner',
+      execution_host_allowed: true,
+      interactive_host_blocked: false,
+      interactive_prompt_blocked: false,
+      no_yes_gate_runtime: true,
+      safe_spawn_active: true,
+      manual_code_ui_allowed: false,
+      official_route: 'Console → Handoff → Runner',
+      codex_yes_hell_guard: 'active',
+      codex_auto_approve_mode: 'active',
+      user_yes_required: false,
+      safety_stop_guard: 'active',
       approval_request_count: 0,
       manual_paste_count: 0,
       wait_request_count: 0,
@@ -359,10 +372,15 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       execution_host: claudeResult.hostInfo.executionHost,
       execution_host_allowed: claudeResult.hostInfo.executionHostAllowed,
       interactive_host_blocked: claudeResult.hostInfo.interactiveHostBlocked,
+      interactive_prompt_blocked: claudeResult.hostInfo.interactivePromptBlocked,
       no_yes_gate_runtime: claudeResult.hostInfo.noYesGateRuntime,
       safe_spawn_active: claudeResult.hostInfo.safeSpawnActive,
       manual_code_ui_allowed: claudeResult.hostInfo.manualCodeUiAllowed,
       official_route: claudeResult.hostInfo.officialRoute,
+      codex_yes_hell_guard: claudeResult.hostInfo.codexYesHellGuard,
+      codex_auto_approve_mode: claudeResult.hostInfo.codexAutoApproveMode,
+      user_yes_required: claudeResult.hostInfo.userYesRequired,
+      safety_stop_guard: claudeResult.hostInfo.safetyStopGuard,
       prompt_detected: claudeResult.promptDetected || '',
       prompt_type: claudeResult.promptDetected || '',
       prompt_origin: claudeResult.blockedDecision.promptOrigin || 'interactive_prompt',
@@ -392,10 +410,15 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       executionHost: claudeResult.hostInfo.executionHost,
       executionHostAllowed: claudeResult.hostInfo.executionHostAllowed,
       interactiveHostBlocked: claudeResult.hostInfo.interactiveHostBlocked,
+      interactivePromptBlocked: claudeResult.hostInfo.interactivePromptBlocked,
       noYesGateRuntime: claudeResult.hostInfo.noYesGateRuntime,
       safeSpawnActive: claudeResult.hostInfo.safeSpawnActive,
       manualCodeUiAllowed: claudeResult.hostInfo.manualCodeUiAllowed,
       officialRoute: claudeResult.hostInfo.officialRoute,
+      codexYesHellGuard: claudeResult.hostInfo.codexYesHellGuard,
+      codexAutoApproveMode: claudeResult.hostInfo.codexAutoApproveMode,
+      userYesRequired: claudeResult.hostInfo.userYesRequired,
+      safetyStopGuard: claudeResult.hostInfo.safetyStopGuard,
       promptType: claudeResult.blockedDecision.promptType || claudeResult.promptDetected || '',
       promptOrigin: claudeResult.blockedDecision.promptOrigin || 'interactive_prompt',
       userInputRequired: false,
@@ -419,6 +442,18 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
       ...blocked,
       executor: ZERO_CONFIRM_EXECUTOR,
       route: ZERO_CONFIRM_ROUTE,
+      execution_host: claudeResult.hostInfo.executionHost,
+      execution_host_allowed: claudeResult.hostInfo.executionHostAllowed,
+      interactive_host_blocked: claudeResult.hostInfo.interactiveHostBlocked,
+      interactive_prompt_blocked: claudeResult.hostInfo.interactivePromptBlocked,
+      no_yes_gate_runtime: claudeResult.hostInfo.noYesGateRuntime,
+      safe_spawn_active: claudeResult.hostInfo.safeSpawnActive,
+      manual_code_ui_allowed: claudeResult.hostInfo.manualCodeUiAllowed,
+      official_route: claudeResult.hostInfo.officialRoute,
+      codex_yes_hell_guard: claudeResult.hostInfo.codexYesHellGuard,
+      codex_auto_approve_mode: claudeResult.hostInfo.codexAutoApproveMode,
+      user_yes_required: claudeResult.hostInfo.userYesRequired,
+      safety_stop_guard: claudeResult.hostInfo.safetyStopGuard,
       approval_request_count: 0,
       manual_paste_count: 0,
       wait_request_count: 0,
@@ -475,10 +510,15 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   resultData.execution_host = claudeResult.hostInfo.executionHost || 'kosame-runner';
   resultData.execution_host_allowed = claudeResult.hostInfo.executionHostAllowed;
   resultData.interactive_host_blocked = claudeResult.hostInfo.interactiveHostBlocked;
+  resultData.interactive_prompt_blocked = claudeResult.hostInfo.interactivePromptBlocked;
   resultData.no_yes_gate_runtime = claudeResult.hostInfo.noYesGateRuntime;
   resultData.safe_spawn_active = claudeResult.hostInfo.safeSpawnActive;
   resultData.manual_code_ui_allowed = claudeResult.hostInfo.manualCodeUiAllowed;
   resultData.official_route = claudeResult.hostInfo.officialRoute;
+  resultData.codex_yes_hell_guard = claudeResult.hostInfo.codexYesHellGuard;
+  resultData.codex_auto_approve_mode = claudeResult.hostInfo.codexAutoApproveMode;
+  resultData.user_yes_required = claudeResult.hostInfo.userYesRequired;
+  resultData.safety_stop_guard = claudeResult.hostInfo.safetyStopGuard;
   resultData.auto_approved_count = Number.isFinite(Number(resultData.auto_approved_count)) ? Number(resultData.auto_approved_count) : 0;
   resultData.auto_blocked_count = Number.isFinite(Number(resultData.auto_blocked_count)) ? Number(resultData.auto_blocked_count) : 0;
   resultData.auto_response_sent = !!resultData.auto_response_sent;

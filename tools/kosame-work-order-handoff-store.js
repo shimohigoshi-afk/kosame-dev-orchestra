@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { stripBase64Payloads } = require('./kosame-attachment-store');
 
 const {
   APPROVAL_LOG_PATH_ENV,
@@ -160,13 +161,15 @@ function resolveWorkOrderSource(input = {}) {
   const riskLevel = truncate(workOrder.risk_level || approved?.risk_level || 'low', 24);
   const humanGateRequired = workOrder.requires_human_confirmation !== false
     && approved?.requires_human_confirmation !== false;
-  const prompt = normalizeText(workOrder.body || workOrder.prompt || approved?.body || approved?.prompt || '');
+  const prompt = stripBase64Payloads(normalizeText(workOrder.body || workOrder.prompt || approved?.body || approved?.prompt || '')).text;
   const originalRequest = truncate(
-    workOrder.originalRequest
-    || workOrder.original_request
-    || approved?.originalRequest
-    || approved?.original_request
-    || '',
+    stripBase64Payloads(
+      workOrder.originalRequest
+      || workOrder.original_request
+      || approved?.originalRequest
+      || approved?.original_request
+      || '',
+    ).text,
     12000,
   );
   const selectedProjectId = truncate(
@@ -230,6 +233,11 @@ function resolveWorkOrderSource(input = {}) {
   const safeSpawnActive = (workOrder.safeSpawnActive ?? approved?.safeSpawnActive) !== false;
   const manualCodeUiAllowed = (workOrder.manualCodeUiAllowed ?? approved?.manualCodeUiAllowed) === true;
   const officialRoute = truncate(workOrder.officialRoute || approved?.officialRoute || 'Console → Handoff → Runner', 80);
+  const codexYesHellGuard = truncate(workOrder.codexYesHellGuard || approved?.codexYesHellGuard || 'active', 32) || 'active';
+  const codexAutoApproveMode = truncate(workOrder.codexAutoApproveMode || approved?.codexAutoApproveMode || 'active', 32) || 'active';
+  const userYesRequired = (workOrder.userYesRequired ?? approved?.userYesRequired) === true;
+  const interactivePromptBlocked = (workOrder.interactivePromptBlocked ?? approved?.interactivePromptBlocked) === true || interactiveHostBlocked;
+  const safetyStopGuard = truncate(workOrder.safetyStopGuard || approved?.safetyStopGuard || 'active', 32) || 'active';
   const promptType = truncate(workOrder.promptType || approved?.promptType || '', 40);
   const promptOrigin = truncate(workOrder.promptOrigin || approved?.promptOrigin || '', 60);
   const blockedReason = truncate(workOrder.blockedReason || approved?.blockedReason || '', 120);
@@ -295,10 +303,15 @@ function resolveWorkOrderSource(input = {}) {
     executionSource,
     executionHostAllowed,
     interactiveHostBlocked,
+    interactivePromptBlocked,
     noYesGateRuntime,
     safeSpawnActive,
     manualCodeUiAllowed,
     officialRoute,
+    codexYesHellGuard,
+    codexAutoApproveMode,
+    userYesRequired,
+    safetyStopGuard,
     promptType,
     promptOrigin,
     blockedReason,
@@ -349,10 +362,15 @@ function normalizeWorkOrderHandoffRecord(record) {
     executionSource: truncate(record.executionSource || record.execution_source || '', 60),
     executionHostAllowed: record.executionHostAllowed !== false,
     interactiveHostBlocked: !!record.interactiveHostBlocked,
+    interactivePromptBlocked: !!record.interactivePromptBlocked,
     noYesGateRuntime: record.noYesGateRuntime !== false,
     safeSpawnActive: record.safeSpawnActive !== false,
     manualCodeUiAllowed: record.manualCodeUiAllowed === true,
     officialRoute: truncate(record.officialRoute || 'Console → Handoff → Runner', 80),
+    codexYesHellGuard: truncate(record.codexYesHellGuard || 'active', 32) || 'active',
+    codexAutoApproveMode: truncate(record.codexAutoApproveMode || 'active', 32) || 'active',
+    userYesRequired: record.userYesRequired === true,
+    safetyStopGuard: truncate(record.safetyStopGuard || 'active', 32) || 'active',
     promptType: truncate(record.promptType || '', 40),
     promptOrigin: truncate(record.promptOrigin || '', 60),
     blockedReason: truncate(record.blockedReason || '', 120),
@@ -411,10 +429,15 @@ function synthesizeLatestHandoff(latestApprovedWorkOrder) {
     executionSource: latestApprovedWorkOrder.executionSource || latestApprovedWorkOrder.execution_source || '',
     executionHostAllowed: latestApprovedWorkOrder.executionHostAllowed !== false,
     interactiveHostBlocked: !!latestApprovedWorkOrder.interactiveHostBlocked,
+    interactivePromptBlocked: !!latestApprovedWorkOrder.interactivePromptBlocked,
     noYesGateRuntime: latestApprovedWorkOrder.noYesGateRuntime !== false,
     safeSpawnActive: latestApprovedWorkOrder.safeSpawnActive !== false,
     manualCodeUiAllowed: latestApprovedWorkOrder.manualCodeUiAllowed === true,
     officialRoute: latestApprovedWorkOrder.officialRoute || 'Console → Handoff → Runner',
+    codexYesHellGuard: latestApprovedWorkOrder.codexYesHellGuard || 'active',
+    codexAutoApproveMode: latestApprovedWorkOrder.codexAutoApproveMode || 'active',
+    userYesRequired: latestApprovedWorkOrder.userYesRequired === true,
+    safetyStopGuard: latestApprovedWorkOrder.safetyStopGuard || 'active',
     promptType: latestApprovedWorkOrder.promptType || '',
     promptOrigin: latestApprovedWorkOrder.promptOrigin || '',
     blockedReason: latestApprovedWorkOrder.blockedReason || '',
@@ -493,10 +516,15 @@ function recordWorkOrderHandoff(input = {}, options = {}) {
     executionSource: source.executionSource,
     executionHostAllowed: source.executionHostAllowed,
     interactiveHostBlocked: source.interactiveHostBlocked,
+    interactivePromptBlocked: source.interactivePromptBlocked,
     noYesGateRuntime: source.noYesGateRuntime,
     safeSpawnActive: source.safeSpawnActive,
     manualCodeUiAllowed: source.manualCodeUiAllowed,
     officialRoute: source.officialRoute,
+    codexYesHellGuard: source.codexYesHellGuard,
+    codexAutoApproveMode: source.codexAutoApproveMode,
+    userYesRequired: source.userYesRequired,
+    safetyStopGuard: source.safetyStopGuard,
     promptType: source.promptType,
     promptOrigin: source.promptOrigin,
     blockedReason: source.blockedReason,

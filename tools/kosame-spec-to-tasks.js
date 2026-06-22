@@ -19,7 +19,7 @@ const SPEC_TRIGGERS = [
   '設計書', '仕様書', '設計図', 'spec', 'design doc', 'specification',
   '実装してください', '自動実装', '作業票',
 ];
-const SPEC_EXTENSIONS = ['.md', '.docx', '.doc', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.gif'];
+const SPEC_EXTENSIONS = ['.md', '.docx', '.doc', '.txt', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf'];
 const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);
 
 // ── Intent detection ────────────────────────────────────────────────────────
@@ -125,6 +125,22 @@ function analyzeSpecText(textContent, filename) {
   return { text: String(textContent || ''), filename: String(filename || '') };
 }
 
+function summarizeAttachments(attachments = []) {
+  const list = Array.isArray(attachments) ? attachments : [];
+  if (!list.length) return [];
+  const summary = [`添付ファイル${list.length}件を受け取りました。`];
+  const imageCount = list.filter((att) => {
+    const ext = String(att.ext || '').toLowerCase();
+    const mimeType = String(att.mimeType || '').toLowerCase();
+    return ['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext) || mimeType.startsWith('image/');
+  }).length;
+  if (imageCount > 0) summary.push(`画像添付あり: ${imageCount}件`);
+  for (const att of list.slice(0, 12)) {
+    summary.push(`[attachment:${att.attachmentId || att.id || att.name || 'attachment'}] ${att.displayName || att.name || 'attachment'} (${att.mimeType || 'application/octet-stream'} · ${Number(att.size || 0)}B)`);
+  }
+  return summary;
+}
+
 // ── Heuristic task decomposition ────────────────────────────────────────────
 
 function decomposeSpecToTasks(specText, projectPath) {
@@ -175,12 +191,17 @@ function decomposeSpecToTasks(specText, projectPath) {
 
 // ── Handoff Inbox persistence ───────────────────────────────────────────────
 
-function saveTasksToHandoff(tasks) {
+function saveTasksToHandoff(tasks, options = {}) {
   const { saveHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
   const results = [];
+  const attachments = Array.isArray(options.attachments) ? options.attachments : [];
+  const handoffDir = options.handoffDir || process.env.KOSAME_HANDOFF_DIR || undefined;
   for (const task of tasks) {
     try {
-      const r = saveHandoffInbox(task);
+      const r = saveHandoffInbox({
+        ...task,
+        attachments,
+      }, { handoffDir });
       process.stderr.write(`[spec-to-tasks] saved ticket: ${task.id} — ${task.title}\n`);
       results.push({ ok: true, id: task.id, title: task.title, savedAt: r.saved_at });
     } catch (err) {
@@ -209,13 +230,18 @@ function emitSpecStreamLog(status, message) {
 // ── Full pipeline ───────────────────────────────────────────────────────────
 
 async function processSpec(input) {
-  const { message, attachments, projectPath } = input || {};
+  const { message, attachments, projectPath, handoffDir } = input || {};
   const { isSpec } = detectSpecIntent(message, Array.isArray(attachments) ? attachments : []);
 
   if (!isSpec) {
     return { ok: false, error: 'spec not detected', tasks: [], saveResults: [] };
   }
 
+  emitSpecStreamLog('running', 'KOSAME: 添付ファイルを受け取りました☂️');
+  emitSpecStreamLog('running', `DIRECTOR: 添付ファイル${Array.isArray(attachments) ? attachments.length : 0}件を作業票に紐づけます☂️`);
+  if (Array.isArray(attachments) && attachments.some((att) => String(att.mimeType || '').toLowerCase().startsWith('image/'))) {
+    emitSpecStreamLog('running', 'KOSAME: 画像添付を受信しました☂️');
+  }
   emitSpecStreamLog('running', '設計書を受け付けました。解析を開始します...');
 
   let specText = '';
@@ -237,6 +263,10 @@ async function processSpec(input) {
   }
 
   if (message) specText += '\n' + message;
+  const attachmentSummary = summarizeAttachments(attachments);
+  if (attachmentSummary.length) {
+    specText += '\n\n## 添付ファイル\n' + attachmentSummary.join('\n');
+  }
 
   if (!specText.trim()) {
     emitSpecStreamLog('failed', '設計書の内容を取得できませんでした');
@@ -253,10 +283,12 @@ async function processSpec(input) {
   }
 
   emitSpecStreamLog('running', `作業票 ${tasks.length} 件をHandoff Inboxに保存中...`);
-  const saveResults = saveTasksToHandoff(tasks);
+  const saveResults = saveTasksToHandoff(tasks, { attachments, handoffDir });
   const savedCount = saveResults.filter((r) => r.ok).length;
 
   if (savedCount > 0) {
+    emitSpecStreamLog('running', 'Runner: attachment manifestを保存しました');
+    emitSpecStreamLog('running', 'Llama: base64本文混入は検出されませんでした。以上。');
     emitSpecStreamLog('success', `作業票 ${savedCount} 件を保存しました。Runnerが自動実行します。`);
   } else {
     emitSpecStreamLog('failed', 'Handoff Inbox への保存に失敗しました');

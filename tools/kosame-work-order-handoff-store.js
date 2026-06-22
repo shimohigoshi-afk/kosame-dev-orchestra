@@ -286,6 +286,7 @@ function normalizeWorkOrderHandoffRecord(record) {
   const safePromptSummary = summarizePrompt(record.safe_prompt_summary || record.prompt_summary || record.prompt || '');
   const approvalId = normalizeText(record.approval_id || record.work_order_id || record.id || '');
   if (!approvalId || !title || !assignedAgent) return null;
+  const attachments = Array.isArray(record.attachments) ? record.attachments.slice(0, 20) : [];
   return {
     handoff_id: normalizeText(record.handoff_id || record.id || approvalId),
     work_order_id: approvalId,
@@ -306,6 +307,17 @@ function normalizeWorkOrderHandoffRecord(record) {
     selectedProjectLabel: truncate(record.selectedProjectLabel || record.selected_project_label || '', 120),
     safetyConditions: normalizeTextList(record.safetyConditions || record.safety_conditions, 20, 240),
     reportItems: normalizeTextList(record.reportItems || record.report_items, 20, 240),
+    attachments: attachments.map((attachment) => ({
+      ...attachment,
+      displayName: normalizeText(attachment.displayName || attachment.name || attachment.originalName || ''),
+    })),
+    attachmentCount: Number.isFinite(Number(record.attachmentCount || record.attachment_count)) ? Number(record.attachmentCount || record.attachment_count) : attachments.length,
+    attachment_count: Number.isFinite(Number(record.attachmentCount || record.attachment_count)) ? Number(record.attachmentCount || record.attachment_count) : attachments.length,
+    attachmentSummary: Array.isArray(record.attachmentSummary) ? record.attachmentSummary : Array.isArray(record.attachment_summary) ? record.attachment_summary : [],
+    attachment_manifest_path: normalizeText(record.attachment_manifest_path || record.attachmentManifestPath || ''),
+    attachmentManifestPath: normalizeText(record.attachmentManifestPath || record.attachment_manifest_path || ''),
+    attachment_dir: normalizeText(record.attachment_dir || record.attachmentDir || ''),
+    attachmentDir: normalizeText(record.attachmentDir || record.attachment_dir || ''),
     target: record.target && typeof record.target === 'object'
       ? {
           id: truncate(record.target.id || record.target.projectId || '', 60),

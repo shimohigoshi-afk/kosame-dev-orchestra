@@ -124,12 +124,19 @@ function normalizeMessageBody(source) {
 
   const rawAttachments = Array.isArray(body.attachments) ? body.attachments : [];
   const attachments = rawAttachments.slice(0, 5).map((a) => ({
+    attachmentId: String(a.attachmentId || a.id || '').slice(0, 80),
     name: String(a.name || '').slice(0, 200),
+    displayName: String(a.displayName || a.name || '').slice(0, 200),
     ext: String(a.ext || '').slice(0, 10).toLowerCase(),
     size: Number.isFinite(Number(a.size)) ? Number(a.size) : 0,
     mimeType: String(a.mimeType || 'application/octet-stream').slice(0, 80),
     textContent: typeof a.textContent === 'string' ? a.textContent.slice(0, 6000) : null,
     base64DataUrl: typeof a.base64DataUrl === 'string' ? a.base64DataUrl.slice(0, 1200000) : null,
+    kind: /image\//i.test(String(a.mimeType || '')) || ['.png', '.jpg', '.jpeg', '.webp'].includes(String(a.ext || '').toLowerCase())
+      ? 'image'
+      : typeof a.textContent === 'string'
+        ? 'text'
+        : 'binary',
   }));
 
   const rawDetectedUrls = Array.isArray(body.detectedUrls) ? body.detectedUrls : [];
@@ -1019,12 +1026,12 @@ async function handleChatRequest(body) {
     const imageParts = [];
 
     for (const att of attachments) {
-      if (att.base64DataUrl && (att.ext === '.png' || att.ext === '.jpg' || att.ext === '.jpeg')) {
+      if (att.base64DataUrl && (att.ext === '.png' || att.ext === '.jpg' || att.ext === '.jpeg' || att.ext === '.webp')) {
         imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
       } else if (att.textContent) {
-        augmentedMessage += `\n\n--- 添付ファイル: ${att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
+        augmentedMessage += `\n\n--- 添付ファイル: ${att.displayName || att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
       } else {
-        augmentedMessage += `\n\n[添付: ${att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
+        augmentedMessage += `\n\n[添付: ${att.displayName || att.name} (${att.ext}・${att.size}バイト) — バイナリ形式のため内容を直接解析できません]`;
       }
     }
     // Fetch URL content — YouTube via Gemini, other pages via html scrape

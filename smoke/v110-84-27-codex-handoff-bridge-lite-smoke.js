@@ -80,7 +80,7 @@ function assertStaticWiring() {
   const html = read(HTML_PATH);
   assert.ok(html.includes('Handoff Inboxへ送る'), 'HTML must include handoff inbox send button');
   assert.ok(html.includes('localhost handoff bridge'), 'HTML must mention localhost handoff bridge');
-  assert.ok(html.includes('codex:watch'), 'HTML must reference codex:watch dispatch automation');
+  assert.ok(html.includes('runner:watch') || html.includes('Runner watcher'), 'HTML must reference runner watcher dispatch automation');
   assert.ok(html.includes('handoff-inbox-status'), 'HTML must include handoff inbox status');
   assert.ok(html.includes('handoff-inbox-panel'), 'HTML must include handoff inbox panel');
   assert.ok(html.includes('work-order-handoff-queue'), 'HTML must keep the handoff queue');
@@ -151,7 +151,7 @@ function assertSavedBundle(result, label, handoffDir) {
   const queueJsonl = read(result.queuePath);
   assertNoLeak(latestMarkdown, `${label} latest.md`);
   assertNoLeak(queueJsonl, `${label} queue.jsonl`);
-  assert.ok(latestMarkdown.includes('codex:watch'), `${label} latest.md must mention codex:watch dispatch`);
+  assert.ok(latestMarkdown.includes('Runner watcher') || latestMarkdown.includes('runner:watch'), `${label} latest.md must mention runner watcher dispatch`);
 }
 
 async function runHttpCycle() {
@@ -186,7 +186,7 @@ async function runHttpCycle() {
     const response = await requestJson(port, '/api/handoff', body, 'POST');
     assert.equal(response.statusCode, 200, 'POST /api/handoff must return 200');
     assert.equal(response.body.ok, true, 'POST /api/handoff must succeed');
-    assert.ok(response.body.message.includes('codex:watch'), 'POST /api/handoff message must reference codex:watch');
+    assert.ok(response.body.message.includes('Runner Queue') || response.body.message.includes('official route'), 'POST /api/handoff message must reference runner queue official route');
     assert.ok(fs.existsSync(response.body.latestPath), 'POST /api/handoff latest.md must exist');
     assert.ok(fs.existsSync(response.body.queuePath), 'POST /api/handoff queue.jsonl must exist');
     return { server, port, usedFallback: false, response };

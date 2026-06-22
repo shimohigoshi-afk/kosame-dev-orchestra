@@ -21,10 +21,12 @@ const {
   lintForZeroConfirmText,
   validateZeroConfirmRunnerCommand,
 } = require('./kosame-zero-confirm-guard');
-const { createAutoResponderGateway } = require('./kosame-auto-responder-gateway');
 const { detectSafetyStop } = require('./kosame-safety-stop-detector');
 const { assertExecutorPolicy } = require('./kosame-executor-policy-kernel');
 const { buildBlockedResult, createRecoveryPlan } = require('./kosame-recovery-manager');
+const { safeSpawn } = require('./kosame-safe-spawn');
+const { evaluateNoYesGate } = require('./kosame-no-yes-gate');
+const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 
 // Safety Stop conditions: dispatch is BLOCKED if any of these are detected in the prompt.
 // Patterns are intentionally specific to avoid matching safety-condition documentation text.
@@ -165,11 +167,22 @@ function postResult(data, options = {}) {
 function runClaude(prompt, timeoutMs) {
   const command = assertZeroConfirmCommand();
   return new Promise((resolve, reject) => {
-    const proc = spawn(command.command[0], command.command.slice(1), {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env },
-    });
-    const autoResponder = createAutoResponderGateway({ retryLimit: 3 });
+    let spawnResult;
+    try {
+      spawnResult = safeSpawn(command.command[0], command.command.slice(1), {
+        cwd: ROOT,
+        env: { ...process.env },
+        executionHost: 'kosame-runner',
+        executionSource: 'kosame-runner',
+        executorId: ZERO_CONFIRM_EXECUTOR,
+        route: ZERO_CONFIRM_ROUTE,
+      });
+    } catch (error) {
+      reject(error);
+      return;
+    }
+    const proc = spawnResult.child;
+    const hostInfo = spawnResult.hostInfo;
 
     let stdout = '';
     let stderr = '';
@@ -180,52 +193,45 @@ function runClaude(prompt, timeoutMs) {
     let promptDetected = '';
     let retryCount = 0;
     let recovered = false;
+    let blockedDecision = null;
 
     proc.stdout.on('data', (chunk) => {
       const text = String(chunk || '');
       stdout += text;
       process.stdout.write(chunk);
-      const handled = autoResponder.handlePromptChunk(text, { source: 'stdout' });
-      if (handled && handled.blocked && handled.safetyStop) {
-        promptDetected = 'safety_stop_prompt';
-        autoBlockedCount += 1;
-        try { proc.kill('SIGTERM'); } catch {}
-      } else if (handled && handled.autoRespond) {
-        promptDetected = handled.classification ? handled.classification.promptType : promptDetected;
-        const response = handled.response || {};
-        autoResponseValueType = response.valueType || autoResponseValueType;
-        try {
-          autoResponder.sendAutoResponse(proc, response);
-          autoApprovedCount += 1;
-          autoResponseSent = true;
-        } catch (error) {
-          recovered = true;
-          retryCount += 1;
-          stderr += `\n[auto-responder] ${error.message}`;
+      const gate = evaluateNoYesGate({
+        text,
+        source: 'stdout',
+        executionHost: hostInfo.executionHost,
+        executionSource: 'kosame-runner',
+        executionHostInfo: hostInfo,
+      });
+      if (!gate.ok) {
+        promptDetected = gate.promptType || promptDetected;
+        blockedDecision = gate;
+        if (gate.decision === 'safety_stop') {
+          autoBlockedCount += 1;
+        } else {
+          autoBlockedCount += 1;
         }
+        try { proc.kill('SIGTERM'); } catch {}
       }
     });
     proc.stderr.on('data', (chunk) => {
       const text = String(chunk || '');
       stderr += text;
-      const handled = autoResponder.handlePromptChunk(text, { source: 'stderr' });
-      if (handled && handled.blocked && handled.safetyStop) {
-        promptDetected = 'safety_stop_prompt';
+      const gate = evaluateNoYesGate({
+        text,
+        source: 'stderr',
+        executionHost: hostInfo.executionHost,
+        executionSource: 'kosame-runner',
+        executionHostInfo: hostInfo,
+      });
+      if (!gate.ok) {
+        promptDetected = gate.promptType || promptDetected;
+        blockedDecision = gate;
         autoBlockedCount += 1;
         try { proc.kill('SIGTERM'); } catch {}
-      } else if (handled && handled.autoRespond) {
-        promptDetected = handled.classification ? handled.classification.promptType : promptDetected;
-        const response = handled.response || {};
-        autoResponseValueType = response.valueType || autoResponseValueType;
-        try {
-          autoResponder.sendAutoResponse(proc, response);
-          autoApprovedCount += 1;
-          autoResponseSent = true;
-        } catch (error) {
-          recovered = true;
-          retryCount += 1;
-          stderr += `\n[auto-responder] ${error.message}`;
-        }
       }
     });
 
@@ -247,6 +253,8 @@ function runClaude(prompt, timeoutMs) {
         promptDetected,
         retryCount,
         recovered,
+        blockedDecision,
+        hostInfo,
       });
     });
     proc.on('error', (err) => {
@@ -279,7 +287,25 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     return;
   }
 
-  process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'} / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR}\n`);
+  process.stdout.write(`[watcher] KOSAME Runner dispatch: ${entry.title || entry.id || '?'} / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR} / executionHost=kosame-runner / officialRoute=Console → Handoff → Runner\n`);
+  appendPipelineStageEvent({
+    stage: 'runner.dispatch.started',
+    status: 'running',
+    workOrderId: entry.id || entry.work_order_id || '',
+    attachmentCount: Array.isArray(entry.attachments) ? entry.attachments.length : 0,
+    attachmentIds: Array.isArray(entry.attachments) ? entry.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+    manifestPath: String(entry.attachment_manifest_path || entry.attachmentManifestPath || ''),
+    route: ZERO_CONFIRM_ROUTE,
+    executionHost: 'kosame-runner',
+    executionHostAllowed: true,
+    interactiveHostBlocked: false,
+    noYesGateRuntime: true,
+    safeSpawnActive: true,
+    manualCodeUiAllowed: false,
+    officialRoute: 'Console → Handoff → Runner',
+    timestamp: new Date().toISOString(),
+    message: `Runner dispatch を開始します: ${entry.title || entry.id || '?'}`,
+  }, { agent: 'RUNNER', task: 'runner.dispatch.started' });
 
   let claudeResult;
   try {
@@ -308,6 +334,78 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
     allowNegatedContext: true,
   });
   const outputSafety = detectSafetyStop(`${claudeResult.stdout}\n${claudeResult.stderr}`);
+  if (claudeResult.blockedDecision) {
+    const blockedStatus = claudeResult.blockedDecision.decision === 'safety_stop'
+      ? 'safety_stop'
+      : claudeResult.blockedDecision.decision === 'blocked_interactive_host'
+        ? 'blocked_interactive_host'
+        : 'blocked_by_interactive_prompt';
+    const blockedReason = claudeResult.blockedDecision.blockedReason || blockedStatus;
+    const blocked = buildBlockedResult({
+      reason: blockedReason,
+      smoke_result: 'FAIL',
+      verify_result: 'FAIL',
+      resultPOSTStatus: 'POST /api/work-orders/result 200',
+    });
+    await postResult({
+      ...blocked,
+      result_status: blockedStatus,
+      work_order_status: blockedStatus,
+      handoff_status: 'needs_attention',
+      decision_status: blockedStatus,
+      nextRecommendedAction: blockedStatus,
+      executor: ZERO_CONFIRM_EXECUTOR,
+      route: ZERO_CONFIRM_ROUTE,
+      execution_host: claudeResult.hostInfo.executionHost,
+      execution_host_allowed: claudeResult.hostInfo.executionHostAllowed,
+      interactive_host_blocked: claudeResult.hostInfo.interactiveHostBlocked,
+      no_yes_gate_runtime: claudeResult.hostInfo.noYesGateRuntime,
+      safe_spawn_active: claudeResult.hostInfo.safeSpawnActive,
+      manual_code_ui_allowed: claudeResult.hostInfo.manualCodeUiAllowed,
+      official_route: claudeResult.hostInfo.officialRoute,
+      prompt_detected: claudeResult.promptDetected || '',
+      prompt_type: claudeResult.promptDetected || '',
+      prompt_origin: claudeResult.blockedDecision.promptOrigin || 'interactive_prompt',
+      blocked_reason: blockedReason,
+      user_input_required: false,
+      approval_request_count: 0,
+      manual_paste_count: 0,
+      wait_request_count: 0,
+      yes_count: 0,
+      copy_count: 0,
+      human_wait: 0,
+      auto_approved_count: claudeResult.autoApprovedCount || 0,
+      auto_blocked_count: claudeResult.autoBlockedCount || 0,
+      retry_count: claudeResult.retryCount || 0,
+      recovered: !!claudeResult.recovered,
+      result_post_retry_count: 0,
+      result_summary: `blocked ${blockedStatus}: ${blockedReason}`,
+    }, options).catch(() => {});
+    appendPipelineStageEvent({
+      stage: 'runner.dispatch.completed',
+      status: 'blocked',
+      workOrderId: entry.id || entry.work_order_id || '',
+      attachmentCount: Array.isArray(entry.attachments) ? entry.attachments.length : 0,
+      attachmentIds: Array.isArray(entry.attachments) ? entry.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+      manifestPath: String(entry.attachment_manifest_path || entry.attachmentManifestPath || ''),
+      route: ZERO_CONFIRM_ROUTE,
+      executionHost: claudeResult.hostInfo.executionHost,
+      executionHostAllowed: claudeResult.hostInfo.executionHostAllowed,
+      interactiveHostBlocked: claudeResult.hostInfo.interactiveHostBlocked,
+      noYesGateRuntime: claudeResult.hostInfo.noYesGateRuntime,
+      safeSpawnActive: claudeResult.hostInfo.safeSpawnActive,
+      manualCodeUiAllowed: claudeResult.hostInfo.manualCodeUiAllowed,
+      officialRoute: claudeResult.hostInfo.officialRoute,
+      promptType: claudeResult.blockedDecision.promptType || claudeResult.promptDetected || '',
+      promptOrigin: claudeResult.blockedDecision.promptOrigin || 'interactive_prompt',
+      userInputRequired: false,
+      blockedReason: blockedReason,
+      timestamp: new Date().toISOString(),
+      message: `Execution host guard blocked runner output: ${blockedStatus}`,
+    }, { agent: 'RUNNER', task: 'runner.dispatch.completed' });
+    process.stderr.write(`[watcher] blocked: ${blockedStatus} / ${blockedReason}\n`);
+    return;
+  }
   if (!outputGuard.ok) {
     const reason = outputGuard.violations.map((v) => v.label).join(', ');
     process.stderr.write(`[watcher] ⛔ OUTPUT GUARD — ${reason}\n`);
@@ -374,6 +472,13 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   resultData.manual_paste_count = Number.isFinite(Number(resultData.manual_paste_count)) ? Number(resultData.manual_paste_count) : resultData.copy_count;
   resultData.wait_request_count = Number.isFinite(Number(resultData.wait_request_count)) ? Number(resultData.wait_request_count) : resultData.human_wait;
   resultData.result_post = resultData.result_post || 'POST /api/work-orders/result 200';
+  resultData.execution_host = claudeResult.hostInfo.executionHost || 'kosame-runner';
+  resultData.execution_host_allowed = claudeResult.hostInfo.executionHostAllowed;
+  resultData.interactive_host_blocked = claudeResult.hostInfo.interactiveHostBlocked;
+  resultData.no_yes_gate_runtime = claudeResult.hostInfo.noYesGateRuntime;
+  resultData.safe_spawn_active = claudeResult.hostInfo.safeSpawnActive;
+  resultData.manual_code_ui_allowed = claudeResult.hostInfo.manualCodeUiAllowed;
+  resultData.official_route = claudeResult.hostInfo.officialRoute;
   resultData.auto_approved_count = Number.isFinite(Number(resultData.auto_approved_count)) ? Number(resultData.auto_approved_count) : 0;
   resultData.auto_blocked_count = Number.isFinite(Number(resultData.auto_blocked_count)) ? Number(resultData.auto_blocked_count) : 0;
   resultData.auto_response_sent = !!resultData.auto_response_sent;
@@ -389,7 +494,7 @@ async function dispatchWorkOrder(entry, handoffDir, options) {
   try {
     const posted = await postResult(resultData, options);
     if (posted.statusCode === 200 && posted.body && posted.body.ok) {
-      process.stdout.write(`[watcher] ✅ Result posted to Console / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR}\n`);
+      process.stdout.write(`[watcher] ✅ Result posted to Console / route=${ZERO_CONFIRM_ROUTE} / executor=${ZERO_CONFIRM_EXECUTOR} / executionHost=kosame-runner\n`);
     } else {
       process.stderr.write(`[watcher] ❌ Post failed: ${posted.statusCode}\n`);
     }

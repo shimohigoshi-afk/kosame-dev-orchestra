@@ -28,6 +28,15 @@ function summarizeDecision(decision) {
   const autoApprovedCount = Number.isFinite(Number(current.auto_approved_count ?? current.autoApprovedCount)) ? Number(current.auto_approved_count ?? current.autoApprovedCount) : 0;
   const autoBlockedCount = Number.isFinite(Number(current.auto_blocked_count ?? current.autoBlockedCount)) ? Number(current.auto_blocked_count ?? current.autoBlockedCount) : 0;
   const retryCount = Number.isFinite(Number(current.retry_count ?? current.retryCount)) ? Number(current.retry_count ?? current.retryCount) : 0;
+  const executionHost = normalizeText(current.execution_host || current.executionHost || '');
+  const executionHostAllowed = current.execution_host_allowed ?? current.executionHostAllowed;
+  const interactiveHostBlocked = current.interactive_host_blocked ?? current.interactiveHostBlocked;
+  const noYesGateRuntime = current.no_yes_gate_runtime ?? current.noYesGateRuntime;
+  const safeSpawnActive = current.safe_spawn_active ?? current.safeSpawnActive;
+  const manualCodeUiAllowed = current.manual_code_ui_allowed ?? current.manualCodeUiAllowed;
+  const officialRoute = normalizeText(current.official_route || current.officialRoute || '');
+  const promptOrigin = normalizeText(current.prompt_origin || current.promptOrigin || '');
+  const blockedReason = normalizeText(current.blocked_reason || current.blockedReason || '');
   const routerDecision = normalizeText(current.router_decision || current.routerDecision || current.orchestra_evidence?.router_decision || '');
   const assignedLanes = Array.isArray(current.assigned_lanes)
     ? current.assigned_lanes.join(' | ')
@@ -45,6 +54,13 @@ function summarizeDecision(decision) {
     `executor=${normalizeText(current.executor || current.assigned_agent || 'Codex')}`,
     `route=${normalizeText(current.route || 'zero-confirm')}`,
     `resultPOST=${normalizeText(current.result_post || current.resultPOST || 'POST /api/work-orders/result 200')}`,
+    `executionHost=${executionHost || '—'}`,
+    `executionHostAllowed=${executionHostAllowed !== false ? 'true' : 'false'}`,
+    `interactiveHostBlocked=${interactiveHostBlocked ? 'true' : 'false'}`,
+    `noYesGateRuntime=${noYesGateRuntime !== false ? 'true' : 'false'}`,
+    `safeSpawnActive=${safeSpawnActive !== false ? 'true' : 'false'}`,
+    `manualCodeUiAllowed=${manualCodeUiAllowed ? 'true' : 'false'}`,
+    `officialRoute=${officialRoute || 'Console → Handoff → Runner'}`,
     `humanGate=${current.human_gate_required ? 'yes' : 'no'}`,
     `commitTagPush=${current.commit_tag_push_allowed ? 'candidate' : 'hold'}`,
     `承認要求回数=${approvalCount}`,
@@ -55,6 +71,8 @@ function summarizeDecision(decision) {
     `retryCount=${retryCount}`,
   ];
   if (routerDecision) parts.push(`routerDecision=${routerDecision}`);
+  if (promptOrigin) parts.push(`promptOrigin=${promptOrigin}`);
+  if (blockedReason) parts.push(`blockedReason=${blockedReason}`);
   if (assignedLanes) parts.push(`assignedLanes=${assignedLanes}`);
   if (laneStatuses) parts.push(`laneStatuses=${laneStatuses}`);
   const reason = clamp(current.reason || current.summary || '', 120);
@@ -65,6 +83,32 @@ function summarizeDecision(decision) {
 }
 
 function buildDecisionBase(status, smoke, verify) {
+  if (status === 'safety_stop') {
+    return {
+      decision_status: 'safety_stop',
+      nextRecommendedAction: 'safety_stop',
+      reason: 'Safety Stop が検出されました。',
+      required_next_work: '安全条件を確認してから official route で再投入する',
+      human_gate_required: true,
+      commit_tag_push_allowed: false,
+      activity_status: 'blocked',
+    };
+  }
+
+  if (status === 'blocked_interactive_host' || status === 'blocked_by_interactive_prompt' || status === 'blocked') {
+    return {
+      decision_status: status === 'blocked_interactive_host' ? 'blocked_interactive_host' : 'blocked_by_interactive_prompt',
+      nextRecommendedAction: status === 'blocked_interactive_host' ? 'blocked_interactive_host' : 'blocked_by_interactive_prompt',
+      reason: status === 'blocked_interactive_host'
+        ? 'interactive host が正規実行ルートから隔離されました。'
+        : 'interactive prompt が検出され、ユーザー入力待ちにせず遮断しました。',
+      required_next_work: 'KOSAME Console から再投入し、official route で実行する',
+      human_gate_required: true,
+      commit_tag_push_allowed: false,
+      activity_status: 'blocked',
+    };
+  }
+
   if (status === 'needs_fix') {
     return {
       decision_status: 'request_fix',
@@ -175,6 +219,78 @@ function buildWorkOrderResultDecision(input = {}) {
     || '',
     40
   );
+  const executionHost = clamp(
+    latestWorkOrderResult?.execution_host
+    || latestWorkOrderResult?.executionHost
+    || latestHandoffWorkOrder?.execution_host
+    || latestHandoffWorkOrder?.executionHost
+    || latestApprovedWorkOrder?.execution_host
+    || latestApprovedWorkOrder?.executionHost
+    || 'kosame-runner',
+    60
+  );
+  const executionHostAllowed = latestWorkOrderResult?.execution_host_allowed
+    ?? latestWorkOrderResult?.executionHostAllowed
+    ?? latestHandoffWorkOrder?.execution_host_allowed
+    ?? latestHandoffWorkOrder?.executionHostAllowed
+    ?? latestApprovedWorkOrder?.execution_host_allowed
+    ?? latestApprovedWorkOrder?.executionHostAllowed;
+  const interactiveHostBlocked = latestWorkOrderResult?.interactive_host_blocked
+    ?? latestWorkOrderResult?.interactiveHostBlocked
+    ?? latestHandoffWorkOrder?.interactive_host_blocked
+    ?? latestHandoffWorkOrder?.interactiveHostBlocked
+    ?? latestApprovedWorkOrder?.interactive_host_blocked
+    ?? latestApprovedWorkOrder?.interactiveHostBlocked;
+  const noYesGateRuntime = latestWorkOrderResult?.no_yes_gate_runtime
+    ?? latestWorkOrderResult?.noYesGateRuntime
+    ?? latestHandoffWorkOrder?.no_yes_gate_runtime
+    ?? latestHandoffWorkOrder?.noYesGateRuntime
+    ?? latestApprovedWorkOrder?.no_yes_gate_runtime
+    ?? latestApprovedWorkOrder?.noYesGateRuntime;
+  const safeSpawnActive = latestWorkOrderResult?.safe_spawn_active
+    ?? latestWorkOrderResult?.safeSpawnActive
+    ?? latestHandoffWorkOrder?.safe_spawn_active
+    ?? latestHandoffWorkOrder?.safeSpawnActive
+    ?? latestApprovedWorkOrder?.safe_spawn_active
+    ?? latestApprovedWorkOrder?.safeSpawnActive;
+  const manualCodeUiAllowed = latestWorkOrderResult?.manual_code_ui_allowed
+    ?? latestWorkOrderResult?.manualCodeUiAllowed
+    ?? latestHandoffWorkOrder?.manual_code_ui_allowed
+    ?? latestHandoffWorkOrder?.manualCodeUiAllowed
+    ?? latestApprovedWorkOrder?.manual_code_ui_allowed
+    ?? latestApprovedWorkOrder?.manualCodeUiAllowed;
+  const officialRoute = clamp(
+    latestWorkOrderResult?.official_route
+    || latestWorkOrderResult?.officialRoute
+    || latestHandoffWorkOrder?.official_route
+    || latestHandoffWorkOrder?.officialRoute
+    || latestApprovedWorkOrder?.official_route
+    || latestApprovedWorkOrder?.officialRoute
+    || 'Console → Handoff → Runner',
+    80
+  );
+  const promptOrigin = clamp(
+    latestWorkOrderResult?.prompt_origin
+    || latestWorkOrderResult?.promptOrigin
+    || latestHandoffWorkOrder?.prompt_origin
+    || latestHandoffWorkOrder?.promptOrigin
+    || '',
+    60
+  );
+  const blockedReason = clamp(
+    latestWorkOrderResult?.blocked_reason
+    || latestWorkOrderResult?.blockedReason
+    || latestHandoffWorkOrder?.blocked_reason
+    || latestHandoffWorkOrder?.blockedReason
+    || '',
+    120
+  );
+  const userInputRequired = latestWorkOrderResult?.user_input_required
+    ?? latestWorkOrderResult?.userInputRequired
+    ?? latestHandoffWorkOrder?.user_input_required
+    ?? latestHandoffWorkOrder?.userInputRequired
+    ?? latestApprovedWorkOrder?.user_input_required
+    ?? latestApprovedWorkOrder?.userInputRequired;
   const executionPath = clamp(
     latestWorkOrderResult?.execution_path
     || latestWorkOrderResult?.executionPath
@@ -214,6 +330,20 @@ function buildWorkOrderResultDecision(input = {}) {
     route,
     result_post: resultPost,
     execution_path: executionPath,
+    execution_host: executionHost,
+    executionHost,
+    execution_host_allowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    interactive_host_blocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    interactiveHostBlocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    safeSpawnActive: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    manual_code_ui_allowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
+    manualCodeUiAllowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
+    official_route: officialRoute,
+    officialRoute,
     yes_count: Number.isFinite(Number(latestWorkOrderResult?.yes_count)) ? Number(latestWorkOrderResult.yes_count) : 0,
     copy_count: Number.isFinite(Number(latestWorkOrderResult?.copy_count)) ? Number(latestWorkOrderResult.copy_count) : 0,
     human_wait: Number.isFinite(Number(latestWorkOrderResult?.human_wait)) ? Number(latestWorkOrderResult.human_wait) : 0,
@@ -225,6 +355,12 @@ function buildWorkOrderResultDecision(input = {}) {
     retry_count: Number.isFinite(Number(latestWorkOrderResult?.retry_count ?? latestWorkOrderResult?.retryCount)) ? Number(latestWorkOrderResult.retry_count ?? latestWorkOrderResult.retryCount) : 0,
     recovered: !!(latestWorkOrderResult?.recovered || latestHandoffWorkOrder?.recovered),
     prompt_type: promptType,
+    prompt_origin: promptOrigin,
+    promptOrigin,
+    blocked_reason: blockedReason,
+    blockedReason,
+    user_input_required: userInputRequired !== undefined ? !!userInputRequired : false,
+    userInputRequired: userInputRequired !== undefined ? !!userInputRequired : false,
     orchestra_evidence: orchestraEvidence,
     router_decision: normalizeText(orchestraEvidence.router_decision || input.router_decision || input.routerDecision || ''),
     routerDecision: normalizeText(orchestraEvidence.router_decision || input.routerDecision || input.router_decision || ''),

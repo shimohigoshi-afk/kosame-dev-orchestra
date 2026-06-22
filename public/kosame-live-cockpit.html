@@ -4544,8 +4544,8 @@ function renderWorkOrderCard(workOrder) {
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
   note.textContent = approval.status === 'approved'
-    ? '了解しました！作業を開始します☂️ codex:watchで自動実行中です。'
-    : '採用後、codex:watch に自動ディスパッチされます。';
+    ? '了解しました！作業を開始します☂️ Runner Queue で自動実行中です。'
+    : '採用後、Runner Queue に自動ディスパッチされます。';
   promptSection.appendChild(note);
 
   card.appendChild(promptSection);
@@ -4718,7 +4718,7 @@ function renderWorkOrderHandoffQueue(snapshot = latestSnapshot || {}) {
 
   const note = document.createElement('div');
   note.className = 'chat-work-order-note';
-  note.textContent = '作業票をHandoff Inboxに保存しました。npm run codex:watch 起動中なら自動でCodexへ渡されます。';
+  note.textContent = '作業票をHandoff Inboxに保存しました。Runner Queue が official route で自動実行します。';
   promptSection.appendChild(note);
 
   card.appendChild(promptSection);
@@ -4741,6 +4741,13 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
   ).trim();
   const id = String(current.work_order_id || current.approval_id || current.handoff_id || current.id || '').trim();
   if (!id || !title || !targetRepo || !promptText) return null;
+  const executionHost = String(current.executionHost || current.execution_host || 'kosame-console').trim() || 'kosame-console';
+  const executionHostAllowed = current.executionHostAllowed !== false;
+  const interactiveHostBlocked = !!current.interactiveHostBlocked;
+  const noYesGateRuntime = current.noYesGateRuntime !== false;
+  const safeSpawnActive = !!current.safeSpawnActive;
+  const manualCodeUiAllowed = !!current.manualCodeUiAllowed;
+  const officialRoute = String(current.officialRoute || current.official_route || 'Console → Handoff → Runner').trim() || 'Console → Handoff → Runner';
   return {
     id,
     title,
@@ -4769,6 +4776,20 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
     attachmentManifestPath: String(current.attachment_manifest_path || current.attachmentManifestPath || '').trim(),
     attachment_dir: String(current.attachment_dir || current.attachmentDir || '').trim(),
     attachmentDir: String(current.attachment_dir || current.attachmentDir || '').trim(),
+    execution_host: executionHost,
+    executionHost,
+    execution_host_allowed: executionHostAllowed,
+    executionHostAllowed,
+    interactive_host_blocked: interactiveHostBlocked,
+    interactiveHostBlocked,
+    no_yes_gate_runtime: noYesGateRuntime,
+    noYesGateRuntime,
+    safe_spawn_active: safeSpawnActive,
+    safeSpawnActive,
+    manual_code_ui_allowed: manualCodeUiAllowed,
+    manualCodeUiAllowed,
+    official_route: officialRoute,
+    officialRoute,
     target: {
       id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
       label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
@@ -4908,7 +4929,7 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   lines.className = 'handoff-inbox-lines';
   [
     `送信先: ${bridgeUrl}`,
-    `Inboxに保存しました。codex:watch 起動中なら自動実行されます。`,
+    `Inboxに保存しました。Runner Queue が official route で自動実行します。`,
     `最終送信時刻: ${bridgeState.lastSentAt ? formatTokyoTimestamp(bridgeState.lastSentAt) || bridgeState.lastSentAt : '—'}`,
     `最終保存先: ${bridgeState.lastHandoffDir || bridgeState.lastPath || '—'}`,
     `最終保存ファイル: ${bridgeState.lastPath || '—'}`,
@@ -5012,7 +5033,7 @@ function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
     `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
     `route: ${current.route || 'zero-confirm'}`,
     `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
-    `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
+    `execution path: ${current.execution_path || current.executionPath || 'Console → Handoff → Runner'}`,
     `changed files: ${current.changed_files_summary || (Array.isArray(current.changed_files) ? current.changed_files.join(' | ') : '—')}`,
     `nextRecommendedAction: ${decisionNext}`,
   ];
@@ -5130,7 +5151,21 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
   let humanGateRequired = false;
   let commitTagPushAllowed = false;
   let activityStatus = 'waiting';
-  if (resultStatus === 'needs_fix') {
+  if (resultStatus === 'safety_stop') {
+    decisionStatus = 'safety_stop';
+    reason = 'Safety Stop が検出されました。';
+    requiredNextWork = '安全条件を確認してから official route で再投入する';
+    humanGateRequired = true;
+    activityStatus = 'blocked';
+  } else if (resultStatus === 'blocked_interactive_host' || resultStatus === 'blocked_by_interactive_prompt' || resultStatus === 'blocked') {
+    decisionStatus = resultStatus;
+    reason = resultStatus === 'blocked_interactive_host'
+      ? 'interactive host が正規実行ルートから隔離されました。'
+      : 'interactive prompt が検出され、ユーザー入力待ちにせず遮断しました。';
+    requiredNextWork = 'KOSAME Console から official route で再投入する';
+    humanGateRequired = true;
+    activityStatus = 'blocked';
+  } else if (resultStatus === 'needs_fix') {
     decisionStatus = 'request_fix';
     reason = '修正依頼が必要です。';
     requiredNextWork = '修正内容を整理して再依頼する';
@@ -5164,6 +5199,20 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
     assigned_agent: base.assigned_agent || base.recommended_agent || '—',
     risk_level: base.risk_level || 'low',
     route: base.route || 'zero-confirm',
+    execution_host: base.execution_host || base.executionHost || 'kosame-runner',
+    executionHost: base.execution_host || base.executionHost || 'kosame-runner',
+    execution_host_allowed: base.execution_host_allowed ?? base.executionHostAllowed,
+    executionHostAllowed: base.execution_host_allowed ?? base.executionHostAllowed,
+    interactive_host_blocked: base.interactive_host_blocked ?? base.interactiveHostBlocked,
+    interactiveHostBlocked: base.interactive_host_blocked ?? base.interactiveHostBlocked,
+    no_yes_gate_runtime: base.no_yes_gate_runtime ?? base.noYesGateRuntime,
+    noYesGateRuntime: base.no_yes_gate_runtime ?? base.noYesGateRuntime,
+    safe_spawn_active: base.safe_spawn_active ?? base.safeSpawnActive,
+    safeSpawnActive: base.safe_spawn_active ?? base.safeSpawnActive,
+    manual_code_ui_allowed: base.manual_code_ui_allowed ?? base.manualCodeUiAllowed,
+    manualCodeUiAllowed: base.manual_code_ui_allowed ?? base.manualCodeUiAllowed,
+    official_route: base.official_route || base.officialRoute || 'Console → Handoff → Runner',
+    officialRoute: base.official_route || base.officialRoute || 'Console → Handoff → Runner',
     human_gate_required: humanGateRequired,
     commit_tag_push_allowed: commitTagPushAllowed,
     decision_status: decisionStatus,
@@ -5256,6 +5305,13 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     ['human gate', current.human_gate_required ? 'required' : 'optional'],
     ['executor', current.executor || current.assigned_agent || 'Codex'],
     ['resultPOST', current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'],
+    ['executionHost', current.executionHost || current.execution_host || 'kosame-runner'],
+    ['hostAllowed', current.executionHostAllowed !== false ? 'true' : 'false'],
+    ['interactiveBlocked', current.interactiveHostBlocked ? 'true' : 'false'],
+    ['noYesGate', current.noYesGateRuntime !== false ? 'true' : 'false'],
+    ['safeSpawn', current.safeSpawnActive !== false ? 'true' : 'false'],
+    ['manualCodeUiAllowed', current.manualCodeUiAllowed ? 'true' : 'false'],
+    ['officialRoute', current.officialRoute || current.official_route || 'Console → Handoff → Runner'],
     ['router', orchestraEvidence.router_decision || current.router_decision || current.routerDecision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'],
   ].forEach(([label, value]) => {
     const chip = document.createElement('span');
@@ -5272,7 +5328,15 @@ function renderResultDecisionPanel(snapshot = latestSnapshot || {}) {
     `executor: ${current.executor || current.assigned_agent || 'Codex'}`,
     `route: ${current.route || 'zero-confirm'}`,
     `resultPOST: ${current.result_post || current.resultPOST || 'POST /api/work-orders/result 200'}`,
-    `execution path: ${current.execution_path || current.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision'}`,
+    `executionHost: ${current.executionHost || current.execution_host || 'kosame-runner'}`,
+    `executionHostAllowed: ${current.executionHostAllowed !== false ? 'true' : 'false'}`,
+    `interactiveHostBlocked: ${current.interactiveHostBlocked ? 'true' : 'false'}`,
+    `noYesGateRuntime: ${current.noYesGateRuntime !== false ? 'true' : 'false'}`,
+    `safeSpawnActive: ${current.safeSpawnActive !== false ? 'true' : 'false'}`,
+    `manualCodeUiAllowed: ${current.manualCodeUiAllowed ? 'true' : 'false'}`,
+    `officialRoute: ${current.officialRoute || current.official_route || 'Console → Handoff → Runner'}`,
+    `runnerWatcher: ${current.runnerWatcher || current.runner_watcher || 'Runner watcher'}`,
+    `execution path: ${current.execution_path || current.executionPath || 'Console → Handoff → Runner'}`,
     `理由: ${current.reason || '—'}`,
     `必要な次作業: ${current.required_next_work || '—'}`,
     `review gate 必要: ${current.human_gate_required ? 'yes' : 'no'}`,
@@ -5333,6 +5397,9 @@ function renderOperationsBoard(snapshot = latestSnapshot || {}) {
   [
     ['zero-confirm', board.route || 'zero-confirm'],
     ['executor', board.executor || 'claude-zero-confirm'],
+    ['executionHost', board.executionHost || board.execution_host || 'kosame-runner'],
+    ['hostAllowed', board.executionHostAllowed !== false ? 'true' : 'false'],
+    ['interactiveBlocked', board.interactiveHostBlocked ? 'true' : 'false'],
     ['policy', board.policyKernel || 'active'],
     ['classifier', board.promptClassifier || 'active'],
     ['autoResponder', board.autoResponder || 'active'],
@@ -5361,6 +5428,13 @@ function renderOperationsBoard(snapshot = latestSnapshot || {}) {
     `latest decision: ${board.latestDecision || 'wait_for_result'}`,
     `latest tag: ${board.latestTag || '—'}`,
     `latest commit: ${board.latestCommit || '—'}`,
+    `executionHost: ${board.executionHost || board.execution_host || 'kosame-runner'}`,
+    `executionHostAllowed: ${board.executionHostAllowed !== false ? 'true' : 'false'}`,
+    `interactiveHostBlocked: ${board.interactiveHostBlocked ? 'true' : 'false'}`,
+    `noYesGateRuntime: ${board.noYesGateRuntime !== false ? 'true' : 'false'}`,
+    `safeSpawnActive: ${board.safeSpawnActive !== false ? 'true' : 'false'}`,
+    `manualCodeUiAllowed: ${board.manualCodeUiAllowed ? 'true' : 'false'}`,
+    `runnerWatcher: ${board.runnerWatcher || board.runner_watcher || 'Runner watcher'}`,
     `assigned lanes: ${formatOrchestraLaneList(board.assignedLanes || orchestraEvidence.assigned_lanes)}`,
     `lane statuses: ${formatOrchestraLaneStatuses(board.laneStatuses || orchestraEvidence.lane_statuses)}`,
   ].forEach((textLine) => {
@@ -5384,7 +5458,7 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     statusNode.textContent = 'Run History: まだ run はありません。';
     const empty = document.createElement('div');
     empty.className = 'work-order-run-history-empty';
-    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / 自動YES回数 / 自動遮断回数 / retryCount / recovered / resultPOST / decision status / router decision / assigned lanes / lane statuses / timestamp を表示します。';
+    empty.textContent = 'Result POST が 3 回連続で入ると、ここに run number / work order id / executor / route / status / 承認要求回数 / 手動貼付回数 / 待機要求回数 / 自動YES回数 / 自動遮断回数 / retryCount / recovered / resultPOST / decision status / executionHost / hostAllowed / interactiveBlocked / router decision / assigned lanes / lane statuses / timestamp を表示します。';
     node.appendChild(empty);
     return;
   }
@@ -5406,16 +5480,19 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
     head.appendChild(badge);
     card.appendChild(head);
 
-    const meta = document.createElement('div');
-    meta.className = 'chat-work-order-meta';
-    [
+  const meta = document.createElement('div');
+  meta.className = 'chat-work-order-meta';
+  [
       ['run', run.run_number || index + 1],
       ['work order id', run.work_order_id || '—'],
       ['executor', run.executor || 'Codex'],
       ['route', run.route || 'zero-confirm'],
       ['status', run.result_status || 'unknown'],
       ['decision', run.decision_status || 'wait_for_result'],
-    ].forEach(([label, value]) => {
+      ['executionHost', run.executionHost || run.execution_host || 'kosame-runner'],
+      ['hostAllowed', run.executionHostAllowed !== false ? 'true' : 'false'],
+      ['interactiveBlocked', run.interactiveHostBlocked ? 'true' : 'false'],
+  ].forEach(([label, value]) => {
       const chip = document.createElement('span');
       chip.textContent = `${label}: ${value}`;
       meta.appendChild(chip);
@@ -5436,6 +5513,12 @@ function renderWorkOrderRunHistory(snapshot = latestSnapshot || {}) {
       `recovered: ${(run.recovered || false) ? 'yes' : 'no'}`,
       `resultPOST: ${run.result_post || 'POST /api/work-orders/result 200'}`,
       `decision status: ${run.decision_status || 'wait_for_result'}`,
+      `executionHost: ${run.executionHost || run.execution_host || 'kosame-runner'}`,
+      `executionHostAllowed: ${run.executionHostAllowed !== false ? 'true' : 'false'}`,
+      `interactiveHostBlocked: ${run.interactiveHostBlocked ? 'true' : 'false'}`,
+      `noYesGateRuntime: ${run.noYesGateRuntime !== false ? 'true' : 'false'}`,
+      `safeSpawnActive: ${run.safeSpawnActive !== false ? 'true' : 'false'}`,
+      `manualCodeUiAllowed: ${run.manualCodeUiAllowed ? 'true' : 'false'}`,
       `router decision: ${run.router_decision || orchestraEvidence.router_decision || 'KOSAME Router / route=zero-confirm / executor=claude-zero-confirm / mode=complete-run-first'}`,
       `assigned lanes: ${formatOrchestraLaneList(run.assigned_lanes || orchestraEvidence.assigned_lanes)}`,
       `lane statuses: ${formatOrchestraLaneStatuses(run.lane_statuses || orchestraEvidence.lane_statuses)}`,
@@ -5679,7 +5762,7 @@ function renderLatestApprovedWorkOrder(snapshot = latestSnapshot || {}) {
     : 'resultPOST待ち';
   const executionPath = result && (result.execution_path || result.executionPath)
     ? (result.execution_path || result.executionPath)
-    : 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision';
+    : 'Console → Handoff → Runner';
   const resultText = result && result.work_order_id && String(result.work_order_id) === String(approved.approval_id || approved.work_order_id || '')
     ? ` / result: ${result.result_status || 'unknown'} / next: ${result.nextRecommendedAction || 'review'} / executor: ${executor} / route: ${result.route || 'zero-confirm'} / 承認要求回数: ${formatZeroConfirmCounterLabel(result.approval_request_count ?? result.yes_count)} / 手動貼付回数: ${formatZeroConfirmCounterLabel(result.manual_paste_count ?? result.copy_count)} / 待機要求回数: ${formatZeroConfirmCounterLabel(result.wait_request_count ?? result.human_wait)} / resultPOST: ${resultPost}`
     : '';
@@ -5731,7 +5814,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
         }
       } catch { /* best-effort: handoff failure does not block UI */ }
 
-      // Step 3: Auto-save to Handoff Inbox (for codex:watch dispatch)
+      // Step 3: Auto-save to Handoff Inbox (for Runner Queue dispatch)
       statusNode.textContent = '採用済み → Inbox保存中...';
       try {
         const inboxPayload = buildHandoffInboxPayload(latestSnapshot);
@@ -5773,7 +5856,7 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
 
     statusNode.textContent = '採用済み / 自動ディスパッチ済み';
     buttonNode.textContent = '採用済み';
-    chatHistory.push({ role: 'assistant', content: '了解しました！作業を開始します☂️ codex:watchで自動実行中です。' });
+    chatHistory.push({ role: 'assistant', content: '了解しました！作業を開始します☂️ Runner Queue で自動実行中です。' });
     renderChatThread();
     renderLatestApprovedWorkOrder(latestSnapshot);
     renderHandoffInboxBridge(latestSnapshot);
@@ -6193,7 +6276,7 @@ async function sendChatMessage(userText, confirmationContext) {
     const data = await res.json();
 
     if (!data.ok) {
-      const errorText = data.error || '入力を確認してください。';
+      const errorText = data.error || '入力が不足しています。';
       chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}`, error_details: data.error_details || null, pipeline_trace: data.pipeline_trace || [] });
       hideTypingIndicator();
       renderChatThread();

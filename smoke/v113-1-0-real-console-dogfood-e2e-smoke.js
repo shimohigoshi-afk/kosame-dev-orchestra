@@ -108,7 +108,7 @@ async function main() {
   assertContains(html, 'executor: ${current.executor || current.assigned_agent || \'Codex\'}', 'Result Decision Panel must render executor');
   assertContains(html, 'route: ${current.route || \'zero-confirm\'}', 'Result Decision Panel must render route');
   assertContains(html, 'resultPOST: ${current.result_post || current.resultPOST || \'POST /api/work-orders/result 200\'}', 'Result Decision Panel must render resultPOST');
-  assertContains(html, 'execution path: ${current.execution_path || current.executionPath || \'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision\'}', 'Result Decision Panel must render execution path');
+  assertContains(html, 'officialRoute: ${current.officialRoute || current.official_route || \'Console → Handoff → Runner\'}', 'Result Decision Panel must render official route');
   assertContains(html, '承認要求回数: ${formatZeroConfirmCounterLabel(current.approval_request_count ?? current.yes_count)}', 'Result Decision Panel must render approval request count');
   assertContains(html, '手動貼付回数: ${formatZeroConfirmCounterLabel(current.manual_paste_count ?? current.copy_count)}', 'Result Decision Panel must render manual paste count');
   assertContains(html, '待機要求回数: ${formatZeroConfirmCounterLabel(current.wait_request_count ?? current.human_wait)}', 'Result Decision Panel must render wait request count');
@@ -201,7 +201,7 @@ async function main() {
     assert.equal(snapshot.latestWorkOrderDecision.yes_count, 0, 'snapshot yesCount must be 0');
     assert.equal(snapshot.latestWorkOrderDecision.copy_count, 0, 'snapshot copyCount must be 0');
     assert.equal(snapshot.latestWorkOrderDecision.human_wait, 0, 'snapshot humanWait must be 0');
-    assert.ok(String(snapshot.latestWorkOrderDecision.execution_path || '').includes('claude-zero-confirm'), 'snapshot execution path must include claude-zero-confirm');
+    assert.ok(String(snapshot.latestWorkOrderDecision.official_route || snapshot.latestWorkOrderDecision.officialRoute || '').includes('Console → Handoff → Runner'), 'snapshot official route must include Console → Handoff → Runner');
     assert.ok(Array.isArray(snapshot.shellAgentActivity.items), 'shell activity must expose items');
     assert.ok(
       snapshot.shellAgentActivity.items.some((item) => String(item.message || '').includes('executor: claude-zero-confirm') && String(item.message || '').includes('resultPOST: POST /api/work-orders/result 200')),

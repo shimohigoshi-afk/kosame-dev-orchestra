@@ -242,6 +242,18 @@ function sanitizeHandoffPayload(payload = {}) {
     .map((line) => maskHandoffText(line));
   const reportItems = normalizeTextList(source.report_items || source.reportItems || workOrder.report_items || workOrder.reportItems, 20, 240)
     .map((line) => maskHandoffText(line));
+  const executionHost = compactText(source.execution_host || source.executionHost || workOrder.execution_host || workOrder.executionHost || '', 60);
+  const executionSource = compactText(source.execution_source || source.executionSource || workOrder.execution_source || workOrder.executionSource || '', 60);
+  const executionHostAllowed = source.execution_host_allowed ?? source.executionHostAllowed ?? workOrder.execution_host_allowed ?? workOrder.executionHostAllowed;
+  const interactiveHostBlocked = source.interactive_host_blocked ?? source.interactiveHostBlocked ?? workOrder.interactive_host_blocked ?? workOrder.interactiveHostBlocked;
+  const noYesGateRuntime = source.no_yes_gate_runtime ?? source.noYesGateRuntime ?? workOrder.no_yes_gate_runtime ?? workOrder.noYesGateRuntime;
+  const safeSpawnActive = source.safe_spawn_active ?? source.safeSpawnActive ?? workOrder.safe_spawn_active ?? workOrder.safeSpawnActive;
+  const manualCodeUiAllowed = source.manual_code_ui_allowed ?? source.manualCodeUiAllowed ?? workOrder.manual_code_ui_allowed ?? workOrder.manualCodeUiAllowed;
+  const officialRoute = compactText(source.official_route || source.officialRoute || workOrder.official_route || workOrder.officialRoute || 'Console → Handoff → Runner', 80);
+  const promptType = compactText(source.prompt_type || source.promptType || workOrder.prompt_type || workOrder.promptType || '', 40);
+  const promptOrigin = compactText(source.prompt_origin || source.promptOrigin || workOrder.prompt_origin || workOrder.promptOrigin || '', 60);
+  const blockedReason = compactText(source.blocked_reason || source.blockedReason || workOrder.blocked_reason || workOrder.blockedReason || '', 120);
+  const userInputRequired = source.user_input_required ?? source.userInputRequired ?? workOrder.user_input_required ?? workOrder.userInputRequired;
   const target = source.target && typeof source.target === 'object'
     ? {
         id: compactText(source.target.id || source.target.projectId || selectedProjectId, 60),
@@ -298,6 +310,30 @@ function sanitizeHandoffPayload(payload = {}) {
     safetyConditions,
     report_items: reportItems,
     reportItems,
+    execution_host: executionHost,
+    executionHost,
+    execution_source: executionSource,
+    executionSource,
+    execution_host_allowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    interactive_host_blocked: !!interactiveHostBlocked,
+    interactiveHostBlocked: !!interactiveHostBlocked,
+    no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    safeSpawnActive: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    manual_code_ui_allowed: !!manualCodeUiAllowed,
+    manualCodeUiAllowed: !!manualCodeUiAllowed,
+    official_route: officialRoute,
+    officialRoute,
+    prompt_type: promptType,
+    promptType,
+    prompt_origin: promptOrigin,
+    promptOrigin,
+    blocked_reason: blockedReason,
+    blockedReason,
+    user_input_required: !!userInputRequired,
+    userInputRequired: !!userInputRequired,
     body: promptText,
     prompt_text: promptText,
     created_at: createdAt,
@@ -378,7 +414,22 @@ function buildLatestMarkdown(entry) {
     safe.prompt_text,
     '```',
     '',
-    '> KOSAME Console Handoff — codex:watch により自動ディスパッチされます。',
+    '## execution_host',
+    '',
+    `- execution_host: ${safe.execution_host || '—'}`,
+    `- execution_source: ${safe.execution_source || '—'}`,
+    `- execution_host_allowed: ${safe.execution_host_allowed ? 'true' : 'false'}`,
+    `- interactive_host_blocked: ${safe.interactive_host_blocked ? 'true' : 'false'}`,
+    `- no_yes_gate_runtime: ${safe.no_yes_gate_runtime ? 'true' : 'false'}`,
+    `- safe_spawn_active: ${safe.safe_spawn_active ? 'true' : 'false'}`,
+    `- manual_code_ui_allowed: ${safe.manual_code_ui_allowed ? 'true' : 'false'}`,
+    `- official_route: ${safe.official_route || 'Console → Handoff → Runner'}`,
+    safe.prompt_type ? `- prompt_type: ${safe.prompt_type}` : null,
+    safe.prompt_origin ? `- prompt_origin: ${safe.prompt_origin}` : null,
+    safe.blocked_reason ? `- blocked_reason: ${safe.blocked_reason}` : null,
+    `- user_input_required: ${safe.user_input_required ? 'true' : 'false'}`,
+    '',
+    '> KOSAME Console Handoff — official route で Runner Queue / Runner watcher に自動ディスパッチされます。',
   ].filter((line) => line != null).join('\n');
 }
 
@@ -438,6 +489,30 @@ function saveHandoffInbox(payload = {}, options = {}) {
     record.attachment_summary = buildSafeHandoffAttachmentSummary(attachmentManifest);
     record.attachmentSummary = record.attachment_summary;
   }
+  record.execution_host = safe.execution_host || safe.executionHost || '';
+  record.executionHost = record.execution_host;
+  record.execution_source = safe.execution_source || safe.executionSource || '';
+  record.executionSource = record.execution_source;
+  record.execution_host_allowed = safe.execution_host_allowed !== undefined ? !!safe.execution_host_allowed : true;
+  record.executionHostAllowed = record.execution_host_allowed;
+  record.interactive_host_blocked = !!safe.interactive_host_blocked;
+  record.interactiveHostBlocked = record.interactive_host_blocked;
+  record.no_yes_gate_runtime = safe.no_yes_gate_runtime !== undefined ? !!safe.no_yes_gate_runtime : true;
+  record.noYesGateRuntime = record.no_yes_gate_runtime;
+  record.safe_spawn_active = !!safe.safe_spawn_active;
+  record.safeSpawnActive = record.safe_spawn_active;
+  record.manual_code_ui_allowed = !!safe.manual_code_ui_allowed;
+  record.manualCodeUiAllowed = record.manual_code_ui_allowed;
+  record.official_route = safe.official_route || safe.officialRoute || 'Console → Handoff → Runner';
+  record.officialRoute = record.official_route;
+  record.prompt_type = safe.prompt_type || safe.promptType || '';
+  record.promptType = record.prompt_type;
+  record.prompt_origin = safe.prompt_origin || safe.promptOrigin || '';
+  record.promptOrigin = record.prompt_origin;
+  record.blocked_reason = safe.blocked_reason || safe.blockedReason || '';
+  record.blockedReason = record.blocked_reason;
+  record.user_input_required = !!safe.user_input_required;
+  record.userInputRequired = record.user_input_required;
   ensureDir(handoffDir);
   fs.appendFileSync(queuePath, `${JSON.stringify(record)}\n`, 'utf8');
   fs.writeFileSync(latestPath, buildLatestMarkdown(record), 'utf8');
@@ -548,7 +623,7 @@ function createCodexHandoffBridgeServer(options = {}) {
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,
             queuePath: result.queuePath,
-            message: 'Inboxに保存しました。codex:watch 起動中なら自動実行されます。',
+            message: 'Inboxに保存しました。Runner Queue が official route で自動実行します。',
           }));
         } catch (error) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

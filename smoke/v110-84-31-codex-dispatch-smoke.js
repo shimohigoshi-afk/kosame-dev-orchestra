@@ -21,9 +21,9 @@ async function main() {
   assert.ok(isVersionAtLeast(pkg.version, '110.84.31'), `version must be >= 110.84.31 (got ${pkg.version})`);
   assert.ok(pkg.scripts['smoke:v110-84-31'], 'smoke:v110-84-31 must exist');
   assert.ok(pkg.scripts.verify.includes('smoke:v110-84-31'), 'verify must include smoke:v110-84-31');
-  assert.ok(pkg.scripts['codex:watch'], 'codex:watch script must exist');
+  assert.ok(pkg.scripts['runner:watch'], 'runner:watch script must exist');
   assert.ok(pkg.scripts['codex:submit'], 'codex:submit script must exist');
-  assert.ok(pkg.scripts['codex:watch'].includes('kosame-codex-dispatch-watcher'), 'codex:watch must point to dispatch watcher');
+  assert.ok(pkg.scripts['runner:watch'].includes('kosame-codex-dispatch-watcher'), 'runner:watch must point to dispatch watcher');
   assert.ok(pkg.scripts['codex:submit'].includes('kosame-codex-result-poster'), 'codex:submit must point to result poster');
   console.log('  PASS: package wiring');
 
@@ -92,7 +92,7 @@ async function main() {
   const html = fs.readFileSync(HTML_PATH, 'utf8');
   assert.ok(!html.includes('手動で Codex に貼り付けてください'), 'HTML must not say manual paste to Codex');
   assert.ok(!html.includes('Codexへ自動入力はしていません'), 'HTML must not say auto input skipped');
-  assert.ok(html.includes('codex:watch'), 'HTML must reference codex:watch');
+  assert.ok(html.includes('runner:watch') || html.includes('Runner watcher'), 'HTML must reference runner watcher');
   console.log('  PASS: HTML manual paste text removed');
 
   // Runtime: build work order and check result poster instruction in body

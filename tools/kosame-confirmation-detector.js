@@ -21,6 +21,7 @@ const CONFIRMATION_PATTERNS = [
   /please confirm/i,
   /confirm (?:the )?changes?\??/i,
   /make (?:the )?following changes?\??/i,
+  /how is claude doing this session\??/i,
 ];
 
 const CHOICE_PATTERN_GLOBAL = /\[(\d+)\]\s+([^\[\n\r]+?)(?=\[|\n|\r|$)/g;

@@ -20,7 +20,7 @@ function classifyPrompt(text, source = 'stdout') {
     ['safety_stop_prompt', [/secret|api[_-]?key|token|password|billing|deploy|force\s+push|rm\s+-rf|sales[-\s]?dx|transcriber|顧客情報|個人情報|外部送信/i], 'blocked', 'blocked'],
     ['yes_no', [/\byes\/no\b/i], 'yes', 'yes\n'],
     ['y_n', [/\by\/n\b/i], 'y', 'y\n'],
-    ['yes_required', [/\bplease\s+confirm\b/i, /\byes\b.*\bno\b/i, /承認してください|承認要求|確認してください|続けますか|continue\?/i], 'yes', 'yes\n'],
+    ['yes_required', [/\bplease\s+confirm\b/i, /\byes\b.*\bno\b/i, /承認してください|承認要求|確認してください|続けますか|continue\?/i, /type\s+yes.*continue/i, /\byes\b.*\bcontinue\b/i], 'yes', 'yes\n'],
     ['enter_confirm', [/press\s+enter|hit\s+enter|enter\s+to\s+continue|enterで/i], 'enter', '\n'],
     ['numbered_choice', [/^\s*\d+\)|select\s+\d+|choose\s+\d+/i], 'number', '1\n'],
     ['trust_prompt', [/workspace trust|folder trust|trust/i], 'trust', 'yes\n'],
@@ -30,7 +30,7 @@ function classifyPrompt(text, source = 'stdout') {
     ['approval_prompt', [/approve|approved|承認/i], 'yes', 'yes\n'],
     ['accept_prompt', [/accept|accepted/i], 'yes', 'yes\n'],
     ['bypass_prompt', [/bypass|skip permissions/i], 'yes', 'yes\n'],
-    ['feedback_prompt', [/feedback|reply with/i], 'yes', 'yes\n'],
+    ['feedback_prompt', [/feedback|reply with|how is claude doing this session\?/i], 'yes', 'yes\n'],
     ['manual_paste_prompt', [/manual paste|貼り付け|コピペ/i], 'yes', 'yes\n'],
     ['human_wait_prompt', [/human wait|待機/i], 'yes', 'yes\n'],
   ];

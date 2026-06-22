@@ -136,6 +136,15 @@ function summarizeWorkOrderResult(workOrderResult) {
   const executor = normalizeText(result.executor || result.assigned_agent || 'Codex');
   const route = normalizeText(result.route || 'zero-confirm');
   const resultPost = normalizeText(result.result_post || result.resultPOST || 'POST /api/work-orders/result 200');
+  const executionHost = normalizeText(result.execution_host || result.executionHost || '—');
+  const executionHostAllowed = result.execution_host_allowed ?? result.executionHostAllowed;
+  const interactiveHostBlocked = result.interactive_host_blocked ?? result.interactiveHostBlocked;
+  const noYesGateRuntime = result.no_yes_gate_runtime ?? result.noYesGateRuntime;
+  const safeSpawnActive = result.safe_spawn_active ?? result.safeSpawnActive;
+  const manualCodeUiAllowed = result.manual_code_ui_allowed ?? result.manualCodeUiAllowed;
+  const officialRoute = normalizeText(result.official_route || result.officialRoute || 'Console → Handoff → Runner');
+  const promptOrigin = normalizeText(result.prompt_origin || result.promptOrigin || '');
+  const blockedReason = normalizeText(result.blocked_reason || result.blockedReason || '');
   const yesCount = Number.isFinite(Number(result.yes_count ?? result.yesCount)) ? Number(result.yes_count ?? result.yesCount) : 0;
   const copyCount = Number.isFinite(Number(result.copy_count ?? result.copyCount)) ? Number(result.copy_count ?? result.copyCount) : 0;
   const humanWait = Number.isFinite(Number(result.human_wait ?? result.humanWait)) ? Number(result.human_wait ?? result.humanWait) : 0;
@@ -160,6 +169,13 @@ function summarizeWorkOrderResult(workOrderResult) {
     `executor=${executor}`,
     `route=${route}`,
     `resultPOST=${resultPost}`,
+    `executionHost=${executionHost}`,
+    `executionHostAllowed=${executionHostAllowed !== false ? 'true' : 'false'}`,
+    `interactiveHostBlocked=${interactiveHostBlocked ? 'true' : 'false'}`,
+    `noYesGateRuntime=${noYesGateRuntime !== false ? 'true' : 'false'}`,
+    `safeSpawnActive=${safeSpawnActive !== false ? 'true' : 'false'}`,
+    `manualCodeUiAllowed=${manualCodeUiAllowed ? 'true' : 'false'}`,
+    `officialRoute=${officialRoute}`,
     `承認要求回数=${approvalCount}`,
     `手動貼付回数=${manualPasteCount}`,
     `待機要求回数=${waitCount}`,
@@ -169,6 +185,8 @@ function summarizeWorkOrderResult(workOrderResult) {
     `recovered=${recovered ? 'yes' : 'no'}`,
   ];
   if (orchestraEvidence) parts.push(orchestraEvidence);
+  if (promptOrigin) parts.push(`promptOrigin=${promptOrigin}`);
+  if (blockedReason) parts.push(`blockedReason=${blockedReason}`);
   if (changedFiles.length) parts.push(`changed=${changedFiles.join(' | ')}`);
   const summary = normalizeText(result.result_summary || result.changed_files_summary || result.notes || '');
   if (summary) parts.push(`summary=${summary}`);
@@ -194,6 +212,13 @@ function summarizeOperationsBoard(board) {
   return [
     `zero-confirm=${normalizeText(current.route || 'zero-confirm')}`,
     `executor=${normalizeText(current.executor || 'claude-zero-confirm')}`,
+    `executionHost=${normalizeText(current.executionHost || current.execution_host || '—')}`,
+    `executionHostAllowed=${current.executionHostAllowed !== false ? 'true' : 'false'}`,
+    `interactiveHostBlocked=${current.interactiveHostBlocked ? 'true' : 'false'}`,
+    `noYesGateRuntime=${current.noYesGateRuntime !== false ? 'true' : 'false'}`,
+    `safeSpawnActive=${current.safeSpawnActive !== false ? 'true' : 'false'}`,
+    `manualCodeUiAllowed=${current.manualCodeUiAllowed ? 'true' : 'false'}`,
+    `officialRoute=${normalizeText(current.officialRoute || current.official_route || 'Console → Handoff → Runner')}`,
     `policyKernel=${normalizeText(current.policyKernel || 'active')}`,
     `promptClassifier=${normalizeText(current.promptClassifier || 'active')}`,
     `autoResponder=${normalizeText(current.autoResponder || 'active')}`,

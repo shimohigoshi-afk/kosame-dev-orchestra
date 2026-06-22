@@ -13,6 +13,7 @@ const {
   sanitizeAttachmentForHandoff,
   stripBase64Payloads,
 } = require('./kosame-attachment-store');
+const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_HANDOFF_DIR = path.join(ROOT, '.kosame-handoff');
@@ -227,6 +228,7 @@ function sanitizeHandoffPayload(payload = {}) {
       createdAt,
       attachmentIndex: index + 1,
     }));
+  const attachmentIds = attachments.map((att) => compactText(att.attachmentId || att.id || '', 120)).filter(Boolean);
   const attachmentSummary = buildSafeHandoffAttachmentSummary({
     workOrderId: id,
     attachments,
@@ -304,6 +306,12 @@ function sanitizeHandoffPayload(payload = {}) {
     attachments,
     attachment_count: attachments.length,
     attachmentCount: attachments.length,
+    attachment_ids: attachmentIds,
+    attachmentIds,
+    attachment_manifest_path: compactText(source.attachment_manifest_path || source.attachmentManifestPath || workOrder.attachment_manifest_path || workOrder.attachmentManifestPath || '', 160),
+    attachmentManifestPath: compactText(source.attachment_manifest_path || source.attachmentManifestPath || workOrder.attachment_manifest_path || workOrder.attachmentManifestPath || '', 160),
+    attachment_dir: compactText(source.attachment_dir || source.attachmentDir || workOrder.attachment_dir || workOrder.attachmentDir || '', 160),
+    attachmentDir: compactText(source.attachment_dir || source.attachmentDir || workOrder.attachment_dir || workOrder.attachmentDir || '', 160),
     has_image_attachments: attachments.some((att) => att.kind === 'image'),
     hasImageAttachments: attachments.some((att) => att.kind === 'image'),
     attachment_summary: attachmentSummary,
@@ -338,6 +346,9 @@ function buildLatestMarkdown(entry) {
     safe.target ? `- target_label: ${safe.target.label || ''}` : null,
     safe.target ? `- target_path: ${safe.target.path || ''}` : null,
     attachments.length ? `- attachment_count: ${attachments.length}` : null,
+    Array.isArray(safe.attachment_ids) && safe.attachment_ids.length ? `- attachment_ids: ${safe.attachment_ids.join(', ')}` : null,
+    safe.attachment_manifest_path ? `- attachment_manifest_path: ${safe.attachment_manifest_path}` : null,
+    safe.attachment_dir ? `- attachment_dir: ${safe.attachment_dir}` : null,
     safe.redacted_count ? `- redacted_count: ${safe.redacted_count}` : null,
     '',
     safetyConditions.length ? '## safety_conditions' : null,
@@ -395,6 +406,19 @@ function saveHandoffInbox(payload = {}, options = {}) {
         },
       )
     : null;
+  if (attachmentManifest) {
+    appendPipelineStageEvent({
+      stage: 'attachments.manifest.saved',
+      status: 'success',
+      workOrderId: safe.id || safe.work_order_id || safe.approval_id || '',
+      attachmentCount: attachmentManifest.attachments.length,
+      attachmentIds: attachmentManifest.attachments.map((att) => att.attachmentId),
+      manifestPath: attachmentManifest.manifestPath,
+      route: 'handoff',
+      timestamp: now,
+      message: `attachment manifest saved at ${attachmentManifest.manifestPath}`,
+    }, { agent: 'Runner', task: 'attachments.manifest.saved' });
+  }
   const record = {
     ...safe,
     saved_at: now,
@@ -406,6 +430,8 @@ function saveHandoffInbox(payload = {}, options = {}) {
     record.attachmentManifestPath = attachmentManifest.manifestPath;
     record.attachment_dir = attachmentManifest.attachmentDir;
     record.attachmentDir = attachmentManifest.attachmentDir;
+    record.attachment_ids = attachmentManifest.attachments.map((att) => att.attachmentId);
+    record.attachmentIds = record.attachment_ids;
     record.attachments = attachmentManifest.attachments;
     record.attachment_count = attachmentManifest.attachments.length;
     record.attachmentCount = attachmentManifest.attachments.length;
@@ -422,6 +448,8 @@ function saveHandoffInbox(payload = {}, options = {}) {
     queuePath,
     saved_at: now,
     latestHandoff: record,
+    attachmentManifestPath: record.attachment_manifest_path || '',
+    attachmentIds: Array.isArray(record.attachment_ids) ? record.attachment_ids : [],
   };
 }
 

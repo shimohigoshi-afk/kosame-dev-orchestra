@@ -818,6 +818,38 @@ h1 {
 .chat-sound-details-body {
   padding: 0 10px 10px;
 }
+.chat-error-details {
+  margin-top: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.16);
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.04);
+  padding: 8px 10px;
+}
+.chat-error-details summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--danger);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.chat-error-details summary::-webkit-details-marker { display: none; }
+.chat-error-details summary::after {
+  content: '▾';
+  float: right;
+  color: var(--danger);
+}
+.chat-error-details[open] summary::after {
+  content: '▴';
+}
+.chat-error-details pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #ffd3d3;
+}
 .timestamp {
   margin-top: 16px;
   color: var(--muted);
@@ -4380,6 +4412,28 @@ function renderChatThread() {
     body.textContent = msg.content;
     bubble.appendChild(header);
     bubble.appendChild(body);
+    if (msg.role === 'assistant' && msg.error_details) {
+      const details = document.createElement('details');
+      details.className = 'chat-error-details';
+      const summary = document.createElement('summary');
+      summary.textContent = '詳細';
+      details.appendChild(summary);
+      const pre = document.createElement('pre');
+      const fields = [
+        ['errorStage', msg.error_details.errorStage || '—'],
+        ['errorCode', msg.error_details.errorCode || '—'],
+        ['errorMessage', msg.error_details.errorMessage || '—'],
+        ['workOrderId', msg.error_details.workOrderId || '—'],
+        ['attachmentCount', Number.isFinite(Number(msg.error_details.attachmentCount)) ? String(msg.error_details.attachmentCount) : '0'],
+        ['attachmentIds', Array.isArray(msg.error_details.attachmentIds) ? msg.error_details.attachmentIds.join(', ') : '—'],
+        ['manifestPath', msg.error_details.manifestPath || '—'],
+        ['route', msg.error_details.route || '—'],
+        ['timestamp', msg.error_details.timestamp || '—'],
+      ];
+      pre.textContent = fields.map(([k, v]) => `${k}=${v}`).join('\n');
+      details.appendChild(pre);
+      bubble.appendChild(details);
+    }
     if (msg.role === 'assistant' && msg.work_order) {
       bubble.appendChild(renderWorkOrderCard(msg.work_order));
     }
@@ -4707,6 +4761,14 @@ function buildHandoffInboxPayload(snapshot = latestSnapshot || {}) {
     report_items: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
     reportItems: Array.isArray(current.reportItems || current.report_items) ? (current.reportItems || current.report_items) : [],
     attachments: Array.isArray(current.attachments) ? current.attachments : [],
+    attachment_count: Number.isFinite(Number(current.attachment_count ?? current.attachmentCount)) ? Number(current.attachment_count ?? current.attachmentCount) : (Array.isArray(current.attachments) ? current.attachments.length : 0),
+    attachmentCount: Number.isFinite(Number(current.attachment_count ?? current.attachmentCount)) ? Number(current.attachment_count ?? current.attachmentCount) : (Array.isArray(current.attachments) ? current.attachments.length : 0),
+    attachment_ids: Array.isArray(current.attachment_ids || current.attachmentIds) ? (current.attachment_ids || current.attachmentIds) : (Array.isArray(current.attachments) ? current.attachments.map((att) => att && (att.attachmentId || att.id || att.name || '')).filter(Boolean) : []),
+    attachmentIds: Array.isArray(current.attachment_ids || current.attachmentIds) ? (current.attachment_ids || current.attachmentIds) : (Array.isArray(current.attachments) ? current.attachments.map((att) => att && (att.attachmentId || att.id || att.name || '')).filter(Boolean) : []),
+    attachment_manifest_path: String(current.attachment_manifest_path || current.attachmentManifestPath || '').trim(),
+    attachmentManifestPath: String(current.attachment_manifest_path || current.attachmentManifestPath || '').trim(),
+    attachment_dir: String(current.attachment_dir || current.attachmentDir || '').trim(),
+    attachmentDir: String(current.attachment_dir || current.attachmentDir || '').trim(),
     target: {
       id: String(current.selectedProjectId || current.selected_project_id || '').trim(),
       label: String(current.selectedProjectLabel || current.selected_project_label || '').trim(),
@@ -6132,7 +6194,7 @@ async function sendChatMessage(userText, confirmationContext) {
 
     if (!data.ok) {
       const errorText = data.error || '入力を確認してください。';
-      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}` });
+      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}`, error_details: data.error_details || null, pipeline_trace: data.pipeline_trace || [] });
       hideTypingIndicator();
       renderChatThread();
       statusEl.textContent = `エラー: ${errorText}`;
@@ -6145,6 +6207,8 @@ async function sendChatMessage(userText, confirmationContext) {
       content: reply,
       work_order: data.work_order || null,
       human_gate_required: !!data.human_gate_required,
+      error_details: data.error_details || null,
+      pipeline_trace: data.pipeline_trace || [],
     });
     hideTypingIndicator();
     renderChatThread();

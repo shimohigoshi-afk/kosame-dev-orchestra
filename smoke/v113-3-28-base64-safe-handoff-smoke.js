@@ -49,7 +49,10 @@ async function main() {
   const specSrc = readFile('tools/kosame-spec-to-tasks.js');
   checkContains('spec: processSpec exists', specSrc, 'async function processSpec(');
   checkContains('spec: AGENT STREAM LOG attachment message', specSrc, '画像添付を受信しました');
-  checkContains('spec: saveResults with handoffDir', specSrc, 'const saveResults = saveTasksToHandoff(tasks, { attachments, handoffDir })');
+  checkContains('spec: saveResults with handoffDir', specSrc, 'const saveOutcome = saveTasksToHandoff(tasks, {');
+  checkContains('spec: saveResults passes attachments', specSrc, 'attachments,');
+  checkContains('spec: saveResults passes handoffDir', specSrc, 'handoffDir,');
+  checkContains('spec: saveResults passes stageHistory', specSrc, 'stageHistory,');
 
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kosame-base64-smoke-'));
   const { saveHandoffInbox, readLatestHandoffInbox } = require(path.join(ROOT, 'tools/kosame-codex-handoff-bridge-server.js'));

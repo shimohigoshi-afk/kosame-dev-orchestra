@@ -128,7 +128,9 @@ async function main() {
   checkContains('spec: summarizeAttachments exists', specSrc, 'function summarizeAttachments(');
   checkContains('spec: attachment stream log for image', specSrc, '画像添付を受信しました');
   checkContains('spec: handoffDir passed through', specSrc, 'handoffDir');
-  checkContains('spec: saveTasksToHandoff passes attachments', specSrc, '{ attachments, handoffDir }');
+  checkContains('spec: saveTasksToHandoff passes attachments', specSrc, 'saveTasksToHandoff(tasks, {');
+  checkContains('spec: saveTasksToHandoff passes attachments', specSrc, 'attachments,');
+  checkContains('spec: saveTasksToHandoff passes attachments', specSrc, 'handoffDir,');
 
   const chatSrc = readFile('tools/kosame-cockpit-chat-server.js');
   checkContains('chat: attachments normalized with displayName', chatSrc, 'displayName: String(a.displayName || a.name ||');

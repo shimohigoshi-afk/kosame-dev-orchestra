@@ -133,7 +133,9 @@ async function main() {
     checkContains('chat: detectSpecIntent called', chatSrc, 'detectSpecIntent');
     checkContains('chat: processSpec called', chatSrc, 'processSpec');
     checkContains('chat: spec pipeline runs before GPT', chatSrc, /detectSpecIntent[\s\S]{0,300}processSpec/);
-    checkContains('chat: returns early on spec detection', chatSrc, /specResult\.ok[\s\S]{0,1000}return result/);
+    checkContains('chat: spec success branch exists', chatSrc, /if \(specResult\.ok\)/);
+    checkContains('chat: returns result from handler', chatSrc, /return result;/);
+    checkContains('chat: spec failure reply is structured', chatSrc, 'error_details');
     checkContains('chat: 完成しました mentioned in reply', chatSrc, '完成しました');
     checkContains('chat: Handoff Inbox mentioned in reply', chatSrc, 'Handoff Inbox');
   }

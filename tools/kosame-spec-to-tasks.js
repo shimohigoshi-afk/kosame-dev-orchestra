@@ -9,6 +9,12 @@
 const https = require('node:https');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {
+  appendPipelineStageEvent,
+  createPipelineError,
+  summarizePipelineStageHistory,
+} = require('./kosame-pipeline-telemetry');
+const { buildSafeHandoffAttachmentSummary } = require('./kosame-attachment-store');
 
 const HANDOFF_TARGET_REPO = '/home/lavie/kosame-dev-orchestra';
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
@@ -141,6 +147,25 @@ function summarizeAttachments(attachments = []) {
   return summary;
 }
 
+function collectAttachmentIds(attachments = []) {
+  return (Array.isArray(attachments) ? attachments : [])
+    .map((att) => String(att && (att.attachmentId || att.id || att.attachment_id || att.name || '')).trim())
+    .filter(Boolean)
+    .slice(0, 20);
+}
+
+function normalizeSpecErrorCode(stage, message) {
+  const text = String(message || '').toLowerCase();
+  if (!stage) return 'SPEC_PIPELINE_FAILED';
+  if (stage.includes('manifest') || stage.includes('save') || stage.includes('handoff')) {
+    if (text.includes('forbidden')) return 'HANDOFF_FORBIDDEN';
+    return 'HANDOFF_SAVE_FAILED';
+  }
+  if (stage.includes('decompos')) return 'SPEC_DECOMPOSE_FAILED';
+  if (stage.includes('content')) return 'SPEC_CONTENT_MISSING';
+  return 'SPEC_PIPELINE_FAILED';
+}
+
 // ── Heuristic task decomposition ────────────────────────────────────────────
 
 function decomposeSpecToTasks(specText, projectPath) {
@@ -192,24 +217,99 @@ function decomposeSpecToTasks(specText, projectPath) {
 // ── Handoff Inbox persistence ───────────────────────────────────────────────
 
 function saveTasksToHandoff(tasks, options = {}) {
-  const { saveHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
+  const { saveHandoffInbox } = options.saveHandoffInbox
+    ? { saveHandoffInbox: options.saveHandoffInbox }
+    : require('./kosame-codex-handoff-bridge-server');
   const results = [];
   const attachments = Array.isArray(options.attachments) ? options.attachments : [];
   const handoffDir = options.handoffDir || process.env.KOSAME_HANDOFF_DIR || undefined;
+  const stageHistory = Array.isArray(options.stageHistory) ? options.stageHistory : [];
   for (const task of tasks) {
     try {
+      stageHistory.push(appendPipelineStageEvent({
+        stage: 'handoff.save.started',
+        status: 'running',
+        workOrderId: task.id,
+        attachmentCount: attachments.length,
+        attachmentIds: collectAttachmentIds(attachments),
+        route: 'spec-to-tasks',
+        message: `作業票 ${task.id} の保存を開始します`,
+      }, { agent: 'Runner', task: task.title || task.id }));
       const r = saveHandoffInbox({
         ...task,
         attachments,
       }, { handoffDir });
+      const manifestPath = r.attachmentManifestPath || r.latestHandoff?.attachment_manifest_path || r.latestHandoff?.attachmentManifestPath || '';
+      stageHistory.push(appendPipelineStageEvent({
+        stage: 'attachments.manifest.saved',
+        status: 'success',
+        workOrderId: task.id,
+        attachmentCount: attachments.length,
+        attachmentIds: collectAttachmentIds(attachments),
+        manifestPath,
+        route: 'spec-to-tasks',
+        message: manifestPath ? `attachment manifest saved at ${manifestPath}` : 'attachment manifest saved',
+      }, { agent: 'Runner', task: task.title || task.id }));
+      stageHistory.push(appendPipelineStageEvent({
+        stage: 'handoff.save.completed',
+        status: 'success',
+        workOrderId: task.id,
+        attachmentCount: attachments.length,
+        attachmentIds: collectAttachmentIds(attachments),
+        manifestPath,
+        route: 'spec-to-tasks',
+        message: `作業票 ${task.id} を保存しました`,
+      }, { agent: 'Runner', task: task.title || task.id }));
       process.stderr.write(`[spec-to-tasks] saved ticket: ${task.id} — ${task.title}\n`);
-      results.push({ ok: true, id: task.id, title: task.title, savedAt: r.saved_at });
+      results.push({
+        ok: true,
+        id: task.id,
+        title: task.title,
+        savedAt: r.saved_at,
+        manifestPath,
+        attachmentManifestPath: r.attachmentManifestPath || manifestPath,
+        attachmentIds: collectAttachmentIds(attachments),
+      });
     } catch (err) {
-      process.stderr.write(`[spec-to-tasks] save failed: ${task.id} — ${err.message}\n`);
-      results.push({ ok: false, id: task.id, title: task.title, error: err.message });
+      const errorStage = 'handoff.save';
+      const errorMessage = err && err.message ? err.message : 'handoff save failed';
+      const errorCode = normalizeSpecErrorCode(errorStage, errorMessage);
+      const structured = createPipelineError({
+        errorStage,
+        errorCode,
+        errorMessage,
+        workOrderId: task.id,
+        attachmentCount: attachments.length,
+        attachmentIds: collectAttachmentIds(attachments),
+        manifestPath: options.manifestPath || '',
+        route: 'spec-to-tasks',
+        stageHistory,
+        details: { taskTitle: task.title || task.id },
+      });
+      stageHistory.push(appendPipelineStageEvent({
+        stage: errorStage,
+        status: 'failed',
+        errorStage,
+        errorCode,
+        errorMessage,
+        workOrderId: task.id,
+        attachmentCount: attachments.length,
+        attachmentIds: collectAttachmentIds(attachments),
+        manifestPath: options.manifestPath || '',
+        route: 'spec-to-tasks',
+        message: errorMessage,
+      }, { agent: 'Runner', task: task.title || task.id }));
+      process.stderr.write(`[spec-to-tasks] save failed: ${task.id} — ${errorMessage}\n`);
+      results.push({
+        ok: false,
+        id: task.id,
+        title: task.title,
+        ...structured,
+        error: errorMessage,
+      });
     }
   }
-  return results;
+  return { results, stageHistory };
 }
 
 // ── Stream log events ───────────────────────────────────────────────────────
@@ -232,16 +332,70 @@ function emitSpecStreamLog(status, message) {
 async function processSpec(input) {
   const { message, attachments, projectPath, handoffDir } = input || {};
   const { isSpec } = detectSpecIntent(message, Array.isArray(attachments) ? attachments : []);
+  const stageHistory = [];
+  const attachmentIds = collectAttachmentIds(attachments);
+  const timestamp = new Date().toISOString();
+  const pipelineId = `spec-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+  const route = 'spec-to-tasks';
 
   if (!isSpec) {
-    return { ok: false, error: 'spec not detected', tasks: [], saveResults: [] };
+    const error = createPipelineError({
+      errorStage: 'spec.intent',
+      errorCode: 'SPEC_NOT_DETECTED',
+      errorMessage: 'spec not detected',
+      workOrderId: pipelineId,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath: '',
+      route,
+      stageHistory,
+      details: { pipelineId },
+    });
+    return { ...error, tasks: [], saveResults: [], stageHistory };
   }
 
-  emitSpecStreamLog('running', 'KOSAME: 添付ファイルを受け取りました☂️');
-  emitSpecStreamLog('running', `DIRECTOR: 添付ファイル${Array.isArray(attachments) ? attachments.length : 0}件を作業票に紐づけます☂️`);
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'chat.received',
+    status: 'running',
+    workOrderId: pipelineId,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp,
+    message: 'KOSAME: 受信した入力を解析します☂️',
+  }, { agent: 'KOSAME', task: 'chat.received' }));
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'attachments.received',
+    status: 'running',
+    workOrderId: pipelineId,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp,
+    message: `KOSAME: 添付ファイル${attachmentIds.length}件を受け取りました☂️`,
+  }, { agent: 'KOSAME', task: 'attachments.received' }));
   if (Array.isArray(attachments) && attachments.some((att) => String(att.mimeType || '').toLowerCase().startsWith('image/'))) {
-    emitSpecStreamLog('running', 'KOSAME: 画像添付を受信しました☂️');
+    stageHistory.push(appendPipelineStageEvent({
+      stage: 'attachments.received',
+      status: 'running',
+      workOrderId: pipelineId,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      route,
+      timestamp: new Date().toISOString(),
+      message: 'KOSAME: 画像添付を受信しました☂️',
+    }, { agent: 'KOSAME', task: 'attachments.received' }));
   }
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'attachments.summary.built',
+    status: 'success',
+    workOrderId: pipelineId,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp: new Date().toISOString(),
+    message: `添付サマリを構築しました（${attachmentIds.length}件）`,
+  }, { agent: 'DIRECTOR', task: 'attachments.summary.built' }));
   emitSpecStreamLog('running', '設計書を受け付けました。解析を開始します...');
 
   let specText = '';
@@ -267,31 +421,177 @@ async function processSpec(input) {
   if (attachmentSummary.length) {
     specText += '\n\n## 添付ファイル\n' + attachmentSummary.join('\n');
   }
+  const attachmentManifestSummary = buildSafeHandoffAttachmentSummary({
+    workOrderId: pipelineId,
+    attachments: Array.isArray(attachments) ? attachments : [],
+  });
+  if (attachmentManifestSummary.length) {
+    specText += '\n\n## 添付マニフェスト参照\n' + attachmentManifestSummary.join('\n');
+  }
 
   if (!specText.trim()) {
+    const error = createPipelineError({
+      errorStage: 'spec.content',
+      errorCode: 'SPEC_CONTENT_MISSING',
+      errorMessage: 'no spec content extracted',
+      workOrderId: pipelineId,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath: '',
+      route,
+      stageHistory,
+    });
     emitSpecStreamLog('failed', '設計書の内容を取得できませんでした');
-    return { ok: false, error: 'no spec content extracted', tasks: [], saveResults: [] };
+    return { ...error, tasks: [], saveResults: [], stageHistory };
   }
 
-  emitSpecStreamLog('running', '設計書を作業票に分解中...');
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'spec-to-tasks.started',
+    status: 'running',
+    workOrderId: pipelineId,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp: new Date().toISOString(),
+    message: '設計書を作業票に分解中...',
+  }, { agent: 'DIRECTOR', task: 'spec-to-tasks.started' }));
   const tasks = decomposeSpecToTasks(specText, projectPath);
   process.stderr.write(`[spec-to-tasks] decomposed into ${tasks.length} task(s)\n`);
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'spec-to-tasks.decomposed',
+    status: 'success',
+    workOrderId: pipelineId,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp: new Date().toISOString(),
+    message: `設計書を ${tasks.length} 件の作業票に分解しました`,
+  }, { agent: 'DIRECTOR', task: 'spec-to-tasks.decomposed' }));
 
   if (tasks.length === 0) {
+    const error = createPipelineError({
+      errorStage: 'spec.decompose',
+      errorCode: 'SPEC_DECOMPOSE_FAILED',
+      errorMessage: 'no tasks decomposed',
+      workOrderId: pipelineId,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath: '',
+      route,
+      stageHistory,
+    });
     emitSpecStreamLog('failed', '作業票を生成できませんでした');
-    return { ok: false, error: 'no tasks decomposed', tasks: [], saveResults: [] };
+    return { ...error, tasks: [], saveResults: [], stageHistory };
   }
 
-  emitSpecStreamLog('running', `作業票 ${tasks.length} 件をHandoff Inboxに保存中...`);
-  const saveResults = saveTasksToHandoff(tasks, { attachments, handoffDir });
-  const savedCount = saveResults.filter((r) => r.ok).length;
+  stageHistory.push(appendPipelineStageEvent({
+    stage: 'handoff.save.started',
+    status: 'running',
+    workOrderId: tasks[0].id,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    route,
+    timestamp: new Date().toISOString(),
+    message: `作業票 ${tasks.length} 件をHandoff Inboxに保存中...`,
+  }, { agent: 'Runner', task: 'handoff.save.started' }));
+  const saveOutcome = saveTasksToHandoff(tasks, {
+    attachments,
+    handoffDir,
+    stageHistory,
+    saveHandoffInbox: input.saveHandoffInbox,
+  });
+  const saveResults = Array.isArray(saveOutcome.results) ? saveOutcome.results : [];
+  const savedCount = saveResults.filter((r) => r && r.ok).length;
+  const failedResults = saveResults.filter((r) => r && !r.ok);
+  const manifestPath = saveResults.find((r) => r && r.manifestPath)?.manifestPath
+    || saveResults.find((r) => r && r.attachmentManifestPath)?.attachmentManifestPath
+    || '';
+  const failedResult = failedResults[0] || null;
 
-  if (savedCount > 0) {
+  if (savedCount > 0 && failedResults.length === 0) {
+    stageHistory.push(appendPipelineStageEvent({
+      stage: 'handoff.save.completed',
+      status: 'success',
+      workOrderId: tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      timestamp: new Date().toISOString(),
+      message: `作業票 ${savedCount} 件を保存しました。Runnerが自動実行します。`,
+    }, { agent: 'Runner', task: 'handoff.save.completed' }));
+    stageHistory.push(appendPipelineStageEvent({
+      stage: 'runner.dispatch.started',
+      status: 'running',
+      workOrderId: tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      timestamp: new Date().toISOString(),
+      message: 'Runner起動を待ちます',
+    }, { agent: 'Runner', task: 'runner.dispatch.started' }));
+    stageHistory.push(appendPipelineStageEvent({
+      stage: 'runner.dispatch.completed',
+      status: 'success',
+      workOrderId: tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      timestamp: new Date().toISOString(),
+      message: 'Runner起動待ちの準備が完了しました',
+    }, { agent: 'Runner', task: 'runner.dispatch.completed' }));
+    stageHistory.push(appendPipelineStageEvent({
+      stage: 'result.decision.updated',
+      status: 'success',
+      workOrderId: tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      timestamp: new Date().toISOString(),
+      message: 'Result Decision Panel へ更新予定です',
+    }, { agent: 'Runner', task: 'result.decision.updated' }));
     emitSpecStreamLog('running', 'Runner: attachment manifestを保存しました');
     emitSpecStreamLog('running', 'Llama: base64本文混入は検出されませんでした。以上。');
     emitSpecStreamLog('success', `作業票 ${savedCount} 件を保存しました。Runnerが自動実行します。`);
   } else {
+    const errorStage = failedResult?.errorStage || 'handoff.save';
+    const errorMessage = failedResult?.errorMessage || failedResult?.error || 'Handoff Inbox への保存に失敗しました';
+    const errorCode = failedResult?.errorCode || normalizeSpecErrorCode(errorStage, errorMessage);
+    const error = createPipelineError({
+      errorStage,
+      errorCode,
+      errorMessage,
+      workOrderId: failedResult?.id || tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      stageHistory,
+      details: {
+        savedCount,
+        failedCount: failedResults.length,
+        tasks: tasks.length,
+      },
+    });
+    stageHistory.push(appendPipelineStageEvent({
+      stage: errorStage,
+      status: 'failed',
+      errorStage,
+      errorCode,
+      errorMessage,
+      workOrderId: failedResult?.id || tasks[0].id,
+      attachmentCount: attachmentIds.length,
+      attachmentIds,
+      manifestPath,
+      route,
+      timestamp: new Date().toISOString(),
+      message: errorMessage,
+    }, { agent: 'Runner', task: errorStage }));
     emitSpecStreamLog('failed', 'Handoff Inbox への保存に失敗しました');
+    return { ...error, tasks, saveResults, savedCount, stageHistory, specPreview: specText.slice(0, 300) };
   }
 
   return {
@@ -299,6 +599,14 @@ async function processSpec(input) {
     tasks,
     saveResults,
     savedCount,
+    stageHistory,
+    stageHistorySummary: summarizePipelineStageHistory(stageHistory),
+    workOrderId: tasks[0].id,
+    attachmentCount: attachmentIds.length,
+    attachmentIds,
+    manifestPath,
+    route,
+    timestamp: new Date().toISOString(),
     specPreview: specText.slice(0, 300),
   };
 }

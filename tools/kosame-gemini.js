@@ -99,6 +99,58 @@ async function askGeminiAboutYouTube(url, timeoutMs = GEMINI_TIMEOUT_MS) {
 }
 
 /**
+ * Analyze an image attachment via Gemini Vision.
+ * @param {string} base64DataUrl - data:image/TYPE;base64,DATA
+ * @param {string} [hint] - optional filename / context hint
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{ text: string|null, error: string|null }>}
+ */
+async function analyzeImageWithGemini(base64DataUrl, hint, timeoutMs = GEMINI_TIMEOUT_MS) {
+  if (!isKeyPresent()) {
+    return { text: null, error: 'GEMINI_API_KEY not set' };
+  }
+  const idx = String(base64DataUrl).indexOf(',');
+  const prefix = idx >= 0 ? base64DataUrl.slice(5, idx) : '';
+  const mimeType = prefix.replace(/;base64$/, '') || 'image/png';
+  const data = idx >= 0 ? base64DataUrl.slice(idx + 1) : base64DataUrl;
+  const promptText = hint ? `この画像（${hint}）について詳しく説明してください。` : 'この画像について詳しく説明してください。';
+  const key = process.env.GEMINI_API_KEY;
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: mimeType, data } }] }],
+    generationConfig: { maxOutputTokens: 1000 },
+  });
+  return new Promise((resolve) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (!done) { done = true; req.destroy(); resolve({ text: null, error: 'timeout' }); }
+    }, timeoutMs);
+    const req = https.request({
+      hostname: GEMINI_HOST,
+      path: `/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    }, (res) => {
+      let raw = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { raw += chunk; });
+      res.on('end', () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try {
+          const parsed = JSON.parse(raw);
+          const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+          resolve({ text, error: text ? null : (parsed?.error?.message || 'empty response') });
+        } catch (e) { resolve({ text: null, error: e.message }); }
+      });
+    });
+    req.on('error', (e) => { if (done) return; done = true; clearTimeout(timer); resolve({ text: null, error: e.message }); });
+    req.write(body);
+    req.end();
+  });
+}
+
+/**
  * Validate GEMINI_API_KEY by calling the models list endpoint.
  * Logs [Gemini] API key valid / invalid at startup.
  * @returns {Promise<void>}
@@ -154,4 +206,4 @@ async function checkGeminiApiKey() {
 // Run key validation at module load (non-blocking)
 checkGeminiApiKey().catch(() => {});
 
-module.exports = { askGeminiAboutYouTube, checkGeminiApiKey, isKeyPresent, GEMINI_TIMEOUT_MS };
+module.exports = { askGeminiAboutYouTube, analyzeImageWithGemini, checkGeminiApiKey, isKeyPresent, GEMINI_TIMEOUT_MS };

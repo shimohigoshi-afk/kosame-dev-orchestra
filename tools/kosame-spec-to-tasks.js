@@ -119,6 +119,18 @@ async function analyzeSpecWithGemini(base64DataUrl, timeoutMs) {
   });
 }
 
+// ── Base64 stripping ────────────────────────────────────────────────────────
+// Base64 chars include '/' (non-word), which creates word boundaries that let
+// sequences like "/deploy/" match forbidden patterns in saveHandoffInbox.
+// Strip all data URLs from spec text before sending to the handoff bridge.
+
+function _stripBase64DataUrls(text) {
+  return String(text).replace(
+    /data:[a-z][a-z0-9!#$&\-^]*(\/[a-z0-9!#$&\-^]*)?(?:;[^;,\s]+)?;base64,[A-Za-z0-9+/=\r\n]{10,}/gi,
+    '[base64データ・除去済み]',
+  );
+}
+
 // ── Text spec analysis ──────────────────────────────────────────────────────
 
 function analyzeSpecText(textContent, filename) {
@@ -232,11 +244,16 @@ async function processSpec(input) {
       }
     } else if (att.textContent) {
       const parsed = analyzeSpecText(att.textContent, att.name);
-      specText += parsed.text + '\n';
+      // Strip base64 data URLs embedded in markdown files (e.g. ![img](data:image/png;base64,...))
+      specText += _stripBase64DataUrls(parsed.text) + '\n';
     }
   }
 
   if (message) specText += '\n' + message;
+
+  // Final guard: strip any remaining base64 before handoff to prevent
+  // forbidden pattern false-positives in saveHandoffInbox
+  specText = _stripBase64DataUrls(specText);
 
   if (!specText.trim()) {
     emitSpecStreamLog('failed', '設計書の内容を取得できませんでした');
@@ -279,6 +296,7 @@ module.exports = {
   saveTasksToHandoff,
   emitSpecStreamLog,
   processSpec,
+  _stripBase64DataUrls,
   HANDOFF_TARGET_REPO,
   SPEC_TRIGGERS,
   SPEC_EXTENSIONS,

@@ -1018,9 +1018,29 @@ async function handleChatRequest(body) {
     let augmentedMessage = message;
     const imageParts = [];
 
+    const IMAGE_EXTS_SET = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);
     for (const att of attachments) {
-      if (att.base64DataUrl && (att.ext === '.png' || att.ext === '.jpg' || att.ext === '.jpeg')) {
-        imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
+      if (att.base64DataUrl && IMAGE_EXTS_SET.has(att.ext)) {
+        // Try Gemini Vision first; fall back to GPT imageParts if unavailable
+        try {
+          const { analyzeImageWithGemini, isKeyPresent: geminiKeyPresent } = require('./kosame-gemini');
+          if (geminiKeyPresent()) {
+            const imgResult = await analyzeImageWithGemini(att.base64DataUrl, att.name);
+            if (imgResult.text) {
+              augmentedMessage += `\n\n--- 添付画像: ${att.name} (Gemini解析) ---\n${imgResult.text.slice(0, 3000)}\n---`;
+              process.stderr.write(`[chat-img] Gemini analyzed ${att.name} (${imgResult.text.length} chars)\n`);
+            } else {
+              imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
+              process.stderr.write(`[chat-img] Gemini failed for ${att.name}: ${imgResult.error} — using GPT Vision\n`);
+            }
+          } else {
+            imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
+            process.stderr.write(`[chat-img] no Gemini key — using GPT Vision for ${att.name}\n`);
+          }
+        } catch (imgErr) {
+          imageParts.push({ type: 'image_url', image_url: { url: att.base64DataUrl } });
+          process.stderr.write(`[chat-img] error: ${imgErr.message} — using GPT Vision for ${att.name}\n`);
+        }
       } else if (att.textContent) {
         augmentedMessage += `\n\n--- 添付ファイル: ${att.name} ---\n${att.textContent.slice(0, 4000)}\n---\nこのファイルを元に実装してください。`;
       } else {

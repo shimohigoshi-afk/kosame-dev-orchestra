@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FK Console — 大宮支店</title>
+<style>
+:root {
+  --bg-deep: #0d1b2a;
+  --bg-mid: #112236;
+  --card-bg: #1a2d42;
+  --card-bg2: #1e3350;
+  --gold: #c9a84c;
+  --gold-light: #e2c87a;
+  --gold-dim: rgba(201,168,76,0.25);
+  --blue: #4fc3f7;
+  --blue-dim: rgba(79,195,247,0.15);
+  --text: #e8f4f8;
+  --text-muted: #7fa8c0;
+  --text-dim: #4a7090;
+  --border: rgba(201,168,76,0.2);
+  --border-blue: rgba(79,195,247,0.2);
+  --success: #4caf82;
+  --danger: #e05555;
+  --warn: #e0a040;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg-deep);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+/* Sidebar */
+.sidebar{width:240px;min-width:240px;background:var(--bg-mid);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.logo-area{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.logo-fk{font-size:36px;font-weight:900;color:var(--gold);letter-spacing:2px;line-height:1}
+.logo-branch{font-size:11px;color:var(--text-muted);letter-spacing:3px;margin-top:4px;text-transform:uppercase}
+.logo-rule{width:40px;height:2px;background:var(--gold);margin-top:10px;opacity:0.5}
+.nav-section{padding:16px 0 8px;flex:1;overflow-y:auto}
+.nav-label{font-size:9px;letter-spacing:3px;color:var(--text-dim);padding:0 20px 8px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:var(--text-muted);transition:.15s;font-size:13px;border-left:2px solid transparent;position:relative}
+.nav-item:hover{color:var(--text);background:rgba(201,168,76,0.05)}
+.nav-item.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-dim)}
+.nav-icon{font-size:15px;width:20px;text-align:center;opacity:.8}
+.nav-badge{margin-left:auto;background:var(--gold);color:var(--bg-deep);font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim)}
+
+/* Main */
+.main-wrap{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:60px;background:var(--bg-mid);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:16px;font-weight:600;color:var(--text);letter-spacing:.5px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-badge{font-size:11px;color:var(--text-muted);border:1px solid var(--border);padding:3px 10px;border-radius:4px}
+.emblem svg{opacity:.9}
+
+.content{padding:24px 28px;flex:1}
+.section{display:none}
+.section.active{display:block}
+
+/* Cards */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:16px}
+.card-title{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--gold);border-radius:2px}
+
+/* Dashboard grid */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:18px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.stat-label{font-size:10px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase}
+.stat-value{font-size:26px;font-weight:700;color:var(--text);margin:6px 0 2px;letter-spacing:-.5px}
+.stat-sub{font-size:11px;color:var(--text-muted)}
+.stat-icon{position:absolute;right:16px;top:16px;font-size:22px;opacity:.3}
+
+.dash-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tool-quick{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:12px}
+.tool-quick:hover{border-color:var(--gold);background:var(--gold-dim)}
+.tool-quick-icon{font-size:24px}
+.tool-quick-name{font-size:13px;font-weight:600;color:var(--text)}
+.tool-quick-desc{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* Forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:11px;color:var(--text-muted);letter-spacing:.5px}
+input,select{background:var(--bg-mid);border:1px solid var(--border-blue);color:var(--text);border-radius:5px;padding:8px 12px;font-size:13px;width:100%;outline:none;transition:.15s}
+input:focus,select:focus{border-color:var(--gold);background:var(--bg-deep)}
+select option{background:var(--bg-mid)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border:none;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;text-transform:none;letter-spacing:.3px}
+.btn-gold{background:var(--gold);color:var(--bg-deep)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold)}
+.btn-outline:hover{background:var(--gold-dim)}
+.btn-blue{background:var(--blue);color:var(--bg-deep)}
+.btn-sm{padding:6px 14px;font-size:12px}
+
+/* Result boxes */
+.result-box{background:var(--bg-deep);border:1px solid var(--gold-dim);border-radius:6px;padding:16px;margin-top:14px}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.result-row:last-child{border:none}
+.result-label{font-size:12px;color:var(--text-muted)}
+.result-value{font-size:16px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.result-value.big{font-size:22px}
+.result-value.blue{color:var(--blue)}
+.result-value.green{color:var(--success)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab{padding:10px 20px;cursor:pointer;color:var(--text-muted);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:600}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-input{padding-left:36px;font-size:14px;height:44px}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:16px}
+.tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tag{padding:5px 14px;border-radius:20px;border:1px solid var(--border-blue);color:var(--blue);font-size:12px;cursor:pointer;transition:.15s}
+.tag:hover,.tag.active{background:var(--blue-dim);border-color:var(--blue)}
+.search-results{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.search-result{background:var(--card-bg2);border:1px solid var(--border);border-radius:6px;padding:14px;cursor:pointer;transition:.15s}
+.search-result:hover{border-color:var(--blue)}
+.sr-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.sr-category{font-size:10px;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase;margin-bottom:6px}
+.sr-body{font-size:12px;color:var(--text-muted);line-height:1.6}
+.sr-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);line-height:1.7}
+.search-result.expanded .sr-detail{display:block}
+
+/* Chart */
+canvas{display:block;width:100%;border-radius:4px}
+.chart-legend{display:flex;gap:16px;margin-top:10px;justify-content:center}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+
+/* BMI */
+.bmi-bar{height:12px;border-radius:6px;background:linear-gradient(90deg,#4caf82 0%,#4caf82 25%,#c9a84c 25%,#c9a84c 55%,#e08040 55%,#e08040 75%,#e05555 75%);position:relative;margin:12px 0}
+.bmi-marker{position:absolute;top:-20px;transform:translateX(-50%);font-size:11px;font-weight:700;transition:left .4s}
+.bmi-marker::after{content:'▼';display:block;text-align:center;font-size:10px}
+.bmi-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px}
+
+/* Insurance */
+.ins-breakdown{background:var(--bg-deep);border-radius:6px;padding:12px;font-size:12px;margin:8px 0}
+.ins-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text-muted)}
+.ins-row strong{color:var(--text)}
+.ins-total{border-top:1px solid var(--border);margin-top:6px;padding-top:6px;font-weight:700;color:var(--gold)}
+
+/* Sim sub tabs */
+.sim-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.sim-tab{padding:7px 16px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:.15s}
+.sim-tab:hover{color:var(--text)}
+.sim-tab.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.sim-panel{display:none}
+.sim-panel.active{display:block}
+
+/* Toggle */
+.toggle-group{display:flex;gap:4px;background:var(--bg-deep);border-radius:5px;padding:3px;width:fit-content;margin-bottom:14px}
+.toggle-btn{padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:.15s}
+.toggle-btn.active{background:var(--gold);color:var(--bg-deep);font-weight:600}
+
+/* Placeholder */
+.placeholder{text-align:center;padding:60px 20px;color:var(--text-dim)}
+.placeholder-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.placeholder-title{font-size:16px;color:var(--text-muted);margin-bottom:8px}
+.placeholder-desc{font-size:12px}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,0.5)}
+
+.mt-8{margin-top:8px}
+.mt-12{margin-top:12px}
+.mt-16{margin-top:16px}
+.flex{display:flex}
+.gap-10{gap:10px}
+.gap-12{gap:12px}
+.items-end{align-items:flex-end}
+.text-sm{font-size:12px}
+.text-muted{color:var(--text-muted)}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo-area">
+    <div class="logo-fk">FK</div>
+    <div class="logo-branch">大宮支店</div>
+    <div class="logo-rule"></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">メインメニュー</div>
+    <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)">
+      <span class="nav-icon">⊞</span>ダッシュボード
+    </div>
+    <div class="nav-item" data-section="search" onclick="navigate('search',this)">
+      <span class="nav-icon">🔍</span>検索・計算ツール
+    </div>
+    <div class="nav-item" data-section="simulation" onclick="navigate('simulation',this)">
+      <span class="nav-icon">📊</span>シミュレーション
+      <span class="nav-badge">5</span>
+    </div>
+    <div class="nav-label" style="margin-top:8px">管理</div>
+    <div class="nav-item" data-section="summary" onclick="navigate('summary',this)">
+      <span class="nav-icon">📋</span>提案サマリー
+    </div>
+    <div class="nav-item" data-section="files" onclick="navigate('files',this)">
+      <span class="nav-icon">📁</span>ファイル管理
+    </div>
+    <div class="nav-item" data-section="url" onclick="navigate('url',this)">
+      <span class="nav-icon">🔗</span>URL解析
+    </div>
+    <div class="nav-item" data-section="settings" onclick="navigate('settings',this)">
+      <span class="nav-icon">⚙</span>設定
+    </div>
+  </div>
+  <div class="sidebar-footer">FK Console v1.0.0 &nbsp;|&nbsp; 大宮支店</div>
+</nav>
+
+<!-- Main -->
+<div class="main-wrap">
+  <header class="topbar">
+    <div class="topbar-title" id="topbar-title">ダッシュボード</div>
+    <div class="topbar-right">
+      <span class="topbar-badge">2026-06-22</span>
+      <span class="topbar-badge">大宮支店</span>
+      <!-- FK Emblem -->
+      <svg width="38" height="44" viewBox="0 0 38 44" class="emblem">
+        <polygon points="19,2 36,10 36,32 19,42 2,32 2,10" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+        <polygon points="19,6 33,13 33,30 19,39 5,30 5,13" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.4"/>
+        <text x="19" y="27" text-anchor="middle" fill="#c9a84c" font-size="14" font-weight="900" letter-spacing="1">FK</text>
+      </svg>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="section-dashboard" class="section active">
+      <div class="dash-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-label">住宅ローン試算</div>
+          <div class="stat-value" id="d-loan">—</div>
+          <div class="stat-sub">最新計算結果</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💴</div>
+          <div class="stat-label">税務計算</div>
+          <div class="stat-value" id="d-tax">—</div>
+          <div class="stat-sub">最新計算結果</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🛡</div>
+          <div class="stat-label">必要保障額</div>
+          <div class="stat-value" id="d-ins">—</div>
+          <div class="stat-sub">最新計算結果</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">資産運用</div>
+          <div class="stat-value" id="d-asset">—</div>
+          <div class="stat-sub">最新将来資産</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">クイックアクセス</div>
+        <div class="dash-tools">
+          <div class="tool-quick" onclick="navigate('search',document.querySelector('[data-section=search]'))">
+            <span class="tool-quick-icon">🔍</span>
+            <div><div class="tool-quick-name">ソリシター君</div><div class="tool-quick-desc">引受基準・不担保キーワード検索</div></div>
+          </div>
+          <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('mortgage')">
+            <span class="tool-quick-icon">🏠</span>
+            <div><div class="tool-quick-name">住宅ローン計算</div><div class="tool-quick-desc">借入額・金利・期間シミュレーション</div></div>
+          </div>
+          <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('tax')">
+            <span class="tool-quick-icon">💴</span>
+            <div><div class="tool-quick-name">税務計算</div><div class="tool-quick-desc">贈与税・相続税の計算</div></div>
+          </div>
+          <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('insurance')">
+            <span class="tool-quick-icon">🛡</span>
+            <div><div class="tool-quick-name">必要保障額</div><div class="tool-quick-desc">死亡・障害時の保障ニーズ</div></div>
+          </div>
+          <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('bmi')">
+            <span class="tool-quick-icon">💊</span>
+            <div><div class="tool-quick-name">健康・BMI</div><div class="tool-quick-desc">BMI計算・肥満度判定</div></div>
+          </div>
+          <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('asset')">
+            <span class="tool-quick-icon">📈</span>
+            <div><div class="tool-quick-name">資産運用</div><div class="tool-quick-desc">複利シミュレーション・将来資産</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">使い方ガイド</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-muted);line-height:1.7">
+          <div>・左メニューの「シミュレーション」から各計算ツールを選択<br>・「検索・計算ツール」でソリシター君を使用<br>・計算結果はダッシュボードに自動反映</div>
+          <div>・住宅ローンは変動・固定の比較グラフを表示<br>・税務計算は贈与税と相続税に対応<br>・資産運用は複利効果をグラフで可視化</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SOLICITOR SEARCH ===== -->
+    <section id="section-search" class="section">
+      <div class="card">
+        <div class="card-title">🔍 ソリシター君 — 引受基準・不担保キーワード検索</div>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="solicitor-input" placeholder="キーワードを入力（例：高血圧、不担保、職業分類 など）" oninput="doSearch()" autocomplete="off">
+        </div>
+        <div class="tag-list" id="tag-list">
+          <span class="tag" onclick="searchTag('告知事項')">📋 告知事項</span>
+          <span class="tag" onclick="searchTag('引受基準')">📏 引受基準</span>
+          <span class="tag" onclick="searchTag('不担保')">🚫 不担保</span>
+          <span class="tag" onclick="searchTag('医的査定')">🩺 医的査定</span>
+          <span class="tag" onclick="searchTag('職業分類')">💼 職業分類</span>
+        </div>
+        <div class="search-results" id="search-results">
+          <div class="placeholder" style="padding:30px">
+            <div class="placeholder-icon">🔍</div>
+            <div class="placeholder-title">キーワードを入力してください</div>
+            <div class="placeholder-desc">引受基準・告知事項・不担保条件などを検索できます</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SIMULATION ===== -->
+    <section id="section-simulation" class="section">
+      <div class="sim-tabs">
+        <div class="sim-tab active" id="stab-mortgage" onclick="switchSimTab('mortgage')">🏠 住宅ローン計算</div>
+        <div class="sim-tab" id="stab-tax" onclick="switchSimTab('tax')">💴 税務計算</div>
+        <div class="sim-tab" id="stab-insurance" onclick="switchSimTab('insurance')">🛡 必要保障額</div>
+        <div class="sim-tab" id="stab-bmi" onclick="switchSimTab('bmi')">💊 健康・BMI</div>
+        <div class="sim-tab" id="stab-asset" onclick="switchSimTab('asset')">📈 資産運用</div>
+      </div>
+
+      <!-- MORTGAGE -->
+      <div class="sim-panel active" id="spanel-mortgage">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div class="card">
+              <div class="card-title">🏠 借入条件入力</div>
+              <div class="form-grid" style="margin-bottom:12px">
+                <div class="form-group">
+                  <label>借入額（万円）</label>
+                  <input type="number" id="m-principal" value="3000" min="100" max="100000" oninput="calcMortgage()">
+                </div>
+                <div class="form-group">
+                  <label>期間（年）</label>
+                  <input type="number" id="m-years" value="35" min="1" max="50" oninput="calcMortgage()">
+                </div>
+                <div class="form-group">
+                  <label>年利率（%）</label>
+                  <input type="number" id="m-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgage()">
+                </div>
+                <div class="form-group">
+                  <label>ボーナス払い（万円/回）</label>
+                  <input type="number" id="m-bonus" value="0" min="0" oninput="calcMortgage()">
+                </div>
+              </div>
+              <div class="result-box" id="m-result" style="display:none">
+                <div class="result-row"><span class="result-label">毎月返済額</span><span class="result-value big" id="m-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">総返済額</span><span class="result-value" id="m-total">—</span></div>
+                <div class="result-row"><span class="result-label">総利息</span><span class="result-value blue" id="m-interest">—</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">⬆ 繰上げ返済シミュレーション</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>繰上げ額（万円）</label>
+                  <input type="number" id="m-prepay" value="100" min="0" oninput="calcPrepay()">
+                </div>
+                <div class="form-group">
+                  <label>繰上げ時期（年後）</label>
+                  <input type="number" id="m-prepay-year" value="5" min="1" oninput="calcPrepay()">
+                </div>
+              </div>
+              <div class="result-box" id="m-prepay-result" style="display:none">
+                <div class="result-row"><span class="result-label">短縮期間</span><span class="result-value green" id="m-save-months">—</span></div>
+                <div class="result-row"><span class="result-label">利息軽減額</span><span class="result-value blue" id="m-save-interest">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📊 変動 vs 固定金利 比較</div>
+            <div style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+              変動金利: <input type="number" id="m-var" value="0.5" min="0.01" max="10" step="0.01" style="width:70px;display:inline-block;padding:4px 8px" oninput="drawMortgageChart()">%
+              &nbsp;固定金利: <input type="number" id="m-fix" value="1.5" min="0.01" max="10" step="0.01" style="width:70px;display:inline-block;padding:4px 8px" oninput="drawMortgageChart()">%
+            </div>
+            <canvas id="mortgage-chart" height="220"></canvas>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>変動金利</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>固定金利</div>
+            </div>
+            <div class="result-box mt-12" id="m-compare-result" style="display:none">
+              <div class="result-row"><span class="result-label">変動：月返済</span><span class="result-value blue" id="mc-var-monthly">—</span></div>
+              <div class="result-row"><span class="result-label">変動：総利息</span><span class="result-value blue" id="mc-var-interest">—</span></div>
+              <div class="result-row"><span class="result-label">固定：月返済</span><span class="result-value" style="color:var(--gold)" id="mc-fix-monthly">—</span></div>
+              <div class="result-row"><span class="result-label">固定：総利息</span><span class="result-value" style="color:var(--gold)" id="mc-fix-interest">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAX -->
+      <div class="sim-panel" id="spanel-tax">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <!-- Gift Tax -->
+          <div class="card">
+            <div class="card-title">🎁 贈与税計算</div>
+            <div class="toggle-group">
+              <div class="toggle-btn active" id="gt-toggle-annual" onclick="switchGiftTax('annual')">暦年課税</div>
+              <div class="toggle-btn" id="gt-toggle-souzoku" onclick="switchGiftTax('souzoku')">相続時精算課税</div>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label>贈与金額（万円）</label>
+              <input type="number" id="gift-amount" value="300" min="0" oninput="calcGiftTax()">
+            </div>
+            <div id="gt-annual-note" style="font-size:11px;color:var(--text-muted);margin-bottom:10px">基礎控除 110万円 / 年</div>
+            <div id="gt-souzoku-note" style="font-size:11px;color:var(--text-muted);margin-bottom:10px;display:none">特別控除 累計2,500万円 / 超過分は一律20%</div>
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">課税価格</span><span class="result-value" id="gt-taxable">—</span></div>
+              <div class="result-row"><span class="result-label">贈与税額</span><span class="result-value big" id="gt-amount">—</span></div>
+              <div class="result-row"><span class="result-label">実効税率</span><span class="result-value blue" id="gt-eff-rate">—</span></div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7">
+              ※一般贈与財産（父母・祖父母等以外）の税率を適用<br>
+              ※実際の申告には専門家にご相談ください
+            </div>
+          </div>
+
+          <!-- Inheritance Tax -->
+          <div class="card">
+            <div class="card-title">📜 相続税計算</div>
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label>遺産総額（万円）</label>
+                <input type="number" id="inh-estate" value="8000" min="0" oninput="calcInheritanceTax()">
+              </div>
+              <div class="form-group">
+                <label>法定相続人数（人）</label>
+                <input type="number" id="inh-heirs" value="3" min="1" max="20" oninput="calcInheritanceTax()">
+              </div>
+              <div class="form-group">
+                <label>債務・葬式費用（万円）</label>
+                <input type="number" id="inh-deduct" value="200" min="0" oninput="calcInheritanceTax()">
+              </div>
+              <div class="form-group">
+                <label>生命保険非課税枠適用</label>
+                <select id="inh-ins-flag" onchange="calcInheritanceTax()">
+                  <option value="1">あり（500万×人数）</option>
+                  <option value="0">なし</option>
+                </select>
+              </div>
+            </div>
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">基礎控除額</span><span class="result-value" id="ih-deduct-base">—</span></div>
+              <div class="result-row"><span class="result-label">課税遺産総額</span><span class="result-value" id="ih-taxable">—</span></div>
+              <div class="result-row"><span class="result-label">概算相続税総額</span><span class="result-value big" id="ih-tax">—</span></div>
+              <div class="result-row"><span class="result-label">実効税率</span><span class="result-value blue" id="ih-eff-rate">—</span></div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7">
+              ※速算表による簡易計算です<br>
+              ※小規模宅地等の特例は含みません
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSURANCE NEEDS -->
+      <div class="sim-panel" id="spanel-insurance">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div class="card">
+              <div class="card-title">💼 収入・社会保険料</div>
+              <div class="form-group" style="margin-bottom:14px">
+                <label>年収（万円）</label>
+                <input type="number" id="ins-income" value="600" min="0" oninput="calcInsurance()">
+              </div>
+              <div class="ins-breakdown" id="ins-social">
+                <div class="ins-row"><span>健康保険料（本人負担）</span><span id="ins-health">—</span></div>
+                <div class="ins-row"><span>厚生年金保険料（本人負担）</span><span id="ins-pension">—</span></div>
+                <div class="ins-row"><span>雇用保険料（本人負担）</span><span id="ins-employ">—</span></div>
+                <div class="ins-row ins-total"><span>年間社会保険料合計</span><span id="ins-social-total">—</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">👨‍👩‍👧 遺族の必要費用</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>月間生活費（万円）</label>
+                  <input type="number" id="ins-living" value="20" min="0" oninput="calcInsurance()">
+                </div>
+                <div class="form-group">
+                  <label>必要年数（年）</label>
+                  <input type="number" id="ins-years" value="25" min="0" oninput="calcInsurance()">
+                </div>
+                <div class="form-group">
+                  <label>教育費合計（万円）</label>
+                  <input type="number" id="ins-education" value="800" min="0" oninput="calcInsurance()">
+                </div>
+                <div class="form-group">
+                  <label>住居費合計（万円）</label>
+                  <input type="number" id="ins-housing" value="1200" min="0" oninput="calcInsurance()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🏛 公的保障・必要保障額</div>
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label>遺族年金（月額・万円）</label>
+                <input type="number" id="ins-survivor-pension" value="12" min="0" oninput="calcInsurance()">
+              </div>
+              <div class="form-group">
+                <label>遺族年金受給年数</label>
+                <input type="number" id="ins-pension-years" value="20" min="0" oninput="calcInsurance()">
+              </div>
+              <div class="form-group">
+                <label>その他の資産（万円）</label>
+                <input type="number" id="ins-assets" value="500" min="0" oninput="calcInsurance()">
+              </div>
+              <div class="form-group">
+                <label>既存の保険金額（万円）</label>
+                <input type="number" id="ins-existing" value="0" min="0" oninput="calcInsurance()">
+              </div>
+            </div>
+
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">生活費総計</span><span class="result-value" id="ins-r-living">—</span></div>
+              <div class="result-row"><span class="result-label">教育費 + 住居費</span><span class="result-value" id="ins-r-fixed">—</span></div>
+              <div class="result-row" style="border-top:1px solid var(--border)"><span class="result-label">必要総額</span><span class="result-value" id="ins-r-total-need">—</span></div>
+              <div class="result-row"><span class="result-label">－ 遺族年金</span><span class="result-value blue" id="ins-r-pension">—</span></div>
+              <div class="result-row"><span class="result-label">－ その他の資産</span><span class="result-value blue" id="ins-r-assets">—</span></div>
+              <div class="result-row"><span class="result-label">－ 既存保険</span><span class="result-value blue" id="ins-r-existing">—</span></div>
+              <div class="result-row" style="border-top:1px solid var(--gold-dim)">
+                <span class="result-label">純粋に必要な保障額</span>
+                <span class="result-value big" id="ins-r-needed">—</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7">
+              ※遺族年金は概算です。実際の受給額は年金事務所へご確認ください
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BMI -->
+      <div class="sim-panel" id="spanel-bmi">
+        <div style="display:grid;grid-template-columns:360px 1fr;gap:16px">
+          <div class="card">
+            <div class="card-title">💊 健康・BMI計算</div>
+            <div class="form-grid" style="margin-bottom:16px">
+              <div class="form-group">
+                <label>身長（cm）</label>
+                <input type="number" id="bmi-height" value="170" min="100" max="250" oninput="calcBMI()">
+              </div>
+              <div class="form-group">
+                <label>体重（kg）</label>
+                <input type="number" id="bmi-weight" value="65" min="20" max="300" oninput="calcBMI()">
+              </div>
+              <div class="form-group">
+                <label>年齢</label>
+                <input type="number" id="bmi-age" value="40" min="18" max="100" oninput="calcBMI()">
+              </div>
+              <div class="form-group">
+                <label>性別</label>
+                <select id="bmi-sex" onchange="calcBMI()">
+                  <option value="m">男性</option>
+                  <option value="f">女性</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">BMI</span><span class="result-value big" id="bmi-value">—</span></div>
+              <div class="result-row"><span class="result-label">判定</span><span class="result-value" id="bmi-judge">—</span></div>
+              <div class="result-row"><span class="result-label">標準体重</span><span class="result-value" id="bmi-ideal">—</span></div>
+              <div class="result-row"><span class="result-label">体重差（標準比）</span><span class="result-value" id="bmi-diff">—</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📏 BMIスケール</div>
+            <div style="margin-bottom:20px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(--text-muted)">
+                <span>低体重</span><span>普通体重</span><span>肥満(1度)</span><span>肥満(2度+)</span>
+              </div>
+              <div style="position:relative;height:32px;margin-bottom:4px">
+                <div style="height:16px;border-radius:8px;background:linear-gradient(90deg,#4caf82 0%,#4caf82 25%,#c9a84c 25%,#c9a84c 55%,#e08040 55%,#e08040 77%,#e05555 77%)"></div>
+                <div id="bmi-marker" style="position:absolute;top:-4px;transform:translateX(-50%);transition:left .4s;font-size:20px">▼</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)">
+                <span>10</span><span>18.5</span><span>25</span><span>30</span><span>40+</span>
+              </div>
+            </div>
+
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+              <div style="display:grid;grid-template-columns:auto auto auto;gap:4px 16px">
+                <span style="color:#4caf82">■</span><span>低体重</span><span>BMI &lt; 18.5</span>
+                <span style="color:#c9a84c">■</span><span>普通体重</span><span>18.5 ≦ BMI &lt; 25</span>
+                <span style="color:#e08040">■</span><span>肥満(1度)</span><span>25 ≦ BMI &lt; 30</span>
+                <span style="color:#e05555">■</span><span>肥満(2度以上)</span><span>BMI ≧ 30</span>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;padding:12px;background:var(--bg-deep);border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px">保険引受への影響（目安）</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+                BMI 18.5〜27.9：通常引受が見込まれる範囲<br>
+                BMI 28〜29.9：割増保険料または条件付きの場合あり<br>
+                BMI 30以上：医的査定・謝絶リスクあり（会社により異なる）
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSET MANAGEMENT -->
+      <div class="sim-panel" id="spanel-asset">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-title">📈 積立シミュレーション設定</div>
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label>毎月積立額（万円）</label>
+                <input type="number" id="ast-monthly" value="5" min="0.1" step="0.1" oninput="calcAsset()">
+              </div>
+              <div class="form-group">
+                <label>積立期間（年）</label>
+                <input type="number" id="ast-years" value="30" min="1" max="50" oninput="calcAsset()">
+              </div>
+              <div class="form-group">
+                <label>想定年利回り（%）</label>
+                <input type="number" id="ast-rate" value="5" min="0" max="20" step="0.1" oninput="calcAsset()">
+              </div>
+              <div class="form-group">
+                <label>初期投資額（万円）</label>
+                <input type="number" id="ast-initial" value="0" min="0" oninput="calcAsset()">
+              </div>
+            </div>
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">積立元本総額</span><span class="result-value" id="ast-principal">—</span></div>
+              <div class="result-row"><span class="result-label">運用益（複利）</span><span class="result-value blue" id="ast-gain">—</span></div>
+              <div class="result-row"><span class="result-label">将来資産総額</span><span class="result-value big" id="ast-total">—</span></div>
+              <div class="result-row"><span class="result-label">複利効果（倍率）</span><span class="result-value green" id="ast-multiplier">—</span></div>
+            </div>
+            <div style="margin-top:14px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">複利の力（参考）</div>
+              <div id="ast-milestones" style="font-size:12px;color:var(--text-muted);line-height:1.8"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📊 将来資産グラフ（積立元本 vs 運用益）</div>
+            <canvas id="asset-chart" height="300"></canvas>
+            <div class="chart-legend" style="margin-top:10px">
+              <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>積立元本</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>運用益（複利）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUMMARY (placeholder) -->
+    <section id="section-summary" class="section">
+      <div class="placeholder">
+        <div class="placeholder-icon">📋</div>
+        <div class="placeholder-title">提案サマリー</div>
+        <div class="placeholder-desc">シミュレーション結果をもとに、顧客向け提案サマリーを自動生成します（準備中）</div>
+      </div>
+    </section>
+
+    <!-- FILES (placeholder) -->
+    <section id="section-files" class="section">
+      <div class="placeholder">
+        <div class="placeholder-icon">📁</div>
+        <div class="placeholder-title">ファイル管理</div>
+        <div class="placeholder-desc">申請書類・設計書・帳票ファイルの管理機能（準備中）</div>
+      </div>
+    </section>
+
+    <!-- URL (placeholder) -->
+    <section id="section-url" class="section">
+      <div class="placeholder">
+        <div class="placeholder-icon">🔗</div>
+        <div class="placeholder-title">URL解析</div>
+        <div class="placeholder-desc">保険会社サイトのURL解析・商品情報取得機能（準備中）</div>
+      </div>
+    </section>
+
+    <!-- SETTINGS (placeholder) -->
+    <section id="section-settings" class="section">
+      <div class="placeholder">
+        <div class="placeholder-icon">⚙</div>
+        <div class="placeholder-title">設定</div>
+        <div class="placeholder-desc">支店情報・ユーザー設定・表示オプション（準備中）</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ── Navigation ── */
+const SECTION_TITLES = {
+  dashboard: 'ダッシュボード',
+  search: '検索・計算ツール｜ソリシター君',
+  simulation: 'シミュレーション',
+  summary: '提案サマリー',
+  files: 'ファイル管理',
+  url: 'URL解析',
+  settings: '設定',
+};
+
+function navigate(key, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('section-' + key);
+  if (sec) sec.classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = SECTION_TITLES[key] || key;
+  if (key === 'simulation') { setTimeout(drawMortgageChart, 100); setTimeout(drawAssetChart, 100); }
+}
+
+/* ── Sim Tabs ── */
+function switchSimTab(tab) {
+  document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sim-panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.getElementById('stab-' + tab);
+  const panEl = document.getElementById('spanel-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (panEl) panEl.classList.add('active');
+  if (tab === 'mortgage') setTimeout(drawMortgageChart, 50);
+  if (tab === 'asset') setTimeout(drawAssetChart, 50);
+  if (tab === 'bmi') setTimeout(calcBMI, 50);
+}
+
+/* ── Formatting ── */
+function fmt(n) {
+  if (isNaN(n) || !isFinite(n)) return '—';
+  return Math.round(n).toLocaleString('ja-JP') + '万円';
+}
+function fmtYen(n) {
+  if (isNaN(n) || !isFinite(n)) return '—';
+  if (n >= 10000) return (n / 10000).toFixed(2) + '億円';
+  return Math.round(n).toLocaleString('ja-JP') + '万円';
+}
+
+/* ── Mortgage Calculator ── */
+function mortgageMonthly(P, rAnnual, years) {
+  const r = rAnnual / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return P / n;
+  return P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+function calcMortgage() {
+  const P = parseFloat(document.getElementById('m-principal').value) || 0;
+  const r = parseFloat(document.getElementById('m-rate').value) || 0;
+  const y = parseInt(document.getElementById('m-years').value) || 0;
+  const bonus = parseFloat(document.getElementById('m-bonus').value) || 0;
+
+  if (P <= 0 || y <= 0) return;
+
+  const monthly = mortgageMonthly(P, r, y);
+  const total = monthly * y * 12 + bonus * y * 2;
+  const interest = total - P;
+
+  document.getElementById('m-result').style.display = 'block';
+  document.getElementById('m-monthly').textContent = Math.round(monthly).toLocaleString() + '円/月';
+  document.getElementById('m-total').textContent = fmtYen(total);
+  document.getElementById('m-interest').textContent = fmtYen(interest);
+
+  document.getElementById('d-loan').textContent = Math.round(monthly).toLocaleString() + '円/月';
+  drawMortgageChart();
+  calcPrepay();
+}
+
+function calcPrepay() {
+  const P = parseFloat(document.getElementById('m-principal').value) || 0;
+  const r = parseFloat(document.getElementById('m-rate').value) || 0;
+  const y = parseInt(document.getElementById('m-years').value) || 0;
+  const prepay = parseFloat(document.getElementById('m-prepay').value) || 0;
+  const prepayYear = parseInt(document.getElementById('m-prepay-year').value) || 1;
+
+  if (P <= 0 || y <= 0 || prepay <= 0) return;
+
+  const monthly = mortgageMonthly(P, r, y);
+  const rMonthly = r / 100 / 12;
+  const n = y * 12;
+  const paidMonths = prepayYear * 12;
+
+  let balance = P;
+  for (let i = 0; i < paidMonths && i < n; i++) {
+    const interestPart = balance * rMonthly;
+    const principalPart = monthly - interestPart;
+    balance -= principalPart;
+    if (balance < 0) { balance = 0; break; }
+  }
+  balance -= prepay;
+  if (balance < 0) balance = 0;
+
+  const remainingOriginal = n - paidMonths;
+  if (remainingOriginal <= 0) return;
+  const totalOriginalRemaining = monthly * remainingOriginal;
+  const newMonthly = mortgageMonthly(balance, r, remainingOriginal / 12);
+  const totalNewRemaining = newMonthly * remainingOriginal;
+  const savedInterest = totalOriginalRemaining - totalNewRemaining - prepay;
+
+  const newTotal = balance === 0 ? 0 : balance;
+  const newN = balance > 0 ? Math.ceil(Math.log(newMonthly / (newMonthly - balance * rMonthly)) / Math.log(1 + rMonthly)) : 0;
+  const savedMonths = remainingOriginal - newN;
+
+  document.getElementById('m-prepay-result').style.display = 'block';
+  document.getElementById('m-save-months').textContent = savedMonths > 0 ? Math.floor(savedMonths / 12) + '年' + (savedMonths % 12) + 'ヶ月 短縮' : '効果なし';
+  document.getElementById('m-save-interest').textContent = savedInterest > 0 ? fmtYen(savedInterest) + ' 節約' : '—';
+}
+
+function drawMortgageChart() {
+  const canvas = document.getElementById('mortgage-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 220;
+  const W = canvas.width, H = canvas.height;
+  const P = parseFloat(document.getElementById('m-principal').value) || 3000;
+  const years = parseInt(document.getElementById('m-years').value) || 35;
+  const varRate = parseFloat(document.getElementById('m-var').value) || 0.5;
+  const fixRate = parseFloat(document.getElementById('m-fix').value) || 1.5;
+
+  const varM = mortgageMonthly(P, varRate, years);
+  const fixM = mortgageMonthly(P, fixRate, years);
+  const varTotal = varM * years * 12;
+  const fixTotal = fixM * years * 12;
+  const varInterest = varTotal - P;
+  const fixInterest = fixTotal - P;
+
+  document.getElementById('m-compare-result').style.display = 'block';
+  document.getElementById('mc-var-monthly').textContent = Math.round(varM).toLocaleString() + '円/月';
+  document.getElementById('mc-var-interest').textContent = fmtYen(varInterest);
+  document.getElementById('mc-fix-monthly').textContent = Math.round(fixM).toLocaleString() + '円/月';
+  document.getElementById('mc-fix-interest').textContent = fmtYen(fixInterest);
+
+  // Draw bar chart: cumulative balance over time
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 50, r: 20, t: 20, b: 30 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  const maxY = P;
+  const steps = Math.min(years, 35);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (cH * i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    ctx.fillStyle = '#4a7090';
+    ctx.font = '10px Arial';
+    ctx.fillText(Math.round(maxY * (1 - i / 4)).toLocaleString(), 2, y + 4);
+  }
+
+  function drawLine(rate, color) {
+    const rM = rate / 100 / 12;
+    const monthly = mortgageMonthly(P, rate, years);
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for (let step = 0; step <= steps; step++) {
+      const months = Math.round(step * years * 12 / steps);
+      let balance = P;
+      for (let m = 0; m < months; m++) {
+        const interest = balance * rM;
+        balance -= (monthly - interest);
+        if (balance < 0) { balance = 0; break; }
+      }
+      const x = pad.l + (cW * step / steps);
+      const y = pad.t + cH * (1 - Math.max(0, balance) / maxY);
+      if (step === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  drawLine(varRate, '#4fc3f7');
+  drawLine(fixRate, '#c9a84c');
+
+  // X axis labels
+  ctx.fillStyle = '#4a7090';
+  ctx.font = '10px Arial';
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + cW * i / 5;
+    ctx.fillText(Math.round(years * i / 5) + '年', x - 8, H - 6);
+  }
+}
+
+/* ── Gift Tax ── */
+let giftTaxMode = 'annual';
+function switchGiftTax(mode) {
+  giftTaxMode = mode;
+  document.getElementById('gt-toggle-annual').classList.toggle('active', mode === 'annual');
+  document.getElementById('gt-toggle-souzoku').classList.toggle('active', mode === 'souzoku');
+  document.getElementById('gt-annual-note').style.display = mode === 'annual' ? '' : 'none';
+  document.getElementById('gt-souzoku-note').style.display = mode === 'souzoku' ? '' : 'none';
+  calcGiftTax();
+}
+
+function giftTaxAnnual(taxable) {
+  // General gift tax rate table
+  if (taxable <= 0) return 0;
+  const table = [
+    [200, 0.10, 0], [300, 0.15, 10], [400, 0.20, 25],
+    [600, 0.30, 65], [1000, 0.40, 125], [1500, 0.45, 175],
+    [3000, 0.50, 250], [Infinity, 0.55, 400],
+  ];
+  for (const [limit, rate, deduct] of table) {
+    if (taxable <= limit) return taxable * rate - deduct;
+  }
+}
+
+function calcGiftTax() {
+  const amount = parseFloat(document.getElementById('gift-amount').value) || 0;
+  let taxable, tax;
+  if (giftTaxMode === 'annual') {
+    taxable = Math.max(0, amount - 110);
+    tax = giftTaxAnnual(taxable);
+  } else {
+    taxable = Math.max(0, amount - 2500);
+    tax = taxable * 0.20;
+  }
+  const effRate = amount > 0 ? (tax / amount * 100) : 0;
+  document.getElementById('gt-taxable').textContent = fmt(taxable);
+  document.getElementById('gt-amount').textContent = fmt(tax);
+  document.getElementById('gt-eff-rate').textContent = effRate.toFixed(1) + '%';
+  document.getElementById('d-tax').textContent = fmt(tax);
+}
+
+/* ── Inheritance Tax ── */
+function inhTaxForHeir(amount) {
+  if (amount <= 0) return 0;
+  const table = [
+    [1000, 0.10, 0], [3000, 0.15, 50], [5000, 0.20, 200],
+    [10000, 0.30, 700], [20000, 0.40, 1700], [30000, 0.45, 2700],
+    [60000, 0.50, 4200], [Infinity, 0.55, 7200],
+  ];
+  for (const [limit, rate, deduct] of table) {
+    if (amount <= limit) return amount * rate - deduct;
+  }
+}
+
+function calcInheritanceTax() {
+  const estate = parseFloat(document.getElementById('inh-estate').value) || 0;
+  const heirs = parseInt(document.getElementById('inh-heirs').value) || 1;
+  const deduct = parseFloat(document.getElementById('inh-deduct').value) || 0;
+  const insFlag = parseInt(document.getElementById('inh-ins-flag').value) || 0;
+
+  const basicDeduct = 3000 + 600 * heirs;
+  const insDeduct = insFlag ? 500 * heirs : 0;
+  const taxableBase = Math.max(0, estate - deduct - insDeduct - basicDeduct);
+  const perHeir = taxableBase / heirs;
+  const taxPerHeir = inhTaxForHeir(perHeir);
+  const totalTax = taxPerHeir * heirs;
+  const effRate = estate > 0 ? (totalTax / estate * 100) : 0;
+
+  document.getElementById('ih-deduct-base').textContent = fmt(basicDeduct) + (insFlag ? ' + 保険' + fmt(insDeduct) : '');
+  document.getElementById('ih-taxable').textContent = fmt(taxableBase);
+  document.getElementById('ih-tax').textContent = fmt(totalTax);
+  document.getElementById('ih-eff-rate').textContent = effRate.toFixed(1) + '%';
+}
+
+/* ── Insurance Needs ── */
+function calcInsurance() {
+  const income = parseFloat(document.getElementById('ins-income').value) || 0;
+  const health = income * 0.0499;  // 協会けんぽ東京 9.98% 本人負担半額
+  const pension = income * 0.0915; // 18.3% 本人負担半額
+  const employ = income * 0.006;   // 0.6%
+  const socialTotal = health + pension + employ;
+
+  document.getElementById('ins-health').textContent = fmt(health);
+  document.getElementById('ins-pension').textContent = fmt(pension);
+  document.getElementById('ins-employ').textContent = fmt(employ);
+  document.getElementById('ins-social-total').textContent = fmt(socialTotal);
+
+  const living = parseFloat(document.getElementById('ins-living').value) || 0;
+  const years = parseFloat(document.getElementById('ins-years').value) || 0;
+  const education = parseFloat(document.getElementById('ins-education').value) || 0;
+  const housing = parseFloat(document.getElementById('ins-housing').value) || 0;
+  const survivorPension = parseFloat(document.getElementById('ins-survivor-pension').value) || 0;
+  const pensionYears = parseFloat(document.getElementById('ins-pension-years').value) || 0;
+  const assets = parseFloat(document.getElementById('ins-assets').value) || 0;
+  const existing = parseFloat(document.getElementById('ins-existing').value) || 0;
+
+  const livingTotal = living * 12 * years;
+  const fixed = education + housing;
+  const totalNeed = livingTotal + fixed;
+  const pensionTotal = survivorPension * 12 * pensionYears;
+  const needed = Math.max(0, totalNeed - pensionTotal - assets - existing);
+
+  document.getElementById('ins-r-living').textContent = fmt(livingTotal);
+  document.getElementById('ins-r-fixed').textContent = fmt(fixed);
+  document.getElementById('ins-r-total-need').textContent = fmt(totalNeed);
+  document.getElementById('ins-r-pension').textContent = fmt(pensionTotal);
+  document.getElementById('ins-r-assets').textContent = fmt(assets);
+  document.getElementById('ins-r-existing').textContent = fmt(existing);
+  document.getElementById('ins-r-needed').textContent = fmt(needed);
+  document.getElementById('d-ins').textContent = fmt(needed);
+}
+
+/* ── BMI ── */
+function calcBMI() {
+  const h = parseFloat(document.getElementById('bmi-height').value) || 0;
+  const w = parseFloat(document.getElementById('bmi-weight').value) || 0;
+  if (h <= 0 || w <= 0) return;
+  const hm = h / 100;
+  const bmi = w / (hm * hm);
+  const ideal = 22 * hm * hm;
+  const diff = w - ideal;
+
+  let judge, color;
+  if (bmi < 18.5) { judge = '低体重'; color = '#4caf82'; }
+  else if (bmi < 25) { judge = '普通体重'; color = '#c9a84c'; }
+  else if (bmi < 30) { judge = '肥満(1度)'; color = '#e08040'; }
+  else if (bmi < 35) { judge = '肥満(2度)'; color = '#e05555'; }
+  else { judge = '肥満(3度以上)'; color = '#cc2222'; }
+
+  document.getElementById('bmi-value').textContent = bmi.toFixed(1);
+  document.getElementById('bmi-value').style.color = color;
+  document.getElementById('bmi-judge').textContent = judge;
+  document.getElementById('bmi-judge').style.color = color;
+  document.getElementById('bmi-ideal').textContent = ideal.toFixed(1) + ' kg';
+  const diffText = diff > 0 ? '+' + diff.toFixed(1) + ' kg（標準超）' : diff.toFixed(1) + ' kg（標準以下）';
+  document.getElementById('bmi-diff').textContent = diffText;
+  document.getElementById('bmi-diff').style.color = Math.abs(diff) > 5 ? '#e08040' : '#4caf82';
+
+  // Marker position (BMI scale 10-40 mapped to 0-100%)
+  const clampedBMI = Math.min(40, Math.max(10, bmi));
+  const pct = (clampedBMI - 10) / 30 * 100;
+  const marker = document.getElementById('bmi-marker');
+  marker.style.left = pct + '%';
+  marker.style.color = color;
+}
+
+/* ── Asset Management ── */
+function calcAsset() {
+  const monthly = parseFloat(document.getElementById('ast-monthly').value) || 0;
+  const years = parseInt(document.getElementById('ast-years').value) || 0;
+  const rate = parseFloat(document.getElementById('ast-rate').value) || 0;
+  const initial = parseFloat(document.getElementById('ast-initial').value) || 0;
+
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  let fv;
+  if (r === 0) {
+    fv = monthly * n + initial;
+  } else {
+    fv = monthly * (Math.pow(1 + r, n) - 1) / r * (1 + r) + initial * Math.pow(1 + r, n);
+  }
+  const principal = monthly * n + initial;
+  const gain = fv - principal;
+  const multiplier = principal > 0 ? fv / principal : 1;
+
+  document.getElementById('ast-principal').textContent = fmtYen(principal);
+  document.getElementById('ast-gain').textContent = fmtYen(gain);
+  document.getElementById('ast-total').textContent = fmtYen(fv);
+  document.getElementById('ast-multiplier').textContent = multiplier.toFixed(2) + '倍';
+  document.getElementById('d-asset').textContent = fmtYen(fv);
+
+  // Milestones
+  const milestones = [5, 10, 20, 30].filter(y => y <= years);
+  let ms = '';
+  for (const y of milestones) {
+    const ny = y * 12;
+    let fvy;
+    if (r === 0) fvy = monthly * ny + initial;
+    else fvy = monthly * (Math.pow(1 + r, ny) - 1) / r * (1 + r) + initial * Math.pow(1 + r, ny);
+    ms += `${y}年後: ${fmtYen(fvy)}<br>`;
+  }
+  document.getElementById('ast-milestones').innerHTML = ms;
+
+  drawAssetChart();
+}
+
+function drawAssetChart() {
+  const canvas = document.getElementById('asset-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 300;
+  const W = canvas.width, H = canvas.height;
+  const monthly = parseFloat(document.getElementById('ast-monthly').value) || 0;
+  const years = parseInt(document.getElementById('ast-years').value) || 30;
+  const rate = parseFloat(document.getElementById('ast-rate').value) || 0;
+  const initial = parseFloat(document.getElementById('ast-initial').value) || 0;
+
+  const r = rate / 100 / 12;
+  const pad = { l: 55, r: 20, t: 20, b: 30 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  // Compute final value for scale
+  const n = years * 12;
+  let maxFV;
+  if (r === 0) maxFV = monthly * n + initial;
+  else maxFV = monthly * (Math.pow(1 + r, n) - 1) / r * (1 + r) + initial * Math.pow(1 + r, n);
+  if (maxFV <= 0) return;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    const val = maxFV * (1 - i / 4);
+    ctx.fillStyle = '#4a7090';
+    ctx.font = '10px Arial';
+    const label = val >= 10000 ? (val / 10000).toFixed(1) + '億' : Math.round(val / 100) * 100 < 1 ? val.toFixed(0) : (Math.round(val / 100) * 100).toLocaleString() + '万';
+    ctx.fillText(label, 2, y + 4);
+  }
+
+  const steps = Math.min(years, 50);
+  const principalPts = [];
+  const totalPts = [];
+
+  for (let s = 0; s <= steps; s++) {
+    const yr = years * s / steps;
+    const nm = Math.round(yr * 12);
+    const p = monthly * nm + initial;
+    let fv;
+    if (r === 0) fv = p;
+    else fv = monthly * (Math.pow(1 + r, nm) - 1) / r * (1 + r) + initial * Math.pow(1 + r, nm);
+    const x = pad.l + cW * s / steps;
+    principalPts.push({ x, y: pad.t + cH * (1 - p / maxFV) });
+    totalPts.push({ x, y: pad.t + cH * (1 - fv / maxFV) });
+  }
+
+  // Fill gain area (between principal and total)
+  ctx.beginPath();
+  totalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  for (let i = principalPts.length - 1; i >= 0; i--) ctx.lineTo(principalPts[i].x, principalPts[i].y);
+  ctx.closePath();
+  const goldGrad = ctx.createLinearGradient(pad.l, pad.t, pad.l, pad.t + cH);
+  goldGrad.addColorStop(0, 'rgba(201,168,76,0.35)');
+  goldGrad.addColorStop(1, 'rgba(201,168,76,0.05)');
+  ctx.fillStyle = goldGrad;
+  ctx.fill();
+
+  // Fill principal area
+  ctx.beginPath();
+  principalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pad.l + cW, pad.t + cH);
+  ctx.lineTo(pad.l, pad.t + cH);
+  ctx.closePath();
+  const blueGrad = ctx.createLinearGradient(pad.l, pad.t, pad.l, pad.t + cH);
+  blueGrad.addColorStop(0, 'rgba(79,195,247,0.3)');
+  blueGrad.addColorStop(1, 'rgba(79,195,247,0.05)');
+  ctx.fillStyle = blueGrad;
+  ctx.fill();
+
+  // Lines
+  function drawLine(pts, color) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  }
+  drawLine(principalPts, '#4fc3f7');
+  drawLine(totalPts, '#c9a84c');
+
+  // X labels
+  ctx.fillStyle = '#4a7090';
+  ctx.font = '10px Arial';
+  for (let i = 0; i <= 5; i++) {
+    ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);
+  }
+}
+
+/* ── Solicitor Search ── */
+const SOLICITOR_DATA = [
+  { title: '高血圧症', category: '告知事項', body: '血圧値140/90以上または医師から診断・治療を受けている場合は告知が必要。現在服薬中の場合も含む。', detail: '軽症コントロール良好の場合は通常引受可。重症・合併症あり（脳卒中・心疾患・腎不全等）の場合は条件付または謝絶。高血圧性腸症の既往は査定対象となる場合あり。' },
+  { title: '糖尿病', category: '告知事項', body: '血糖値・HbA1c値が診断基準を超えた場合、または医師から診断・治療を受けている場合は告知が必要。', detail: 'HbA1c 7.0未満でコントロール良好の場合は部位不担保等で引受可の場合あり。合併症（神経障害・網膜症・腎症）は謝絶の可能性が高い。' },
+  { title: '心疾患・心臓病', category: '告知事項', body: '狭心症・心筋梗塞・不整脈等の診断または治療歴がある場合は告知要。ペースメーカー装着も含む。', detail: '完治後一定期間経過していれば部位不担保で引受の場合あり。再発リスクが高いと判断される場合は謝絶。' },
+  { title: '脳卒中・脳梗塞', category: '告知事項', body: '脳出血・くも膜下出血・脳梗塞・TIAの既往は告知必須。後遺症の有無にかかわらず告知が必要。', detail: '後遺症なし・発症から5年以上経過で引受検討可の場合あり。後遺症残存は謝絶が多い。' },
+  { title: '精神疾患・うつ病', category: '告知事項', body: 'うつ病・統合失調症・双極性障害等の診断・通院・投薬歴は告知必須。', detail: '軽症かつ2年以上完治の場合に限り通常引受の会社もあり。死亡保険の自殺条項に注意。' },
+  { title: '不担保（部位不担保）', category: '不担保', body: '特定部位・特定疾病を保障の対象外とする引受条件。基本保険料は変わらない場合が多い。', detail: '例：循環器系疾患不担保・消化器系不担保等。不担保部位以外は通常通り保障される。不担保期間は3年・5年等の期間不担保と無期限不担保がある。' },
+  { title: '割増保険料', category: '引受基準', body: '通常の保険料に一定の割増率を乗じた保険料で引受する方法。', detail: '健康上のリスクが高い場合に適用。割増率は50%・100%等。保障は通常通り。割増期間終了後は標準保険料に戻る場合あり。' },
+  { title: '謝絶（告知義務違反）', category: '引受基準', body: '告知義務違反が発覚した場合、契約解除・保険金不払いとなる可能性がある。', detail: '故意または重大な過失による告知義務違反は解除事由。解除後2年以内の保険事故でも保険金が支払われないことがある。' },
+  { title: '医的査定', category: '医的査定', body: '医師の診断書・健康診断結果等をもとに保険会社の医師（嘱託医・社医）が引受可否を判断するプロセス。', detail: '通常の告知書査定に加え、診断書や医師面接（メディカル面接）が必要な場合に実施。高額保険の場合も医的査定要件あり。' },
+  { title: '嘱託医面接', category: '医的査定', body: '保険会社の嘱託医または指定医療機関にて健康状態を確認する面接。', detail: '通常、保険金額が一定額（例：5,000万円）を超える場合や、複雑な健康状態の場合に実施。費用は保険会社負担が原則。' },
+  { title: '職業分類A', category: '職業分類', body: '最も標準的なリスクに分類される職業。事務職・教育職・医療従事者（直接的危険を伴わないもの）等。', detail: '通常の保険料率を適用。引受に制限なし。' },
+  { title: '職業分類B', category: '職業分類', body: '一定のリスクがある職業。建設業・製造業現場・運転業務等。', detail: '傷害保険の保険料に割増が適用される場合あり。死亡・医療保険は原則標準引受。会社により分類基準が異なる。' },
+  { title: '危険職業（引受不可）', category: '職業分類', body: '危険度が高く通常引受対象外となる職業。爆発物取扱・採掘業・プロスポーツ選手（格闘技等）など。', detail: '傷害特約・入院保険の全部または一部が引受不可。死亡保険は会社により引受可の場合あり（危険職業割増適用）。' },
+  { title: '既往症（既往歴）', category: '告知事項', body: '過去に罹患・治療した疾病。告知書の過去5年（会社により異なる）の病歴を記載する必要がある。', detail: '軽症かつ完治後一定期間経過のものは影響なし。重篤な疾病・再発リスクの高い疾病は査定に影響する。' },
+  { title: '告知義務（告知事項）', category: '告知事項', body: '保険契約者・被保険者は、保険会社が告知を求めた事項について、事実を正確に申告する義務がある。', detail: '告知事項は保険種類・会社により異なる。一般的に現在の健康状態・過去5年の病歴・職業・喫煙・運転状況等が含まれる。' },
+  { title: '引受基準緩和型保険', category: '引受基準', body: '通常の引受基準を緩和し、健康状態に不安がある方でも加入しやすくした保険。', detail: '告知事項が3項目程度に簡素化されている。保険料は割高で、保障内容も限定的。加入後1〜2年は給付割合が70〜80%等に制限される場合あり。' },
+  { title: '無告知型・引受審査なし型', category: '引受基準', body: '健康状態の告知不要で加入できる保険。', detail: '保険料は高額。保険金額の上限が低い。持病があっても加入可。解約返戻金の少ない一時払い終身保険等で見られる形態。' },
+  { title: '喫煙者特則・非喫煙者割引', category: '引受基準', body: '喫煙状況により保険料が異なる特則または割引。非喫煙者は保険料が安くなる場合がある。', detail: '非喫煙者割引適用の場合、直近1年（会社により異なる）以上の非喫煙を証明する必要がある。健康診断書のコチニン検査等で確認する場合あり。' },
+];
+
+function doSearch() {
+  const q = document.getElementById('solicitor-input').value.trim();
+  if (!q) {
+    document.getElementById('search-results').innerHTML = '<div class="placeholder" style="padding:30px"><div class="placeholder-icon">🔍</div><div class="placeholder-title">キーワードを入力してください</div><div class="placeholder-desc">引受基準・告知事項・不担保条件などを検索できます</div></div>';
+    return;
+  }
+  const results = SOLICITOR_DATA.filter(d =>
+    d.title.includes(q) || d.category.includes(q) || d.body.includes(q) || d.detail.includes(q)
+  );
+  renderResults(results, q);
+}
+
+function searchTag(tag) {
+  document.getElementById('solicitor-input').value = tag;
+  document.querySelectorAll('.tag').forEach(t => t.classList.toggle('active', t.textContent.includes(tag)));
+  doSearch();
+}
+
+function renderResults(results, q) {
+  const el = document.getElementById('search-results');
+  if (results.length === 0) {
+    el.innerHTML = '<div class="placeholder" style="padding:30px"><div class="placeholder-icon">🔍</div><div class="placeholder-title">"' + q + '" の検索結果はありません</div></div>';
+    return;
+  }
+  el.innerHTML = results.map((r, i) =>
+    `<div class="search-result" onclick="toggleResult(this)">
+      <div class="sr-category">${r.category}</div>
+      <div class="sr-title">${r.title}</div>
+      <div class="sr-body">${r.body}</div>
+      <div class="sr-detail">${r.detail}</div>
+    </div>`
+  ).join('');
+}
+
+function toggleResult(el) {
+  el.classList.toggle('expanded');
+}
+
+/* ── Init ── */
+calcMortgage();
+calcGiftTax();
+calcInheritanceTax();
+calcInsurance();
+calcBMI();
+calcAsset();
+setTimeout(() => {
+  drawMortgageChart();
+  drawAssetChart();
+}, 100);
+
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.sim-panel.active');
+  if (!active) return;
+  if (active.id === 'spanel-mortgage') drawMortgageChart();
+  if (active.id === 'spanel-asset') drawAssetChart();
+});
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOWN, assertNoZeroConfirmRequests } = require('./kosame-prompt-lint');
+const { OFFICIAL_ROUTE, MANUAL_CODE_UI_ALLOWED } = require('./kosame-execution-host-guard');
 const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
@@ -799,8 +800,8 @@ function buildWorkOrderReply(input, snapshotSummary) {
   });
 
   return {
-    reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が自動でディスパッチします。Orchestra証跡を Run History / Result Decision / Operations Board に残します。`,
-    suggested_action: '採用すると、KOSAME Runner / dispatch watcher が zero-confirm で自動ディスパッチします。Orchestra証跡も記録されます。',
+    reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が official route で自動実行します。Orchestra証跡を Run History / Result Decision / Operations Board に残します。`,
+    suggested_action: '採用すると、KOSAME Runner / dispatch watcher が official route で zero-confirm 実行します。Orchestra証跡も記録されます。',
     human_gate_required: true,
     work_order: {
       title,
@@ -821,6 +822,17 @@ function buildWorkOrderReply(input, snapshotSummary) {
       resultDecisionRequired: true,
       operationsBoardRequired: true,
       executionCommand: 'claude --dangerously-skip-permissions -p',
+      executionHost: 'kosame-console',
+      executionHostAllowed: true,
+      interactiveHostBlocked: false,
+      noYesGateRuntime: true,
+      safeSpawnActive: false,
+      manualCodeUiAllowed: MANUAL_CODE_UI_ALLOWED,
+      officialRoute: OFFICIAL_ROUTE,
+      executionSource: 'kosame-console',
+      promptType: 'work_order_request',
+      promptOrigin: 'kosame-console',
+      userInputRequired: false,
       router_decision: orchestraEvidence.router_decision,
       routerDecision: orchestraEvidence.router_decision,
       assigned_lanes: orchestraEvidence.assigned_lanes,
@@ -986,27 +998,31 @@ async function handleChatRequest(body) {
   const contextSummary = normalizeContent(source.contextSummary || source.context || normalized.contextSummary);
   const directText = [message, project].filter(Boolean).join(' ');
   const attachmentIds = (normalized.attachments || []).map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean);
-  appendPipelineStageEvent({
-    stage: 'chat.received',
-    status: 'running',
-    workOrderId: '',
-    attachmentCount: attachmentIds.length,
-    attachmentIds,
-    route: 'chat',
-    timestamp: requestAt,
-    message: `KOSAME: 受信した入力を受け付けました☂️`,
-  }, { agent: 'KOSAME', task: 'chat.received' });
-  if (attachmentIds.length) {
+  const { detectSpecIntent } = require('./kosame-spec-to-tasks');
+  const telemetrySpecIntent = detectSpecIntent(message, normalized.attachments || []);
+  if (telemetrySpecIntent.isSpec) {
     appendPipelineStageEvent({
-      stage: 'attachments.received',
+      stage: 'chat.received',
       status: 'running',
       workOrderId: '',
       attachmentCount: attachmentIds.length,
       attachmentIds,
       route: 'chat',
       timestamp: requestAt,
-      message: `KOSAME: 添付${attachmentIds.length}件を受け取りました☂️`,
-    }, { agent: 'KOSAME', task: 'attachments.received' });
+      message: `KOSAME: 受信した入力を受け付けました☂️`,
+    }, { agent: 'KOSAME', task: 'chat.received' });
+    if (attachmentIds.length) {
+      appendPipelineStageEvent({
+        stage: 'attachments.received',
+        status: 'running',
+        workOrderId: '',
+        attachmentCount: attachmentIds.length,
+        attachmentIds,
+        route: 'chat',
+        timestamp: requestAt,
+        message: `KOSAME: 添付${attachmentIds.length}件を受け取りました☂️`,
+      }, { agent: 'KOSAME', task: 'attachments.received' });
+    }
   }
 
   if (!message) {
@@ -1170,8 +1186,8 @@ async function handleChatRequest(body) {
 
     // Spec-to-Tasks: detect design doc intent and auto-generate work tickets
     try {
-      const { detectSpecIntent, processSpec } = require('./kosame-spec-to-tasks');
-      const specIntent = detectSpecIntent(message, attachments);
+      const { processSpec } = require('./kosame-spec-to-tasks');
+      const specIntent = telemetrySpecIntent;
       if (specIntent.isSpec) {
         process.stderr.write(`[spec-to-tasks] spec detected — running pipeline\n`);
         appendPipelineStageEvent({
@@ -1213,7 +1229,7 @@ async function handleChatRequest(body) {
           result.ok = false;
           result.reply = failure.reply;
           result.error = `設計書の処理に失敗しました: ${failure.error_details.errorCode}`;
-          result.suggested_action = 'エラーを確認してください';
+          result.suggested_action = 'エラーを修正してください';
           result.human_gate_required = true;
           result.error_details = failure.error_details;
           result.pipeline_trace = Array.isArray(specResult.stageHistory) ? specResult.stageHistory : [];
@@ -1243,7 +1259,10 @@ async function handleChatRequest(body) {
     const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
     process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);
     if (gptResult.ok && gptResult.reply) {
-      result.reply = gptResult.reply;
+      const zeroConfirmRouteLine = `route: ${replyPacket.work_order && replyPacket.work_order.route ? replyPacket.work_order.route : 'zero-confirm'}`;
+      result.reply = String(gptResult.reply).includes(zeroConfirmRouteLine)
+        ? gptResult.reply
+        : `${gptResult.reply}\n\n${zeroConfirmRouteLine}`;
       result.gptProvider = 'openai';
       process.stderr.write('[chat-gpt] GPT reply used\n');
       if (sessionId) {
@@ -1251,7 +1270,7 @@ async function handleChatRequest(body) {
           const { appendToSession } = require('./kosame-chat-sessions');
           appendToSession(sessionId, [
             { role: 'user', content: message },
-            { role: 'assistant', content: gptResult.reply },
+            { role: 'assistant', content: result.reply },
           ]);
         } catch (sessErr) {
           process.stderr.write(`[sessions] save error: ${sessErr.message}\n`);

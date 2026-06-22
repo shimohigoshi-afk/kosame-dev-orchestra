@@ -3,13 +3,13 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { spawn } = require('node:child_process');
 // Load .env before any module reads process.env at init time
 try {
   const _el = require('node:fs').readFileSync(path.resolve(__dirname, '..', '.env'), 'utf8').split('\n');
   for (const _l of _el) { const _m = _l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/); if (_m && !(_m[1] in process.env)) process.env[_m[1]] = _m[2].trim(); }
 } catch (_) { /* .env is optional */ }
 const http = require('node:http');
-const { spawn } = require('node:child_process');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
@@ -21,6 +21,7 @@ const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { saveHandoffInbox, readLatestHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
 const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
+const { evaluateNoYesGate } = require('./kosame-no-yes-gate');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
@@ -60,12 +61,23 @@ function buildResultActivityMessage(decision, title, agent) {
   const autoApprovedCount = Number.isFinite(Number(decision && (decision.auto_approved_count ?? decision.autoApprovedCount))) ? Number(decision.auto_approved_count ?? decision.autoApprovedCount) : 0;
   const autoBlockedCount = Number.isFinite(Number(decision && (decision.auto_blocked_count ?? decision.autoBlockedCount))) ? Number(decision.auto_blocked_count ?? decision.autoBlockedCount) : 0;
   const retryCount = Number.isFinite(Number(decision && (decision.retry_count ?? decision.retryCount))) ? Number(decision.retry_count ?? decision.retryCount) : 0;
+  const executionHost = String(decision && (decision.execution_host || decision.executionHost) || 'kosame-runner').trim() || 'kosame-runner';
+  const executionHostAllowed = decision && (decision.execution_host_allowed ?? decision.executionHostAllowed);
+  const interactiveHostBlocked = !!(decision && (decision.interactive_host_blocked ?? decision.interactiveHostBlocked));
+  const noYesGateRuntime = decision && (decision.no_yes_gate_runtime ?? decision.noYesGateRuntime);
+  const safeSpawnActive = decision && (decision.safe_spawn_active ?? decision.safeSpawnActive);
+  const manualCodeUiAllowed = decision && (decision.manual_code_ui_allowed ?? decision.manualCodeUiAllowed);
+  const officialRoute = String(decision && (decision.official_route || decision.officialRoute) || 'Console → Handoff → Runner').trim() || 'Console → Handoff → Runner';
   const messages = {
-    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
-    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
-    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
-    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
-    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    ready_for_commit: `[ready_for_commit] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    ready_for_review: `[ready_for_review] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    request_fix: `[request_fix] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    stop_and_investigate: `[stop_and_investigate] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    blocked_interactive_host: `[blocked_interactive_host] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    blocked_by_interactive_prompt: `[blocked_by_interactive_prompt] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    blocked: `[blocked] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    safety_stop: `[safety_stop] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
+    wait_for_result: `[wait_for_result] ${safeTitle} / executor: ${executor} / route: ${route} / resultPOST: ${resultPost} / executionHost: ${executionHost} / executionHostAllowed: ${executionHostAllowed !== false ? 'true' : 'false'} / interactiveHostBlocked: ${interactiveHostBlocked ? 'true' : 'false'} / noYesGateRuntime: ${noYesGateRuntime !== false ? 'true' : 'false'} / safeSpawnActive: ${safeSpawnActive !== false ? 'true' : 'false'} / manualCodeUiAllowed: ${manualCodeUiAllowed ? 'true' : 'false'} / officialRoute: ${officialRoute} / 承認要求回数: ${approvalCount} / 手動貼付回数: ${manualPasteCount} / 待機要求回数: ${waitCount} / 自動YES回数: ${autoApprovedCount} / 自動遮断回数: ${autoBlockedCount} / retryCount: ${retryCount}`,
   };
   return messages[decisionStatus] || `${safeTitle} の実装結果を ${safeAgent} から受け取りました。`;
 }
@@ -388,7 +400,7 @@ function createLiveCockpitServer(options = {}) {
             latestHandoff: result.latestHandoff,
             latestPath: result.latestPath,
             queuePath: result.queuePath,
-            message: 'Inboxに保存しました。codex:watch 起動中なら自動実行されます。',
+            message: 'Inboxに保存しました。Runner Queue が official route で自動実行します。',
           }));
         } catch (error) {
           res.writeHead(400, {
@@ -490,6 +502,13 @@ function createLiveCockpitServer(options = {}) {
             attachmentIds: Array.isArray(latestHandoff.attachments) ? latestHandoff.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
             manifestPath: String(latestHandoff.attachment_manifest_path || latestHandoff.attachmentManifestPath || ''),
             route: String(latestDecision.route || latestHandoff.route || 'zero-confirm'),
+            executionHost: String(latestDecision.execution_host || latestDecision.executionHost || latestResult?.execution_host || latestResult?.executionHost || latestHandoff.execution_host || latestHandoff.executionHost || 'kosame-runner'),
+            executionHostAllowed: latestDecision.execution_host_allowed ?? latestDecision.executionHostAllowed ?? latestResult?.execution_host_allowed ?? latestResult?.executionHostAllowed,
+            interactiveHostBlocked: latestDecision.interactive_host_blocked ?? latestDecision.interactiveHostBlocked ?? latestResult?.interactive_host_blocked ?? latestResult?.interactiveHostBlocked,
+            noYesGateRuntime: latestDecision.no_yes_gate_runtime ?? latestDecision.noYesGateRuntime ?? latestResult?.no_yes_gate_runtime ?? latestResult?.noYesGateRuntime,
+            safeSpawnActive: latestDecision.safe_spawn_active ?? latestDecision.safeSpawnActive ?? latestResult?.safe_spawn_active ?? latestResult?.safeSpawnActive,
+            manualCodeUiAllowed: latestDecision.manual_code_ui_allowed ?? latestDecision.manualCodeUiAllowed ?? latestResult?.manual_code_ui_allowed ?? latestResult?.manualCodeUiAllowed,
+            officialRoute: String(latestDecision.official_route || latestDecision.officialRoute || latestResult?.official_route || latestResult?.officialRoute || 'Console → Handoff → Runner'),
             timestamp: new Date().toISOString(),
             message: `Result Decision updated: ${latestDecision.decision_status} / ${latestDecision.result_post || 'resultPOST待ち'}`,
           }, { agent: 'KOSAME', task: 'result.decision.updated' });
@@ -609,14 +628,67 @@ function createLiveCockpitServer(options = {}) {
             cwd: ROOT,
             stdio: ['ignore', 'pipe', 'pipe'],
             env: process.env,
+            shell: false,
           });
           child.stdout.on('data', (chunk) => {
             String(chunk).split('\n').filter(Boolean).forEach(line => {
+              const gate = evaluateNoYesGate({ text: line, source: 'stdout', executionHost: 'kosame-api-runner', executionSource: 'kosame-api-runner', safeSpawn: true });
+              if (!gate.ok && gate.decision !== 'allow') {
+                appendPipelineStageEvent({
+                  stage: gate.decision === 'safety_stop' ? 'runner.dispatch.safety_stop' : 'runner.dispatch.blocked',
+                  status: 'blocked',
+                  workOrderId: ticketId,
+                  attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
+                  attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+                  manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
+                  route: 'zero-confirm',
+                  executionHost: gate.executionHost,
+                  executionHostAllowed: gate.executionHostAllowed,
+                  interactiveHostBlocked: gate.interactiveHostBlocked,
+                  noYesGateRuntime: gate.noYesGateRuntime,
+                  safeSpawnActive: gate.safeSpawnActive,
+                  manualCodeUiAllowed: gate.manualCodeUiAllowed,
+                  officialRoute: gate.officialRoute,
+                  promptType: gate.promptType,
+                  promptOrigin: gate.promptOrigin,
+                  userInputRequired: gate.userInputRequired,
+                  blockedReason: gate.blockedReason,
+                  timestamp: new Date().toISOString(),
+                  message: `Execution host guard blocked runner output: ${gate.decision}`,
+                }, { agent: 'RUNNER', task: 'runner.dispatch.blocked' });
+                try { child.kill('SIGTERM'); } catch (_) {}
+              }
               _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
             });
           });
           child.stderr.on('data', (chunk) => {
             String(chunk).split('\n').filter(Boolean).forEach(line => {
+              const gate = evaluateNoYesGate({ text: line, source: 'stderr', executionHost: 'kosame-api-runner', executionSource: 'kosame-api-runner', safeSpawn: true });
+              if (!gate.ok && gate.decision !== 'allow') {
+                appendPipelineStageEvent({
+                  stage: gate.decision === 'safety_stop' ? 'runner.dispatch.safety_stop' : 'runner.dispatch.blocked',
+                  status: 'blocked',
+                  workOrderId: ticketId,
+                  attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
+                  attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+                  manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
+                  route: 'zero-confirm',
+                  executionHost: gate.executionHost,
+                  executionHostAllowed: gate.executionHostAllowed,
+                  interactiveHostBlocked: gate.interactiveHostBlocked,
+                  noYesGateRuntime: gate.noYesGateRuntime,
+                  safeSpawnActive: gate.safeSpawnActive,
+                  manualCodeUiAllowed: gate.manualCodeUiAllowed,
+                  officialRoute: gate.officialRoute,
+                  promptType: gate.promptType,
+                  promptOrigin: gate.promptOrigin,
+                  userInputRequired: gate.userInputRequired,
+                  blockedReason: gate.blockedReason,
+                  timestamp: new Date().toISOString(),
+                  message: `Execution host guard blocked runner output: ${gate.decision}`,
+                }, { agent: 'RUNNER', task: 'runner.dispatch.blocked' });
+                try { child.kill('SIGTERM'); } catch (_) {}
+              }
               _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
             });
           });

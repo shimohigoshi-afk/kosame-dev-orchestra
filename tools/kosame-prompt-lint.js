@@ -25,6 +25,7 @@ const HUMAN_WAIT_PATTERNS = [
   { pattern: /would you like to continue/i, label: 'would you like to continue' },
   { pattern: /do you want to proceed/i, label: 'do you want to proceed' },
   { pattern: /continue\?/i, label: 'continue?' },
+  { pattern: /how is claude doing this session\?/i, label: 'session feedback prompt' },
   { pattern: /\bY\s*\/\s*E\s*\/\s*S\b/i, label: 'Y/E/S' },
   { pattern: /コピペ依頼/i, label: 'コピペ依頼' },
 ];

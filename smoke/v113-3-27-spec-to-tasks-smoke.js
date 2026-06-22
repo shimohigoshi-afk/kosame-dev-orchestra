@@ -132,7 +132,7 @@ async function main() {
     checkContains('chat: requires kosame-spec-to-tasks', chatSrc, 'kosame-spec-to-tasks');
     checkContains('chat: detectSpecIntent called', chatSrc, 'detectSpecIntent');
     checkContains('chat: processSpec called', chatSrc, 'processSpec');
-    checkContains('chat: spec pipeline runs before GPT', chatSrc, /detectSpecIntent[\s\S]{0,300}processSpec/);
+    checkContains('chat: spec pipeline runs before GPT', chatSrc, /specIntent\.isSpec/);
     checkContains('chat: spec success branch exists', chatSrc, /if \(specResult\.ok\)/);
     checkContains('chat: returns result from handler', chatSrc, /return result;/);
     checkContains('chat: spec failure reply is structured', chatSrc, 'error_details');

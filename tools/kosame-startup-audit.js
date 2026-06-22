@@ -20,10 +20,11 @@ function runStartupAudit(options = {}) {
   const violations = [];
   if (!fs.existsSync(batPath)) violations.push({ file: 'KOSAME.bat', reason: 'missing startup launcher' });
   if (!/cockpit:server/.test(batText)) violations.push({ file: 'KOSAME.bat', reason: 'missing cockpit server launch' });
-  if (!/codex:watch/.test(batText)) violations.push({ file: 'KOSAME.bat', reason: 'missing watcher launch' });
+  if (!/runner:watch|codex:watch/.test(batText)) violations.push({ file: 'KOSAME.bat', reason: 'missing watcher launch' });
   if (!/browse|browser|start\s+http|open/i.test(batText)) violations.push({ file: 'KOSAME.bat', reason: 'missing browser launch hint' });
+  if (/Claude Code対話窓|Codex Code対話窓/.test(batText)) violations.push({ file: 'KOSAME.bat', reason: 'interactive code UI must not be launched' });
   if (!scripts['cockpit:server']) violations.push({ file: 'package.json', reason: 'missing cockpit:server script' });
-  if (!scripts['codex:watch']) violations.push({ file: 'package.json', reason: 'missing codex:watch script' });
+  if (!scripts['codex:watch'] && !scripts['runner:watch']) violations.push({ file: 'package.json', reason: 'missing runner watcher script' });
   if (!scripts.verify || !scripts.verify.includes('smoke:v113-2-0')) violations.push({ file: 'package.json', reason: 'verify missing v113.2.0 smoke' });
   if (directSpawn.violations.length) violations.push(...directSpawn.violations);
   return {

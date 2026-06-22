@@ -113,6 +113,18 @@ function sanitizeApprovalWorkOrder(input = {}) {
   const selectedProjectLabel = truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120);
   const safetyConditions = normalizeTextList(workOrder.safetyConditions || workOrder.safety_conditions, 20, 240);
   const reportItems = normalizeTextList(workOrder.reportItems || workOrder.report_items, 20, 240);
+  const executionHost = truncate(workOrder.executionHost || workOrder.execution_host || '', 60);
+  const executionSource = truncate(workOrder.executionSource || workOrder.execution_source || '', 60);
+  const executionHostAllowed = workOrder.executionHostAllowed !== false;
+  const interactiveHostBlocked = !!workOrder.interactiveHostBlocked;
+  const noYesGateRuntime = workOrder.noYesGateRuntime !== false;
+  const safeSpawnActive = workOrder.safeSpawnActive !== false;
+  const manualCodeUiAllowed = workOrder.manualCodeUiAllowed === true;
+  const officialRoute = truncate(workOrder.officialRoute || 'Console → Handoff → Runner', 80);
+  const promptType = truncate(workOrder.promptType || '', 40);
+  const promptOrigin = truncate(workOrder.promptOrigin || '', 60);
+  const blockedReason = truncate(workOrder.blockedReason || '', 120);
+  const userInputRequired = workOrder.userInputRequired === true;
   const body = truncate(workOrder.body || workOrder.prompt || '', MAX_PROMPT_LENGTH);
   const requiresHumanConfirmation = workOrder.requires_human_confirmation !== false;
   const promptSource = [prompt, originalRequest, body]
@@ -138,6 +150,12 @@ function sanitizeApprovalWorkOrder(input = {}) {
     selectedProjectLabel,
     ...safetyConditions,
     ...reportItems,
+    executionHost,
+    executionSource,
+    officialRoute,
+    promptType,
+    promptOrigin,
+    blockedReason,
     promptSource,
   ].join('\n');
   if (hasSecretLikeText(rawText)) {
@@ -157,6 +175,30 @@ function sanitizeApprovalWorkOrder(input = {}) {
     selectedProjectLabel,
     safetyConditions,
     reportItems,
+    executionHost,
+    execution_host: executionHost,
+    executionSource,
+    execution_source: executionSource,
+    executionHostAllowed,
+    execution_host_allowed: executionHostAllowed,
+    interactiveHostBlocked,
+    interactive_host_blocked: interactiveHostBlocked,
+    noYesGateRuntime,
+    no_yes_gate_runtime: noYesGateRuntime,
+    safeSpawnActive,
+    safe_spawn_active: safeSpawnActive,
+    manualCodeUiAllowed,
+    manual_code_ui_allowed: manualCodeUiAllowed,
+    officialRoute,
+    official_route: officialRoute,
+    promptType,
+    prompt_type: promptType,
+    promptOrigin,
+    prompt_origin: promptOrigin,
+    blockedReason,
+    blocked_reason: blockedReason,
+    userInputRequired,
+    user_input_required: userInputRequired,
     target: {
       id: selectedProjectId,
       label: selectedProjectLabel,
@@ -194,6 +236,18 @@ function normalizeApprovedWorkOrder(record) {
     selectedProjectLabel: truncate(workOrder.selectedProjectLabel || workOrder.selected_project_label || '', 120),
     safetyConditions: normalizeTextList(workOrder.safetyConditions || workOrder.safety_conditions, 20, 240),
     reportItems: normalizeTextList(workOrder.reportItems || workOrder.report_items, 20, 240),
+    executionHost: truncate(workOrder.executionHost || workOrder.execution_host || '', 60),
+    executionSource: truncate(workOrder.executionSource || workOrder.execution_source || '', 60),
+    executionHostAllowed: workOrder.executionHostAllowed !== false,
+    interactiveHostBlocked: !!workOrder.interactiveHostBlocked,
+    noYesGateRuntime: workOrder.noYesGateRuntime !== false,
+    safeSpawnActive: workOrder.safeSpawnActive !== false,
+    manualCodeUiAllowed: workOrder.manualCodeUiAllowed === true,
+    officialRoute: truncate(workOrder.officialRoute || 'Console → Handoff → Runner', 80),
+    promptType: truncate(workOrder.promptType || '', 40),
+    promptOrigin: truncate(workOrder.promptOrigin || '', 60),
+    blockedReason: truncate(workOrder.blockedReason || '', 120),
+    userInputRequired: workOrder.userInputRequired === true,
     target: workOrder.target && typeof workOrder.target === 'object'
       ? {
           id: truncate(workOrder.target.id || workOrder.target.projectId || '', 60),
@@ -247,6 +301,30 @@ function approveWorkOrder(input = {}, options = {}) {
     agent: workOrder.agent,
     target_repo: workOrder.target_repo,
     risk_level: workOrder.risk_level,
+    executionHost: workOrder.executionHost,
+    execution_host: workOrder.execution_host,
+    executionSource: workOrder.executionSource,
+    execution_source: workOrder.execution_source,
+    executionHostAllowed: workOrder.executionHostAllowed,
+    execution_host_allowed: workOrder.execution_host_allowed,
+    interactiveHostBlocked: workOrder.interactiveHostBlocked,
+    interactive_host_blocked: workOrder.interactive_host_blocked,
+    noYesGateRuntime: workOrder.noYesGateRuntime,
+    no_yes_gate_runtime: workOrder.no_yes_gate_runtime,
+    safeSpawnActive: workOrder.safeSpawnActive,
+    safe_spawn_active: workOrder.safe_spawn_active,
+    manualCodeUiAllowed: workOrder.manualCodeUiAllowed,
+    manual_code_ui_allowed: workOrder.manual_code_ui_allowed,
+    officialRoute: workOrder.officialRoute,
+    official_route: workOrder.official_route,
+    promptType: workOrder.promptType,
+    prompt_type: workOrder.prompt_type,
+    promptOrigin: workOrder.promptOrigin,
+    prompt_origin: workOrder.prompt_origin,
+    blockedReason: workOrder.blockedReason,
+    blocked_reason: workOrder.blocked_reason,
+    userInputRequired: workOrder.userInputRequired,
+    user_input_required: workOrder.user_input_required,
   };
 
   fs.mkdirSync(path.dirname(approvalLogPath), { recursive: true, mode: 0o700 });
@@ -272,6 +350,18 @@ function approveWorkOrder(input = {}, options = {}) {
       selectedProjectLabel: workOrder.selectedProjectLabel,
       safetyConditions: workOrder.safetyConditions,
       reportItems: workOrder.reportItems,
+      executionHost: workOrder.executionHost,
+      executionSource: workOrder.executionSource,
+      executionHostAllowed: workOrder.executionHostAllowed,
+      interactiveHostBlocked: workOrder.interactiveHostBlocked,
+      noYesGateRuntime: workOrder.noYesGateRuntime,
+      safeSpawnActive: workOrder.safeSpawnActive,
+      manualCodeUiAllowed: workOrder.manualCodeUiAllowed,
+      officialRoute: workOrder.officialRoute,
+      promptType: workOrder.promptType,
+      promptOrigin: workOrder.promptOrigin,
+      blockedReason: workOrder.blockedReason,
+      userInputRequired: workOrder.userInputRequired,
       target: workOrder.target,
       requires_human_confirmation: workOrder.requires_human_confirmation,
     },

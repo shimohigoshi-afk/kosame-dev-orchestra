@@ -208,6 +208,32 @@ function resolveWorkOrderSource(input = {}) {
     20,
     240,
   ).map((line) => maskHandoffText(line));
+  const executionHost = truncate(
+    workOrder.executionHost
+    || workOrder.execution_host
+    || approved?.executionHost
+    || approved?.execution_host
+    || '',
+    60,
+  );
+  const executionSource = truncate(
+    workOrder.executionSource
+    || workOrder.execution_source
+    || approved?.executionSource
+    || approved?.execution_source
+    || '',
+    60,
+  );
+  const executionHostAllowed = (workOrder.executionHostAllowed ?? approved?.executionHostAllowed) !== false;
+  const interactiveHostBlocked = !!(workOrder.interactiveHostBlocked ?? approved?.interactiveHostBlocked);
+  const noYesGateRuntime = (workOrder.noYesGateRuntime ?? approved?.noYesGateRuntime) !== false;
+  const safeSpawnActive = (workOrder.safeSpawnActive ?? approved?.safeSpawnActive) !== false;
+  const manualCodeUiAllowed = (workOrder.manualCodeUiAllowed ?? approved?.manualCodeUiAllowed) === true;
+  const officialRoute = truncate(workOrder.officialRoute || approved?.officialRoute || 'Console → Handoff → Runner', 80);
+  const promptType = truncate(workOrder.promptType || approved?.promptType || '', 40);
+  const promptOrigin = truncate(workOrder.promptOrigin || approved?.promptOrigin || '', 60);
+  const blockedReason = truncate(workOrder.blockedReason || approved?.blockedReason || '', 120);
+  const userInputRequired = (workOrder.userInputRequired ?? approved?.userInputRequired) === true;
   const safePromptSummary = summarizePrompt(
     input.safe_prompt_summary
     || workOrder.safe_prompt_summary
@@ -265,6 +291,18 @@ function resolveWorkOrderSource(input = {}) {
     selectedProjectLabel,
     safetyConditions: safetyConditions.map((line) => maskHandoffText(line)),
     reportItems: reportItems.map((line) => maskHandoffText(line)),
+    executionHost,
+    executionSource,
+    executionHostAllowed,
+    interactiveHostBlocked,
+    noYesGateRuntime,
+    safeSpawnActive,
+    manualCodeUiAllowed,
+    officialRoute,
+    promptType,
+    promptOrigin,
+    blockedReason,
+    userInputRequired,
     target: {
       id: selectedProjectId,
       label: selectedProjectLabel,
@@ -307,6 +345,18 @@ function normalizeWorkOrderHandoffRecord(record) {
     selectedProjectLabel: truncate(record.selectedProjectLabel || record.selected_project_label || '', 120),
     safetyConditions: normalizeTextList(record.safetyConditions || record.safety_conditions, 20, 240),
     reportItems: normalizeTextList(record.reportItems || record.report_items, 20, 240),
+    executionHost: truncate(record.executionHost || record.execution_host || '', 60),
+    executionSource: truncate(record.executionSource || record.execution_source || '', 60),
+    executionHostAllowed: record.executionHostAllowed !== false,
+    interactiveHostBlocked: !!record.interactiveHostBlocked,
+    noYesGateRuntime: record.noYesGateRuntime !== false,
+    safeSpawnActive: record.safeSpawnActive !== false,
+    manualCodeUiAllowed: record.manualCodeUiAllowed === true,
+    officialRoute: truncate(record.officialRoute || 'Console → Handoff → Runner', 80),
+    promptType: truncate(record.promptType || '', 40),
+    promptOrigin: truncate(record.promptOrigin || '', 60),
+    blockedReason: truncate(record.blockedReason || '', 120),
+    userInputRequired: record.userInputRequired === true,
     attachments: attachments.map((attachment) => ({
       ...attachment,
       displayName: normalizeText(attachment.displayName || attachment.name || attachment.originalName || ''),
@@ -357,6 +407,18 @@ function synthesizeLatestHandoff(latestApprovedWorkOrder) {
     selectedProjectLabel: latestApprovedWorkOrder.selectedProjectLabel || latestApprovedWorkOrder.selected_project_label || '',
     safetyConditions: latestApprovedWorkOrder.safetyConditions || latestApprovedWorkOrder.safety_conditions || [],
     reportItems: latestApprovedWorkOrder.reportItems || latestApprovedWorkOrder.report_items || [],
+    executionHost: latestApprovedWorkOrder.executionHost || latestApprovedWorkOrder.execution_host || '',
+    executionSource: latestApprovedWorkOrder.executionSource || latestApprovedWorkOrder.execution_source || '',
+    executionHostAllowed: latestApprovedWorkOrder.executionHostAllowed !== false,
+    interactiveHostBlocked: !!latestApprovedWorkOrder.interactiveHostBlocked,
+    noYesGateRuntime: latestApprovedWorkOrder.noYesGateRuntime !== false,
+    safeSpawnActive: latestApprovedWorkOrder.safeSpawnActive !== false,
+    manualCodeUiAllowed: latestApprovedWorkOrder.manualCodeUiAllowed === true,
+    officialRoute: latestApprovedWorkOrder.officialRoute || 'Console → Handoff → Runner',
+    promptType: latestApprovedWorkOrder.promptType || '',
+    promptOrigin: latestApprovedWorkOrder.promptOrigin || '',
+    blockedReason: latestApprovedWorkOrder.blockedReason || '',
+    userInputRequired: latestApprovedWorkOrder.userInputRequired === true,
     target: latestApprovedWorkOrder.target || {
       id: latestApprovedWorkOrder.selectedProjectId || latestApprovedWorkOrder.selected_project_id || '',
       label: latestApprovedWorkOrder.selectedProjectLabel || latestApprovedWorkOrder.selected_project_label || '',
@@ -427,6 +489,18 @@ function recordWorkOrderHandoff(input = {}, options = {}) {
     selectedProjectLabel: source.selectedProjectLabel,
     safetyConditions: source.safetyConditions,
     reportItems: source.reportItems,
+    executionHost: source.executionHost,
+    executionSource: source.executionSource,
+    executionHostAllowed: source.executionHostAllowed,
+    interactiveHostBlocked: source.interactiveHostBlocked,
+    noYesGateRuntime: source.noYesGateRuntime,
+    safeSpawnActive: source.safeSpawnActive,
+    manualCodeUiAllowed: source.manualCodeUiAllowed,
+    officialRoute: source.officialRoute,
+    promptType: source.promptType,
+    promptOrigin: source.promptOrigin,
+    blockedReason: source.blockedReason,
+    userInputRequired: source.userInputRequired,
     target: source.target,
     source: source.source,
   };

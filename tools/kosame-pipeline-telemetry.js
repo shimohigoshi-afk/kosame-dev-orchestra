@@ -54,6 +54,17 @@ function formatPipelineStageEvent(event = {}) {
   if (attachmentIds.length) parts.push(`attachmentIds=${attachmentIds.join('|')}`);
   if (event.manifestPath) parts.push(`manifestPath=${normalizeText(event.manifestPath)}`);
   if (event.route) parts.push(`route=${normalizeText(event.route)}`);
+  if (event.executionHost) parts.push(`executionHost=${normalizeText(event.executionHost)}`);
+  if (event.executionHostAllowed != null) parts.push(`executionHostAllowed=${event.executionHostAllowed ? 'true' : 'false'}`);
+  if (event.interactiveHostBlocked != null) parts.push(`interactiveHostBlocked=${event.interactiveHostBlocked ? 'true' : 'false'}`);
+  if (event.noYesGateRuntime != null) parts.push(`noYesGateRuntime=${event.noYesGateRuntime ? 'true' : 'false'}`);
+  if (event.safeSpawnActive != null) parts.push(`safeSpawnActive=${event.safeSpawnActive ? 'true' : 'false'}`);
+  if (event.manualCodeUiAllowed != null) parts.push(`manualCodeUiAllowed=${event.manualCodeUiAllowed ? 'true' : 'false'}`);
+  if (event.officialRoute) parts.push(`officialRoute=${normalizeText(event.officialRoute)}`);
+  if (event.promptType) parts.push(`promptType=${normalizeText(event.promptType)}`);
+  if (event.promptOrigin) parts.push(`promptOrigin=${normalizeText(event.promptOrigin)}`);
+  if (event.userInputRequired != null) parts.push(`userInputRequired=${event.userInputRequired ? 'true' : 'false'}`);
+  if (event.blockedReason) parts.push(`blockedReason=${normalizeText(event.blockedReason)}`);
   if (event.timestamp) parts.push(`timestamp=${normalizeText(event.timestamp)}`);
   if (event.message) parts.push(`message=${clamp(event.message, 220)}`);
   return parts.join(' / ');
@@ -72,6 +83,17 @@ function appendPipelineStageEvent(event = {}, options = {}) {
     attachmentIds: listify(event.attachmentIds, 8),
     manifestPath: normalizeText(event.manifestPath),
     route: normalizeText(event.route),
+    executionHost: normalizeText(event.executionHost),
+    executionHostAllowed: event.executionHostAllowed,
+    interactiveHostBlocked: event.interactiveHostBlocked,
+    noYesGateRuntime: event.noYesGateRuntime,
+    safeSpawnActive: event.safeSpawnActive,
+    manualCodeUiAllowed: event.manualCodeUiAllowed,
+    officialRoute: normalizeText(event.officialRoute),
+    promptType: normalizeText(event.promptType),
+    promptOrigin: normalizeText(event.promptOrigin),
+    userInputRequired: event.userInputRequired,
+    blockedReason: normalizeText(event.blockedReason),
     message: clamp(event.message, 220),
   };
   const project = normalizeText(options.project || event.project || 'KOSAME Dev Orchestra') || 'KOSAME Dev Orchestra';
@@ -123,6 +145,17 @@ function createPipelineError(input = {}) {
     attachmentIds: listify(input.attachmentIds, 8),
     manifestPath: normalizeText(input.manifestPath || input.attachmentManifestPath || ''),
     route: normalizeText(input.route || 'spec-to-tasks'),
+    executionHost: normalizeText(input.executionHost || ''),
+    executionHostAllowed: input.executionHostAllowed,
+    interactiveHostBlocked: input.interactiveHostBlocked,
+    noYesGateRuntime: input.noYesGateRuntime,
+    safeSpawnActive: input.safeSpawnActive,
+    manualCodeUiAllowed: input.manualCodeUiAllowed,
+    officialRoute: normalizeText(input.officialRoute || ''),
+    promptType: normalizeText(input.promptType || ''),
+    promptOrigin: normalizeText(input.promptOrigin || ''),
+    userInputRequired: input.userInputRequired,
+    blockedReason: normalizeText(input.blockedReason || ''),
     timestamp: normalizeText(input.timestamp) || new Date().toISOString(),
     stageHistory: Array.isArray(input.stageHistory) ? input.stageHistory : [],
     details: input.details && typeof input.details === 'object' ? input.details : {},

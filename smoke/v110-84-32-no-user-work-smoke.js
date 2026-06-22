@@ -96,7 +96,7 @@ async function main() {
   assert.ok(isVersionAtLeast(pkg.version, '110.84.32'), `version must be >= 110.84.32 (got ${pkg.version})`);
   assert.ok(pkg.scripts['smoke:v110-84-32'], 'smoke:v110-84-32 must exist');
   assert.ok(pkg.scripts.verify.includes('smoke:v110-84-32'), 'verify must include smoke:v110-84-32');
-  assert.ok(pkg.scripts['codex:watch'], 'codex:watch must exist');
+  assert.ok(pkg.scripts['runner:watch'], 'runner:watch must exist');
   assert.ok(pkg.scripts['codex:submit'], 'codex:submit must exist');
   console.log('  PASS: package wiring');
 
@@ -126,7 +126,7 @@ async function main() {
   assert.ok(!html.includes('確認してから Codex に貼ってください'), 'HTML must not have paste instruction');
   assert.ok(!html.includes('Codexへ貼り付け待ち'), 'HTML must not have paste-wait label');
   assert.ok(html.includes('dispatch待ち'), 'HTML must show dispatch status instead');
-  assert.ok(html.includes('codex:watch'), 'HTML must reference codex:watch');
+  assert.ok(html.includes('runner:watch') || html.includes('Runner watcher'), 'HTML must reference runner watcher');
   console.log('  PASS: HTML no human-wait phrases');
 
   // Chat server: reply for work orders does NOT ask for paste/YES
@@ -137,8 +137,8 @@ async function main() {
   assert.ok(r.work_order, 'work order must be returned');
   assertNoForbiddenPhrase(r.reply, 'chat reply for work order');
   assert.ok(
-    /codex:watch|自動でディスパッチ/.test(r.reply),
-    `reply must reference codex:watch dispatch (got: ${r.reply})`
+    /runner:watch|dispatch watcher|自動でディスパッチ/.test(r.reply),
+    `reply must reference runner watcher dispatch (got: ${r.reply})`
   );
   console.log('  PASS: chat reply no human-wait phrases');
 

@@ -26,7 +26,15 @@ const RESULT_LOG_PATH_ENV = 'KOSAME_WORK_ORDER_RESULT_LOG_PATH';
 const HANDOFF_TARGET_REPO = '/home/lavie/kosame-dev-orchestra';
 const MAX_TEXT_LENGTH = 260;
 const MAX_NOTE_LENGTH = 400;
-const ALLOWED_RESULT_STATUSES = new Set(['success', 'failed', 'needs_fix']);
+const ALLOWED_RESULT_STATUSES = new Set([
+  'success',
+  'failed',
+  'needs_fix',
+  'safety_stop',
+  'blocked',
+  'blocked_interactive_host',
+  'blocked_by_interactive_prompt',
+]);
 function normalizeText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -151,8 +159,17 @@ function buildSafeResultText(input = {}) {
   const executor = truncate(input.executor || input.assigned_agent || input.agent || '', 60);
   const resultPost = truncate(input.result_post || input.resultPOST || input.result_post_status || '', 120);
   const executionPath = truncate(input.execution_path || input.executionPath || '', 180);
+  const executionHost = truncate(input.execution_host || input.executionHost || '', 60);
+  const executionHostAllowed = input.execution_host_allowed ?? input.executionHostAllowed;
+  const interactiveHostBlocked = input.interactive_host_blocked ?? input.interactiveHostBlocked;
+  const noYesGateRuntime = input.no_yes_gate_runtime ?? input.noYesGateRuntime;
+  const safeSpawnActive = input.safe_spawn_active ?? input.safeSpawnActive;
+  const manualCodeUiAllowed = input.manual_code_ui_allowed ?? input.manualCodeUiAllowed;
+  const officialRoute = truncate(input.official_route || input.officialRoute || '', 80);
   const route = truncate(input.route || input.execution_route || 'zero-confirm', 40);
   const promptType = truncate(input.prompt_type || input.promptType || '', 40);
+  const promptOrigin = truncate(input.prompt_origin || input.promptOrigin || '', 60);
+  const blockedReason = truncate(input.blocked_reason || input.blockedReason || '', 120);
   const autoApprovedCount = Number.isFinite(Number(input.auto_approved_count ?? input.autoApprovedCount)) ? Number(input.auto_approved_count ?? input.autoApprovedCount) : 0;
   const autoBlockedCount = Number.isFinite(Number(input.auto_blocked_count ?? input.autoBlockedCount)) ? Number(input.auto_blocked_count ?? input.autoBlockedCount) : 0;
   const retryCount = Number.isFinite(Number(input.retry_count ?? input.retryCount)) ? Number(input.retry_count ?? input.retryCount) : 0;
@@ -168,8 +185,11 @@ function buildSafeResultText(input = {}) {
     executor,
     resultPost,
     executionPath,
+    executionHost,
     route,
     promptType,
+    promptOrigin,
+    blockedReason,
   ].join('\n');
   if (hasSecretLikeText(rawCheck)) {
     throw new Error('secret っぽい内容は保存できません。');
@@ -183,12 +203,14 @@ function buildSafeResultText(input = {}) {
   });
   return {
     result_status: status,
-    work_order_status: status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : 'completed',
+    work_order_status: status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : (status === 'safety_stop' || status.startsWith('blocked')) ? 'blocked' : 'completed',
     handoff_status: status === 'failed'
       ? 'needs_attention'
       : status === 'needs_fix'
         ? 'revision_needed'
-        : 'review_ready',
+        : (status === 'safety_stop' || status.startsWith('blocked'))
+          ? 'blocked'
+          : 'review_ready',
     activity_status: decision.activity_status,
     nextRecommendedAction: decision.nextRecommendedAction,
     decision_status: decision.decision_status,
@@ -225,6 +247,20 @@ function buildSafeResultText(input = {}) {
     result_post_retry_count: resultPostRetryCount,
     result_post: resultPost || 'POST /api/work-orders/result 200',
     execution_path: executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision',
+    execution_host: executionHost,
+    executionHost,
+    execution_host_allowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    executionHostAllowed: executionHostAllowed !== undefined ? !!executionHostAllowed : true,
+    interactive_host_blocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    interactiveHostBlocked: interactiveHostBlocked !== undefined ? !!interactiveHostBlocked : false,
+    no_yes_gate_runtime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    noYesGateRuntime: noYesGateRuntime !== undefined ? !!noYesGateRuntime : true,
+    safe_spawn_active: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    safeSpawnActive: safeSpawnActive !== undefined ? !!safeSpawnActive : true,
+    manual_code_ui_allowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
+    manualCodeUiAllowed: manualCodeUiAllowed !== undefined ? !!manualCodeUiAllowed : false,
+    official_route: officialRoute || 'Console → Handoff → Runner',
+    officialRoute: officialRoute || 'Console → Handoff → Runner',
     orchestra_evidence: orchestraEvidence,
     router_decision: truncate(input.router_decision || input.routerDecision || orchestraEvidence.router_decision, 200),
     routerDecision: truncate(input.routerDecision || input.router_decision || orchestraEvidence.router_decision, 200),
@@ -259,6 +295,17 @@ function normalizeWorkOrderResultRecord(record) {
       recommended_agent: truncate(record.recommended_agent || record.agent || assignedAgent, 60),
       risk_level: truncate(record.risk_level || 'low', 24),
       human_gate_required: record.human_gate_required !== false,
+      execution_host: truncate(record.execution_host || record.executionHost || '', 60),
+      execution_host_allowed: record.execution_host_allowed ?? record.executionHostAllowed,
+      interactive_host_blocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
+      no_yes_gate_runtime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
+      safe_spawn_active: record.safe_spawn_active ?? record.safeSpawnActive,
+      manual_code_ui_allowed: record.manual_code_ui_allowed ?? record.manualCodeUiAllowed,
+      official_route: truncate(record.official_route || record.officialRoute || '', 80),
+      prompt_type: truncate(record.prompt_type || record.promptType || '', 40),
+      prompt_origin: truncate(record.prompt_origin || record.promptOrigin || '', 60),
+      blocked_reason: truncate(record.blocked_reason || record.blockedReason || '', 120),
+      user_input_required: record.user_input_required ?? record.userInputRequired,
     },
     latestHandoffWorkOrder: {
       title,
@@ -288,8 +335,8 @@ function normalizeWorkOrderResultRecord(record) {
     risk_level: truncate(record.risk_level || 'low', 24),
     human_gate_required: record.human_gate_required !== false,
     result_status: status,
-    work_order_status: normalizeText(record.work_order_status || (status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : 'completed')),
-    handoff_status: normalizeText(record.handoff_status || (status === 'failed' ? 'needs_attention' : status === 'needs_fix' ? 'revision_needed' : 'review_ready')),
+    work_order_status: normalizeText(record.work_order_status || (status === 'failed' ? 'failed' : status === 'needs_fix' ? 'needs_fix' : (status === 'safety_stop' || status.startsWith('blocked')) ? 'blocked' : 'completed')),
+    handoff_status: normalizeText(record.handoff_status || (status === 'failed' ? 'needs_attention' : status === 'needs_fix' ? 'revision_needed' : (status === 'safety_stop' || status.startsWith('blocked')) ? 'blocked' : 'review_ready')),
     activity_status: normalizeText(record.activity_status || decision.activity_status),
     nextRecommendedAction: normalizeText(record.nextRecommendedAction || decision.nextRecommendedAction),
     result_summary: truncate(record.result_summary || record.summary || '', MAX_NOTE_LENGTH),
@@ -315,6 +362,20 @@ function normalizeWorkOrderResultRecord(record) {
     route: truncate(record.route || record.execution_route || 'zero-confirm', 40),
     result_post: truncate(record.result_post || record.resultPOST || 'POST /api/work-orders/result 200', 120),
     execution_path: truncate(record.execution_path || record.executionPath || 'Console → 作業票採用 → watcher → claude-zero-confirm → verify / smoke → commit → tag → push → resultPOST → Result Decision', 180),
+    execution_host: truncate(record.execution_host || record.executionHost || '', 60),
+    executionHost: truncate(record.execution_host || record.executionHost || '', 60),
+    execution_host_allowed: record.execution_host_allowed ?? record.executionHostAllowed,
+    executionHostAllowed: record.execution_host_allowed ?? record.executionHostAllowed,
+    interactive_host_blocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
+    interactiveHostBlocked: record.interactive_host_blocked ?? record.interactiveHostBlocked,
+    no_yes_gate_runtime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
+    noYesGateRuntime: record.no_yes_gate_runtime ?? record.noYesGateRuntime,
+    safe_spawn_active: record.safe_spawn_active ?? record.safeSpawnActive,
+    safeSpawnActive: record.safe_spawn_active ?? record.safeSpawnActive,
+    manual_code_ui_allowed: record.manual_code_ui_allowed ?? record.manualCodeUiAllowed,
+    manualCodeUiAllowed: record.manual_code_ui_allowed ?? record.manualCodeUiAllowed,
+    official_route: truncate(record.official_route || record.officialRoute || '', 80),
+    officialRoute: truncate(record.official_route || record.officialRoute || '', 80),
     orchestra_evidence: orchestraEvidence,
     router_decision: truncate(record.router_decision || record.routerDecision || orchestraEvidence.router_decision, 200),
     routerDecision: truncate(record.routerDecision || record.router_decision || orchestraEvidence.router_decision, 200),
@@ -387,6 +448,20 @@ function mergeWorkOrderResultIntoHandoff(handoff, result) {
     prompt_type: latestResult.prompt_type,
     result_post: latestResult.result_post,
     execution_path: latestResult.execution_path,
+    execution_host: latestResult.execution_host,
+    executionHost: latestResult.executionHost || latestResult.execution_host,
+    execution_host_allowed: latestResult.execution_host_allowed,
+    executionHostAllowed: latestResult.executionHostAllowed,
+    interactive_host_blocked: latestResult.interactive_host_blocked,
+    interactiveHostBlocked: latestResult.interactiveHostBlocked,
+    no_yes_gate_runtime: latestResult.no_yes_gate_runtime,
+    noYesGateRuntime: latestResult.noYesGateRuntime,
+    safe_spawn_active: latestResult.safe_spawn_active,
+    safeSpawnActive: latestResult.safeSpawnActive,
+    manual_code_ui_allowed: latestResult.manual_code_ui_allowed,
+    manualCodeUiAllowed: latestResult.manualCodeUiAllowed,
+    official_route: latestResult.official_route,
+    officialRoute: latestResult.officialRoute,
     orchestra_evidence: latestResult.orchestra_evidence,
     router_decision: latestResult.router_decision,
     routerDecision: latestResult.routerDecision || latestResult.router_decision,

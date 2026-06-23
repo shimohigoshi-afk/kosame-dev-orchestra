@@ -176,6 +176,13 @@ canvas{display:block;width:100%;border-radius:4px}
 .items-end{align-items:flex-end}
 .text-sm{font-size:12px}
 .text-muted{color:var(--text-muted)}
+/* Inner sub-tabs (mortgage & asset panels) */
+.inner-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.inner-tab{padding:5px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:11px;color:var(--text-muted);transition:.15s}
+.inner-tab:hover{color:var(--text)}
+.inner-tab.active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);font-weight:600}
+.inner-panel{display:none}
+.inner-panel.active{display:block}
 </style>
 </head>
 <body>
@@ -197,7 +204,7 @@ canvas{display:block;width:100%;border-radius:4px}
     </div>
     <div class="nav-item" data-section="simulation" onclick="navigate('simulation',this)">
       <span class="nav-icon">📊</span>シミュレーション
-      <span class="nav-badge">5</span>
+      <span class="nav-badge">7</span>
     </div>
     <div class="nav-label" style="margin-top:8px">管理</div>
     <div class="nav-item" data-section="summary" onclick="navigate('summary',this)">
@@ -213,7 +220,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <span class="nav-icon">⚙</span>設定
     </div>
   </div>
-  <div class="sidebar-footer">FK Console v1.0.0 &nbsp;|&nbsp; 大宮支店</div>
+  <div class="sidebar-footer">FK Console v113.3.37 &nbsp;|&nbsp; 大宮支店</div>
 </nav>
 
 <!-- Main -->
@@ -339,6 +346,12 @@ canvas{display:block;width:100%;border-radius:4px}
 
       <!-- MORTGAGE -->
       <div class="sim-panel active" id="spanel-mortgage">
+        <div class="inner-tabs">
+          <div class="inner-tab active" id="itab-mortgage-basic" onclick="switchMortgageInner('basic')">📋 基本計算</div>
+          <div class="inner-tab" id="itab-mortgage-balance" onclick="switchMortgageInner('balance')">📉 残債確認</div>
+          <div class="inner-tab" id="itab-mortgage-steprate" onclick="switchMortgageInner('steprate')">📈 段階金利</div>
+        </div>
+        <div class="inner-panel active" id="ipanel-mortgage-basic">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
             <div class="card">
@@ -403,6 +416,109 @@ canvas{display:block;width:100%;border-radius:4px}
               <div class="result-row"><span class="result-label">変動：総利息</span><span class="result-value blue" id="mc-var-interest">—</span></div>
               <div class="result-row"><span class="result-label">固定：月返済</span><span class="result-value" style="color:var(--gold)" id="mc-fix-monthly">—</span></div>
               <div class="result-row"><span class="result-label">固定：総利息</span><span class="result-value" style="color:var(--gold)" id="mc-fix-interest">—</span></div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /ipanel-mortgage-basic -->
+
+        <!-- RESIDUAL BALANCE PANEL -->
+        <div class="inner-panel" id="ipanel-mortgage-balance">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">📉 残債確認 — 年齢別残高シミュレーション</div>
+              <div class="form-grid" style="margin-bottom:12px">
+                <div class="form-group">
+                  <label>現在年齢（歳）</label>
+                  <input type="number" id="mb-age" value="35" min="20" max="65" oninput="calcMortgageBalance()">
+                </div>
+                <div class="form-group">
+                  <label>借入額（万円）</label>
+                  <input type="number" id="mb-principal" value="3000" min="100" oninput="calcMortgageBalance()">
+                </div>
+                <div class="form-group">
+                  <label>年利率（%）</label>
+                  <input type="number" id="mb-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgageBalance()">
+                </div>
+                <div class="form-group">
+                  <label>借入期間（年）</label>
+                  <input type="number" id="mb-years" value="35" min="1" max="50" oninput="calcMortgageBalance()">
+                </div>
+              </div>
+              <div class="result-box" id="mb-result">
+                <div class="result-row"><span class="result-label">月返済額</span><span class="result-value" id="mb-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">60歳時 残債残高</span><span class="result-value big" id="mb-bal60">—</span></div>
+                <div class="result-row"><span class="result-label">65歳時 残債残高</span><span class="result-value" id="mb-bal65">—</span></div>
+                <div class="result-row"><span class="result-label">完済年齢</span><span class="result-value blue" id="mb-end-age">—</span></div>
+              </div>
+              <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7">
+                ※60・65歳時点の残債は、定年退職・年金受給開始時の住宅ローン負担確認に活用できます
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">📊 残債推移グラフ</div>
+              <canvas id="balance-chart" height="260"></canvas>
+              <div class="chart-legend" style="margin-top:8px">
+                <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>残債残高</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>60・65歳マーカー</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP RATE PANEL -->
+        <div class="inner-panel" id="ipanel-mortgage-steprate">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">📈 段階金利シミュレーション（5年ルール・1.25倍ルール）</div>
+              <div class="form-grid" style="margin-bottom:14px">
+                <div class="form-group">
+                  <label>借入額（万円）</label>
+                  <input type="number" id="sr-principal" value="3000" min="100" oninput="calcStepRate()">
+                </div>
+                <div class="form-group">
+                  <label>借入期間（年）</label>
+                  <input type="number" id="sr-years" value="35" min="1" max="50" oninput="calcStepRate()">
+                </div>
+                <div class="form-group">
+                  <label>当初金利（%）</label>
+                  <input type="number" id="sr-init-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcStepRate()">
+                </div>
+                <div class="form-group">
+                  <label>上昇後金利（%）</label>
+                  <input type="number" id="sr-rise-rate" value="2.0" min="0.01" max="10" step="0.01" oninput="calcStepRate()">
+                </div>
+                <div class="form-group">
+                  <label>金利上昇タイミング（年後）</label>
+                  <input type="number" id="sr-rise-after" value="5" min="1" max="30" oninput="calcStepRate()">
+                </div>
+              </div>
+              <div class="result-box" id="sr-result" style="display:none">
+                <div class="result-row"><span class="result-label">当初月返済額</span><span class="result-value" id="sr-init-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">上昇後 本来必要な月返済</span><span class="result-value blue" id="sr-required-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">1.25倍上限後の月返済</span><span class="result-value" id="sr-capped-monthly">—</span></div>
+                <div class="result-row" style="border-top:1px solid var(--border)"><span class="result-label">最終バルーン残債</span><span class="result-value big" id="sr-balloon">—</span></div>
+                <div class="result-row"><span class="result-label">総返済額（返済分）</span><span class="result-value" id="sr-total-paid">—</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">💡 ルール解説</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.9">
+                <div style="margin-bottom:12px;padding:12px;background:var(--bg-deep);border-radius:6px;border-left:3px solid var(--blue)">
+                  <strong style="color:var(--blue);display:block;margin-bottom:4px">5年ルール</strong>
+                  変動金利が変わっても月返済額は5年間据え置き。金利上昇時は利息優先となり元本返済が減少する。
+                </div>
+                <div style="margin-bottom:12px;padding:12px;background:var(--bg-deep);border-radius:6px;border-left:3px solid var(--gold)">
+                  <strong style="color:var(--gold);display:block;margin-bottom:4px">1.25倍ルール</strong>
+                  5年ごとの見直し後も新月返済額は前回の125%を超えない。超過利息は繰り越しとなる。
+                </div>
+                <div style="padding:12px;background:var(--bg-deep);border-radius:6px;border-left:3px solid var(--danger)">
+                  <strong style="color:var(--danger);display:block;margin-bottom:4px">バルーン残債（注意）</strong>
+                  上記ルールにより未払い利息が積み上がり、期間満了時に残債が発生することがある。この一括請求額がバルーン残債。
+                </div>
+                <div style="margin-top:12px;font-size:11px;color:var(--text-dim)">
+                  ※金融機関により適用ルールは異なります。実際の借入条件をご確認ください。
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -626,6 +742,12 @@ canvas{display:block;width:100%;border-radius:4px}
 
       <!-- ASSET MANAGEMENT -->
       <div class="sim-panel" id="spanel-asset">
+        <div class="inner-tabs">
+          <div class="inner-tab active" id="itab-asset-accum" onclick="switchAssetInner('accum')">📈 積立型</div>
+          <div class="inner-tab" id="itab-asset-goal" onclick="switchAssetInner('goal')">🎯 逆算型</div>
+          <div class="inner-tab" id="itab-asset-lumpsum" onclick="switchAssetInner('lumpsum')">💰 一時払い型</div>
+        </div>
+        <div class="inner-panel active" id="ipanel-asset-accum">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div class="card">
             <div class="card-title">📈 積立シミュレーション設定</div>
@@ -665,6 +787,93 @@ canvas{display:block;width:100%;border-radius:4px}
             <div class="chart-legend" style="margin-top:10px">
               <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>積立元本</div>
               <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>運用益（複利）</div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /ipanel-asset-accum -->
+
+        <!-- GOAL（逆算型）PANEL -->
+        <div class="inner-panel" id="ipanel-asset-goal">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">🎯 逆算型 — 目標金額から必要積立額を計算</div>
+              <div class="form-grid" style="margin-bottom:14px">
+                <div class="form-group">
+                  <label>目標金額（万円）</label>
+                  <input type="number" id="ag-target" value="3000" min="1" oninput="calcAssetGoal()">
+                </div>
+                <div class="form-group">
+                  <label>運用期間（年）</label>
+                  <input type="number" id="ag-years" value="30" min="1" max="50" oninput="calcAssetGoal()">
+                </div>
+                <div class="form-group">
+                  <label>想定年利回り（%）</label>
+                  <input type="number" id="ag-rate" value="5" min="0" max="20" step="0.1" oninput="calcAssetGoal()">
+                </div>
+                <div class="form-group">
+                  <label>初期投資額（万円）</label>
+                  <input type="number" id="ag-initial" value="0" min="0" oninput="calcAssetGoal()">
+                </div>
+              </div>
+              <div class="result-box">
+                <div class="result-row"><span class="result-label">必要月額積立</span><span class="result-value big" id="ag-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">積立元本合計</span><span class="result-value" id="ag-total-invest">—</span></div>
+                <div class="result-row"><span class="result-label">運用益（複利）</span><span class="result-value blue" id="ag-gain">—</span></div>
+                <div class="result-row"><span class="result-label">運用効果（倍率）</span><span class="result-value green" id="ag-multiplier">—</span></div>
+              </div>
+              <div style="margin-top:14px;font-size:11px;color:var(--text-dim);line-height:1.7">
+                ※「いくら必要か」から逆算して月々の積立額を求めます。<br>
+                ※NISA・iDeCo等の積立計画立案にご活用ください。
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">📊 目標到達ロードマップ</div>
+              <canvas id="goal-chart" height="260"></canvas>
+              <div class="chart-legend" style="margin-top:8px">
+                <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>積立元本</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>運用後資産</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LUMPSUM（一時払い型）PANEL -->
+        <div class="inner-panel" id="ipanel-asset-lumpsum">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">💰 一時払い型 — まとまった資金の運用シミュレーション</div>
+              <div class="form-grid" style="margin-bottom:14px">
+                <div class="form-group">
+                  <label>一時投資額（万円）</label>
+                  <input type="number" id="al-initial" value="500" min="1" oninput="calcAssetLumpsum()">
+                </div>
+                <div class="form-group">
+                  <label>運用期間（年）</label>
+                  <input type="number" id="al-years" value="20" min="1" max="50" oninput="calcAssetLumpsum()">
+                </div>
+                <div class="form-group">
+                  <label>想定年利回り（%）</label>
+                  <input type="number" id="al-rate" value="5" min="0" max="20" step="0.1" oninput="calcAssetLumpsum()">
+                </div>
+              </div>
+              <div class="result-box">
+                <div class="result-row"><span class="result-label">投資元本</span><span class="result-value" id="al-principal">—</span></div>
+                <div class="result-row"><span class="result-label">運用後の将来価値</span><span class="result-value big" id="al-fv">—</span></div>
+                <div class="result-row"><span class="result-label">運用益</span><span class="result-value blue" id="al-gain">—</span></div>
+                <div class="result-row"><span class="result-label">倍率</span><span class="result-value green" id="al-multiplier">—</span></div>
+              </div>
+              <div style="margin-top:14px">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">年別将来価値（マイルストーン）</div>
+                <div id="al-milestones" style="font-size:12px;color:var(--text-muted);line-height:1.8"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">📊 資産成長グラフ（一時払い）</div>
+              <canvas id="lumpsum-chart" height="260"></canvas>
+              <div class="chart-legend" style="margin-top:8px">
+                <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>投資元本</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>運用後価値</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1246,6 +1455,337 @@ function toggleResult(el) {
   el.classList.toggle('expanded');
 }
 
+/* ── Mortgage Inner Tabs ── */
+function switchMortgageInner(tab) {
+  document.querySelectorAll('#spanel-mortgage .inner-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#spanel-mortgage .inner-panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.getElementById('itab-mortgage-' + tab);
+  const panEl = document.getElementById('ipanel-mortgage-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (panEl) panEl.classList.add('active');
+  if (tab === 'basic') { calcMortgage(); setTimeout(drawMortgageChart, 50); }
+  if (tab === 'balance') setTimeout(calcMortgageBalance, 50);
+  if (tab === 'steprate') setTimeout(calcStepRate, 50);
+}
+
+/* ── Mortgage Balance ── */
+function calcMortgageBalance() {
+  const age = parseInt(document.getElementById('mb-age').value) || 35;
+  const P = parseFloat(document.getElementById('mb-principal').value) || 3000;
+  const r = parseFloat(document.getElementById('mb-rate').value) || 0.5;
+  const years = parseInt(document.getElementById('mb-years').value) || 35;
+  if (P <= 0 || years <= 0) return;
+
+  const rM = r / 100 / 12;
+  const n = years * 12;
+  const monthly = mortgageMonthly(P, r, years);
+  const endAge = age + years;
+
+  function balanceAtMonth(months) {
+    let bal = P;
+    for (let i = 0; i < Math.min(months, n); i++) {
+      bal -= (monthly - bal * rM);
+      if (bal < 0) return 0;
+    }
+    return Math.max(0, bal);
+  }
+
+  const bal60 = age < 60 ? balanceAtMonth((60 - age) * 12) : null;
+  const bal65 = age < 65 ? balanceAtMonth((65 - age) * 12) : null;
+
+  document.getElementById('mb-monthly').textContent = Math.round(monthly).toLocaleString() + '円/月';
+  document.getElementById('mb-bal60').textContent = bal60 === null ? '（60歳超）' : fmtYen(bal60);
+  document.getElementById('mb-bal65').textContent = bal65 === null ? '（65歳超）' : fmtYen(bal65);
+  document.getElementById('mb-end-age').textContent = endAge + '歳 完済';
+
+  drawBalanceChart(P, r, years, age, monthly, rM);
+}
+
+function drawBalanceChart(P, r, years, age, monthly, rM) {
+  const canvas = document.getElementById('balance-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 260;
+  const W = canvas.width, H = canvas.height;
+  const n = years * 12;
+  const pad = { l: 55, r: 20, t: 20, b: 30 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+    const v = P * (1 - i / 4);
+    ctx.fillText(v >= 10000 ? (v / 10000).toFixed(1) + '億' : Math.round(v) + '万', 2, y + 4);
+  }
+
+  const steps = Math.min(n, 420);
+  const pts = [];
+  let bal = P;
+  for (let m = 0; m <= steps; m++) {
+    pts.push({ x: pad.l + cW * m / steps, y: pad.t + cH * (1 - Math.max(0, bal) / P) });
+    if (m < steps) { bal -= (monthly - bal * rM); if (bal < 0) bal = 0; }
+  }
+
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pad.l + cW, pad.t + cH); ctx.lineTo(pad.l, pad.t + cH); ctx.closePath();
+  const g = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+  g.addColorStop(0, 'rgba(79,195,247,0.3)'); g.addColorStop(1, 'rgba(79,195,247,0.05)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle = '#4fc3f7'; ctx.lineWidth = 2;
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+
+  function ageMarker(targetAge, color, label) {
+    if (targetAge <= age || targetAge > age + years) return;
+    const x = pad.l + cW * ((targetAge - age) * 12) / steps;
+    ctx.setLineDash([4, 3]); ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + cH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color; ctx.font = 'bold 10px Arial';
+    ctx.fillText(label, x + 3, pad.t + 14);
+  }
+  ageMarker(60, '#c9a84c', '60歳');
+  ageMarker(65, '#e08040', '65歳');
+
+  ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+  for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);
+}
+
+/* ── Step Rate ── */
+function calcStepRate() {
+  const P = parseFloat(document.getElementById('sr-principal').value) || 3000;
+  const initRate = parseFloat(document.getElementById('sr-init-rate').value) || 0.5;
+  const riseRate = parseFloat(document.getElementById('sr-rise-rate').value) || 2.0;
+  const years = parseInt(document.getElementById('sr-years').value) || 35;
+  const riseAfter = parseInt(document.getElementById('sr-rise-after').value) || 5;
+  if (P <= 0 || years <= 0) return;
+
+  const n = years * 12;
+  const riseMonth = riseAfter * 12;
+  const initMonthly = mortgageMonthly(P, initRate, years);
+
+  let balance = P, currentMonthly = initMonthly, totalPaid = 0;
+
+  for (let m = 0; m < n; m++) {
+    const rM = (m < riseMonth ? initRate : riseRate) / 100 / 12;
+    const interest = balance * rM;
+    balance -= Math.max(0, currentMonthly - interest);
+    if (balance < 0) balance = 0;
+    totalPaid += currentMonthly;
+    if ((m + 1) % 60 === 0 && m + 1 < n) {
+      const remYears = (n - m - 1) / 12;
+      const nextRate = (m + 1) < riseMonth ? initRate : riseRate;
+      const required = mortgageMonthly(balance, nextRate, remYears);
+      currentMonthly = Math.min(required, currentMonthly * 1.25);
+    }
+  }
+
+  // Required amount right after rate rise (for display)
+  let balAtRise = P;
+  for (let m = 0; m < Math.min(riseMonth, n); m++) {
+    const rM = initRate / 100 / 12;
+    balAtRise -= Math.max(0, initMonthly - balAtRise * rM);
+    if (balAtRise < 0) { balAtRise = 0; break; }
+  }
+  const requiredAfterRise = mortgageMonthly(balAtRise, riseRate, Math.max(1, years - riseAfter));
+  const cappedAfterRise = Math.min(requiredAfterRise, initMonthly * 1.25);
+  const balloon = Math.max(0, balance);
+
+  document.getElementById('sr-result').style.display = 'block';
+  document.getElementById('sr-init-monthly').textContent = Math.round(initMonthly).toLocaleString() + '円/月';
+  document.getElementById('sr-required-monthly').textContent = Math.round(requiredAfterRise).toLocaleString() + '円/月';
+  document.getElementById('sr-capped-monthly').textContent = Math.round(cappedAfterRise).toLocaleString() + '円/月';
+  const balloonEl = document.getElementById('sr-balloon');
+  if (balloon > 1) {
+    balloonEl.textContent = fmtYen(balloon) + '（一括請求）';
+    balloonEl.style.color = 'var(--danger)';
+  } else {
+    balloonEl.textContent = '残債なし ✓';
+    balloonEl.style.color = 'var(--success)';
+  }
+  document.getElementById('sr-total-paid').textContent = fmtYen(totalPaid);
+}
+
+/* ── Asset Inner Tabs ── */
+function switchAssetInner(tab) {
+  document.querySelectorAll('#spanel-asset .inner-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#spanel-asset .inner-panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.getElementById('itab-asset-' + tab);
+  const panEl = document.getElementById('ipanel-asset-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (panEl) panEl.classList.add('active');
+  if (tab === 'accum') { calcAsset(); setTimeout(drawAssetChart, 50); }
+  if (tab === 'goal') setTimeout(calcAssetGoal, 50);
+  if (tab === 'lumpsum') setTimeout(calcAssetLumpsum, 50);
+}
+
+/* ── Asset Goal（逆算型）── */
+function calcAssetGoal() {
+  const target = parseFloat(document.getElementById('ag-target').value) || 3000;
+  const years = parseInt(document.getElementById('ag-years').value) || 30;
+  const rate = parseFloat(document.getElementById('ag-rate').value) || 5;
+  const initial = parseFloat(document.getElementById('ag-initial').value) || 0;
+
+  const r = rate / 100 / 12;
+  const n = years * 12;
+  let monthly;
+  if (r === 0) {
+    monthly = Math.max(0, (target - initial) / n);
+  } else {
+    const fvFactor = (Math.pow(1 + r, n) - 1) / r * (1 + r);
+    const initialFV = initial * Math.pow(1 + r, n);
+    monthly = Math.max(0, (target - initialFV) / fvFactor);
+  }
+
+  const totalInvest = monthly * n + initial;
+  const gain = Math.max(0, target - totalInvest);
+  const multiplier = totalInvest > 0 ? target / totalInvest : 1;
+
+  document.getElementById('ag-monthly').textContent = monthly > 0.001 ? (Math.round(monthly * 100) / 100).toFixed(2) + '万円/月' : '初期投資のみで達成';
+  document.getElementById('ag-total-invest').textContent = fmtYen(totalInvest);
+  document.getElementById('ag-gain').textContent = fmtYen(gain);
+  document.getElementById('ag-multiplier').textContent = multiplier.toFixed(2) + '倍';
+
+  drawGoalChart(monthly, years, rate, initial, target);
+}
+
+function drawGoalChart(monthly, years, rate, initial, target) {
+  const canvas = document.getElementById('goal-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 260;
+  const W = canvas.width, H = canvas.height;
+  const r = rate / 100 / 12;
+  const pad = { l: 55, r: 20, t: 20, b: 30 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+  const steps = Math.min(years, 50);
+  const principalPts = [], totalPts = [];
+
+  for (let s = 0; s <= steps; s++) {
+    const yr = years * s / steps;
+    const nm = Math.round(yr * 12);
+    const p = monthly * nm + initial;
+    let fv = r === 0 ? p : monthly * (Math.pow(1 + r, nm) - 1) / r * (1 + r) + initial * Math.pow(1 + r, nm);
+    const x = pad.l + cW * s / steps;
+    principalPts.push({ x, y: pad.t + cH * (1 - Math.min(1, p / target)) });
+    totalPts.push({ x, y: pad.t + cH * (1 - Math.min(1, fv / target)) });
+  }
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+    const v = target * (1 - i / 4);
+    ctx.fillText(v >= 10000 ? (v / 10000).toFixed(1) + '億' : Math.round(v) + '万', 2, y + 4);
+  }
+
+  ctx.setLineDash([5, 3]); ctx.strokeStyle = 'rgba(201,168,76,0.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l + cW, pad.t); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#c9a84c'; ctx.font = '10px Arial'; ctx.fillText('目標', pad.l + 4, pad.t + 11);
+
+  ctx.beginPath();
+  totalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  for (let i = principalPts.length - 1; i >= 0; i--) ctx.lineTo(principalPts[i].x, principalPts[i].y);
+  ctx.closePath();
+  const g1 = ctx.createLinearGradient(pad.l, pad.t, pad.l, pad.t + cH);
+  g1.addColorStop(0, 'rgba(201,168,76,0.35)'); g1.addColorStop(1, 'rgba(201,168,76,0.05)');
+  ctx.fillStyle = g1; ctx.fill();
+
+  ctx.beginPath();
+  principalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pad.l + cW, pad.t + cH); ctx.lineTo(pad.l, pad.t + cH); ctx.closePath();
+  const g2 = ctx.createLinearGradient(pad.l, pad.t, pad.l, pad.t + cH);
+  g2.addColorStop(0, 'rgba(79,195,247,0.3)'); g2.addColorStop(1, 'rgba(79,195,247,0.05)');
+  ctx.fillStyle = g2; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle = '#4fc3f7'; ctx.lineWidth = 2;
+  principalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+  ctx.beginPath(); ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2;
+  totalPts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+
+  ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+  for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);
+}
+
+/* ── Asset Lumpsum（一時払い型）── */
+function calcAssetLumpsum() {
+  const initial = parseFloat(document.getElementById('al-initial').value) || 500;
+  const years = parseInt(document.getElementById('al-years').value) || 20;
+  const rate = parseFloat(document.getElementById('al-rate').value) || 5;
+
+  const fv = initial * Math.pow(1 + rate / 100, years);
+  const gain = fv - initial;
+  const multiplier = initial > 0 ? fv / initial : 1;
+
+  document.getElementById('al-principal').textContent = fmtYen(initial);
+  document.getElementById('al-fv').textContent = fmtYen(fv);
+  document.getElementById('al-gain').textContent = fmtYen(gain);
+  document.getElementById('al-multiplier').textContent = multiplier.toFixed(2) + '倍';
+
+  const milestones = [5, 10, 15, 20, 30].filter(y => y <= years);
+  document.getElementById('al-milestones').innerHTML = milestones
+    .map(y => `${y}年後: ${fmtYen(initial * Math.pow(1 + rate / 100, y))}`)
+    .join('<br>');
+
+  drawLumpsumChart(initial, years, rate, fv);
+}
+
+function drawLumpsumChart(initial, years, rate, maxFV) {
+  const canvas = document.getElementById('lumpsum-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 260;
+  const W = canvas.width, H = canvas.height;
+  const pad = { l: 55, r: 20, t: 20, b: 30 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+  if (maxFV <= 0) return;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + cH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+    const v = maxFV * (1 - i / 4);
+    ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+    ctx.fillText(v >= 10000 ? (v / 10000).toFixed(1) + '億' : Math.round(v / 100) * 100 + '万', 2, y + 4);
+  }
+
+  const steps = Math.min(years * 4, 200);
+  const pts = [];
+  for (let s = 0; s <= steps; s++) {
+    const yr = years * s / steps;
+    pts.push({ x: pad.l + cW * s / steps, y: pad.t + cH * (1 - initial * Math.pow(1 + rate / 100, yr) / maxFV) });
+  }
+
+  const principalY = pad.t + cH * (1 - initial / maxFV);
+  ctx.setLineDash([4, 3]); ctx.strokeStyle = 'rgba(79,195,247,0.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, principalY); ctx.lineTo(pad.l + cW, principalY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#4fc3f7'; ctx.font = '10px Arial'; ctx.fillText('元本', pad.l + 4, principalY - 4);
+
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pad.l + cW, principalY); ctx.lineTo(pad.l, principalY); ctx.closePath();
+  const g = ctx.createLinearGradient(pad.l, pad.t, pad.l, pad.t + cH);
+  g.addColorStop(0, 'rgba(201,168,76,0.4)'); g.addColorStop(1, 'rgba(201,168,76,0.05)');
+  ctx.fillStyle = g; ctx.fill();
+
+  ctx.beginPath(); ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2;
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+
+  ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
+  for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);
+}
+
 /* ── Init ── */
 calcMortgage();
 calcGiftTax();
@@ -1259,10 +1799,19 @@ setTimeout(() => {
 }, 100);
 
 window.addEventListener('resize', () => {
-  const active = document.querySelector('.sim-panel.active');
-  if (!active) return;
-  if (active.id === 'spanel-mortgage') drawMortgageChart();
-  if (active.id === 'spanel-asset') drawAssetChart();
+  const activeSim = document.querySelector('.sim-panel.active');
+  if (!activeSim) return;
+  const activeInner = activeSim.querySelector('.inner-panel.active');
+  const innerId = activeInner ? activeInner.id : null;
+  if (activeSim.id === 'spanel-mortgage') {
+    if (!innerId || innerId === 'ipanel-mortgage-basic') drawMortgageChart();
+    else if (innerId === 'ipanel-mortgage-balance') calcMortgageBalance();
+  }
+  if (activeSim.id === 'spanel-asset') {
+    if (!innerId || innerId === 'ipanel-asset-accum') drawAssetChart();
+    else if (innerId === 'ipanel-asset-goal') calcAssetGoal();
+    else if (innerId === 'ipanel-asset-lumpsum') calcAssetLumpsum();
+  }
 });
 </script>
 </body>

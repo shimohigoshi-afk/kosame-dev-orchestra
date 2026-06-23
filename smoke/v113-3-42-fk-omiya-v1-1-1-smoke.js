@@ -58,9 +58,9 @@ async function main() {
   assert.ok(importSrc.includes('data/underwriting'), 'must save to data/underwriting/');
   console.log('  PASS ③ import-underwriting-pdf.js 実装（pdf-parse, CLI対応, JSON出力）');
 
-  // v1.1.1 footer
-  assert.ok(src.includes('v1.1.1'), 'sidebar footer must show v1.1.1');
-  console.log('  PASS console version v1.1.1');
+  // v1.1.x footer (patched in subsequent versions)
+  assert.ok(/v1\.1\.[1-9]/.test(src), 'sidebar footer must show v1.1.1 or higher');
+  console.log('  PASS console version v1.1.1+');
 
   // No secrets
   assert.ok(!src.includes('OPENAI_API_KEY'), 'must not contain OPENAI_API_KEY');

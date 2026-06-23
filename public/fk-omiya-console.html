@@ -284,6 +284,36 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-stat-label{font-size:10px;color:var(--text-muted);margin-bottom:4px}
 .re-stat-val{font-size:18px;font-weight:700;color:var(--gold)}
 .re-stat-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+/* ── Feedback Widget ── */
+#fb-float-btn{position:fixed;bottom:28px;right:28px;z-index:2000;background:var(--gold);color:#0d1b2a;border-radius:50px;padding:10px 20px;cursor:pointer;font-weight:700;font-size:14px;box-shadow:0 4px 20px rgba(201,168,76,0.5);transition:transform .2s,box-shadow .2s;user-select:none}
+#fb-float-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(201,168,76,0.7)}
+#fb-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,10,20,0.75);align-items:center;justify-content:center}
+#fb-overlay.open{display:flex}
+#fb-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:28px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.fb-category-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.fb-cat-btn{padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-muted);cursor:pointer;font-size:12px;transition:all .2s;text-align:left}
+.fb-cat-btn.selected{border-color:var(--gold);background:rgba(201,168,76,0.12);color:var(--gold)}
+.fb-textarea{width:100%;min-height:100px;background:var(--bg-deep);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:10px 12px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;margin-top:8px}
+.fb-textarea:focus{outline:none;border-color:var(--gold)}
+.fb-submit-btn{background:var(--gold);color:#0d1b2a;border:none;border-radius:6px;padding:10px 24px;font-weight:700;cursor:pointer;width:100%;margin-top:12px;font-size:14px;transition:opacity .2s}
+.fb-submit-btn:hover{opacity:0.9}
+.fb-submit-btn:disabled{opacity:0.5;cursor:default}
+.fb-success{display:none;text-align:center;padding:20px;color:#4caf82}
+/* Admin feedback panel */
+.fb-admin-card{background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.fb-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+.fb-stat{text-align:center;padding:12px;background:var(--bg-card);border-radius:6px}
+.fb-stat-num{font-size:24px;font-weight:700;color:var(--gold)}
+.fb-stat-label{font-size:10px;color:var(--text-muted);margin-top:4px}
+.fb-entry-list{max-height:280px;overflow-y:auto}
+.fb-entry{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;color:var(--text-muted)}
+.fb-entry .cat{color:var(--gold);font-weight:600;margin-right:8px}
+.gemini-analysis-box{background:rgba(79,195,247,0.05);border:1px solid rgba(79,195,247,0.2);border-radius:8px;padding:16px;margin-top:16px;font-size:13px;color:var(--text);line-height:1.8;white-space:pre-wrap}
+.settings-input-group{margin-bottom:16px}
+.settings-input-group label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:6px;letter-spacing:1px}
+.settings-input-group input{width:100%;background:var(--bg-deep);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;box-sizing:border-box}
+.settings-input-group input:focus{outline:none;border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -343,7 +373,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <span class="nav-icon">⚙</span>設定
     </div>
   </div>
-  <div class="sidebar-footer">FK Console v1.1.1 &nbsp;|&nbsp; 大宮支店</div>
+  <div class="sidebar-footer">FK Console v1.1.2 &nbsp;|&nbsp; 大宮支店</div>
 </nav>
 
 <!-- Main -->
@@ -1675,14 +1705,92 @@ canvas{display:block;width:100%;border-radius:4px}
 
     <!-- SETTINGS (placeholder) -->
     <section id="section-settings" class="section">
-      <div class="placeholder">
-        <div class="placeholder-icon">⚙</div>
-        <div class="placeholder-title">設定</div>
-        <div class="placeholder-desc">支店情報・ユーザー設定・表示オプション（準備中）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+        <!-- GAS / Gemini 設定 -->
+        <div class="card">
+          <div class="card-title">⚙ 外部連携設定</div>
+          <div class="settings-input-group">
+            <label>Google Apps Script Web App URL</label>
+            <input type="url" id="cfg-gas-url" placeholder="https://script.google.com/macros/s/..." oninput="saveSettings()">
+          </div>
+          <div class="settings-input-group">
+            <label>Gemini API キー</label>
+            <input type="password" id="cfg-gemini-key" placeholder="AIza..." oninput="saveSettings()">
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:8px">
+            ※ 設定値はブラウザのlocalStorageに保存されます。サーバーには送信されません。<br>
+            ※ GAS URLの設定方法は <code style="color:var(--gold)">docs/fk-omiya-feedback-gas-setup.md</code> を参照。
+          </div>
+          <button class="fb-submit-btn" onclick="testGasConnection()" style="margin-top:12px;background:var(--bg-deep);color:var(--text);border:1px solid var(--border)">🔗 GAS接続テスト</button>
+          <div id="cfg-test-result" style="font-size:12px;margin-top:8px;color:var(--text-muted)"></div>
+        </div>
+
+        <!-- フィードバック統計 -->
+        <div class="card">
+          <div class="card-title">📊 フィードバック概要</div>
+          <div class="fb-stat-grid" id="fb-stats-grid">
+            <div class="fb-stat"><div class="fb-stat-num" id="fb-stat-total">0</div><div class="fb-stat-label">合計件数</div></div>
+            <div class="fb-stat"><div class="fb-stat-num" id="fb-stat-week">0</div><div class="fb-stat-label">今週</div></div>
+            <div class="fb-stat"><div class="fb-stat-num" id="fb-stat-cats">0</div><div class="fb-stat-label">カテゴリ数</div></div>
+          </div>
+          <button class="fb-submit-btn" onclick="generateWeeklyReport()" style="background:var(--bg-deep);color:var(--text);border:1px solid var(--border);margin-bottom:8px">📥 週次レポートDL</button>
+          <button class="fb-submit-btn" onclick="clearLocalFeedback()" style="background:var(--bg-deep);color:#e05555;border:1px solid rgba(224,85,85,0.3)">🗑 ローカルキャッシュ削除</button>
+        </div>
+      </div>
+
+      <!-- Gemini AI 分析 -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">🤖 Gemini AI フィードバック分析</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">ローカルに保存されたフィードバックを Gemini API で分析します。Gemini APIキーの設定が必要です。</div>
+        <button class="fb-submit-btn" id="fb-analyze-btn" onclick="analyzeFeedback()" style="width:auto;padding:10px 24px">✨ AI分析を実行</button>
+        <div class="gemini-analysis-box" id="gemini-result" style="display:none"></div>
+      </div>
+
+      <!-- フィードバック一覧 -->
+      <div class="card">
+        <div class="card-title">📋 フィードバック一覧（ローカルキャッシュ）</div>
+        <div class="fb-entry-list" id="fb-entry-list">
+          <div style="color:var(--text-dim);font-size:12px">フィードバックがまだありません</div>
+        </div>
       </div>
     </section>
 
   </main>
+</div>
+
+<!-- FEEDBACK FLOAT BUTTON -->
+<div id="fb-float-btn" onclick="openFeedback()">💬 ご意見</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="fb-overlay" onclick="if(event.target===this)closeFeedback()">
+  <div id="fb-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)">💬 ご意見・ご要望</div>
+      <div onclick="closeFeedback()" style="cursor:pointer;color:var(--text-muted);font-size:18px">✕</div>
+    </div>
+    <div id="fb-form-area">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">カテゴリを選択</div>
+      <div class="fb-category-grid">
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'新機能要望')">✨ 新機能要望</div>
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'UI改善')">🎨 UI改善</div>
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'バグ報告')">🐛 バグ報告</div>
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'データ精度')">📊 データ精度</div>
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'使いにくい点')">🔧 使いにくい点</div>
+        <div class="fb-cat-btn" onclick="selectFbCat(this,'その他')">💡 その他</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:12px">コメント（任意）</div>
+      <textarea class="fb-textarea" id="fb-comment" placeholder="ご自由にお書きください..."></textarea>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px">※ 匿名で送信されます。個人情報は含めないでください。</div>
+      <button class="fb-submit-btn" id="fb-submit-btn" onclick="submitFeedback()" disabled>送信する</button>
+    </div>
+    <div class="fb-success" id="fb-success">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-weight:700;color:#4caf82">ご意見ありがとうございました！</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:8px">大切に参考にさせていただきます。</div>
+      <button class="fb-submit-btn" onclick="closeFeedback()" style="margin-top:16px;background:var(--bg-card);color:var(--text)">閉じる</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -3419,6 +3527,208 @@ window.addEventListener('resize', () => {
     else if (innerId === 'ipanel-asset-lumpsum') calcAssetLumpsum();
   }
 });
+
+/* ── Feedback Widget ── */
+let _fbCategory = '';
+
+function getAnonymousId() {
+  let id = localStorage.getItem('fb_anon_id');
+  if (!id) { id = 'user-' + Math.random().toString(36).slice(2, 10); localStorage.setItem('fb_anon_id', id); }
+  return id;
+}
+
+function openFeedback() {
+  document.getElementById('fb-overlay').classList.add('open');
+  document.getElementById('fb-form-area').style.display = 'block';
+  document.getElementById('fb-success').style.display = 'none';
+  document.getElementById('fb-comment').value = '';
+  _fbCategory = '';
+  document.querySelectorAll('.fb-cat-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('fb-submit-btn').disabled = true;
+}
+
+function closeFeedback() {
+  document.getElementById('fb-overlay').classList.remove('open');
+}
+
+function selectFbCat(el, cat) {
+  document.querySelectorAll('.fb-cat-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  _fbCategory = cat;
+  document.getElementById('fb-submit-btn').disabled = false;
+}
+
+async function submitFeedback() {
+  const comment = document.getElementById('fb-comment').value.trim();
+  const btn = document.getElementById('fb-submit-btn');
+  if (!_fbCategory) return;
+
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const entry = {
+    datetime: new Date().toISOString(),
+    category: _fbCategory,
+    comment,
+    screen: document.getElementById('page-title') ? document.getElementById('page-title').textContent : '',
+    anonymousId: getAnonymousId(),
+  };
+
+  // ローカルキャッシュに保存
+  const cache = JSON.parse(localStorage.getItem('fb_local_cache') || '[]');
+  cache.push(entry);
+  localStorage.setItem('fb_local_cache', JSON.stringify(cache));
+
+  // GAS に送信
+  const gasUrl = localStorage.getItem('fb_gas_url');
+  if (gasUrl) {
+    try {
+      await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+        mode: 'no-cors',
+      });
+    } catch (_) { /* no-cors では response 読取不可 — ローカル保存で代替 */ }
+  }
+
+  document.getElementById('fb-form-area').style.display = 'none';
+  document.getElementById('fb-success').style.display = 'block';
+  btn.textContent = '送信する';
+  btn.disabled = false;
+  refreshFeedbackAdmin();
+}
+
+/* ── Settings ── */
+function saveSettings() {
+  const gasUrl = document.getElementById('cfg-gas-url').value.trim();
+  const geminiKey = document.getElementById('cfg-gemini-key').value.trim();
+  if (gasUrl) localStorage.setItem('fb_gas_url', gasUrl);
+  if (geminiKey) localStorage.setItem('gemini_api_key', geminiKey);
+}
+
+function loadSettings() {
+  const gasUrlEl = document.getElementById('cfg-gas-url');
+  const geminiKeyEl = document.getElementById('cfg-gemini-key');
+  if (gasUrlEl) gasUrlEl.value = localStorage.getItem('fb_gas_url') || '';
+  if (geminiKeyEl) geminiKeyEl.value = localStorage.getItem('gemini_api_key') || '';
+}
+
+async function testGasConnection() {
+  const url = localStorage.getItem('fb_gas_url');
+  const result = document.getElementById('cfg-test-result');
+  if (!url) { result.textContent = '⚠ GAS URLが設定されていません'; result.style.color = '#e08040'; return; }
+  result.textContent = '接続テスト中...'; result.style.color = 'var(--text-muted)';
+  try {
+    await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ _test: true }) });
+    result.textContent = '✅ リクエスト送信完了（no-cors のため応答確認不可）'; result.style.color = '#4caf82';
+  } catch (e) {
+    result.textContent = '✗ 接続失敗: ' + e.message; result.style.color = '#e05555';
+  }
+}
+
+function refreshFeedbackAdmin() {
+  const cache = JSON.parse(localStorage.getItem('fb_local_cache') || '[]');
+  const total = cache.length;
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+  const weekCount = cache.filter(e => e.datetime >= weekAgo).length;
+  const cats = new Set(cache.map(e => e.category)).size;
+
+  const totalEl = document.getElementById('fb-stat-total');
+  const weekEl = document.getElementById('fb-stat-week');
+  const catsEl = document.getElementById('fb-stat-cats');
+  if (totalEl) totalEl.textContent = total;
+  if (weekEl) weekEl.textContent = weekCount;
+  if (catsEl) catsEl.textContent = cats;
+
+  const listEl = document.getElementById('fb-entry-list');
+  if (listEl) {
+    if (cache.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-dim);font-size:12px">フィードバックがまだありません</div>';
+    } else {
+      listEl.innerHTML = cache.slice().reverse().slice(0, 50).map(e =>
+        '<div class="fb-entry"><span class="cat">[' + e.category + ']</span>' +
+        '<span style="color:var(--text-dim)">' + e.datetime.slice(0, 16).replace('T', ' ') + '</span> ' +
+        (e.comment ? '— ' + e.comment.slice(0, 80) : '') + '</div>'
+      ).join('');
+    }
+  }
+}
+
+function generateWeeklyReport() {
+  const cache = JSON.parse(localStorage.getItem('fb_local_cache') || '[]');
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+  const week = cache.filter(e => e.datetime >= weekAgo);
+  const catCounts = {};
+  week.forEach(e => { catCounts[e.category] = (catCounts[e.category] || 0) + 1; });
+  const top = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+  const report = {
+    generated: new Date().toISOString(),
+    period: weekAgo.slice(0, 10) + ' 〜 ' + new Date().toISOString().slice(0, 10),
+    totalThisWeek: week.length,
+    categoryBreakdown: catCounts,
+    topCategories: top.slice(0, 3).map(([cat, count]) => ({ cat, count })),
+    comments: week.filter(e => e.comment).map(e => ({ category: e.category, comment: e.comment, date: e.datetime.slice(0, 10) })),
+  };
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fk-omiya-feedback-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+}
+
+function clearLocalFeedback() {
+  if (!confirm('ローカルキャッシュを削除しますか？（GASのスプレッドシートデータは削除されません）')) return;
+  localStorage.removeItem('fb_local_cache');
+  refreshFeedbackAdmin();
+}
+
+async function analyzeFeedback() {
+  const apiKey = localStorage.getItem('gemini_api_key');
+  const resultEl = document.getElementById('gemini-result');
+  const btn = document.getElementById('fb-analyze-btn');
+  if (!apiKey) { resultEl.textContent = '⚠ 設定タブでGemini APIキーを設定してください。'; resultEl.style.display = 'block'; return; }
+  const cache = JSON.parse(localStorage.getItem('fb_local_cache') || '[]');
+  if (cache.length === 0) { resultEl.textContent = '⚠ 分析するフィードバックがありません。'; resultEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = '🤖 分析中...';
+  resultEl.textContent = 'Geminiに問い合わせ中...'; resultEl.style.display = 'block';
+
+  const summary = cache.map(e => '[' + e.category + '] ' + (e.comment || '（コメントなし）')).join('
+');
+  const prompt = '以下は保険営業支援ツール「FK Omiya Console」へのユーザーフィードバック一覧です。
+
+' + summary
+    + '
+
+以下を日本語で簡潔に回答してください：
+1. よく要望される機能TOP3（箇条書き）
+2. 優先実装推奨項目とその理由
+3. UIや操作性に関する改善提案（あれば）';
+
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    });
+    if (!res.ok) { const err = await res.text(); throw new Error('HTTP ' + res.status + ': ' + err); }
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '（応答なし）';
+    resultEl.textContent = text;
+  } catch (e) {
+    resultEl.textContent = '✗ エラー: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '✨ AI分析を実行';
+}
+
+// 設定タブに切り替わった時にデータをロード
+const _origNavigate = navigate;
+function navigate(section, el) {
+  _origNavigate(section, el);
+  if (section === 'settings') { loadSettings(); refreshFeedbackAdmin(); }
+}
+
 </script>
 </body>
 </html>

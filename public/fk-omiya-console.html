@@ -183,6 +183,28 @@ canvas{display:block;width:100%;border-radius:4px}
 .inner-tab.active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);font-weight:600}
 .inner-panel{display:none}
 .inner-panel.active{display:block}
+/* Allocation bar */
+.alloc-bar{height:28px;border-radius:6px;display:flex;overflow:hidden;margin:10px 0;background:var(--bg-deep);border:1px solid var(--border)}
+.alloc-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg-deep);transition:width .4s;min-width:0;overflow:hidden;white-space:nowrap}
+/* Risk cards */
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.risk-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.risk-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.risk-icon{font-size:20px}
+.risk-name{font-size:13px;font-weight:600;color:var(--text)}
+.risk-amount{font-size:20px;font-weight:700;color:var(--gold);margin:4px 0}
+.risk-shortage{font-size:12px;font-weight:600;color:var(--danger);margin-top:4px}
+.risk-note{font-size:11px;color:var(--text-muted);line-height:1.6;margin-top:6px}
+/* Step wizard */
+.step-wizard{display:flex;flex-direction:column;gap:12px}
+.step-item{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.step-label{font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.step-options{display:flex;flex-wrap:wrap;gap:8px}
+.step-option{padding:7px 14px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:.15s;text-align:center;line-height:1.5}
+.step-option:hover{border-color:var(--gold);color:var(--text)}
+.step-option.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);font-weight:600}
+/* Average comparison */
+.avg-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:var(--bg-deep);border-radius:5px;font-size:12px;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -205,6 +227,13 @@ canvas{display:block;width:100%;border-radius:4px}
     <div class="nav-item" data-section="simulation" onclick="navigate('simulation',this)">
       <span class="nav-icon">📊</span>シミュレーション
       <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-label" style="margin-top:8px">分析ツール</div>
+    <div class="nav-item" data-section="lifetime" onclick="navigate('lifetime',this)">
+      <span class="nav-icon">💹</span>生涯収入・配分
+    </div>
+    <div class="nav-item" data-section="security" onclick="navigate('security',this)">
+      <span class="nav-icon">🏛</span>社会保障ナビ
     </div>
     <div class="nav-label" style="margin-top:8px">管理</div>
     <div class="nav-item" data-section="summary" onclick="navigate('summary',this)">
@@ -880,6 +909,166 @@ canvas{display:block;width:100%;border-radius:4px}
       </div>
     </section>
 
+    <!-- ===== LIFETIME INCOME ===== -->
+    <section id="section-lifetime" class="section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div class="card">
+            <div class="card-title">💹 生涯手取り収入シミュレーション</div>
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label>現在年齢（歳）</label>
+                <input type="number" id="lt-age" value="35" min="20" max="64" oninput="calcLifetime()">
+              </div>
+              <div class="form-group">
+                <label>現在の年収（万円）</label>
+                <input type="number" id="lt-income" value="600" min="0" oninput="calcLifetime()">
+              </div>
+              <div class="form-group">
+                <label>年収上昇率（%/年）</label>
+                <input type="number" id="lt-growth" value="1.5" min="0" max="10" step="0.5" oninput="calcLifetime()">
+              </div>
+            </div>
+            <div class="result-box">
+              <div class="result-row"><span class="result-label">65歳までの就業年数</span><span class="result-value" id="lt-years">—</span></div>
+              <div class="result-row"><span class="result-label">社会保険料（現在・年間）</span><span class="result-value" id="lt-social">—</span></div>
+              <div class="result-row"><span class="result-label">所得税＋住民税（現在・年間）</span><span class="result-value blue" id="lt-tax">—</span></div>
+              <div class="result-row"><span class="result-label">手取り年収（現在）</span><span class="result-value" id="lt-net-annual">—</span></div>
+              <div class="result-row" style="border-top:1px solid var(--gold-dim)">
+                <span class="result-label">65歳までの総手取り</span>
+                <span class="result-value big" id="lt-total-net">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📊 控除内訳（手取り率）</div>
+            <div id="lt-breakdown" style="font-size:12px;color:var(--text-muted);line-height:2"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🗂 生涯資産配分シミュレーション</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">
+            65歳までの総手取りを各カテゴリに配分します（合計100%推奨）
+          </div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="form-group">
+              <label>住宅費 (%)</label>
+              <input type="number" id="alloc-housing" value="28" min="0" max="100" oninput="calcAllocation()">
+            </div>
+            <div class="form-group">
+              <label>生活費 (%)</label>
+              <input type="number" id="alloc-living" value="25" min="0" max="100" oninput="calcAllocation()">
+            </div>
+            <div class="form-group">
+              <label>教育費 (%)</label>
+              <input type="number" id="alloc-education" value="10" min="0" max="100" oninput="calcAllocation()">
+            </div>
+            <div class="form-group">
+              <label>保険料 (%)</label>
+              <input type="number" id="alloc-insurance" value="7" min="0" max="100" oninput="calcAllocation()">
+            </div>
+            <div class="form-group">
+              <label>貯蓄・投資 (%)</label>
+              <input type="number" id="alloc-savings" value="20" min="0" max="100" oninput="calcAllocation()">
+            </div>
+            <div class="form-group">
+              <label>その他 (%)</label>
+              <input type="number" id="alloc-other" value="10" min="0" max="100" oninput="calcAllocation()">
+            </div>
+          </div>
+          <div id="alloc-total-bar" class="alloc-bar"></div>
+          <div id="alloc-total-pct" style="font-size:11px;text-align:right;margin-bottom:14px;color:var(--text-muted)">合計: 100%</div>
+          <div class="result-box">
+            <div class="result-row"><span class="result-label">🏠 住宅費 予算総額</span><span class="result-value" id="alloc-r-housing">—</span></div>
+            <div class="result-row"><span class="result-label">🍽 生活費 予算総額</span><span class="result-value" id="alloc-r-living">—</span></div>
+            <div class="result-row"><span class="result-label">🎓 教育費 予算総額</span><span class="result-value" id="alloc-r-education">—</span></div>
+            <div class="result-row"><span class="result-label">🛡 保険料 予算総額</span><span class="result-value" id="alloc-r-insurance">—</span></div>
+            <div class="result-row"><span class="result-label">💰 貯蓄・投資 予算総額</span><span class="result-value blue" id="alloc-r-savings">—</span></div>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px">全国平均との比較（総務省家計調査 参考）</div>
+            <div id="alloc-avg-compare"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SOCIAL SECURITY NAV ===== -->
+    <section id="section-security" class="section">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:16px">
+        <div class="card">
+          <div class="card-title">🏛 FK社会保障ナビ — 入力ウィザード</div>
+          <div class="step-wizard">
+            <div class="step-item">
+              <div class="step-label">STEP 1 · 性別</div>
+              <div class="step-options">
+                <div class="step-option active" id="ss-sex-m" onclick="setSS('sex','m')">👨 男性</div>
+                <div class="step-option" id="ss-sex-f" onclick="setSS('sex','f')">👩 女性</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-label">STEP 2 · ご本人の年金種別</div>
+              <div class="step-options">
+                <div class="step-option" id="ss-type-1" onclick="setSS('type','1')">第1号<br><small style="color:var(--text-dim)">自営業・無職等</small></div>
+                <div class="step-option active" id="ss-type-2" onclick="setSS('type','2')">第2号<br><small style="color:var(--text-dim)">会社員・公務員</small></div>
+                <div class="step-option" id="ss-type-3" onclick="setSS('type','3')">第3号<br><small style="color:var(--text-dim)">第2号の扶養配偶者</small></div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-label">STEP 3 · 配偶者の年金種別</div>
+              <div class="step-options">
+                <div class="step-option active" id="ss-spouse-none" onclick="setSS('spouse','none')">配偶者なし</div>
+                <div class="step-option" id="ss-spouse-1" onclick="setSS('spouse','1')">第1号</div>
+                <div class="step-option" id="ss-spouse-2" onclick="setSS('spouse','2')">第2号</div>
+                <div class="step-option" id="ss-spouse-3" onclick="setSS('spouse','3')">第3号</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-label">STEP 4 · 18歳未満の子ども</div>
+              <div class="step-options">
+                <div class="step-option active" id="ss-child-0" onclick="setSS('child',0)">0人</div>
+                <div class="step-option" id="ss-child-1" onclick="setSS('child',1)">1人</div>
+                <div class="step-option" id="ss-child-2" onclick="setSS('child',2)">2人</div>
+                <div class="step-option" id="ss-child-3" onclick="setSS('child',3)">3人以上</div>
+              </div>
+            </div>
+            <div class="step-item" id="ss-income-step">
+              <div class="step-label">STEP 5 · 月収・勤続年数（厚生年金計算用）</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>月収（万円）</label>
+                  <input type="number" id="ss-monthly" value="40" min="5" max="200" oninput="calcSocialSecurity()">
+                </div>
+                <div class="form-group">
+                  <label>厚生年金 加入年数</label>
+                  <input type="number" id="ss-kinen" value="30" min="1" max="45" oninput="calcSocialSecurity()">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">📋 5リスク別 公的保障額（概算）</div>
+            <div id="ss-result-area" style="margin-top:4px">
+              <div class="placeholder" style="padding:30px">
+                <div class="placeholder-icon">🏛</div>
+                <div class="placeholder-title">左のウィザードで条件を選択してください</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">💡 社会保障活用のポイント</div>
+            <div id="ss-notes" style="font-size:12px;color:var(--text-muted);line-height:1.8">
+              左のウィザードで入力すると、状況に合わせたアドバイスが表示されます。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- SUMMARY (placeholder) -->
     <section id="section-summary" class="section">
       <div class="placeholder">
@@ -925,6 +1114,8 @@ const SECTION_TITLES = {
   dashboard: 'ダッシュボード',
   search: '検索・計算ツール｜ソリシター君',
   simulation: 'シミュレーション',
+  lifetime: '生涯収入・資産配分',
+  security: 'FK社会保障ナビ',
   summary: '提案サマリー',
   files: 'ファイル管理',
   url: 'URL解析',
@@ -939,6 +1130,8 @@ function navigate(key, el) {
   if (el) el.classList.add('active');
   document.getElementById('topbar-title').textContent = SECTION_TITLES[key] || key;
   if (key === 'simulation') { setTimeout(drawMortgageChart, 100); setTimeout(drawAssetChart, 100); }
+  if (key === 'lifetime') setTimeout(calcLifetime, 100);
+  if (key === 'security') setTimeout(calcSocialSecurity, 100);
 }
 
 /* ── Sim Tabs ── */
@@ -1786,6 +1979,269 @@ function drawLumpsumChart(initial, years, rate, maxFV) {
   for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);
 }
 
+/* ── Lifetime Income ── */
+function calcLifetime() {
+  const age = parseInt(document.getElementById('lt-age').value) || 35;
+  const income = parseFloat(document.getElementById('lt-income').value) || 600;
+  const growth = parseFloat(document.getElementById('lt-growth').value) || 1.5;
+  const remainYears = Math.max(0, 65 - age);
+
+  if (remainYears === 0) {
+    document.getElementById('lt-years').textContent = '0年（65歳以上）';
+    ['lt-social','lt-tax','lt-net-annual','lt-total-net'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  function salaryDeduction(inc) {
+    if (inc <= 180) return Math.max(55, inc * 0.4 - 10);
+    if (inc <= 360) return inc * 0.3 + 8;
+    if (inc <= 660) return inc * 0.2 + 44;
+    if (inc <= 850) return inc * 0.1 + 110;
+    return 195;
+  }
+
+  function incomeTaxCalc(ti) {
+    if (ti <= 0) return 0;
+    if (ti <= 195) return ti * 0.05;
+    if (ti <= 330) return ti * 0.10 - 9.75;
+    if (ti <= 695) return ti * 0.20 - 42.75;
+    if (ti <= 900) return ti * 0.23 - 63.6;
+    if (ti <= 1800) return ti * 0.33 - 153.6;
+    if (ti <= 4000) return ti * 0.40 - 279.6;
+    return ti * 0.45 - 479.6;
+  }
+
+  function calcNet(inc) {
+    const social = inc * (0.0499 + 0.0915 + 0.006);
+    const salaryInc = inc - salaryDeduction(inc);
+    const taxable = Math.max(0, salaryInc - social - 48);
+    const tax = incomeTaxCalc(taxable) * 1.021 + taxable * 0.10;
+    return { social, tax, net: inc - social - tax };
+  }
+
+  const cur = calcNet(income);
+  let totalNet = 0;
+  for (let y = 0; y < remainYears; y++) {
+    totalNet += calcNet(income * Math.pow(1 + growth / 100, y)).net;
+  }
+
+  document.getElementById('lt-years').textContent = remainYears + '年（65歳完了）';
+  document.getElementById('lt-social').textContent = fmt(cur.social);
+  document.getElementById('lt-tax').textContent = fmt(cur.tax);
+  document.getElementById('lt-net-annual').textContent = fmt(cur.net);
+  document.getElementById('lt-total-net').textContent = fmtYen(totalNet);
+
+  const htRate = income > 0 ? (cur.net / income * 100) : 0;
+  document.getElementById('lt-breakdown').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 14px">
+      <span style="color:var(--text-muted)">年収</span><span>${fmt(income)}</span>
+      <span style="color:var(--text-muted)">社会保険料</span><span style="color:var(--danger)">− ${fmt(cur.social)}（${(cur.social/income*100).toFixed(1)}%）</span>
+      <span style="color:var(--text-muted)">所得税＋住民税</span><span style="color:var(--danger)">− ${fmt(cur.tax)}（${(cur.tax/income*100).toFixed(1)}%）</span>
+      <span style="color:var(--gold);font-weight:700">手取り年収</span><span style="color:var(--gold);font-weight:700">${fmt(cur.net)}（手取り率 ${htRate.toFixed(1)}%）</span>
+    </div>
+  `;
+
+  window._ltTotalNet = totalNet;
+  calcAllocation();
+}
+
+/* ── Allocation ── */
+function calcAllocation() {
+  const totalNet = window._ltTotalNet || 0;
+  const housing = parseFloat(document.getElementById('alloc-housing').value) || 0;
+  const living = parseFloat(document.getElementById('alloc-living').value) || 0;
+  const education = parseFloat(document.getElementById('alloc-education').value) || 0;
+  const insurance = parseFloat(document.getElementById('alloc-insurance').value) || 0;
+  const savings = parseFloat(document.getElementById('alloc-savings').value) || 0;
+  const other = parseFloat(document.getElementById('alloc-other').value) || 0;
+  const total = housing + living + education + insurance + savings + other;
+
+  const pctEl = document.getElementById('alloc-total-pct');
+  pctEl.textContent = '合計: ' + total.toFixed(0) + '%';
+  pctEl.style.color = Math.abs(total - 100) < 0.5 ? 'var(--success)' : 'var(--danger)';
+
+  const segs = [
+    { pct: housing, color: '#c9a84c', label: '住宅' },
+    { pct: living, color: '#4fc3f7', label: '生活' },
+    { pct: education, color: '#4caf82', label: '教育' },
+    { pct: insurance, color: '#e08040', label: '保険' },
+    { pct: savings, color: '#9c88ff', label: '貯蓄' },
+    { pct: other, color: '#7fa8c0', label: 'その他' },
+  ];
+  document.getElementById('alloc-total-bar').innerHTML = total > 0
+    ? segs.filter(s => s.pct > 0).map(s => {
+        const w = (s.pct / total * 100).toFixed(1);
+        return `<div class="alloc-seg" style="width:${w}%;background:${s.color}">${s.pct >= 8 ? s.label : ''}</div>`;
+      }).join('')
+    : '';
+
+  if (totalNet > 0) {
+    document.getElementById('alloc-r-housing').textContent = fmtYen(totalNet * housing / 100);
+    document.getElementById('alloc-r-living').textContent = fmtYen(totalNet * living / 100);
+    document.getElementById('alloc-r-education').textContent = fmtYen(totalNet * education / 100);
+    document.getElementById('alloc-r-insurance').textContent = fmtYen(totalNet * insurance / 100);
+    document.getElementById('alloc-r-savings').textContent = fmtYen(totalNet * savings / 100);
+  }
+
+  const NAT = { housing: [25, 30], living: [20, 25], education: [5, 10], insurance: [5, 7], savings: [15, 20] };
+  const vals = { housing, living, education, insurance, savings };
+  const lbls = { housing: '住宅費', living: '生活費', education: '教育費', insurance: '保険料', savings: '貯蓄・投資' };
+  document.getElementById('alloc-avg-compare').innerHTML = Object.entries(vals).map(([k, v]) => {
+    const [lo, hi] = NAT[k];
+    const diff = v - (lo + hi) / 2;
+    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + '%';
+    const isGood = k === 'savings' ? diff > 0 : Math.abs(diff) <= 5;
+    const diffColor = isGood ? 'var(--success)' : 'var(--warn)';
+    return `<div class="avg-row">
+      <span style="color:var(--text-muted)">${lbls[k]}</span>
+      <span><span style="color:var(--gold);font-weight:700">${v.toFixed(0)}%</span>
+      <span style="color:var(--text-dim);margin:0 4px">vs ${lo}〜${hi}%</span>
+      <span style="color:${diffColor};font-size:11px">${diffStr}</span></span>
+    </div>`;
+  }).join('');
+}
+
+/* ── Social Security Nav ── */
+const SS_STATE = { sex: 'm', type: '2', spouse: 'none', child: 0 };
+
+function setSS(key, value) {
+  SS_STATE[key] = value;
+  document.querySelectorAll(`[id^="ss-${key}-"]`).forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(`ss-${key}-${value}`);
+  if (target) target.classList.add('active');
+  const incomeStep = document.getElementById('ss-income-step');
+  if (incomeStep) incomeStep.style.display = SS_STATE.type === '2' ? '' : 'none';
+  calcSocialSecurity();
+}
+
+function calcSocialSecurity() {
+  const type = SS_STATE.type;
+  const spouse = SS_STATE.spouse;
+  const child = parseInt(SS_STATE.child) || 0;
+  const monthly = parseFloat(document.getElementById('ss-monthly').value) || 40;
+  const kinen = parseInt(document.getElementById('ss-kinen').value) || 30;
+
+  function childAdd(n) {
+    if (n === 0) return 0;
+    return Math.min(n, 2) * 23.48 + Math.max(0, n - 2) * 7.83;
+  }
+
+  // 1. 遺族年金
+  const survivorBasic = child > 0 ? 81.6 + childAdd(child) : 0;
+  const koseiOld = type === '2' ? monthly * 12 * kinen * 5.481 / 1000 : 0;
+  const survivorKosei = koseiOld * 0.75;
+  const survivorTotal = survivorBasic + survivorKosei;
+  const survivorShortage = Math.max(0, 240 - survivorTotal);
+
+  // 2. 障害年金
+  const disB1 = 102.0 + childAdd(child);
+  const disB2 = 81.6 + childAdd(child);
+  const koseiMinMonths = Math.max(kinen * 12, 300);
+  const koseiBase = type === '2' ? monthly * 12 * (koseiMinMonths / 12) * 5.481 / 1000 : 0;
+  const dis1 = disB1 + koseiBase * 1.25;
+  const dis2 = disB2 + koseiBase;
+
+  // 3. 老齢年金
+  const oldBasic = 81.6 * Math.min(kinen * 12, 480) / 480;
+  const oldKosei = type === '2' ? monthly * 12 * kinen * 5.481 / 1000 : 0;
+  const oldTotal = oldBasic + oldKosei;
+  const oldShortage = Math.max(0, 200 - oldTotal);
+
+  // 4. 医療（高額療養費）
+  const annualIncome = monthly * 12;
+  let kogakuLimit, kogakuLabel;
+  if (annualIncome >= 1160) { kogakuLimit = 25.26; kogakuLabel = '年収1,160万以上 区分ア'; }
+  else if (annualIncome >= 770) { kogakuLimit = 16.74; kogakuLabel = '年収770〜1,160万 区分イ'; }
+  else if (annualIncome >= 370) { kogakuLimit = 8.01; kogakuLabel = '年収370〜770万 区分ウ'; }
+  else if (annualIncome >= 156) { kogakuLimit = 5.76; kogakuLabel = '年収156〜370万 区分エ'; }
+  else { kogakuLimit = 3.54; kogakuLabel = '住民税非課税 区分オ'; }
+
+  renderSecurityResults({
+    survivors: { basic: survivorBasic, kosei: survivorKosei, total: survivorTotal, shortage: survivorShortage, hasChild: child > 0, type },
+    disability: { level1: dis1, level2: dis2, type },
+    elderly: { basic: oldBasic, kosei: oldKosei, total: oldTotal, shortage: oldShortage, type },
+    medical: { limit: kogakuLimit, label: kogakuLabel },
+    care: { level1: 1.7, level3: 2.7, level5: 3.6 }
+  });
+
+  const notes = [];
+  if (type === '1') notes.push('第1号（国民年金のみ）は厚生年金部分がないため公的保障が薄くなります。民間保険による補完が特に重要です。');
+  if (type === '2') notes.push('第2号（厚生年金）は公的保障が充実していますが、高所得になるほど代替率が低下します。不足額に応じた民間保険の追加を検討してください。');
+  if (type === '3') notes.push('第3号は扶養から外れた後の保障変化を確認してください。就業状況の変化で受給額が変わります。');
+  if (spouse !== 'none') notes.push('配偶者がいる場合、遺族年金の受給者・金額は配偶者の年金種別・年齢によっても変わります。');
+  if (child > 0) notes.push('子どもがいる間は遺族基礎年金・障害年金に子加算があります。子が18歳年度末を超えると加算がなくなります。');
+  notes.push('高額療養費制度で医療費自己負担には月の上限があります。先進医療・差額ベッド代は対象外です。');
+  notes.push('介護リスクは65歳以上で急増します。50代からの備えを早めに検討することをお勧めします。');
+  document.getElementById('ss-notes').innerHTML = notes.map(n => `<span style="color:var(--blue)">▸</span> ${n}`).join('<br>');
+}
+
+function renderSecurityResults(d) {
+  const fmtM = v => (Math.round(v * 10) / 10).toFixed(1) + '万円/年';
+  const fmtMo = v => (Math.round(v * 10) / 10).toFixed(1) + '万円/月';
+  document.getElementById('ss-result-area').innerHTML = `
+    <div class="risk-grid">
+      <div class="risk-card">
+        <div class="risk-card-header"><span class="risk-icon">🪦</span><span class="risk-name">① 遺族年金</span></div>
+        ${!d.survivors.hasChild ? '<div style="font-size:11px;color:var(--warn);margin-bottom:6px">⚠ 子なし：遺族基礎年金は対象外</div>' : ''}
+        <div class="risk-amount">${fmtM(d.survivors.total)}</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:4px">
+          基礎: ${fmtM(d.survivors.basic)}${d.survivors.type === '2' ? '<br>厚生: ' + fmtM(d.survivors.kosei) : ''}
+        </div>
+        <div class="risk-shortage">不足目安: 年${Math.round(d.survivors.shortage)}万円</div>
+        <div class="risk-note">※生活費240万/年との差分。子の年齢・家族形態により変動</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header"><span class="risk-icon">♿</span><span class="risk-name">② 障害年金</span></div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">1級（重度障害）</div>
+        <div class="risk-amount">${fmtM(d.disability.level1)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin:6px 0 2px">2級（中度障害）</div>
+        <div style="font-size:17px;font-weight:700;color:var(--gold)">${fmtM(d.disability.level2)}</div>
+        <div class="risk-note" style="margin-top:8px">※子加算含む。就労不能・収入減少リスクも考慮が必要</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header"><span class="risk-icon">👴</span><span class="risk-name">③ 老齢年金（65歳〜）</span></div>
+        <div class="risk-amount">${fmtM(d.elderly.total)}</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.7;margin-top:4px">
+          基礎: ${fmtM(d.elderly.basic)}${d.elderly.type === '2' ? '<br>厚生: ' + fmtM(d.elderly.kosei) : ''}
+        </div>
+        <div class="risk-shortage">不足目安: 年${Math.round(d.elderly.shortage)}万円</div>
+        <div class="risk-note">※老後必要額200万/年との差分。生活水準・持家状況で変動</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header"><span class="risk-icon">🏥</span><span class="risk-name">④ 医療（高額療養費）</span></div>
+        <div class="risk-amount">${fmtMo(d.medical.limit)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${d.medical.label}</div>
+        <div class="risk-note" style="margin-top:6px">
+          月の自己負担上限額。長期入院・先進医療・差額ベッド代は別途。<br>
+          多数回該当で上限額がさらに低下します。
+        </div>
+      </div>
+      <div class="risk-card" style="grid-column:1/-1">
+        <div class="risk-card-header"><span class="risk-icon">🛏</span><span class="risk-name">⑤ 介護保険（自己負担 通常1割）</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px">
+          <div style="text-align:center;padding:12px;background:var(--bg-deep);border-radius:6px">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">要介護1（軽度）</div>
+            <div style="font-size:18px;font-weight:700;color:var(--gold)">${fmtMo(d.care.level1)}</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg-deep);border-radius:6px">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">要介護3（中程度）</div>
+            <div style="font-size:18px;font-weight:700;color:var(--gold)">${fmtMo(d.care.level3)}</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg-deep);border-radius:6px">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">要介護5（重度）</div>
+            <div style="font-size:18px;font-weight:700;color:var(--gold)">${fmtMo(d.care.level5)}</div>
+          </div>
+        </div>
+        <div class="risk-note" style="margin-top:8px">
+          在宅サービス上限単位使用時の1割自己負担額。施設入所は食費・居住費等で別途5〜15万円/月が必要。
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 /* ── Init ── */
 calcMortgage();
 calcGiftTax();
@@ -1793,6 +2249,8 @@ calcInheritanceTax();
 calcInsurance();
 calcBMI();
 calcAsset();
+calcLifetime();
+calcSocialSecurity();
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();

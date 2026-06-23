@@ -131,7 +131,7 @@ canvas{display:block;width:100%;border-radius:4px}
 .legend-dot{width:10px;height:10px;border-radius:2px}
 
 /* BMI */
-.bmi-bar{height:12px;border-radius:6px;background:linear-gradient(90deg,#4caf82 0%,#4caf82 25%,#c9a84c 25%,#c9a84c 55%,#e08040 55%,#e08040 75%,#e05555 75%);position:relative;margin:12px 0}
+.bmi-bar{height:12px;border-radius:6px;background:linear-gradient(90deg,#e08040 0%,#e08040 26.7%,#4caf82 26.7%,#4caf82 56.7%,#c9a84c 56.7%,#c9a84c 66.7%,#e05555 66.7%);position:relative;margin:12px 0}
 .bmi-marker{position:absolute;top:-20px;transform:translateX(-50%);font-size:11px;font-weight:700;transition:left .4s}
 .bmi-marker::after{content:'▼';display:block;text-align:center;font-size:10px}
 .bmi-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px}
@@ -343,7 +343,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <span class="nav-icon">⚙</span>設定
     </div>
   </div>
-  <div class="sidebar-footer">FK Console v1.1.0 &nbsp;|&nbsp; 大宮支店</div>
+  <div class="sidebar-footer">FK Console v1.1.1 &nbsp;|&nbsp; 大宮支店</div>
 </nav>
 
 <!-- Main -->
@@ -518,7 +518,10 @@ canvas{display:block;width:100%;border-radius:4px}
               </div>
               <div class="result-box" id="m-prepay-result" style="display:none">
                 <div class="result-row"><span class="result-label">短縮期間</span><span class="result-value green" id="m-save-months">—</span></div>
-                <div class="result-row"><span class="result-label">利息軽減額</span><span class="result-value blue" id="m-save-interest">—</span></div>
+                <div style="margin-top:10px;padding:10px 12px;background:rgba(201,168,76,0.10);border-radius:6px;border-left:3px solid var(--gold)">
+                  <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;letter-spacing:1px">総利息節約額</div>
+                  <div style="font-size:22px;font-weight:700;color:#c9a84c" id="m-save-interest">—</div>
+                </div>
               </div>
             </div>
           </div>
@@ -567,11 +570,36 @@ canvas{display:block;width:100%;border-radius:4px}
                   <input type="number" id="mb-years" value="35" min="1" max="50" oninput="calcMortgageBalance()">
                 </div>
               </div>
+              <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600">⬆ 繰上げ返済シミュレーション</div>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>繰上げ額（万円）</label>
+                    <input type="number" id="mb-prepay" value="0" min="0" oninput="calcMortgageBalance()">
+                  </div>
+                  <div class="form-group">
+                    <label>繰上げ時期（年後）</label>
+                    <input type="number" id="mb-prepay-year" value="5" min="1" oninput="calcMortgageBalance()">
+                  </div>
+                </div>
+              </div>
               <div class="result-box" id="mb-result">
                 <div class="result-row"><span class="result-label">月返済額</span><span class="result-value" id="mb-monthly">—</span></div>
-                <div class="result-row"><span class="result-label">60歳時 残債残高</span><span class="result-value big" id="mb-bal60">—</span></div>
-                <div class="result-row"><span class="result-label">65歳時 残債残高</span><span class="result-value" id="mb-bal65">—</span></div>
                 <div class="result-row"><span class="result-label">完済年齢</span><span class="result-value blue" id="mb-end-age">—</span></div>
+                <table style="width:100%;font-size:11px;margin-top:10px;border-collapse:collapse">
+                  <thead>
+                    <tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.08)">
+                      <th style="text-align:left;padding:4px 0">時点</th>
+                      <th style="text-align:right;padding:4px 4px;color:#4fc3f7">繰上げなし</th>
+                      <th style="text-align:right;padding:4px 0;color:#c9a84c">繰上げあり</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mb-milestone-body"></tbody>
+                </table>
+                <div style="margin-top:12px;padding:10px 12px;background:rgba(201,168,76,0.10);border-radius:6px;border-left:3px solid var(--gold);display:none" id="mb-savings-box">
+                  <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;letter-spacing:1px">総利息節約額（繰上げ効果）</div>
+                  <div style="font-size:24px;font-weight:700;color:#c9a84c" id="mb-total-savings">—</div>
+                </div>
               </div>
               <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.7">
                 ※60・65歳時点の残債は、定年退職・年金受給開始時の住宅ローン負担確認に活用できます
@@ -581,8 +609,9 @@ canvas{display:block;width:100%;border-radius:4px}
               <div class="card-title">📊 残債推移グラフ</div>
               <canvas id="balance-chart" height="260"></canvas>
               <div class="chart-legend" style="margin-top:8px">
-                <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>残債残高</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>60・65歳マーカー</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>繰上げなし</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>繰上げあり</div>
+                <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.3)"></div>60・65歳マーカー</div>
               </div>
             </div>
           </div>
@@ -821,7 +850,8 @@ canvas{display:block;width:100%;border-radius:4px}
 
             <div class="result-box">
               <div class="result-row"><span class="result-label">BMI</span><span class="result-value big" id="bmi-value">—</span></div>
-              <div class="result-row"><span class="result-label">判定</span><span class="result-value" id="bmi-judge">—</span></div>
+              <div class="result-row"><span class="result-label">引受区分</span><span class="result-value" id="bmi-judge">—</span></div>
+              <div class="result-row"><span class="result-label">引受ガイド</span><span class="result-value" id="bmi-ins-note" style="font-size:12px">—</span></div>
               <div class="result-row"><span class="result-label">標準体重</span><span class="result-value" id="bmi-ideal">—</span></div>
               <div class="result-row"><span class="result-label">体重差（標準比）</span><span class="result-value" id="bmi-diff">—</span></div>
             </div>
@@ -831,32 +861,32 @@ canvas{display:block;width:100%;border-radius:4px}
             <div class="card-title">📏 BMIスケール</div>
             <div style="margin-bottom:20px">
               <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(--text-muted)">
-                <span>低体重</span><span>普通体重</span><span>肥満(1度)</span><span>肥満(2度+)</span>
+                <span>要確認域</span><span>優良体域</span><span>標準体域</span><span>要確認域</span>
               </div>
               <div style="position:relative;height:32px;margin-bottom:4px">
-                <div style="height:16px;border-radius:8px;background:linear-gradient(90deg,#4caf82 0%,#4caf82 25%,#c9a84c 25%,#c9a84c 55%,#e08040 55%,#e08040 77%,#e05555 77%)"></div>
+                <div style="height:16px;border-radius:8px;background:linear-gradient(90deg,#e08040 0%,#e08040 26.7%,#4caf82 26.7%,#4caf82 56.7%,#c9a84c 56.7%,#c9a84c 66.7%,#e05555 66.7%)"></div>
                 <div id="bmi-marker" style="position:absolute;top:-4px;transform:translateX(-50%);transition:left .4s;font-size:20px">▼</div>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)">
-                <span>10</span><span>18.5</span><span>25</span><span>30</span><span>40+</span>
+                <span>10</span><span>18.0</span><span>27.0</span><span>30.0</span><span>40+</span>
               </div>
             </div>
 
             <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
               <div style="display:grid;grid-template-columns:auto auto auto;gap:4px 16px">
-                <span style="color:#4caf82">■</span><span>低体重</span><span>BMI &lt; 18.5</span>
-                <span style="color:#c9a84c">■</span><span>普通体重</span><span>18.5 ≦ BMI &lt; 25</span>
-                <span style="color:#e08040">■</span><span>肥満(1度)</span><span>25 ≦ BMI &lt; 30</span>
-                <span style="color:#e05555">■</span><span>肥満(2度以上)</span><span>BMI ≧ 30</span>
+                <span style="color:#e08040">■</span><span>要確認域 🔍</span><span>BMI &lt; 18.0</span>
+                <span style="color:#4caf82">■</span><span>優良体域 ✅</span><span>18.0 ≦ BMI ≦ 27.0</span>
+                <span style="color:#c9a84c">■</span><span>標準体域</span><span>27.1 ≦ BMI &lt; 30.0</span>
+                <span style="color:#e05555">■</span><span>要確認域 🔍</span><span>BMI ≧ 30.0</span>
               </div>
             </div>
 
             <div style="margin-top:16px;padding:12px;background:var(--bg-deep);border-radius:6px;border:1px solid var(--border)">
               <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px">保険引受への影響（目安）</div>
               <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
-                BMI 18.5〜27.9：通常引受が見込まれる範囲<br>
-                BMI 28〜29.9：割増保険料または条件付きの場合あり<br>
-                BMI 30以上：医的査定・謝絶リスクあり（会社により異なる）
+                BMI 18.0〜27.0（優良体域）：引受条件が有利な範囲<br>
+                BMI 27.1〜29.9（標準体域）：通常引受が見込まれる範囲<br>
+                BMI 30.0以上 / 18.0未満（要確認域）：医的査定が必要な場合あり
               </div>
             </div>
           </div>
@@ -1984,17 +2014,18 @@ function calcBMI() {
   const ideal = 22 * hm * hm;
   const diff = w - ideal;
 
-  let judge, color;
-  if (bmi < 18.5) { judge = '低体重'; color = '#4caf82'; }
-  else if (bmi < 25) { judge = '普通体重'; color = '#c9a84c'; }
-  else if (bmi < 30) { judge = '肥満(1度)'; color = '#e08040'; }
-  else if (bmi < 35) { judge = '肥満(2度)'; color = '#e05555'; }
-  else { judge = '肥満(3度以上)'; color = '#cc2222'; }
+  let judge, color, insNote;
+  if (bmi < 18.0) { judge = '要確認域 🔍'; color = '#e08040'; insNote = '詳細確認が必要な場合があります'; }
+  else if (bmi <= 27.0) { judge = '優良体域 ✅'; color = '#4caf82'; insNote = '引受条件が有利な範囲です'; }
+  else if (bmi < 30.0) { judge = '標準体域'; color = '#c9a84c'; insNote = '通常引受の範囲内です'; }
+  else { judge = '要確認域 🔍'; color = '#e05555'; insNote = '詳細確認が必要な場合があります'; }
 
   document.getElementById('bmi-value').textContent = bmi.toFixed(1);
   document.getElementById('bmi-value').style.color = color;
   document.getElementById('bmi-judge').textContent = judge;
   document.getElementById('bmi-judge').style.color = color;
+  document.getElementById('bmi-ins-note').textContent = insNote;
+  document.getElementById('bmi-ins-note').style.color = color;
   document.getElementById('bmi-ideal').textContent = ideal.toFixed(1) + ' kg';
   const diffText = diff > 0 ? '+' + diff.toFixed(1) + ' kg（標準超）' : diff.toFixed(1) + ' kg（標準以下）';
   document.getElementById('bmi-diff').textContent = diffText;
@@ -2224,6 +2255,8 @@ function calcMortgageBalance() {
   const P = parseFloat(document.getElementById('mb-principal').value) || 3000;
   const r = parseFloat(document.getElementById('mb-rate').value) || 0.5;
   const years = parseInt(document.getElementById('mb-years').value) || 35;
+  const prepay = parseFloat(document.getElementById('mb-prepay').value) || 0;
+  const prepayYear = parseInt(document.getElementById('mb-prepay-year').value) || 5;
   if (P <= 0 || years <= 0) return;
 
   const rM = r / 100 / 12;
@@ -2240,18 +2273,81 @@ function calcMortgageBalance() {
     return Math.max(0, bal);
   }
 
-  const bal60 = age < 60 ? balanceAtMonth((60 - age) * 12) : null;
-  const bal65 = age < 65 ? balanceAtMonth((65 - age) * 12) : null;
+  function balanceAtMonthWithPrepay(months) {
+    if (prepay <= 0) return balanceAtMonth(months);
+    const prepayMonth = prepayYear * 12;
+    let bal = P;
+    let hasPrepaid = false;
+    for (let i = 0; i < Math.min(months, n); i++) {
+      bal -= (monthly - bal * rM);
+      if (bal < 0) { bal = 0; break; }
+      if (!hasPrepaid && i + 1 === prepayMonth) {
+        bal = Math.max(0, bal - prepay);
+        hasPrepaid = true;
+      }
+    }
+    return Math.max(0, bal);
+  }
+
+  function totalInterest(balFn) {
+    let bal = P, total = 0;
+    for (let i = 0; i < n; i++) {
+      const interest = bal * rM;
+      total += interest;
+      bal -= (monthly - interest);
+      if (bal <= 0) break;
+    }
+    return total;
+  }
 
   document.getElementById('mb-monthly').textContent = Math.round(monthly).toLocaleString() + '円/月';
-  document.getElementById('mb-bal60').textContent = bal60 === null ? '（60歳超）' : fmtYen(bal60);
-  document.getElementById('mb-bal65').textContent = bal65 === null ? '（65歳超）' : fmtYen(bal65);
   document.getElementById('mb-end-age').textContent = endAge + '歳 完済';
 
-  drawBalanceChart(P, r, years, age, monthly, rM);
+  const milestones = [
+    { label: '借入時', months: 0 },
+    { label: '5年後', months: 60 },
+    { label: '10年後', months: 120 },
+    { label: '60歳時', months: age < 60 ? (60 - age) * 12 : null },
+    { label: '65歳時', months: age < 65 ? (65 - age) * 12 : null },
+  ];
+
+  const tbody = document.getElementById('mb-milestone-body');
+  tbody.innerHTML = '';
+  milestones.forEach(m => {
+    if (m.months === null || m.months > n) {
+      const tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid rgba(255,255,255,0.05)';
+      tr.innerHTML = '<td style="padding:4px 0;color:var(--text-muted)">' + m.label + '</td><td style="text-align:right;padding:4px 4px;color:var(--text-dim)">—</td><td style="text-align:right;color:var(--text-dim)">—</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+    const balNo = m.months === 0 ? P : balanceAtMonth(m.months);
+    const balWith = m.months === 0 ? P : balanceAtMonthWithPrepay(m.months);
+    const tr = document.createElement('tr');
+    tr.style.cssText = 'border-bottom:1px solid rgba(255,255,255,0.05)';
+    tr.innerHTML = '<td style="padding:4px 0;color:var(--text-muted)">' + m.label + '</td>'
+      + '<td style="text-align:right;padding:4px 4px;color:#4fc3f7">' + (balNo > 0 ? fmtYen(balNo) : '完済') + '</td>'
+      + '<td style="text-align:right;color:#c9a84c">' + (balWith > 0 ? fmtYen(balWith) : '完済') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  if (prepay > 0) {
+    let intNoP = 0, balNoP = P;
+    for (let i = 0; i < n; i++) { const ip = balNoP * rM; intNoP += ip; balNoP -= (monthly - ip); if (balNoP <= 0) break; }
+    let intWP = 0, balWP = P, prepaid = false;
+    const pm = prepayYear * 12;
+    for (let i = 0; i < n; i++) { const ip = balWP * rM; intWP += ip; balWP -= (monthly - ip); if (balWP < 0) { balWP = 0; break; } if (!prepaid && i + 1 === pm) { balWP = Math.max(0, balWP - prepay); prepaid = true; } }
+    const savings = intNoP - intWP;
+    document.getElementById('mb-total-savings').textContent = savings > 0 ? fmtYen(savings) + ' 節約' : '効果なし';
+    document.getElementById('mb-savings-box').style.display = 'block';
+  } else {
+    document.getElementById('mb-savings-box').style.display = 'none';
+  }
+
+  drawBalanceChart(P, r, years, age, monthly, rM, prepay, prepayYear);
 }
 
-function drawBalanceChart(P, r, years, age, monthly, rM) {
+function drawBalanceChart(P, r, years, age, monthly, rM, prepay, prepayYear) {
   const canvas = document.getElementById('balance-chart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -2273,6 +2369,8 @@ function drawBalanceChart(P, r, years, age, monthly, rM) {
   }
 
   const steps = Math.min(n, 420);
+
+  // Line 1: without prepayment
   const pts = [];
   let bal = P;
   for (let m = 0; m <= steps; m++) {
@@ -2284,10 +2382,27 @@ function drawBalanceChart(P, r, years, age, monthly, rM) {
   pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
   ctx.lineTo(pad.l + cW, pad.t + cH); ctx.lineTo(pad.l, pad.t + cH); ctx.closePath();
   const g = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-  g.addColorStop(0, 'rgba(79,195,247,0.3)'); g.addColorStop(1, 'rgba(79,195,247,0.05)');
+  g.addColorStop(0, 'rgba(79,195,247,0.2)'); g.addColorStop(1, 'rgba(79,195,247,0.03)');
   ctx.fillStyle = g; ctx.fill();
   ctx.beginPath(); ctx.strokeStyle = '#4fc3f7'; ctx.lineWidth = 2;
   pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+
+  // Line 2: with prepayment
+  if (prepay > 0) {
+    const pts2 = [];
+    let bal2 = P, hasPrepaid = false;
+    const prepayMonth = (prepayYear || 5) * 12;
+    for (let m = 0; m <= steps; m++) {
+      pts2.push({ x: pad.l + cW * m / steps, y: pad.t + cH * (1 - Math.max(0, bal2) / P) });
+      if (m < steps) {
+        bal2 -= (monthly - bal2 * rM);
+        if (bal2 < 0) bal2 = 0;
+        if (!hasPrepaid && m + 1 === prepayMonth) { bal2 = Math.max(0, bal2 - prepay); hasPrepaid = true; }
+      }
+    }
+    ctx.beginPath(); ctx.strokeStyle = '#c9a84c'; ctx.lineWidth = 2.5;
+    pts2.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+  }
 
   function ageMarker(targetAge, color, label) {
     if (targetAge <= age || targetAge > age + years) return;
@@ -2298,8 +2413,8 @@ function drawBalanceChart(P, r, years, age, monthly, rM) {
     ctx.fillStyle = color; ctx.font = 'bold 10px Arial';
     ctx.fillText(label, x + 3, pad.t + 14);
   }
-  ageMarker(60, '#c9a84c', '60歳');
-  ageMarker(65, '#e08040', '65歳');
+  ageMarker(60, 'rgba(255,255,255,0.5)', '60歳');
+  ageMarker(65, 'rgba(255,255,255,0.35)', '65歳');
 
   ctx.fillStyle = '#4a7090'; ctx.font = '10px Arial';
   for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad.l + cW * i / 5 - 8, H - 6);

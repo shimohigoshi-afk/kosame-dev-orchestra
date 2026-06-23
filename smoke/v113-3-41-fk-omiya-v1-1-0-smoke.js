@@ -66,9 +66,9 @@ async function main() {
   assert.ok(src.includes('戸建て'), 'RE_DATA must include 戸建て');
   console.log('  PASS ④ 不動産・土地価格検索');
 
-  // v1.1.0 console version
-  assert.ok(src.includes('v1.1.0'), 'sidebar footer must show v1.1.0');
-  console.log('  PASS console version v1.1.0');
+  // v1.1.x console version (footer updated in subsequent patches)
+  assert.ok(/v1\.1\.\d/.test(src), 'sidebar footer must show v1.1.x or higher');
+  console.log('  PASS console version v1.1.x');
 
   // .gitignore
   const gitignore = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8');

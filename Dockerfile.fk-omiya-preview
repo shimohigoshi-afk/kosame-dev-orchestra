@@ -1,0 +1,19 @@
+# FK Omiya Console — Public Preview (Cloud Run)
+# Serves ONLY public/fk-omiya-console.html as a demo page.
+# DO NOT copy .env, secrets, or internal tools.
+# Unauthenticated access is allowed — demo page only.
+
+FROM node:24-slim
+
+WORKDIR /app
+
+# Only the preview server and public assets are needed — no other tools
+COPY tools/kosame-fk-omiya-preview-server.js ./tools/
+COPY public/ ./public/
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+
+CMD ["node", "tools/kosame-fk-omiya-preview-server.js"]

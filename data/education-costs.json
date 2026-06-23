@@ -1,0 +1,27 @@
+{
+  "_source": "文科省 令和3年度 子供の学習費調査",
+  "_url": "https://www.mext.go.jp/b_menu/toukei/chousa03/gakushuuhi/1268091.htm",
+  "_updated": "2021-12-24",
+  "_fetchedAt": null,
+  "kindergarten": {
+    "public":  { "label": "幼稚園（公立）", "years": 3, "annual": 22.3 },
+    "private": { "label": "幼稚園（私立）", "years": 3, "annual": 52.8 }
+  },
+  "elementary": {
+    "public":  { "label": "小学校（公立）", "years": 6, "annual": 35.2 },
+    "private": { "label": "小学校（私立）", "years": 6, "annual": 167.3 }
+  },
+  "junior": {
+    "public":  { "label": "中学校（公立）", "years": 3, "annual": 53.8 },
+    "private": { "label": "中学校（私立）", "years": 3, "annual": 143.6 }
+  },
+  "high": {
+    "public":  { "label": "高校（公立）", "years": 3, "annual": 51.2 },
+    "private": { "label": "高校（私立）", "years": 3, "annual": 105.4 }
+  },
+  "university": {
+    "national":     { "label": "大学（国立）",     "years": 4, "annual": 107.7 },
+    "private_arts": { "label": "大学（私立文系）", "years": 4, "annual": 127.0 },
+    "private_sci":  { "label": "大学（私立理系）", "years": 4, "annual": 154.0 }
+  }
+}

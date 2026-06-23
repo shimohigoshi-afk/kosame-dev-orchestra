@@ -231,6 +231,59 @@ canvas{display:block;width:100%;border-radius:4px}
 .uw-badge.declined{background:rgba(224,85,85,0.15);color:var(--danger);border:1px solid rgba(224,85,85,0.3)}
 .uw-badge.exclusion{background:rgba(79,195,247,0.12);color:var(--blue);border:1px solid rgba(79,195,247,0.3)}
 .uw-count{font-size:11px;color:var(--text-muted);margin-bottom:8px}
+/* UW criteria filter */
+.uw-criteria-filter{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.uw-cf-btn{padding:5px 13px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-muted);transition:.15s;background:none}
+.uw-cf-btn:hover{border-color:var(--gold);color:var(--gold)}
+.uw-cf-btn.cf-all{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.uw-cf-btn.cf-standard{border-color:var(--success);color:var(--success);background:rgba(76,175,130,0.1)}
+.uw-cf-btn.cf-conditional{border-color:var(--warn);color:var(--warn);background:rgba(224,160,64,0.1)}
+.uw-cf-btn.cf-exclusion{border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+.uw-cf-btn.cf-declined{border-color:var(--danger);color:var(--danger);background:rgba(224,85,85,0.1)}
+.uw-pdf-note{background:rgba(201,168,76,0.05);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.9;margin-top:14px}
+/* Education simulation */
+.edu-child-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.edu-child-tab{padding:7px 18px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:.15s;font-weight:600}
+.edu-child-tab:hover{border-color:var(--gold)}
+.edu-child-tab.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.edu-child-panel{display:none}
+.edu-child-panel.active{display:block}
+.edu-stage-block{margin-bottom:10px;padding:10px 12px;background:var(--bg-deep);border-radius:6px}
+.edu-stage-name{font-size:10px;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px}
+.edu-type-btns{display:flex;gap:6px;flex-wrap:wrap}
+.edu-type-btn{padding:4px 11px;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;color:var(--text-muted);transition:.15s}
+.edu-type-btn:hover{border-color:var(--blue);color:var(--blue)}
+.edu-type-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);font-weight:700}
+.edu-total-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.edu-total-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.edu-total-label{font-size:10px;color:var(--text-muted);margin-bottom:5px;letter-spacing:1px;line-height:1.4}
+.edu-total-val{font-size:20px;font-weight:700;color:var(--gold)}
+.edu-total-sub{font-size:10px;color:var(--text-dim);margin-top:3px}
+.edu-bar-item{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.edu-bar-label{font-size:11px;color:var(--text-muted);width:90px;flex:none;line-height:1.3}
+.edu-bar-track{flex:1;height:8px;background:var(--bg-deep);border-radius:4px;overflow:hidden}
+.edu-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.edu-bar-val{font-size:11px;color:var(--gold);width:55px;text-align:right;flex:none;font-weight:700}
+.edu-lipss-box{background:rgba(201,168,76,0.08);border:1px solid var(--gold);border-radius:8px;padding:14px;margin-top:10px}
+/* Real estate search */
+.re-search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.re-search-bar input{flex:1;min-width:180px}
+.re-search-bar select{width:140px;flex:none}
+.re-result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px}
+.re-price-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:default;transition:.15s}
+.re-price-card:hover{border-color:var(--gold)}
+.re-price-type{font-size:10px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px}
+.re-price-area{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.re-price-main{font-size:22px;font-weight:700;color:var(--gold);margin:4px 0}
+.re-price-sub{font-size:11px;color:var(--text-dim);line-height:1.6}
+.re-price-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.re-price-tag{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border)}
+.re-api-note{background:rgba(79,195,247,0.05);border:1px solid rgba(79,195,247,0.2);border-radius:6px;padding:12px 14px;font-size:11px;color:var(--blue);line-height:1.9;margin-bottom:14px}
+.re-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.re-stat-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.re-stat-label{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.re-stat-val{font-size:18px;font-weight:700;color:var(--gold)}
+.re-stat-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
 </style>
 </head>
 <body>
@@ -270,6 +323,12 @@ canvas{display:block;width:100%;border-radius:4px}
     <div class="nav-item" data-section="underwriting" onclick="navigate('underwriting',this)">
       <span class="nav-icon">🔍</span>医務査定検索
     </div>
+    <div class="nav-item" data-section="education" onclick="navigate('education',this)">
+      <span class="nav-icon">🎓</span>教育費シミュ
+    </div>
+    <div class="nav-item" data-section="realestate" onclick="navigate('realestate',this)">
+      <span class="nav-icon">🏡</span>不動産価格検索
+    </div>
     <div class="nav-label" style="margin-top:8px">管理</div>
     <div class="nav-item" data-section="summary" onclick="navigate('summary',this)">
       <span class="nav-icon">📋</span>提案サマリー
@@ -284,7 +343,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <span class="nav-icon">⚙</span>設定
     </div>
   </div>
-  <div class="sidebar-footer">FK Console v113.3.37 &nbsp;|&nbsp; 大宮支店</div>
+  <div class="sidebar-footer">FK Console v1.1.0 &nbsp;|&nbsp; 大宮支店</div>
 </nav>
 
 <!-- Main -->
@@ -339,7 +398,7 @@ canvas{display:block;width:100%;border-radius:4px}
         <div class="dash-tools">
           <div class="tool-quick" onclick="navigate('search',document.querySelector('[data-section=search]'))">
             <span class="tool-quick-icon">🔍</span>
-            <div><div class="tool-quick-name">ソリシター君</div><div class="tool-quick-desc">引受基準・不担保キーワード検索</div></div>
+            <div><div class="tool-quick-name">引受基準検索</div><div class="tool-quick-desc">引受基準・不担保キーワード検索</div></div>
           </div>
           <div class="tool-quick" onclick="navigate('simulation',document.querySelector('[data-section=simulation]'));switchSimTab('mortgage')">
             <span class="tool-quick-icon">🏠</span>
@@ -367,7 +426,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <div class="card">
         <div class="card-title">使い方ガイド</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-muted);line-height:1.7">
-          <div>・左メニューの「シミュレーション」から各計算ツールを選択<br>・「検索・計算ツール」でソリシター君を使用<br>・計算結果はダッシュボードに自動反映</div>
+          <div>・左メニューの「シミュレーション」から各計算ツールを選択<br>・「検索・計算ツール」で引受基準キーワード検索を使用<br>・計算結果はダッシュボードに自動反映</div>
           <div>・住宅ローンは変動・固定の比較グラフを表示<br>・税務計算は贈与税と相続税に対応<br>・資産運用は複利効果をグラフで可視化</div>
         </div>
       </div>
@@ -376,7 +435,7 @@ canvas{display:block;width:100%;border-radius:4px}
     <!-- ===== SOLICITOR SEARCH ===== -->
     <section id="section-search" class="section">
       <div class="card">
-        <div class="card-title">🔍 ソリシター君 — 引受基準・不担保キーワード検索</div>
+        <div class="card-title">🔍 引受基準・不担保キーワード検索</div>
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" class="search-input" id="solicitor-input" placeholder="キーワードを入力（例：高血圧、不担保、職業分類 など）" oninput="doSearch()" autocomplete="off">
@@ -1266,7 +1325,16 @@ canvas{display:block;width:100%;border-radius:4px}
             <option value="大同生命">大同生命</option>
             <option value="東京海上日動あんしん生命">東京海上日動あんしん生命</option>
             <option value="アフラック">アフラック</option>
+            <option value="ソニー生命">ソニー生命</option>
+            <option value="オリックス生命">オリックス生命</option>
           </select>
+        </div>
+        <div class="uw-criteria-filter" id="uw-criteria-filter">
+          <button class="uw-cf-btn cf-all" onclick="filterUWCriteria('')">すべて</button>
+          <button class="uw-cf-btn" onclick="filterUWCriteria('standard')">✅ 引受可（標準）</button>
+          <button class="uw-cf-btn" onclick="filterUWCriteria('conditional')">⚡ 条件付き引受</button>
+          <button class="uw-cf-btn" onclick="filterUWCriteria('exclusion')">🔵 部位不担保</button>
+          <button class="uw-cf-btn" onclick="filterUWCriteria('declined')">❌ 謝絶</button>
         </div>
         <div class="uw-count" id="uw-count">— 件</div>
         <div style="overflow-x:auto">
@@ -1283,9 +1351,267 @@ canvas{display:block;width:100%;border-radius:4px}
             <tbody id="uw-tbody"></tbody>
           </table>
         </div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:12px;line-height:1.7">
-          ※ 表示データはサンプルです。実際の引受基準は保険会社・商品・申込時期により異なります。<br>
-          ※ 最終判断は各社の正式な医務査定による確認が必要です。
+        <div class="uw-pdf-note">
+          <strong style="color:var(--gold)">📁 PDFデータ取り込み</strong><br>
+          保険会社の医務査定基準PDFを <code style="color:var(--text)">data/underwriting/</code> フォルダに配置後、<br>
+          <code style="color:var(--text)">node tools/import-underwriting-pdf.js</code> を実行すると UW_DATA が自動更新されます。<br>
+          ※ data/underwriting/ は .gitignore 対象です。社外秘データを誤って公開しないようご注意ください。
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:10px;line-height:1.7">
+          ※ 表示データはサンプルです。実際の引受基準は保険会社・商品・申込時期により異なります。最終判断は各社の正式な医務査定による確認が必要です。
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="section-education" class="section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-title">👶 子ども別 教育プラン設定</div>
+            <div class="edu-child-tabs">
+              <div class="edu-child-tab active" id="edu-ctab-0" onclick="switchEduChild(0)">第１子</div>
+              <div class="edu-child-tab" id="edu-ctab-1" onclick="switchEduChild(1)">第２子</div>
+              <div class="edu-child-tab" id="edu-ctab-2" onclick="switchEduChild(2)">第３子</div>
+            </div>
+
+            <!-- 第１子 -->
+            <div class="edu-child-panel active" id="edu-child-0">
+              <div class="input-row" style="margin-bottom:10px">
+                <label class="input-label">現在の年齢（歳）</label>
+                <input type="number" id="edu-age-0" value="5" min="0" max="22" oninput="calcEducation()">
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">幼稚園（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-0-kindergarten-public" onclick="selectEduStage(0,'kindergarten','public')">公立 22.3万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-kindergarten-private" onclick="selectEduStage(0,'kindergarten','private')">私立 52.8万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">小学校（6年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-0-elementary-public" onclick="selectEduStage(0,'elementary','public')">公立 35.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-elementary-private" onclick="selectEduStage(0,'elementary','private')">私立 167.3万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">中学校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-0-junior-public" onclick="selectEduStage(0,'junior','public')">公立 53.8万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-junior-private" onclick="selectEduStage(0,'junior','private')">私立 143.6万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">高校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-0-high-public" onclick="selectEduStage(0,'high','public')">公立 51.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-high-private" onclick="selectEduStage(0,'high','private')">私立 105.4万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">大学（4年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-0-university-national" onclick="selectEduStage(0,'university','national')">国立 107.7万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-university-private_arts" onclick="selectEduStage(0,'university','private_arts')">私文 127.0万/年</div>
+                  <div class="edu-type-btn" id="ebt-0-university-private_sci" onclick="selectEduStage(0,'university','private_sci')">私理 154.0万/年</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第２子 -->
+            <div class="edu-child-panel" id="edu-child-1">
+              <div class="input-row" style="margin-bottom:10px">
+                <label class="input-label">現在の年齢（歳）</label>
+                <input type="number" id="edu-age-1" value="3" min="0" max="22" oninput="calcEducation()">
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">幼稚園（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-1-kindergarten-public" onclick="selectEduStage(1,'kindergarten','public')">公立 22.3万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-kindergarten-private" onclick="selectEduStage(1,'kindergarten','private')">私立 52.8万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">小学校（6年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-1-elementary-public" onclick="selectEduStage(1,'elementary','public')">公立 35.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-elementary-private" onclick="selectEduStage(1,'elementary','private')">私立 167.3万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">中学校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-1-junior-public" onclick="selectEduStage(1,'junior','public')">公立 53.8万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-junior-private" onclick="selectEduStage(1,'junior','private')">私立 143.6万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">高校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-1-high-public" onclick="selectEduStage(1,'high','public')">公立 51.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-high-private" onclick="selectEduStage(1,'high','private')">私立 105.4万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">大学（4年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-1-university-national" onclick="selectEduStage(1,'university','national')">国立 107.7万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-university-private_arts" onclick="selectEduStage(1,'university','private_arts')">私文 127.0万/年</div>
+                  <div class="edu-type-btn" id="ebt-1-university-private_sci" onclick="selectEduStage(1,'university','private_sci')">私理 154.0万/年</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第３子 -->
+            <div class="edu-child-panel" id="edu-child-2">
+              <div class="input-row" style="margin-bottom:10px">
+                <label class="input-label">現在の年齢（歳）</label>
+                <input type="number" id="edu-age-2" value="1" min="0" max="22" oninput="calcEducation()">
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">幼稚園（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-2-kindergarten-public" onclick="selectEduStage(2,'kindergarten','public')">公立 22.3万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-kindergarten-private" onclick="selectEduStage(2,'kindergarten','private')">私立 52.8万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">小学校（6年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-2-elementary-public" onclick="selectEduStage(2,'elementary','public')">公立 35.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-elementary-private" onclick="selectEduStage(2,'elementary','private')">私立 167.3万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">中学校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-2-junior-public" onclick="selectEduStage(2,'junior','public')">公立 53.8万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-junior-private" onclick="selectEduStage(2,'junior','private')">私立 143.6万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">高校（3年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-2-high-public" onclick="selectEduStage(2,'high','public')">公立 51.2万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-high-private" onclick="selectEduStage(2,'high','private')">私立 105.4万/年</div>
+                </div>
+              </div>
+              <div class="edu-stage-block">
+                <div class="edu-stage-name">大学（4年）</div>
+                <div class="edu-type-btns">
+                  <div class="edu-type-btn active" id="ebt-2-university-national" onclick="selectEduStage(2,'university','national')">国立 107.7万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-university-private_arts" onclick="selectEduStage(2,'university','private_arts')">私文 127.0万/年</div>
+                  <div class="edu-type-btn" id="ebt-2-university-private_sci" onclick="selectEduStage(2,'university','private_sci')">私理 154.0万/年</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">💰 教育費総計（LiPSS試算）</div>
+            <div class="edu-total-grid" id="edu-total-grid">
+              <div class="edu-total-card">
+                <div class="edu-total-label">3人合計<br>教育費総額</div>
+                <div class="edu-total-val" id="edu-grand-total">—</div>
+                <div class="edu-total-sub">幼稚園〜大学まで</div>
+              </div>
+              <div class="edu-total-card">
+                <div class="edu-total-label">LiPSS<br>残存教育費</div>
+                <div class="edu-total-val" id="edu-lipss-total">—</div>
+                <div class="edu-total-sub">今から必要な費用</div>
+              </div>
+              <div class="edu-total-card">
+                <div class="edu-total-label">末子<br>就職まで</div>
+                <div class="edu-total-val" id="edu-youngest-years">—</div>
+                <div class="edu-total-sub">保障が必要な年数</div>
+              </div>
+            </div>
+            <div style="margin-top:12px" id="edu-bar-area">
+              <!-- Bar chart per child -->
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🛡 必要保障額への連動</div>
+            <div id="edu-lipss-detail">
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.9">
+                左で子どもの年齢とプランを設定すると、LiPSS方式の教育費必要保障額を算出します。
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="font-size:11px">📚 文科省データ（令和3年度 子供の学習費調査）</div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px">
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">幼稚園</div><div style="color:var(--gold)">公 22.3万</div><div style="color:var(--text-dim)">私 52.8万</div></div>
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">小学校</div><div style="color:var(--gold)">公 35.2万</div><div style="color:var(--text-dim)">私167.3万</div></div>
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">中学校</div><div style="color:var(--gold)">公 53.8万</div><div style="color:var(--text-dim)">私143.6万</div></div>
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">高校</div><div style="color:var(--gold)">公 51.2万</div><div style="color:var(--text-dim)">私105.4万</div></div>
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">大学</div><div style="color:var(--gold)">国107.7万</div><div style="color:var(--text-dim)">私文127万</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:6px;line-height:1.7">
+              ※ 年額（授業料・給食費・課外活動費等含む学習費総額）。最新データは <code>npm run fetch:education-costs</code> で更新。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REAL ESTATE -->
+    <section id="section-realestate" class="section">
+      <div class="re-api-note">
+        📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携（準備中）<br>
+        APIキーを <code>MLIT_API_KEY</code> として設定するとリアルタイム取得に切り替わります。現在は参考サンプルデータを表示中です。<br>
+        APIマニュアル: <code>https://www.reinfolib.mlit.go.jp/help/apiManual/</code>
+      </div>
+      <div class="card">
+        <div class="card-title">🔍 エリア・種別検索</div>
+        <div class="re-search-bar">
+          <input type="text" id="re-keyword" placeholder="市区町村・駅名で検索（例：大宮、浦和、川越）" oninput="searchRealestate()">
+          <select id="re-type" onchange="searchRealestate()">
+            <option value="">すべての種別</option>
+            <option value="マンション">マンション</option>
+            <option value="戸建て">戸建て</option>
+            <option value="土地">土地</option>
+          </select>
+          <select id="re-area" onchange="searchRealestate()">
+            <option value="">すべてのエリア</option>
+            <option value="さいたま市">さいたま市</option>
+            <option value="川越市">川越市</option>
+            <option value="所沢市">所沢市</option>
+            <option value="熊谷市">熊谷市</option>
+            <option value="東京23区">東京23区</option>
+          </select>
+        </div>
+        <div class="re-stat-grid" id="re-stat-grid">
+          <div class="re-stat-card">
+            <div class="re-stat-label">表示件数</div>
+            <div class="re-stat-val" id="re-count">—</div>
+            <div class="re-stat-sub">件</div>
+          </div>
+          <div class="re-stat-card">
+            <div class="re-stat-label">マンション平均坪単価</div>
+            <div class="re-stat-val" id="re-avg-mansion">—</div>
+            <div class="re-stat-sub">万円/坪</div>
+          </div>
+          <div class="re-stat-card">
+            <div class="re-stat-label">戸建て平均価格</div>
+            <div class="re-stat-val" id="re-avg-house">—</div>
+            <div class="re-stat-sub">万円</div>
+          </div>
+          <div class="re-stat-card">
+            <div class="re-stat-label">土地平均坪単価</div>
+            <div class="re-stat-val" id="re-avg-land">—</div>
+            <div class="re-stat-sub">万円/坪</div>
+          </div>
+        </div>
+        <div class="re-result-grid" id="re-result-grid"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:14px;line-height:1.7">
+          ※ 国土交通省不動産取引価格情報（2023年）をもとにしたサンプルデータです。実際の取引価格は個別査定が必要です。<br>
+          ※ 坪単価 = 取引価格 ÷ 面積（㎡）× 3.3058。
         </div>
       </div>
     </section>
@@ -1333,13 +1659,15 @@ canvas{display:block;width:100%;border-radius:4px}
 /* ── Navigation ── */
 const SECTION_TITLES = {
   dashboard: 'ダッシュボード',
-  search: '検索・計算ツール｜ソリシター君',
+  search: '検索・計算ツール',
   simulation: 'シミュレーション',
   lifetime: '生涯収入・資産配分',
   security: 'FK社会保障ナビ',
   medical: '高額療養費・傷病手当金計算',
   disease: '医療費・疾病リスク計算',
   underwriting: '医務査定検索',
+  education: '教育費シミュレーション（LiPSS）',
+  realestate: '不動産・土地価格検索',
   summary: '提案サマリー',
   files: 'ファイル管理',
   url: 'URL解析',
@@ -1359,6 +1687,8 @@ function navigate(key, el) {
   if (key === 'medical') setTimeout(calcMedical, 100);
   if (key === 'disease') setTimeout(calcDisease, 100);
   if (key === 'underwriting') setTimeout(renderUnderwriting, 100);
+  if (key === 'education') setTimeout(calcEducation, 100);
+  if (key === 'realestate') setTimeout(renderRealestate, 100);
 }
 
 /* ── Sim Tabs ── */
@@ -2663,16 +2993,38 @@ function calcDisease() {
 /* ── Underwriting Search ── */
 const UW_DATA = [
   { disease: '高血圧症（治療中）', company: '日本生命', criteria: 'exclusion', criteriaLabel: '部位不担保（循環器）', notes: '服薬1剤・安定値の場合は条件緩和あり。収縮期150/拡張期100未満が目安', updated: '2024-01' },
+  { disease: '高血圧症（軽症・服薬なし）', company: 'ソニー生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '収縮期140未満・拡張期90未満で安定している場合は通常引受可。経過観察1年以上が要件', updated: '2024-06' },
   { disease: '糖尿病（2型・服薬中）', company: '第一生命', criteria: 'conditional', criteriaLabel: '保険料割増（6分の1）', notes: 'HbA1c 7.0未満・合併症なし・服薬1剤で割増のみの場合あり', updated: '2024-01' },
+  { disease: '糖尿病（2型・HbA1c 8.0以上）', company: '明治安田生命', criteria: 'declined', criteriaLabel: '謝絶', notes: 'HbA1c 8.0以上・合併症（網膜症・腎症）を有する場合は謝絶となるケースが多い', updated: '2024-02' },
   { disease: 'うつ病（寛解後）', company: '住友生命', criteria: 'conditional', criteriaLabel: '5年経過後 条件付き引受', notes: '軽症エピソード1回・就労継続中・服薬終了が要件。重症歴は引受困難', updated: '2024-03' },
+  { disease: 'うつ病（治療中）', company: '富国生命', criteria: 'declined', criteriaLabel: '謝絶（治療中）', notes: '投薬・通院継続中は原則謝絶。寛解・就労復帰後に再申込が推奨される', updated: '2024-02' },
   { disease: '脂質異常症（服薬中）', company: '明治安田生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '服薬1剤・LDL 160未満は通常引受。動脈硬化合併は要審査', updated: '2024-02' },
   { disease: '乳がん（術後5年経過）', company: '太陽生命', criteria: 'exclusion', criteriaLabel: '部位不担保（乳房）10年', notes: '再発なし・ホルモン療法終了後。ステージ・組織型により条件変動', updated: '2024-01' },
+  { disease: '乳がん（術後10年経過・再発なし）', company: 'オリックス生命', criteria: 'conditional', criteriaLabel: '特定部位不担保 解除交渉可', notes: '10年経過・ホルモン療法終了・再発転移なし。ステージ1は標準体移行交渉あり', updated: '2024-04' },
   { disease: '甲状腺がん（乳頭がん術後）', company: '朝日生命', criteria: 'conditional', criteriaLabel: '経過期間で条件緩和', notes: '低リスク型は3年経過で再審査可。高リスク型・再発例は引受困難', updated: '2024-03' },
+  { disease: '甲状腺機能低下症（チラーヂン服薬中）', company: 'アフラック', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: 'TSH正常範囲内・症状安定・1剤管理の場合は通常引受が多い', updated: '2024-04' },
   { disease: '狭心症（PCI後 安定）', company: '富国生命', criteria: 'exclusion', criteriaLabel: '循環器疾患 部位不担保', notes: 'ステント留置後2年安定・服薬継続中。追加病変なし要件', updated: '2024-02' },
+  { disease: '脳梗塞（後遺症なし・5年経過）', company: '日本生命', criteria: 'conditional', criteriaLabel: '保険料割増または部位不担保', notes: '後遺症なし・再発なし・5年経過で交渉可。抗血小板薬継続中。会社・商品による差が大きい', updated: '2024-05' },
   { disease: '子宮筋腫（経過観察）', company: '大同生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '5cm未満・治療なし・定期検査中の場合。手術歴あり・多発例は要審査', updated: '2024-01' },
+  { disease: '子宮内膜症（治療中）', company: '住友生命', criteria: 'exclusion', criteriaLabel: '婦人科系 部位不担保', notes: '投薬・ホルモン療法中は部位不担保が多い。手術歴・不妊治療歴も要審査', updated: '2024-03' },
   { disease: 'メニエール病', company: '東京海上日動あんしん生命', criteria: 'exclusion', criteriaLabel: '耳・頭部 部位不担保', notes: '発作回数・重症度・聴力障害の有無により条件変動', updated: '2024-03' },
   { disease: '逆流性食道炎（PPI服薬中）', company: 'アフラック', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '内視鏡でグレードB以下・バレット食道なし。定期検査継続が望ましい', updated: '2024-04' },
+  { disease: '気管支喘息（軽症・吸入薬管理）', company: '第一生命', criteria: 'conditional', criteriaLabel: '呼吸器 条件付き', notes: '軽症持続型・吸入ステロイド1剤で安定の場合。中等症以上・入院歴ありは謝絶の可能性', updated: '2024-03' },
+  { disease: '椎間板ヘルニア（保存療法中）', company: '明治安田生命', criteria: 'exclusion', criteriaLabel: '脊椎・腰部 部位不担保', notes: '手術未施行・保存療法中は部位不担保。術後2年経過・症状消失で解除交渉可', updated: '2024-02' },
+  { disease: '関節リウマチ（生物学的製剤使用中）', company: '太陽生命', criteria: 'declined', criteriaLabel: '謝絶', notes: '生物学的製剤・JAK阻害剤使用中は感染リスク・合併症リスクにより謝絶が多い', updated: '2024-04' },
+  { disease: '大腸ポリープ（内視鏡切除後）', company: '朝日生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '腺腫性ポリープ切除後・定期検査継続中。がん化していない・経過1年以上が要件', updated: '2024-01' },
+  { disease: '慢性腎臓病（CKD3期）', company: '富国生命', criteria: 'declined', criteriaLabel: '謝絶', notes: 'CKD3期（eGFR 30〜59）は腎不全リスクにより多くの保険会社で謝絶となる', updated: '2024-05' },
+  { disease: '腎結石（経過観察中）', company: 'ソニー生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '排石後・再発なし・定期エコー経過観察中。再発頻度が高い場合は要審査', updated: '2024-03' },
+  { disease: '白内障（術後）', company: '大同生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '両眼手術完了・視力良好・緑内障合併なし。術後1年経過で通常引受が多い', updated: '2024-02' },
+  { disease: '緑内障（点眼薬管理中）', company: '日本生命', criteria: 'exclusion', criteriaLabel: '眼部 部位不担保', notes: '進行抑制中でも失明リスクにより部位不担保。視野障害進行例は謝絶の可能性', updated: '2024-06' },
+  { disease: '前立腺肥大症（服薬中）', company: '住友生命', criteria: 'conditional', criteriaLabel: '条件付き引受', notes: 'α遮断薬管理中・PSA正常範囲内。PSA高値・要精密検査は審査保留', updated: '2024-04' },
+  { disease: '脂肪肝（NAFLD・肥満）', company: 'オリックス生命', criteria: 'conditional', criteriaLabel: 'BMI条件あり', notes: 'BMI 30以上は別途審査。ALT正常化・体重管理良好なら条件付き引受の場合あり', updated: '2024-05' },
+  { disease: '慢性B型肝炎（ウイルスキャリア）', company: '第一生命', criteria: 'declined', criteriaLabel: '謝絶', notes: 'HBs抗原陽性かつ肝機能異常・抗ウイルス治療中は肝硬変・肝がんリスクにより謝絶', updated: '2024-03' },
+  { disease: '花粉症・アレルギー性鼻炎（軽症）', company: 'アフラック', criteria: 'standard', criteriaLabel: '標準体', notes: '季節性・軽症の場合は通常引受。喘息合併・重症は別途審査', updated: '2024-01' },
+  { disease: '痔（痔核・術後2年経過）', company: '東京海上日動あんしん生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '手術後2年以上経過・再発なし・経過良好の場合は通常引受。現在治療中は部位不担保', updated: '2024-02' },
 ];
+
+let _uwCriteriaFilter = '';
 
 function renderUnderwriting(data) {
   const rows = data || UW_DATA;
@@ -2689,15 +3041,233 @@ function renderUnderwriting(data) {
   `).join('');
 }
 
+function filterUWCriteria(criteria) {
+  _uwCriteriaFilter = criteria;
+  document.querySelectorAll('.uw-cf-btn').forEach(b => {
+    b.className = 'uw-cf-btn';
+    if (!criteria && b.textContent.includes('すべて')) b.classList.add('cf-all');
+  });
+  if (criteria) {
+    const map = { standard: 'cf-standard', conditional: 'cf-conditional', exclusion: 'cf-exclusion', declined: 'cf-declined' };
+    const btns = document.querySelectorAll('.uw-cf-btn');
+    btns.forEach(b => { if (b.textContent.includes({ standard: '引受可', conditional: '条件付き', exclusion: '部位不担保', declined: '謝絶' }[criteria])) b.classList.add(map[criteria]); });
+  }
+  searchUnderwriting();
+}
+
 function searchUnderwriting() {
   const kw = (document.getElementById('uw-keyword').value || '').toLowerCase();
   const co = (document.getElementById('uw-company').value || '').toLowerCase();
   const filtered = UW_DATA.filter(r => {
     const matchKw = !kw || r.disease.toLowerCase().includes(kw) || r.notes.toLowerCase().includes(kw) || r.criteriaLabel.toLowerCase().includes(kw);
     const matchCo = !co || r.company.toLowerCase().includes(co);
-    return matchKw && matchCo;
+    const matchCriteria = !_uwCriteriaFilter || r.criteria === _uwCriteriaFilter;
+    return matchKw && matchCo && matchCriteria;
   });
   renderUnderwriting(filtered);
+}
+
+/* ── Education (LiPSS) ── */
+const EDU_COST = {
+  kindergarten: { public: 22.3, private: 52.8, years: 3, startAge: 3 },
+  elementary:   { public: 35.2, private: 167.3, years: 6, startAge: 6 },
+  junior:       { public: 53.8, private: 143.6, years: 3, startAge: 12 },
+  high:         { public: 51.2, private: 105.4, years: 3, startAge: 15 },
+  university:   { national: 107.7, private_arts: 127.0, private_sci: 154.0, years: 4, startAge: 18 },
+};
+
+const EDU_STATE = {
+  activeChild: 0,
+  children: [
+    { age: 5, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
+    { age: 3, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
+    { age: 1, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
+  ],
+};
+
+function switchEduChild(idx) {
+  EDU_STATE.activeChild = idx;
+  document.querySelectorAll('.edu-child-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.edu-child-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+function selectEduStage(childIdx, stage, type) {
+  EDU_STATE.children[childIdx].stages[stage] = type;
+  const stageEl = EDU_COST[stage];
+  const typeKeys = stage === 'university'
+    ? ['national', 'private_arts', 'private_sci']
+    : ['public', 'private'];
+  typeKeys.forEach(t => {
+    const el = document.getElementById(`ebt-${childIdx}-${stage}-${t}`);
+    if (el) el.classList.toggle('active', t === type);
+  });
+  calcEducation();
+}
+
+function eduChildCost(childAge, stages) {
+  let total = 0;
+  let remaining = 0;
+  const stageOrder = ['kindergarten', 'elementary', 'junior', 'high', 'university'];
+  const stageColors = { kindergarten: '#4caf82', elementary: '#4fc3f7', junior: '#c9a84c', high: '#e08040', university: '#9c88ff' };
+  const breakdown = [];
+
+  for (const stage of stageOrder) {
+    const cfg = EDU_COST[stage];
+    const type = stages[stage] || (stage === 'university' ? 'national' : 'public');
+    const annual = cfg[type] || 0;
+    const stageCost = annual * cfg.years;
+    const stageEnd = cfg.startAge + cfg.years;
+
+    let remainCost = 0;
+    if (childAge < cfg.startAge) {
+      remainCost = stageCost;
+    } else if (childAge < stageEnd) {
+      const remainYears = stageEnd - childAge;
+      remainCost = annual * remainYears;
+    }
+    total += stageCost;
+    remaining += remainCost;
+    breakdown.push({ stage, stageCost, remainCost, color: stageColors[stage] });
+  }
+  return { total, remaining, breakdown };
+}
+
+function calcEducation() {
+  const children = EDU_STATE.children.map((c, i) => {
+    const ageEl = document.getElementById(`edu-age-${i}`);
+    const age = ageEl ? (parseInt(ageEl.value) || 0) : c.age;
+    c.age = age;
+    return { ...c, age, ...eduChildCost(age, c.stages) };
+  });
+
+  const grandTotal = children.reduce((s, c) => s + c.total, 0);
+  const lipssTotal = children.reduce((s, c) => s + c.remaining, 0);
+  const youngestAge = Math.min(...children.map(c => c.age));
+  const youngestEndAge = 22;
+  const yearsNeeded = Math.max(0, youngestEndAge - youngestAge);
+
+  const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setT('edu-grand-total', Math.round(grandTotal) + '万円');
+  setT('edu-lipss-total', Math.round(lipssTotal) + '万円');
+  setT('edu-youngest-years', yearsNeeded + '年');
+
+  const barArea = document.getElementById('edu-bar-area');
+  if (barArea) {
+    const maxCost = Math.max(...children.map(c => c.total), 1);
+    barArea.innerHTML = children.map((c, i) => `
+      <div class="edu-bar-item">
+        <div class="edu-bar-label">第${i+1}子（${c.age}歳）</div>
+        <div class="edu-bar-track"><div class="edu-bar-fill" style="width:${(c.total/maxCost*100).toFixed(1)}%;background:#c9a84c"></div></div>
+        <div class="edu-bar-val">${Math.round(c.total)}万</div>
+      </div>
+      <div class="edu-bar-item">
+        <div class="edu-bar-label" style="color:var(--blue)">　残存費用</div>
+        <div class="edu-bar-track"><div class="edu-bar-fill" style="width:${(c.remaining/maxCost*100).toFixed(1)}%;background:#4fc3f7"></div></div>
+        <div class="edu-bar-val" style="color:var(--blue)">${Math.round(c.remaining)}万</div>
+      </div>
+    `).join('');
+  }
+
+  const lipssBox = document.getElementById('edu-lipss-detail');
+  if (lipssBox) {
+    const stages = ['kindergarten', 'elementary', 'junior', 'high', 'university'];
+    const stageLabels = { kindergarten: '幼稚園', elementary: '小学校', junior: '中学校', high: '高校', university: '大学' };
+    lipssBox.innerHTML = `
+      <div class="edu-lipss-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;letter-spacing:1px">LiPSS — 今必要な教育費保障</div>
+        <div style="font-size:26px;font-weight:700;color:var(--gold);margin:4px 0">${Math.round(lipssTotal).toLocaleString('ja-JP')}万円</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">万一の際に不足する教育費の合計。必要保障額の試算に上乗せしてください。</div>
+      </div>
+      <div style="margin-top:14px">
+        ${children.map((c, i) => `
+          <div style="margin-bottom:10px;padding:10px;background:var(--bg-deep);border-radius:6px">
+            <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">第${i+1}子（現在 ${c.age} 歳）</div>
+            ${c.breakdown.filter(b => b.remainCost > 0).map(b => `
+              <div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+                <span style="color:var(--text-muted)">${stageLabels[b.stage]}</span>
+                <span style="color:${b.color};font-weight:700">${Math.round(b.remainCost)}万円</span>
+              </div>
+            `).join('') || '<div style="font-size:11px;color:var(--text-dim)">すべて完了済み</div>'}
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;margin-top:4px">
+              <span style="color:var(--text)">小計</span>
+              <span style="color:var(--gold);font-weight:700">${Math.round(c.remaining)}万円</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
+
+/* ── Real Estate ── */
+const RE_DATA = [
+  { type: 'マンション', area: 'さいたま市', location: '大宮駅 徒歩5分圏', pricePer: 65, size: 70, totalPrice: 4550, year: 2023, note: 'JR宇都宮線・京浜東北線沿線' },
+  { type: 'マンション', area: 'さいたま市', location: '浦和駅 徒歩8分圏', pricePer: 72, size: 68, totalPrice: 4896, year: 2023, note: '学区良好・高台立地' },
+  { type: 'マンション', area: 'さいたま市', location: '北浦和駅 徒歩6分圏', pricePer: 58, size: 72, totalPrice: 4176, year: 2023, note: '利便性高い住宅地' },
+  { type: 'マンション', area: 'さいたま市', location: '与野本町駅 徒歩10分圏', pricePer: 52, size: 75, totalPrice: 3900, year: 2023, note: '都心直通30分圏' },
+  { type: '戸建て', area: 'さいたま市', location: '大宮区 一般住宅地', pricePer: 28, size: 160, totalPrice: 4480, year: 2023, note: '建物込み（築10年）' },
+  { type: '戸建て', area: 'さいたま市', location: '見沼区 閑静住宅地', pricePer: 22, size: 165, totalPrice: 3630, year: 2023, note: '新築建売' },
+  { type: '土地', area: 'さいたま市', location: '大宮区 住宅地', pricePer: 25, size: 150, totalPrice: 3750, year: 2023, note: '建築条件なし' },
+  { type: '土地', area: 'さいたま市', location: '中央区 準住宅地', pricePer: 30, size: 120, totalPrice: 3600, year: 2023, note: '角地・建蔽率60%' },
+  { type: 'マンション', area: '川越市', location: '川越駅 徒歩10分圏', pricePer: 45, size: 72, totalPrice: 3240, year: 2023, note: '小江戸川越 生活利便高い' },
+  { type: '戸建て', area: '川越市', location: '南大塚駅 徒歩8分圏', pricePer: 19, size: 175, totalPrice: 3325, year: 2023, note: '東上線 都心アクセス良好' },
+  { type: '土地', area: '川越市', location: '川越市内 住宅地', pricePer: 16, size: 155, totalPrice: 2480, year: 2023, note: '整形地・上水道引込済' },
+  { type: 'マンション', area: '所沢市', location: '所沢駅 徒歩7分圏', pricePer: 48, size: 70, totalPrice: 3360, year: 2023, note: '西武新宿線・池袋線 2路線利用' },
+  { type: '戸建て', area: '所沢市', location: '航空公園駅 徒歩15分圏', pricePer: 18, size: 168, totalPrice: 3024, year: 2023, note: '公園近接 自然環境良好' },
+  { type: 'マンション', area: '熊谷市', location: '熊谷駅 徒歩10分圏', pricePer: 30, size: 75, totalPrice: 2250, year: 2023, note: '新幹線停車駅 交通利便高い' },
+  { type: '戸建て', area: '熊谷市', location: '熊谷市内 住宅地', pricePer: 13, size: 180, totalPrice: 2340, year: 2023, note: '広めの敷地 ファミリー向け' },
+  { type: 'マンション', area: '東京23区', location: '板橋駅 徒歩8分圏', pricePer: 110, size: 65, totalPrice: 7150, year: 2023, note: '都心近接 生活インフラ充実' },
+  { type: 'マンション', area: '東京23区', location: '練馬駅 徒歩5分圏', pricePer: 98, size: 70, totalPrice: 6860, year: 2023, note: '西武池袋線 急行停車駅' },
+  { type: '戸建て', area: '東京23区', location: '足立区 住宅地', pricePer: 60, size: 100, totalPrice: 6000, year: 2023, note: '建物込み（築5年）' },
+  { type: '土地', area: '東京23区', location: '荒川区 住宅地', pricePer: 72, size: 80, totalPrice: 5760, year: 2023, note: '第一種低層 50/100' },
+];
+
+function searchRealestate() {
+  const kw = (document.getElementById('re-keyword').value || '').toLowerCase();
+  const type = document.getElementById('re-type').value || '';
+  const area = document.getElementById('re-area').value || '';
+  const filtered = RE_DATA.filter(r => {
+    const matchKw = !kw || r.location.toLowerCase().includes(kw) || r.area.toLowerCase().includes(kw) || r.note.toLowerCase().includes(kw);
+    const matchType = !type || r.type === type;
+    const matchArea = !area || r.area === area;
+    return matchKw && matchType && matchArea;
+  });
+  renderRealestate(filtered);
+}
+
+function renderRealestate(data) {
+  const rows = data || RE_DATA;
+  const el = id => document.getElementById(id);
+
+  el('re-count').textContent = rows.length;
+
+  const mansions = rows.filter(r => r.type === 'マンション');
+  const houses = rows.filter(r => r.type === '戸建て');
+  const lands = rows.filter(r => r.type === '土地');
+  const avg = arr => arr.length ? Math.round(arr.reduce((s, r) => s + r.pricePer, 0) / arr.length) : '—';
+  const avgHouse = houses.length ? Math.round(houses.reduce((s, r) => s + r.totalPrice, 0) / houses.length) : '—';
+
+  el('re-avg-mansion').textContent = avg(mansions) === '—' ? '—' : avg(mansions);
+  el('re-avg-house').textContent = avgHouse === '—' ? '—' : avgHouse;
+  el('re-avg-land').textContent = avg(lands) === '—' ? '—' : avg(lands);
+
+  const typeColor = { 'マンション': 'var(--blue)', '戸建て': 'var(--gold)', '土地': 'var(--success)' };
+  el('re-result-grid').innerHTML = rows.map(r => {
+    const tsubo = (r.size / 3.3058).toFixed(1);
+    return `
+      <div class="re-price-card">
+        <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
+        <div class="re-price-area">${r.location}</div>
+        <div class="re-price-main">${r.totalPrice.toLocaleString('ja-JP')}万円</div>
+        <div class="re-price-sub">坪単価: <strong style="color:var(--gold)">${r.pricePer}万円/坪</strong> &nbsp;|&nbsp; ${r.size}㎡（${tsubo}坪）</div>
+        <div class="re-price-tags">
+          <span class="re-price-tag">${r.area}</span>
+          <span class="re-price-tag">${r.year}年</span>
+          <span class="re-price-tag">${r.note}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ── Init ── */
@@ -2712,6 +3282,8 @@ calcSocialSecurity();
 calcMedical();
 calcDisease();
 renderUnderwriting();
+calcEducation();
+renderRealestate();
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();

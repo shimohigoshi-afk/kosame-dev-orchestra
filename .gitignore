@@ -15,6 +15,11 @@ package-lock.json
 # Secret keys (never commit)
 .env
 
+# 医務査定データ（社外秘 — 絶対にコミットしない）
+data/underwriting/*.pdf
+data/underwriting/raw/
+data/underwriting/*.json
+
 # Runner queue runtime state and logs
 .kosame-runner/
 

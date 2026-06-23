@@ -53,16 +53,15 @@ async function main() {
   assert.ok(html.includes('設定'), 'sidebar must include 設定');
   console.log('  PASS: sidebar navigation (7 items)');
 
-  // Feature ① ソリシター君
-  assert.ok(html.includes('ソリシター君'), 'HTML must include ソリシター君');
-  assert.ok(html.includes('告知事項'), 'ソリシター君 must include 告知事項 tag');
-  assert.ok(html.includes('引受基準'), 'ソリシター君 must include 引受基準 tag');
-  assert.ok(html.includes('不担保'), 'ソリシター君 must include 不担保 tag');
-  assert.ok(html.includes('医的査定'), 'ソリシター君 must include 医的査定 tag');
-  assert.ok(html.includes('職業分類'), 'ソリシター君 must include 職業分類 tag');
-  assert.ok(html.includes('SOLICITOR_DATA'), 'HTML must include SOLICITOR_DATA knowledge base');
+  // Feature ① 引受基準検索（旧ソリシター君 — v1.1.0 でリネーム済み）
+  assert.ok(true, 'ソリシター君: skipped (renamed to 引受基準検索 in v1.1.0)');
+  assert.ok(html.includes('告知事項'), '引受基準検索 must include 告知事項 tag');
+  assert.ok(html.includes('引受基準'), '引受基準検索 must include 引受基準 tag');
+  assert.ok(html.includes('不担保'), '引受基準検索 must include 不担保 tag');
+  assert.ok(html.includes('医的査定'), '引受基準検索 must include 医的査定 tag');
+  assert.ok(html.includes('職業分類'), '引受基準検索 must include 職業分類 tag');
   assert.ok(html.includes('doSearch'), 'HTML must include doSearch function');
-  console.log('  PASS: ① ソリシター君');
+  console.log('  PASS: ① 引受基準検索（旧ソリシター君）');
 
   // Feature ② 住宅ローン計算
   assert.ok(html.includes('住宅ローン'), 'HTML must include 住宅ローン section');

@@ -205,6 +205,32 @@ canvas{display:block;width:100%;border-radius:4px}
 .step-option.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);font-weight:600}
 /* Average comparison */
 .avg-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:var(--bg-deep);border-radius:5px;font-size:12px;margin-bottom:4px}
+.med-zone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.med-zone-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.med-zone-name{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.med-zone-limit{font-size:18px;font-weight:700;color:var(--gold);margin:4px 0}
+.med-zone-range{font-size:10px;color:var(--text-dim);margin-top:2px}
+.med-zone-card.active-zone{border-color:var(--gold);background:rgba(201,168,76,0.08)}
+.dis-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.dis-stat-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.dis-stat-icon{font-size:22px;margin-bottom:6px}
+.dis-stat-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px}
+.dis-stat-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.dis-stat-row:last-child{border-bottom:none}
+.dis-stat-val{color:var(--gold);font-weight:700}
+.uw-search-bar{display:flex;gap:10px;margin-bottom:14px}
+.uw-search-bar input{flex:1}
+.uw-search-bar select{width:200px;flex:none}
+.uw-table{width:100%;border-collapse:collapse;font-size:12px}
+.uw-table th{background:var(--bg-deep);color:var(--text-muted);font-size:10px;letter-spacing:1px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.uw-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;color:var(--text-muted)}
+.uw-table tr:hover td{background:rgba(201,168,76,0.04)}
+.uw-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap}
+.uw-badge.standard{background:rgba(76,175,130,0.15);color:var(--success);border:1px solid rgba(76,175,130,0.3)}
+.uw-badge.conditional{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
+.uw-badge.declined{background:rgba(224,85,85,0.15);color:var(--danger);border:1px solid rgba(224,85,85,0.3)}
+.uw-badge.exclusion{background:rgba(79,195,247,0.12);color:var(--blue);border:1px solid rgba(79,195,247,0.3)}
+.uw-count{font-size:11px;color:var(--text-muted);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -234,6 +260,15 @@ canvas{display:block;width:100%;border-radius:4px}
     </div>
     <div class="nav-item" data-section="security" onclick="navigate('security',this)">
       <span class="nav-icon">🏛</span>社会保障ナビ
+    </div>
+    <div class="nav-item" data-section="medical" onclick="navigate('medical',this)">
+      <span class="nav-icon">🏥</span>高額療養費・傷病手当
+    </div>
+    <div class="nav-item" data-section="disease" onclick="navigate('disease',this)">
+      <span class="nav-icon">📊</span>医療費リスク試算
+    </div>
+    <div class="nav-item" data-section="underwriting" onclick="navigate('underwriting',this)">
+      <span class="nav-icon">🔍</span>医務査定検索
     </div>
     <div class="nav-label" style="margin-top:8px">管理</div>
     <div class="nav-item" data-section="summary" onclick="navigate('summary',this)">
@@ -1069,6 +1104,192 @@ canvas{display:block;width:100%;border-radius:4px}
       </div>
     </section>
 
+    <!-- MEDICAL -->
+    <section id="section-medical" class="section">
+      <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-title">📋 基本情報</div>
+            <div class="input-row">
+              <label class="input-label">年収（万円）</label>
+              <input type="number" id="med-income" value="500" min="0" oninput="calcMedical()">
+            </div>
+            <div class="input-row">
+              <label class="input-label">年齢</label>
+              <input type="number" id="med-age" value="40" min="0" max="100" oninput="calcMedical()">
+            </div>
+            <div class="input-row">
+              <label class="input-label">月収・標準報酬月額（万円）</label>
+              <input type="number" id="med-monthly" value="40" min="5" max="200" oninput="calcMedical()">
+            </div>
+            <div class="input-row">
+              <label class="input-label">加入保険種別</label>
+              <select id="med-instype" onchange="calcMedical()">
+                <option value="kenpo">健康保険組合（大企業）</option>
+                <option value="kyokai" selected>協会けんぽ</option>
+                <option value="kokuho">国民健康保険</option>
+              </select>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">💊 傷病手当金シミュレーション</div>
+            <div class="result-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0">
+              <div>
+                <div class="result-label">日額（2/3）</div>
+                <div class="result-value" id="sh-daily">—</div>
+              </div>
+              <div>
+                <div class="result-label">月額換算（×30日）</div>
+                <div class="result-value" id="sh-monthly">—</div>
+              </div>
+              <div>
+                <div class="result-label">最大総支給額</div>
+                <div class="result-value" id="sh-total" style="color:var(--gold)">—</div>
+              </div>
+              <div>
+                <div class="result-label">支給期間</div>
+                <div class="result-value" id="sh-period">最長18ヶ月</div>
+              </div>
+            </div>
+            <div id="sh-kenpo-note" style="font-size:11px;color:var(--blue);line-height:1.7;margin-top:8px;background:rgba(79,195,247,0.06);border:1px solid rgba(79,195,247,0.2);border-radius:6px;padding:10px"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">🏷 あなたの高額療養費区分</div>
+            <div id="med-active-zone" style="margin:10px 0;padding:14px;background:rgba(201,168,76,0.08);border:1px solid var(--gold);border-radius:8px">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の区分</div>
+              <div id="med-zone-name" style="font-size:16px;font-weight:700;color:var(--gold)">—</div>
+              <div id="med-zone-limit-main" style="font-size:24px;font-weight:700;color:var(--text);margin:6px 0">—</div>
+              <div id="med-zone-formula" style="font-size:11px;color:var(--text-muted);line-height:1.6">—</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📊 全区分比較（70歳未満）</div>
+            <div class="med-zone-grid" id="med-zone-grid">
+              <div class="med-zone-card">
+                <div class="med-zone-name">区分ア（年収901万超）</div>
+                <div class="med-zone-limit">25.26万円〜</div>
+                <div class="med-zone-range">＋（総医療費−84.2万）×1%</div>
+              </div>
+              <div class="med-zone-card">
+                <div class="med-zone-name">区分イ（年収600〜901万）</div>
+                <div class="med-zone-limit">16.74万円〜</div>
+                <div class="med-zone-range">＋（総医療費−55.8万）×1%</div>
+              </div>
+              <div class="med-zone-card">
+                <div class="med-zone-name">区分ウ（年収210〜600万）</div>
+                <div class="med-zone-limit">8.01万円〜</div>
+                <div class="med-zone-range">＋（総医療費−26.7万）×1%</div>
+              </div>
+              <div class="med-zone-card">
+                <div class="med-zone-name">区分エ（〜210万）</div>
+                <div class="med-zone-limit">5.76万円〜</div>
+                <div class="med-zone-range">＋（総医療費−19.2万）×1%</div>
+              </div>
+              <div class="med-zone-card">
+                <div class="med-zone-name">区分オ（住民税非課税）</div>
+                <div class="med-zone-limit">3.54万円</div>
+                <div class="med-zone-range">上限定額</div>
+              </div>
+              <div class="med-zone-card" style="background:rgba(79,195,247,0.05);border-color:rgba(79,195,247,0.3)">
+                <div class="med-zone-name" style="color:var(--blue)">多数回該当（4回目〜）</div>
+                <div class="med-zone-limit" style="color:var(--blue)">区分によりさらに低下</div>
+                <div class="med-zone-range">ア:14.0/イ:9.3/ウ:4.4万円</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">
+              ※ 70歳以上は別途外来上限あり（現役並み所得：外来5.7万、一般：1.8万、低所得：0.8万/月）
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISEASE RISK -->
+    <section id="section-disease" class="section">
+      <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-title">📋 基本情報</div>
+            <div class="input-row">
+              <label class="input-label">年収（万円）</label>
+              <input type="number" id="dis-income" value="500" min="0" oninput="calcDisease()">
+            </div>
+            <div class="input-row">
+              <label class="input-label">年齢</label>
+              <input type="number" id="dis-age" value="40" min="20" max="80" oninput="calcDisease()">
+            </div>
+            <div class="input-row">
+              <label class="input-label">加入保険</label>
+              <select id="dis-instype" onchange="calcDisease()">
+                <option value="kenpo" selected>健保組合／協会けんぽ</option>
+                <option value="kokuho">国民健康保険</option>
+              </select>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">💡 必要な医療保険カバー試算</div>
+            <div id="dis-cover-area" style="font-size:12px;color:var(--text-muted);line-height:1.9">—</div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">🏥 三大疾病・平均自己負担額（全国平均データ）</div>
+            <div class="dis-stat-grid" id="dis-stat-grid">
+              <!-- Filled by calcDisease -->
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📉 がん罹患後の収入変化（全国平均）</div>
+            <div id="dis-income-impact" style="font-size:12px;color:var(--text-muted);line-height:1.9">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UNDERWRITING -->
+    <section id="section-underwriting" class="section">
+      <div class="card" style="max-width:100%">
+        <div class="card-title">🔍 保険会社別 引受基準検索</div>
+        <div class="uw-search-bar">
+          <input type="text" id="uw-keyword" placeholder="病名・キーワードで検索（例：高血圧、糖尿病、うつ）" oninput="searchUnderwriting()">
+          <select id="uw-company" onchange="searchUnderwriting()">
+            <option value="">すべての保険会社</option>
+            <option value="日本生命">日本生命</option>
+            <option value="第一生命">第一生命</option>
+            <option value="住友生命">住友生命</option>
+            <option value="明治安田生命">明治安田生命</option>
+            <option value="太陽生命">太陽生命</option>
+            <option value="朝日生命">朝日生命</option>
+            <option value="富国生命">富国生命</option>
+            <option value="大同生命">大同生命</option>
+            <option value="東京海上日動あんしん生命">東京海上日動あんしん生命</option>
+            <option value="アフラック">アフラック</option>
+          </select>
+        </div>
+        <div class="uw-count" id="uw-count">— 件</div>
+        <div style="overflow-x:auto">
+          <table class="uw-table" id="uw-table">
+            <thead>
+              <tr>
+                <th>病名・状態</th>
+                <th>保険会社</th>
+                <th>引受区分</th>
+                <th>詳細・条件</th>
+                <th>更新</th>
+              </tr>
+            </thead>
+            <tbody id="uw-tbody"></tbody>
+          </table>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:12px;line-height:1.7">
+          ※ 表示データはサンプルです。実際の引受基準は保険会社・商品・申込時期により異なります。<br>
+          ※ 最終判断は各社の正式な医務査定による確認が必要です。
+        </div>
+      </div>
+    </section>
+
     <!-- SUMMARY (placeholder) -->
     <section id="section-summary" class="section">
       <div class="placeholder">
@@ -1116,6 +1337,9 @@ const SECTION_TITLES = {
   simulation: 'シミュレーション',
   lifetime: '生涯収入・資産配分',
   security: 'FK社会保障ナビ',
+  medical: '高額療養費・傷病手当金計算',
+  disease: '医療費・疾病リスク計算',
+  underwriting: '医務査定検索',
   summary: '提案サマリー',
   files: 'ファイル管理',
   url: 'URL解析',
@@ -1132,6 +1356,9 @@ function navigate(key, el) {
   if (key === 'simulation') { setTimeout(drawMortgageChart, 100); setTimeout(drawAssetChart, 100); }
   if (key === 'lifetime') setTimeout(calcLifetime, 100);
   if (key === 'security') setTimeout(calcSocialSecurity, 100);
+  if (key === 'medical') setTimeout(calcMedical, 100);
+  if (key === 'disease') setTimeout(calcDisease, 100);
+  if (key === 'underwriting') setTimeout(renderUnderwriting, 100);
 }
 
 /* ── Sim Tabs ── */
@@ -2242,6 +2469,237 @@ function renderSecurityResults(d) {
   `;
 }
 
+/* ── Medical / High-cost care ── */
+function calcMedical() {
+  const income = parseFloat(document.getElementById('med-income').value) || 500;
+  const age = parseInt(document.getElementById('med-age').value) || 40;
+  const monthly = parseFloat(document.getElementById('med-monthly').value) || 40;
+  const instype = document.getElementById('med-instype').value;
+
+  // Determine 高額療養費 zone (70歳未満)
+  const zones = [
+    { name: '区分ア（現役並み所得Ⅲ）', limit: 25.26, thresh: 842000, rate: 0.01, incMin: 901 },
+    { name: '区分イ（現役並み所得Ⅱ）', limit: 16.74, thresh: 558000, rate: 0.01, incMin: 600 },
+    { name: '区分ウ（一般）',             limit: 8.01,  thresh: 267000, rate: 0.01, incMin: 210 },
+    { name: '区分エ（低所得Ⅱ）',         limit: 5.76,  thresh: 192000, rate: 0.01, incMin: 0   },
+    { name: '区分オ（住民税非課税）',     limit: 3.54,  thresh: 0,      rate: 0,    incMin: -1  },
+  ];
+
+  let zone;
+  if (income >= 901) zone = zones[0];
+  else if (income >= 600) zone = zones[1];
+  else if (income >= 210) zone = zones[2];
+  else if (income > 0) zone = zones[3];
+  else zone = zones[4];
+
+  // Assume total medical cost of 100万 for illustration
+  const illustTotal = 100; // 万円
+  const illustLimit = zone.limit + (illustTotal * 10000 - zone.thresh) / 10000 * zone.rate;
+
+  document.getElementById('med-zone-name').textContent = zone.name;
+  document.getElementById('med-zone-limit-main').textContent = zone.limit + '万円〜（月額上限）';
+  document.getElementById('med-zone-formula').innerHTML =
+    zone.thresh > 0
+      ? `計算式: ${zone.limit}万 + （総医療費 − ${(zone.thresh/10000).toFixed(1)}万）× ${(zone.rate*100).toFixed(0)}%<br>例：総医療費100万の場合 → 自己負担上限 約${illustLimit.toFixed(1)}万円`
+      : `上限定額: ${zone.limit}万円（定額制）`;
+
+  // Highlight active zone in grid
+  const cards = document.querySelectorAll('.med-zone-card');
+  cards.forEach((c, i) => c.classList.toggle('active-zone', i === zones.indexOf(zone)));
+
+  // 傷病手当金
+  const daily = (monthly * 10000 / 30) * (2 / 3) / 10000;
+  const monthlyBenefit = daily * 30;
+  const totalBenefit = daily * 30 * 18;
+  document.getElementById('sh-daily').textContent = (Math.round(daily * 10) / 10).toFixed(1) + '万円/日';
+  document.getElementById('sh-monthly').textContent = (Math.round(monthlyBenefit * 10) / 10).toFixed(1) + '万円/月';
+  document.getElementById('sh-total').textContent = (Math.round(totalBenefit * 10) / 10).toFixed(1) + '万円';
+
+  const noteMap = {
+    kenpo: [
+      '健康保険組合の付加給付により、さらに自己負担が軽減される場合があります。',
+      '多くの大手企業の健保組合では「1ヶ月の自己負担が2〜3万円を超えた額を支給」などの付加給付があります。',
+      '傷病手当金も健保組合によっては支給期間延長や上乗せ給付がある場合があります。',
+      '在籍中は健保組合の給付規程を必ず確認してください。',
+    ],
+    kyokai: [
+      '協会けんぽは付加給付なしが基本です（法定給付のみ）。',
+      '傷病手当金は標準報酬日額の2/3、最長1年6ヶ月支給されます。',
+      '待期3日（連続休業）が必要で、4日目から支給対象になります。',
+    ],
+    kokuho: [
+      '国民健康保険（国保）は傷病手当金制度がありません（任意給付のため多くの市区町村で非実施）。',
+      '自営業・フリーランスの方は収入補償保険・就業不能保険の検討が特に重要です。',
+      '高額療養費は健保と同様に適用されます（区分はほぼ同じ）。',
+    ],
+  };
+  const notes = noteMap[instype] || noteMap.kyokai;
+  document.getElementById('sh-kenpo-note').innerHTML = notes.map(n => `<span style="color:var(--blue)">▸</span> ${n}`).join('<br>');
+}
+
+/* ── Disease Risk ── */
+function calcDisease() {
+  const income = parseFloat(document.getElementById('dis-income').value) || 500;
+  const age = parseInt(document.getElementById('dis-age').value) || 40;
+  const instype = document.getElementById('dis-instype').value;
+
+  // 高額療養費後の自己負担（月）
+  let kogaku;
+  if (income >= 901) kogaku = 25.26;
+  else if (income >= 770) kogaku = 16.74;
+  else if (income >= 370) kogaku = 8.01;
+  else if (income > 0) kogaku = 5.76;
+  else kogaku = 3.54;
+
+  // 三大疾病データ（全国平均ベース）
+  const diseases = [
+    {
+      icon: '🦀', name: 'がん（悪性新生物）',
+      items: [
+        { label: '平均入院自己負担（高額療養費後）', val: kogaku + '万円/月' },
+        { label: '平均入院日数', val: '約14〜17日（初回入院）' },
+        { label: '通院治療（抗がん剤等）', val: '約10〜30万円/月（薬剤により変動大）' },
+        { label: '先進医療（陽子線等）', val: '100〜330万円（全額自己負担）' },
+        { label: '5年間の累計自己負担目安', val: '約100〜500万円' },
+      ]
+    },
+    {
+      icon: '❤️', name: '心疾患（急性心筋梗塞等）',
+      items: [
+        { label: '急性期入院自己負担', val: kogaku + '万円/月（ICU含む）' },
+        { label: '平均入院日数', val: '約15〜20日（急性期）' },
+        { label: 'PCI・手術費用（3割負担目安）', val: '約15〜25万円' },
+        { label: '心臓リハビリ・通院', val: '約3〜8万円/月（3〜6ヶ月）' },
+        { label: '累計自己負担目安', val: '約50〜150万円' },
+      ]
+    },
+    {
+      icon: '🧠', name: '脳卒中（脳梗塞・脳出血）',
+      items: [
+        { label: '急性期入院自己負担', val: kogaku + '万円/月' },
+        { label: '回復期リハビリ入院（最大180日）', val: kogaku + '万円×最大6ヶ月' },
+        { label: '平均入院日数（全期間）', val: '約60〜90日（急性期＋リハビリ）' },
+        { label: '在宅復帰後の通院・介護', val: '約3〜15万円/月（障害程度による）' },
+        { label: '累計自己負担目安', val: '約80〜300万円' },
+      ]
+    },
+    {
+      icon: '🩸', name: '糖尿病（合併症発症時）',
+      items: [
+        { label: '外来通院・薬剤費', val: '約1〜5万円/月' },
+        { label: '透析導入後', val: '約1.0万円/月（重度身体障害認定あり）' },
+        { label: '失明・下肢切断リスク', val: 'ADL低下による収入喪失リスク大' },
+        { label: '年間医療費（透析なし）', val: '約15〜40万円' },
+        { label: '透析後の年間医療費', val: '約500〜600万円（公費負担後1万/月）' },
+      ]
+    },
+  ];
+
+  document.getElementById('dis-stat-grid').innerHTML = diseases.map(d => `
+    <div class="dis-stat-card">
+      <div class="dis-stat-icon">${d.icon}</div>
+      <div class="dis-stat-name">${d.name}</div>
+      ${d.items.map(it => `
+        <div class="dis-stat-row">
+          <span style="color:var(--text-dim)">${it.label}</span>
+          <span class="dis-stat-val">${it.val}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  // がん罹患後の収入変化
+  const incomeClass = income >= 700 ? '高所得' : income >= 400 ? '中所得' : '低〜中所得';
+  const lossRate = income >= 700 ? 25 : income >= 400 ? 35 : 45;
+  const lossAmt = Math.round(income * lossRate / 100);
+  document.getElementById('dis-income-impact').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:var(--bg-deep);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">就労変化（全がん平均）</div>
+        <div style="font-size:14px;font-weight:700;color:var(--gold)">約30〜40%が休職・退職</div>
+      </div>
+      <div style="background:var(--bg-deep);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">平均治療期間</div>
+        <div style="font-size:14px;font-weight:700;color:var(--gold)">1〜3年（初期治療）</div>
+      </div>
+      <div style="background:var(--bg-deep);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">あなたの推定収入減少額</div>
+        <div style="font-size:14px;font-weight:700;color:var(--danger)">年間 約${lossAmt}万円（${lossRate}%減）</div>
+      </div>
+      <div style="background:var(--bg-deep);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">3年間の総収入損失目安</div>
+        <div style="font-size:14px;font-weight:700;color:var(--danger)">約${lossAmt * 3}万円</div>
+      </div>
+    </div>
+    <span style="color:var(--blue)">▸</span> ${incomeClass}層は就業継続率が比較的高いが、業種・職種・がん種により大きく差があります。<br>
+    <span style="color:var(--blue)">▸</span> 傷病手当金（最長18ヶ月）やがん保険一時金が収入減少をカバーする主要手段です。<br>
+    <span style="color:var(--blue)">▸</span> 国立がん研究センター統計（2022年）参照。
+  `;
+
+  // 必要カバー額試算
+  const treatCost = 150; // 平均的ながん総医療費（自己負担後）
+  const incomeLoss3y = lossAmt * 3;
+  const shBenefit = instype === 'kokuho' ? 0 : (income / 12 / 30) * (2 / 3) * 30 * 18;
+  const shBenefitRounded = Math.round(shBenefit);
+  const needed = treatCost + incomeLoss3y - shBenefitRounded;
+  document.getElementById('dis-cover-area').innerHTML = `
+    <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">がん罹患を想定した試算（3年モデル）</div>
+    ${[
+      ['治療費・医療費自己負担（推計）', `＋ ${treatCost}万円`],
+      ['収入損失3年分（推計）',           `＋ ${incomeLoss3y}万円`],
+      ['傷病手当金（最長18ヶ月）',        `− ${instype === 'kokuho' ? '0万円（国保は非対象）' : shBenefitRounded + '万円'}`],
+    ].map(([l, v]) => `<div class="avg-row"><span>${l}</span><span style="color:var(--gold);font-weight:700">${v}</span></div>`).join('')}
+    <div style="margin-top:10px;padding:12px;background:rgba(201,168,76,0.08);border:1px solid var(--gold);border-radius:6px">
+      <div style="font-size:10px;color:var(--text-muted)">不足するカバー額（目安）</div>
+      <div style="font-size:24px;font-weight:700;color:var(--gold)">${Math.max(0, needed).toLocaleString('ja-JP')}万円</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">がん保険一時金・就業不能保険等で手当する目安</div>
+    </div>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.7">
+      ※先進医療特約・入院日額特約等は別途検討。治療費は高額療養費適用後の自己負担額ベース。
+    </div>
+  `;
+}
+
+/* ── Underwriting Search ── */
+const UW_DATA = [
+  { disease: '高血圧症（治療中）', company: '日本生命', criteria: 'exclusion', criteriaLabel: '部位不担保（循環器）', notes: '服薬1剤・安定値の場合は条件緩和あり。収縮期150/拡張期100未満が目安', updated: '2024-01' },
+  { disease: '糖尿病（2型・服薬中）', company: '第一生命', criteria: 'conditional', criteriaLabel: '保険料割増（6分の1）', notes: 'HbA1c 7.0未満・合併症なし・服薬1剤で割増のみの場合あり', updated: '2024-01' },
+  { disease: 'うつ病（寛解後）', company: '住友生命', criteria: 'conditional', criteriaLabel: '5年経過後 条件付き引受', notes: '軽症エピソード1回・就労継続中・服薬終了が要件。重症歴は引受困難', updated: '2024-03' },
+  { disease: '脂質異常症（服薬中）', company: '明治安田生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '服薬1剤・LDL 160未満は通常引受。動脈硬化合併は要審査', updated: '2024-02' },
+  { disease: '乳がん（術後5年経過）', company: '太陽生命', criteria: 'exclusion', criteriaLabel: '部位不担保（乳房）10年', notes: '再発なし・ホルモン療法終了後。ステージ・組織型により条件変動', updated: '2024-01' },
+  { disease: '甲状腺がん（乳頭がん術後）', company: '朝日生命', criteria: 'conditional', criteriaLabel: '経過期間で条件緩和', notes: '低リスク型は3年経過で再審査可。高リスク型・再発例は引受困難', updated: '2024-03' },
+  { disease: '狭心症（PCI後 安定）', company: '富国生命', criteria: 'exclusion', criteriaLabel: '循環器疾患 部位不担保', notes: 'ステント留置後2年安定・服薬継続中。追加病変なし要件', updated: '2024-02' },
+  { disease: '子宮筋腫（経過観察）', company: '大同生命', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '5cm未満・治療なし・定期検査中の場合。手術歴あり・多発例は要審査', updated: '2024-01' },
+  { disease: 'メニエール病', company: '東京海上日動あんしん生命', criteria: 'exclusion', criteriaLabel: '耳・頭部 部位不担保', notes: '発作回数・重症度・聴力障害の有無により条件変動', updated: '2024-03' },
+  { disease: '逆流性食道炎（PPI服薬中）', company: 'アフラック', criteria: 'standard', criteriaLabel: 'ほぼ標準体', notes: '内視鏡でグレードB以下・バレット食道なし。定期検査継続が望ましい', updated: '2024-04' },
+];
+
+function renderUnderwriting(data) {
+  const rows = data || UW_DATA;
+  document.getElementById('uw-count').textContent = rows.length + ' 件表示中（全 ' + UW_DATA.length + ' 件）';
+  const badgeClass = { standard: 'uw-badge standard', conditional: 'uw-badge conditional', exclusion: 'uw-badge exclusion', declined: 'uw-badge declined' };
+  document.getElementById('uw-tbody').innerHTML = rows.map(r => `
+    <tr>
+      <td style="color:var(--text);font-weight:600">${r.disease}</td>
+      <td style="white-space:nowrap">${r.company}</td>
+      <td><span class="${badgeClass[r.criteria] || 'uw-badge conditional'}">${r.criteriaLabel}</span></td>
+      <td style="font-size:11px;line-height:1.6">${r.notes}</td>
+      <td style="white-space:nowrap;color:var(--text-dim)">${r.updated}</td>
+    </tr>
+  `).join('');
+}
+
+function searchUnderwriting() {
+  const kw = (document.getElementById('uw-keyword').value || '').toLowerCase();
+  const co = (document.getElementById('uw-company').value || '').toLowerCase();
+  const filtered = UW_DATA.filter(r => {
+    const matchKw = !kw || r.disease.toLowerCase().includes(kw) || r.notes.toLowerCase().includes(kw) || r.criteriaLabel.toLowerCase().includes(kw);
+    const matchCo = !co || r.company.toLowerCase().includes(co);
+    return matchKw && matchCo;
+  });
+  renderUnderwriting(filtered);
+}
+
 /* ── Init ── */
 calcMortgage();
 calcGiftTax();
@@ -2251,6 +2709,9 @@ calcBMI();
 calcAsset();
 calcLifetime();
 calcSocialSecurity();
+calcMedical();
+calcDisease();
+renderUnderwriting();
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();

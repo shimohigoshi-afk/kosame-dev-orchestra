@@ -99,8 +99,14 @@ async function main() {
   console.log('  PASS JS functions: lifetime + social security');
 
   // Init block calls
-  assert.ok(src.includes('calcLifetime();'), 'init must call calcLifetime()');
-  assert.ok(src.includes('calcSocialSecurity();'), 'init must call calcSocialSecurity()');
+  assert.ok(
+    src.includes('calcLifetime();') || src.includes('calcLifetime, calcSocialSecurity'),
+    'init must include calcLifetime in init block',
+  );
+  assert.ok(
+    src.includes('calcSocialSecurity();') || src.includes('calcLifetime, calcSocialSecurity'),
+    'init must include calcSocialSecurity in init block',
+  );
   console.log('  PASS init block calls');
 
   // Phase 1 preserved

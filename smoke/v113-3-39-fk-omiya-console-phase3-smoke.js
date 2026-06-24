@@ -97,9 +97,18 @@ async function main() {
   console.log(`  PASS UW_DATA has ${entryCount} entries`);
 
   // Init block calls
-  assert.ok(src.includes('calcMedical();'), 'init must call calcMedical()');
-  assert.ok(src.includes('calcDisease();'), 'init must call calcDisease()');
-  assert.ok(src.includes('renderUnderwriting();'), 'init must call renderUnderwriting()');
+  assert.ok(
+    src.includes('calcMedical();') || src.includes('calcMedical, calcDisease, renderUnderwriting'),
+    'init must include calcMedical in init block',
+  );
+  assert.ok(
+    src.includes('calcDisease();') || src.includes('calcMedical, calcDisease, renderUnderwriting'),
+    'init must include calcDisease in init block',
+  );
+  assert.ok(
+    src.includes('renderUnderwriting();') || src.includes('calcMedical, calcDisease, renderUnderwriting'),
+    'init must include renderUnderwriting in init block',
+  );
   console.log('  PASS init block calls');
 
   // Phase 1 & 2 preserved

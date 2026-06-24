@@ -126,11 +126,7 @@ if ! command -v gcloud &> /dev/null; then
 fi
 echo -e "  ${GREEN}✓ gcloud CLI : $(gcloud version 2>/dev/null | head -1)${NC}"
 
-if ! command -v docker &> /dev/null; then
-  echo -e "  ${RED}✗ docker が見つかりません。インストールしてください。${NC}"
-  exit 1
-fi
-echo -e "  ${GREEN}✓ docker     : $(docker --version | cut -d' ' -f3 | tr -d ',')${NC}"
+echo -e "  ${GREEN}✓ ビルド     : Cloud Build (Docker不要)${NC}"
 
 CURRENT_PROJECT=$(gcloud config get-value project 2>/dev/null || echo "")
 if [ "$CURRENT_PROJECT" != "$PROJECT" ]; then
@@ -184,20 +180,20 @@ else
   echo -e "  ${GREEN}✓ リポジトリ既存: ${REGISTRY_REPO}${NC}"
 fi
 
-# Docker 認証設定
-gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-echo -e "  ${GREEN}✓ Docker 認証設定完了${NC}"
-
-# ── [2] コンソールイメージ Build & Push ───────────────────────────────────────
+# ── [2] コンソールイメージ Build & Push (Cloud Build) ────────────────────────
 echo ""
-echo -e "${BOLD}[2/6] fk-omiya-console イメージ Build & Push...${NC}"
+echo -e "${BOLD}[2/6] fk-omiya-console イメージ Cloud Build...${NC}"
 echo -e "  Image: ${CONSOLE_IMAGE}"
-docker build \
-  --file "${ROOT}/Dockerfile.fk-omiya-console" \
-  --tag "${CONSOLE_IMAGE}" \
-  --label "git-commit=$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" \
-  "${ROOT}"
-docker push "${CONSOLE_IMAGE}"
+cat > /tmp/cloudbuild-console.yaml << CBEOF
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.fk-omiya-console', '-t', '${CONSOLE_IMAGE}', '.']
+images: ['${CONSOLE_IMAGE}']
+CBEOF
+gcloud builds submit "${ROOT}" \
+  --project="${PROJECT}" \
+  --config=/tmp/cloudbuild-console.yaml \
+  --quiet
 echo -e "  ${GREEN}✓ コンソールイメージ Push 完了${NC}"
 
 # ── [3] コンソールサービス デプロイ ───────────────────────────────────────────
@@ -242,16 +238,20 @@ else
   LINE_SECRET_FLAGS=""
 fi
 
-# ── [5] LINE Bot イメージ Build & Push ────────────────────────────────────────
+# ── [5] LINE Bot イメージ Build & Push (Cloud Build) ─────────────────────────
 echo ""
-echo -e "${BOLD}[5/6] kosame-line-bot イメージ Build & Push...${NC}"
+echo -e "${BOLD}[5/6] kosame-line-bot イメージ Cloud Build...${NC}"
 echo -e "  Image: ${BOT_IMAGE}"
-docker build \
-  --file "${ROOT}/Dockerfile.fk-omiya-line-bot" \
-  --tag "${BOT_IMAGE}" \
-  --label "git-commit=$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo 'unknown')" \
-  "${ROOT}"
-docker push "${BOT_IMAGE}"
+cat > /tmp/cloudbuild-line-bot.yaml << CBEOF
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.fk-omiya-line-bot', '-t', '${BOT_IMAGE}', '.']
+images: ['${BOT_IMAGE}']
+CBEOF
+gcloud builds submit "${ROOT}" \
+  --project="${PROJECT}" \
+  --config=/tmp/cloudbuild-line-bot.yaml \
+  --quiet
 echo -e "  ${GREEN}✓ LINE Bot イメージ Push 完了${NC}"
 
 # ── [6] LINE Botサービス デプロイ ─────────────────────────────────────────────

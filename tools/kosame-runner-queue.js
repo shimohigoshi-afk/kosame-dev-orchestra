@@ -62,9 +62,49 @@ function formatInput(ticket) {
   ].join('\n');
 }
 
+// ── Claude Chat Executor (v113.3.50) ─────────────────────────────────────────
+
+function claudeChatExecutor(ticket, runDir) {
+  const promptText = String(ticket.prompt_text || ticket.body || '');
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
+    ? ticket.target_repo
+    : ROOT;
+
+  const jsonArg = JSON.stringify({ promptText, cwd: targetRepo, runDir });
+  const res = spawnSync(process.execPath, [path.join(__dirname, 'kosame-claude-auto-launch.js'), '--json-arg', jsonArg], {
+    cwd: ROOT,
+    timeout: 720000,
+    maxBuffer: 20 * 1024 * 1024,
+    // inherit stdio so claude output streams in real-time to cockpit SSE
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+
+  const outputMd = [
+    '# Runner Queue Lite — Claude Auto-Launch Log',
+    `ticket_id: ${ticket.id}`,
+    `source: ${ticket.source || ''}`,
+    `target_repo: ${targetRepo}`,
+    `exit_code: ${res.status}`,
+    `prompt_text: ${promptText.slice(0, 200)}`,
+  ].join('\n');
+  fs.writeFileSync(path.join(runDir, 'output.md'), outputMd);
+  fs.writeFileSync(path.join(runDir, 'verify.log'), `exit_code: ${res.status}\n`);
+
+  return {
+    ok: res.status === 0,
+    exitCode: res.status,
+    error: res.error ? res.error.message : null,
+  };
+}
+
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
+  // Chat dispatch tickets: run claude auto-launch pipeline
+  if (ticket.source === 'kosame-chat-dispatch' && (ticket.prompt_text || ticket.body)) {
+    return claudeChatExecutor(ticket, runDir);
+  }
+
   const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
     ? ticket.target_repo
     : ROOT;
@@ -249,6 +289,7 @@ module.exports = {
   runTicket,
   formatInput,
   defaultExecutor,
+  claudeChatExecutor,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,

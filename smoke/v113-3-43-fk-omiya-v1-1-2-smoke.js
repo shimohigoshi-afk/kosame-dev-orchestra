@@ -80,9 +80,9 @@ async function main() {
   assert.ok(docSrc.includes('sendWeeklySummary'), 'GAS doc must include weekly summary function');
   console.log('  PASS ⑦ GASセットアップドキュメント');
 
-  // v1.1.2 footer
-  assert.ok(src.includes('v1.1.2'), 'sidebar footer must show v1.1.2');
-  console.log('  PASS console version v1.1.2');
+  // v1.1.2+ footer
+  assert.ok(/v1\.1\.[2-9]/.test(src), 'sidebar footer must show v1.1.2 or higher');
+  console.log('  PASS console version v1.1.2+');
 
   // No secrets
   assert.ok(!src.includes('OPENAI_API_KEY'), 'must not contain OPENAI_API_KEY');

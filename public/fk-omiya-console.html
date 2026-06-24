@@ -2200,6 +2200,7 @@ const SECTION_TITLES = {
 };
 
 function navigate(key, el) {
+  if (!getSession()) { return; }
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const sec = document.getElementById('section-' + key);
@@ -2214,6 +2215,8 @@ function navigate(key, el) {
   if (key === 'underwriting') setTimeout(renderUnderwriting, 100);
   if (key === 'education') setTimeout(calcEducation, 100);
   if (key === 'realestate') setTimeout(renderRealestate, 100);
+  trackFeatureUse(key);
+  if (key === 'settings') { loadSettings(); refreshFeedbackAdmin(); }
 }
 
 /* ── Sim Tabs ── */
@@ -3987,7 +3990,8 @@ function initAuth() {
 }
 
 function showApp(session) {
-  document.getElementById('auth-overlay').style.display = 'none';
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay) { overlay.style.display = 'none'; overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }
   const emailEl = document.getElementById('topbar-user-email');
   const chipEl = document.getElementById('topbar-user-chip');
   const logoutEl = document.getElementById('topbar-logout-btn');
@@ -4393,6 +4397,7 @@ function loadSettings() {
   renderLoginHistory();
   renderCostDashboard();
   renderImportedCompanies();
+  loadLineSettings();
 }
 
 /* セッション自動ログアウトチェック（1分ごと）
@@ -4484,12 +4489,6 @@ function saveSettings() {
   if (geminiKey) localStorage.setItem('gemini_api_key', geminiKey);
 }
 
-function loadSettings() {
-  const gasUrlEl = document.getElementById('cfg-gas-url');
-  const geminiKeyEl = document.getElementById('cfg-gemini-key');
-  if (gasUrlEl) gasUrlEl.value = localStorage.getItem('fb_gas_url') || '';
-  if (geminiKeyEl) geminiKeyEl.value = localStorage.getItem('gemini_api_key') || '';
-}
 
 async function testGasConnection() {
   const url = localStorage.getItem('fb_gas_url');
@@ -5060,21 +5059,6 @@ async function testLineConnection() {
   }
 }
 
-// 設定タブの loadSettings に LINE 設定ロードを追加
-const _origLoadSettings = loadSettings;
-function loadSettings() {
-  _origLoadSettings();
-  loadLineSettings();
-}
-
-// 設定タブに切り替わった時にデータをロード、他タブは認証チェック
-const _origNavigate = navigate;
-function navigate(section, el) {
-  if (!getSession()) { return; } // 未認証は操作不可
-  _origNavigate(section, el);
-  trackFeatureUse(section);
-  if (section === 'settings') { loadSettings(); refreshFeedbackAdmin(); }
-}
 
 </script>
 </body>

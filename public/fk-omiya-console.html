@@ -266,6 +266,16 @@ canvas{display:block;width:100%;border-radius:4px}
 .edu-bar-val{font-size:11px;color:var(--gold);width:55px;text-align:right;flex:none;font-weight:700}
 .edu-lipss-box{background:rgba(201,168,76,0.08);border:1px solid var(--gold);border-radius:8px;padding:14px;margin-top:10px}
 /* Real estate search */
+.re-nationwide-shell{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.re-nationwide-sample-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.re-nationwide-sample-row .re-filter-field{min-width:180px;flex:1}
+.re-nationwide-fallback{font-size:10px;color:var(--text-dim);line-height:1.7;margin-top:-4px}
+.re-nationwide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.re-nationwide-grid .re-summary-card{min-height:96px}
+.re-region-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid rgba(79,195,247,0.22);color:var(--blue);background:rgba(79,195,247,0.08);font-size:10px;font-weight:700;letter-spacing:.06em}
+.re-area-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.re-area-chip{font-size:10px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:var(--bg-deep);color:var(--text-muted)}
+.re-area-chip.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.14)}
 .re-search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .re-search-bar input{flex:1;min-width:180px}
 .re-search-bar select{width:140px;flex:none}
@@ -1770,6 +1780,200 @@ canvas{display:block;width:100%;border-radius:4px}
 
     <!-- REAL ESTATE -->
     <section id="section-realestate" class="section">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🗾 全国版 エリア価格・賃料推定 Lite</div>
+        <div class="re-filter-hint">都道府県、市区町村、町名/エリア、駅徒歩、築年数、面積、物件種別、間取りをもとに、売買価格・参考賃料・表面利回りを参考推定します。サンプルにない地域は、地方区分・都市規模をもとにした fallback 推定です。地図クリック時は緯度経度から町名/町丁目を判定して同じ全国版ロジックへ流す設計です。</div>
+        <div class="re-nationwide-shell">
+          <div class="re-nationwide-sample-row">
+            <div class="re-filter-field">
+              <label for="re-nationwide-sample">サンプル地域</label>
+              <select id="re-nationwide-sample" onchange="applyNationwideSample(this.value)">
+                <option value="">自由入力</option>
+                <option value="tokyo-ebisu">東京都 渋谷区 恵比寿</option>
+                <option value="tokyo-sangenjaya">東京都 世田谷区 三軒茶屋</option>
+                <option value="tokyo-kachidoki">東京都 中央区 勝どき</option>
+                <option value="kanagawa-minatomirai">神奈川県 横浜市西区 みなとみらい</option>
+                <option value="saitama-omiya-sakuragicho">埼玉県 さいたま市大宮区 桜木町</option>
+                <option value="chiba-funabashi-honcho">千葉県 船橋市 本町</option>
+                <option value="osaka-umeda">大阪府 大阪市北区 梅田</option>
+                <option value="osaka-honmachi">大阪府 大阪市中央区 本町</option>
+                <option value="kyoto-karasumaoike">京都府 京都市中京区 烏丸御池</option>
+                <option value="hyogo-sannomiya">兵庫県 神戸市中央区 三宮町</option>
+                <option value="aichi-meieki">愛知県 名古屋市中村区 名駅</option>
+                <option value="aichi-sakae">愛知県 名古屋市中区 栄</option>
+                <option value="hokkaido-odori">北海道 札幌市中央区 大通</option>
+                <option value="miyagi-ichibancho">宮城県 仙台市青葉区 一番町</option>
+                <option value="fukuoka-hakataekimae">福岡県 福岡市博多区 博多駅前</option>
+                <option value="fukuoka-tenjin">福岡県 福岡市中央区 天神</option>
+              </select>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-prefecture">都道府県</label>
+              <input id="re-nationwide-prefecture" type="text" list="re-nationwide-prefecture-list" placeholder="例：東京都" oninput="searchRealestateNationwide()">
+              <datalist id="re-nationwide-prefecture-list">
+                <option value="東京都"></option><option value="神奈川県"></option><option value="埼玉県"></option><option value="千葉県"></option>
+                <option value="大阪府"></option><option value="京都府"></option><option value="兵庫県"></option><option value="愛知県"></option>
+                <option value="北海道"></option><option value="宮城県"></option><option value="福岡県"></option>
+              </datalist>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-city">市区町村</label>
+              <input id="re-nationwide-city" type="text" list="re-nationwide-city-list" placeholder="例：渋谷区" oninput="searchRealestateNationwide()">
+              <datalist id="re-nationwide-city-list">
+                <option value="渋谷区"></option><option value="世田谷区"></option><option value="中央区"></option><option value="横浜市西区"></option>
+                <option value="さいたま市大宮区"></option><option value="船橋市"></option><option value="大阪市北区"></option><option value="大阪市中央区"></option>
+                <option value="京都市中京区"></option><option value="神戸市中央区"></option><option value="名古屋市中村区"></option><option value="名古屋市中区"></option>
+                <option value="札幌市中央区"></option><option value="仙台市青葉区"></option><option value="福岡市博多区"></option><option value="福岡市中央区"></option>
+              </datalist>
+            </div>
+          </div>
+          <div class="re-nationwide-sample-row">
+            <div class="re-filter-field">
+              <label for="re-nationwide-area">町名/エリア</label>
+              <input id="re-nationwide-area" type="text" list="re-nationwide-area-list" placeholder="例：恵比寿 / 梅田 / 名駅" oninput="searchRealestateNationwide()">
+              <datalist id="re-nationwide-area-list">
+                <option value="恵比寿"></option><option value="三軒茶屋"></option><option value="勝どき"></option><option value="みなとみらい"></option>
+                <option value="桜木町"></option><option value="本町"></option><option value="烏丸御池"></option><option value="三宮町"></option>
+                <option value="名駅"></option><option value="栄"></option><option value="大通"></option><option value="一番町"></option>
+                <option value="博多駅前"></option><option value="天神"></option>
+              </datalist>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-station">最寄駅</label>
+              <input id="re-nationwide-station" type="text" placeholder="例：恵比寿 / 梅田 / 名古屋" oninput="searchRealestateNationwide()">
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-walk">駅徒歩</label>
+              <select id="re-nationwide-walk" onchange="searchRealestateNationwide()">
+                <option value="">指定なし</option>
+                <option value="5">5分以内</option>
+                <option value="10">10分以内</option>
+                <option value="15">15分以内</option>
+                <option value="20">20分以内</option>
+              </select>
+            </div>
+          </div>
+          <div class="re-nationwide-sample-row">
+            <div class="re-filter-field">
+              <label for="re-nationwide-age">築年数</label>
+              <select id="re-nationwide-age" onchange="searchRealestateNationwide()">
+                <option value="">指定なし</option>
+                <option value="5">5年以内</option>
+                <option value="10">10年以内</option>
+                <option value="20">20年以内</option>
+                <option value="30">30年以内</option>
+                <option value="31">31年以上</option>
+              </select>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-size">専有面積 / 土地面積</label>
+              <input id="re-nationwide-size" type="number" step="0.1" min="0" placeholder="例：55" oninput="searchRealestateNationwide()">
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-type">物件種別</label>
+              <select id="re-nationwide-type" onchange="searchRealestateNationwide()">
+                <option value="">指定なし</option>
+                <option value="中古マンション">中古マンション</option>
+                <option value="戸建て">戸建て</option>
+                <option value="土地">土地</option>
+              </select>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-room">間取り</label>
+              <select id="re-nationwide-room" onchange="searchRealestateNationwide()">
+                <option value="">指定なし</option>
+                <option value="1R">1R</option>
+                <option value="1K">1K</option>
+                <option value="1DK">1DK</option>
+                <option value="1LDK">1LDK</option>
+                <option value="2LDK">2LDK</option>
+                <option value="3LDK">3LDK</option>
+                <option value="4LDK">4LDK</option>
+              </select>
+            </div>
+            <div class="re-filter-field">
+              <label for="re-nationwide-mode">売買 / 賃貸 / 両方</label>
+              <select id="re-nationwide-mode" onchange="searchRealestateNationwide()">
+                <option value="both">両方</option>
+                <option value="sale">売買</option>
+                <option value="rent">賃貸</option>
+              </select>
+            </div>
+          </div>
+          <div class="re-area-chip-row" id="re-nationwide-area-chips">
+            <span class="re-area-chip active" data-area-chip="tokyo-ebisu">恵比寿</span>
+            <span class="re-area-chip" data-area-chip="osaka-umeda">梅田</span>
+            <span class="re-area-chip" data-area-chip="aichi-meieki">名駅</span>
+            <span class="re-area-chip" data-area-chip="fukuoka-hakataekimae">博多駅前</span>
+            <span class="re-area-chip" data-area-chip="saitama-omiya-sakuragicho">桜木町</span>
+          </div>
+        </div>
+        <div class="re-nationwide-grid">
+          <div class="re-summary-card">
+            <div class="re-summary-label">選択エリア</div>
+            <div class="re-summary-value" id="re-nationwide-area-name">—</div>
+            <div class="re-summary-sub" id="re-nationwide-area-meta">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">地方区分 / 都市規模</div>
+            <div class="re-summary-value" id="re-nationwide-region">—</div>
+            <div class="re-summary-sub" id="re-nationwide-region-note">完全一致データではなく、地方区分・都市規模をもとにした参考推定</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">推定成約価格</div>
+            <div class="re-summary-value" id="re-nationwide-sale-center">—</div>
+            <div class="re-summary-sub" id="re-nationwide-sale-basis">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">相場レンジ</div>
+            <div class="re-summary-value" id="re-nationwide-sale-range">—</div>
+            <div class="re-summary-sub" id="re-nationwide-sale-count">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">売出目安 / 強気上限</div>
+            <div class="re-summary-value" id="re-nationwide-sale-listing">—</div>
+            <div class="re-summary-sub" id="re-nationwide-sale-upper">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">売買信頼度</div>
+            <div class="re-summary-value" id="re-nationwide-sale-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+            <div class="re-summary-sub" id="re-nationwide-sale-confidence-note">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">参考月額賃料</div>
+            <div class="re-summary-value" id="re-nationwide-rent-center">—</div>
+            <div class="re-summary-sub" id="re-nationwide-rent-per-sqm">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">賃料レンジ / 年間賃料</div>
+            <div class="re-summary-value" id="re-nationwide-rent-range">—</div>
+            <div class="re-summary-sub" id="re-nationwide-annual-rent">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">表面利回り</div>
+            <div class="re-summary-value" id="re-nationwide-yield">—</div>
+            <div class="re-summary-sub" id="re-nationwide-rent-basis">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">賃貸信頼度 / 注意書き</div>
+            <div class="re-summary-value" id="re-nationwide-rent-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+            <div class="re-summary-sub" id="re-nationwide-rent-note">—</div>
+          </div>
+        </div>
+        <div class="re-action-row" style="margin-top:0">
+          <button type="button" class="re-action-btn" id="re-nationwide-mortgage-btn" onclick="applyRealestateNationwideEstimateToMortgage()" data-estimated-price="" data-estimated-rent="" data-estimated-yield="" data-selected-area="">
+            住宅ローン計算へ反映
+          </button>
+          <div class="re-action-hint" id="re-nationwide-mortgage-hint">推定売買価格を住宅ローンへ反映し、参考賃料・表面利回りも保存します。</div>
+        </div>
+        <div class="re-disclaimer">
+          ※ 売買価格は査定・鑑定ではなく参考推定です。<br>
+          ※ 賃料は募集賃料・成約賃料を保証するものではありません。<br>
+          ※ サンプルにない地域は地方区分・都市規模による fallback 推定です。<br>
+          ※ 国交省データだけでは現在募集家賃の網羅は難しいため、将来は国交省API・公的家賃統計・手入力賃料メモ・管理費・空室率を分けて扱います。
+        </div>
+        <div class="re-nationwide-fallback">地図表示は将来の別系統です。価格取得は Cloud Run 側の国交省 不動産情報ライブラリ API 取得へ分離し、Google Maps や国土地理院タイルは地図表示だけに使い、ブラウザから API key は直打ちしません。</div>
+      </div>
       <div class="re-api-note">
         📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携前提の参考版（<strong>FK Omiya Real Estate Pricing Score Lite</strong>）<br>
         現在は公開取引のサンプル/モックデータのみを使い、駅徒歩・築年数・類似事例スコア・信頼度を表示します。<br>
@@ -4283,6 +4487,57 @@ function applyRealestateMapEstimateToMortgage() {
   applyRealestateEstimateToMortgage();
 }
 
+const RE_NATIONWIDE_PRICE_LS_KEY = 'fkRealEstateNationwideSelectedPrice';
+const RE_NATIONWIDE_RENT_LS_KEY = 'fkRealEstateNationwideSelectedRent';
+const RE_NATIONWIDE_YIELD_LS_KEY = 'fkRealEstateNationwideSelectedYield';
+const RE_NATIONWIDE_AREA_LS_KEY = 'fkRealEstateNationwideSelectedArea';
+const RE_NATIONWIDE_SAMPLE_AREAS = [
+  { key:'tokyo-ebisu', prefecture:'東京都', city:'渋谷区', area:'恵比寿', station:'恵比寿', walkMin:4, age:10, size:56, type:'中古マンション', room:'2LDK', regionGroup:'首都圏', cityTier:'megacity', baseSalePerSqm:220, baseRentPerSqm:0.95, sampleSaleCount:28, sampleRentCount:24, stationBias:1.10, rentDemand:1.14, confidenceBase:'A' },
+  { key:'tokyo-sangenjaya', prefecture:'東京都', city:'世田谷区', area:'三軒茶屋', station:'三軒茶屋', walkMin:6, age:15, size:64, type:'中古マンション', room:'2LDK', regionGroup:'首都圏', cityTier:'megacity', baseSalePerSqm:185, baseRentPerSqm:0.82, sampleSaleCount:24, sampleRentCount:21, stationBias:1.06, rentDemand:1.08, confidenceBase:'A' },
+  { key:'tokyo-kachidoki', prefecture:'東京都', city:'中央区', area:'勝どき', station:'勝どき', walkMin:5, age:8, size:70, type:'中古マンション', room:'3LDK', regionGroup:'首都圏', cityTier:'megacity', baseSalePerSqm:235, baseRentPerSqm:1.02, sampleSaleCount:30, sampleRentCount:26, stationBias:1.12, rentDemand:1.18, confidenceBase:'A' },
+  { key:'kanagawa-minatomirai', prefecture:'神奈川県', city:'横浜市西区', area:'みなとみらい', station:'みなとみらい', walkMin:7, age:11, size:68, type:'中古マンション', room:'2LDK', regionGroup:'首都圏', cityTier:'megacity', baseSalePerSqm:200, baseRentPerSqm:0.88, sampleSaleCount:26, sampleRentCount:22, stationBias:1.08, rentDemand:1.10, confidenceBase:'A' },
+  { key:'saitama-omiya-sakuragicho', prefecture:'埼玉県', city:'さいたま市大宮区', area:'桜木町', station:'大宮', walkMin:8, age:14, size:68, type:'中古マンション', room:'2LDK', regionGroup:'首都圏', cityTier:'core', baseSalePerSqm:106, baseRentPerSqm:0.46, sampleSaleCount:17, sampleRentCount:16, stationBias:1.04, rentDemand:1.02, confidenceBase:'B' },
+  { key:'chiba-funabashi-honcho', prefecture:'千葉県', city:'船橋市', area:'本町', station:'船橋', walkMin:6, age:12, size:62, type:'中古マンション', room:'2LDK', regionGroup:'首都圏', cityTier:'core', baseSalePerSqm:112, baseRentPerSqm:0.48, sampleSaleCount:18, sampleRentCount:16, stationBias:1.03, rentDemand:1.03, confidenceBase:'B' },
+  { key:'osaka-umeda', prefecture:'大阪府', city:'大阪市北区', area:'梅田', station:'大阪', walkMin:5, age:9, size:58, type:'中古マンション', room:'1LDK', regionGroup:'関西圏', cityTier:'megacity', baseSalePerSqm:168, baseRentPerSqm:0.82, sampleSaleCount:27, sampleRentCount:24, stationBias:1.10, rentDemand:1.14, confidenceBase:'A' },
+  { key:'osaka-honmachi', prefecture:'大阪府', city:'大阪市中央区', area:'本町', station:'本町', walkMin:4, age:8, size:54, type:'中古マンション', room:'1LDK', regionGroup:'関西圏', cityTier:'megacity', baseSalePerSqm:172, baseRentPerSqm:0.84, sampleSaleCount:26, sampleRentCount:23, stationBias:1.11, rentDemand:1.15, confidenceBase:'A' },
+  { key:'kyoto-karasumaoike', prefecture:'京都府', city:'京都市中京区', area:'烏丸御池', station:'烏丸御池', walkMin:6, age:13, size:60, type:'中古マンション', room:'2LDK', regionGroup:'関西圏', cityTier:'core', baseSalePerSqm:176, baseRentPerSqm:0.86, sampleSaleCount:22, sampleRentCount:20, stationBias:1.05, rentDemand:1.08, confidenceBase:'A' },
+  { key:'hyogo-sannomiya', prefecture:'兵庫県', city:'神戸市中央区', area:'三宮町', station:'三宮', walkMin:5, age:12, size:57, type:'中古マンション', room:'2LDK', regionGroup:'関西圏', cityTier:'core', baseSalePerSqm:158, baseRentPerSqm:0.77, sampleSaleCount:21, sampleRentCount:19, stationBias:1.04, rentDemand:1.06, confidenceBase:'A' },
+  { key:'aichi-meieki', prefecture:'愛知県', city:'名古屋市中村区', area:'名駅', station:'名古屋', walkMin:5, age:10, size:59, type:'中古マンション', room:'2LDK', regionGroup:'中部圏', cityTier:'megacity', baseSalePerSqm:150, baseRentPerSqm:0.76, sampleSaleCount:23, sampleRentCount:21, stationBias:1.08, rentDemand:1.10, confidenceBase:'A' },
+  { key:'aichi-sakae', prefecture:'愛知県', city:'名古屋市中区', area:'栄', station:'栄', walkMin:6, age:11, size:61, type:'中古マンション', room:'2LDK', regionGroup:'中部圏', cityTier:'megacity', baseSalePerSqm:146, baseRentPerSqm:0.74, sampleSaleCount:22, sampleRentCount:20, stationBias:1.06, rentDemand:1.08, confidenceBase:'A' },
+  { key:'hokkaido-odori', prefecture:'北海道', city:'札幌市中央区', area:'大通', station:'大通', walkMin:5, age:14, size:60, type:'中古マンション', room:'2LDK', regionGroup:'地方中核都市', cityTier:'core', baseSalePerSqm:118, baseRentPerSqm:0.54, sampleSaleCount:19, sampleRentCount:17, stationBias:1.02, rentDemand:1.03, confidenceBase:'B' },
+  { key:'miyagi-ichibancho', prefecture:'宮城県', city:'仙台市青葉区', area:'一番町', station:'仙台', walkMin:7, age:15, size:62, type:'中古マンション', room:'2LDK', regionGroup:'地方中核都市', cityTier:'core', baseSalePerSqm:102, baseRentPerSqm:0.47, sampleSaleCount:18, sampleRentCount:16, stationBias:1.01, rentDemand:1.01, confidenceBase:'B' },
+  { key:'fukuoka-hakataekimae', prefecture:'福岡県', city:'福岡市博多区', area:'博多駅前', station:'博多', walkMin:5, age:9, size:58, type:'中古マンション', room:'2LDK', regionGroup:'地方中核都市', cityTier:'core', baseSalePerSqm:132, baseRentPerSqm:0.63, sampleSaleCount:22, sampleRentCount:20, stationBias:1.08, rentDemand:1.12, confidenceBase:'A' },
+  { key:'fukuoka-tenjin', prefecture:'福岡県', city:'福岡市中央区', area:'天神', station:'天神', walkMin:6, age:10, size:57, type:'中古マンション', room:'2LDK', regionGroup:'地方中核都市', cityTier:'core', baseSalePerSqm:140, baseRentPerSqm:0.66, sampleSaleCount:21, sampleRentCount:19, stationBias:1.07, rentDemand:1.10, confidenceBase:'A' },
+];
+function buildNationwideSampleCases(center, spread, count){const n=Math.max(1,count);return Array.from({length:n},(_,i)=>Math.max(0,Math.round((center+((n===1?0:i/(n-1))-0.5)*spread*2+Math.sin((i+1)*1.43)*spread*0.09)/10)*10)).sort((a,b)=>a-b);}
+function fmtNationwideRent(n){return isNaN(n)||!isFinite(n)?'—':`${Number(n).toFixed(1)}万円`;}
+function normalizeNationwideText(v){return String(v||'').trim().replace(/\s+/g,'');}
+function getNationwideRegionGroup(p){const n=normalizeNationwideText(p);if(['東京都','神奈川県','埼玉県','千葉県'].some(v=>normalizeNationwideText(v)===n))return '首都圏';if(['大阪府','京都府','兵庫県'].some(v=>normalizeNationwideText(v)===n))return '関西圏';if(['愛知県'].some(v=>normalizeNationwideText(v)===n))return '中部圏';if(['北海道','宮城県','福岡県'].some(v=>normalizeNationwideText(v)===n))return '地方中核都市';return 'その他地方都市';}
+function getNationwideCityTierLabel(t){return({megacity:'大都市圏中心',core:'地方中核都市',local:'地方都市'}[t]||'地方都市');}
+function getNationwideCityTierFactor(t){return({megacity:1.12,core:1.0,local:0.88}[t]||1);}
+function getNationwideRegionFactor(r){return({'首都圏':1.0,'関西圏':0.94,'中部圏':0.90,'地方中核都市':0.84,'その他地方都市':0.72}[r]||1);}
+function getNationwideWalkFactor(w){if(!w)return 1;if(w<=5)return 1.10;if(w<=10)return 1.04;if(w<=15)return 0.98;if(w<=20)return 0.93;return 0.88;}
+function getNationwideAgeFactor(a){if(!a)return 1;if(a<=5)return 1.13;if(a<=10)return 1.06;if(a<=20)return 1.0;if(a<=30)return 0.93;return 0.86;}
+function getNationwideSizeFactor(s){if(!s)return 1;if(s<30)return 1.08;if(s<50)return 1.04;if(s<70)return 1.0;if(s<90)return 0.97;return 0.93;}
+function getNationwideTypeSaleFactor(t){if(t==='中古マンション')return 1;if(t==='戸建て')return 0.95;if(t==='土地')return 0.88;return 1;}
+function getNationwideTypeRentFactor(t){if(t==='中古マンション')return 1;if(t==='戸建て')return 0.90;if(t==='土地')return 0;return 1;}
+function getNationwideRoomFactor(r){return({'1R':1.10,'1K':1.07,'1DK':1.03,'1LDK':1,'2LDK':0.96,'3LDK':0.92,'4LDK':0.88}[r]||1);}
+function getNationwideStationFactor(inputStation,sampleStation,baseBias=1){const s=normalizeNationwideText(inputStation),t=normalizeNationwideText(sampleStation);if(!s||!t)return baseBias;if(s===t)return baseBias;if(s.includes(t)||t.includes(s))return baseBias*0.98;return baseBias*0.96;}
+function findNationwideSample(prefecture,city,area){const p=normalizeNationwideText(prefecture),c=normalizeNationwideText(city),a=normalizeNationwideText(area);return RE_NATIONWIDE_SAMPLE_AREAS.find(sample=>{const sp=normalizeNationwideText(sample.prefecture),sc=normalizeNationwideText(sample.city),sa=normalizeNationwideText(sample.area);return (!p||p===sp)&&(!c||c===sc||c.includes(sc)||sc.includes(c))&&(!a||a===sa||a.includes(sa)||sa.includes(a));})||null;}
+function buildNationwideFallbackProfile(input={}){const regionGroup=getNationwideRegionGroup(input.prefecture);const base={'首都圏':{baseSalePerSqm:118,baseRentPerSqm:0.54,sampleSaleCount:14,sampleRentCount:12,stationBias:1.03,rentDemand:1.06,confidenceBase:'B',cityTier:'core'},'関西圏':{baseSalePerSqm:104,baseRentPerSqm:0.50,sampleSaleCount:13,sampleRentCount:11,stationBias:1.01,rentDemand:1.03,confidenceBase:'B',cityTier:'core'},'中部圏':{baseSalePerSqm:92,baseRentPerSqm:0.46,sampleSaleCount:12,sampleRentCount:10,stationBias:1.00,rentDemand:1.00,confidenceBase:'B',cityTier:'core'},'地方中核都市':{baseSalePerSqm:82,baseRentPerSqm:0.40,sampleSaleCount:11,sampleRentCount:10,stationBias:0.98,rentDemand:0.98,confidenceBase:'C',cityTier:'core'},'その他地方都市':{baseSalePerSqm:60,baseRentPerSqm:0.32,sampleSaleCount:8,sampleRentCount:7,stationBias:0.96,rentDemand:0.94,confidenceBase:'C',cityTier:'local'}}[regionGroup];return {key:`fallback-${normalizeNationwideText(input.prefecture||'unknown')}-${normalizeNationwideText(input.city||'unknown')}-${normalizeNationwideText(input.area||'unknown')}`,prefecture:input.prefecture||'全国',city:input.city||'自由入力',area:input.area||'自由入力',station:input.station||'',walkMin:input.walkMin||10,age:input.age||18,size:input.size||60,type:input.type||'中古マンション',room:input.room||'2LDK',regionGroup,cityTier:base.cityTier,baseSalePerSqm:base.baseSalePerSqm,baseRentPerSqm:base.baseRentPerSqm,sampleSaleCount:base.sampleSaleCount,sampleRentCount:base.sampleRentCount,stationBias:base.stationBias,rentDemand:base.rentDemand,confidenceBase:base.confidenceBase,isFallback:true,fallbackNote:'完全一致データではなく、地方区分・都市規模をもとにした参考推定'};}
+function buildNationwideAreaProfile(input={}){const sample=findNationwideSample(input.prefecture,input.city,input.area);if(sample)return {...sample,isFallback:false,fallbackNote:'',regionFactor:1,cityTierFactor:1};const fallback=buildNationwideFallbackProfile(input);return {...fallback,regionFactor:getNationwideRegionFactor(fallback.regionGroup),cityTierFactor:getNationwideCityTierFactor(fallback.cityTier)};}
+function buildNationwideConfidence(profile,saleCount,rentCount,exactMatch,closeEnough){const w=Math.max(saleCount,rentCount);if(exactMatch&&closeEnough&&w>=20&&profile.confidenceBase==='A')return{grade:'A',className:'re-confidence-a',note:'サンプル一致・類似事例20件以上・条件が近い'};if(w>=8)return{grade:profile.confidenceBase==='A'?'A':'B',className:profile.confidenceBase==='A'?'re-confidence-a':'re-confidence-b',note:exactMatch?'サンプル一致・類似事例8〜19件':'類似事例8〜19件'};return{grade:'C',className:'re-confidence-c',note:profile.isFallback?'類似事例7件以下、または条件が広い':'条件が広い'};}
+function parseNationwideInputs(){return{sampleKey:document.getElementById('re-nationwide-sample')?.value||'',prefecture:document.getElementById('re-nationwide-prefecture')?.value||'',city:document.getElementById('re-nationwide-city')?.value||'',area:document.getElementById('re-nationwide-area')?.value||'',station:document.getElementById('re-nationwide-station')?.value||'',walkMin:parseInt(document.getElementById('re-nationwide-walk')?.value||'0',10)||0,age:parseInt(document.getElementById('re-nationwide-age')?.value||'0',10)||0,size:parseFloat(document.getElementById('re-nationwide-size')?.value||'0')||0,type:document.getElementById('re-nationwide-type')?.value||'',room:document.getElementById('re-nationwide-room')?.value||'',mode:document.getElementById('re-nationwide-mode')?.value||'both'};}
+function setNationwideInputValue(id,value){const el=document.getElementById(id);if(el)el.value=value;}
+function applyNationwideSample(sampleKey){const sample=RE_NATIONWIDE_SAMPLE_AREAS.find(item=>item.key===sampleKey)||null;if(!sample){['prefecture','city','area','station','walk','age','size','type','room'].forEach(f=>setNationwideInputValue(`re-nationwide-${f}`,''));setNationwideInputValue('re-nationwide-mode','both');searchRealestateNationwide();return;}setNationwideInputValue('re-nationwide-prefecture',sample.prefecture);setNationwideInputValue('re-nationwide-city',sample.city);setNationwideInputValue('re-nationwide-area',sample.area);setNationwideInputValue('re-nationwide-station',sample.station);setNationwideInputValue('re-nationwide-walk',String(sample.walkMin||''));setNationwideInputValue('re-nationwide-age',String(sample.age||''));setNationwideInputValue('re-nationwide-size',String(sample.size||''));setNationwideInputValue('re-nationwide-type',sample.type);setNationwideInputValue('re-nationwide-room',sample.room);setNationwideInputValue('re-nationwide-mode','both');searchRealestateNationwide();}
+function renderNationwideAreaChips(activeKey){document.querySelectorAll('[data-area-chip]').forEach(node=>{node.classList.toggle('active',node.dataset.areaChip===activeKey);node.onclick=()=>applyNationwideSample(node.dataset.areaChip);});}
+function buildNationwideAreaEstimate(input={}){const profile=buildNationwideAreaProfile(input);const exactMatch=!profile.isFallback;const selectedSize=input.size||profile.size||60;const selectedWalk=input.walkMin||profile.walkMin||10;const selectedAge=input.age||profile.age||18;const selectedType=input.type||profile.type||'中古マンション';const selectedRoom=input.room||profile.room||'2LDK';const selectedStation=input.station||profile.station||'';const walkFactor=getNationwideWalkFactor(selectedWalk)/getNationwideWalkFactor(profile.walkMin||10);const ageFactor=getNationwideAgeFactor(selectedAge)/getNationwideAgeFactor(profile.age||18);const sizeFactor=getNationwideSizeFactor(selectedSize)/getNationwideSizeFactor(profile.size||60);const saleTypeFactor=getNationwideTypeSaleFactor(selectedType)/getNationwideTypeSaleFactor(profile.type||'中古マンション');const rentTypeFactor=getNationwideTypeRentFactor(selectedType)/getNationwideTypeRentFactor(profile.type||'中古マンション');const roomFactor=getNationwideRoomFactor(selectedRoom)/getNationwideRoomFactor(profile.room||'2LDK');const stationFactor=getNationwideStationFactor(selectedStation,profile.station,profile.stationBias||1);const regionFactor=profile.regionFactor||1;const cityTierFactor=profile.cityTierFactor||1;const demandFactor=profile.rentDemand||1;const salePerSqm=profile.baseSalePerSqm*regionFactor*cityTierFactor*stationFactor*walkFactor*ageFactor*sizeFactor*saleTypeFactor;const saleCenter=Math.max(0,Math.round(salePerSqm*selectedSize));const saleCases=buildNationwideSampleCases(saleCenter,Math.max(80,saleCenter*0.08),profile.sampleSaleCount||12);const saleQ1=percentile(saleCases,0.25);const saleQ3=percentile(saleCases,0.75);const saleConfidence=buildNationwideConfidence(profile,profile.sampleSaleCount||saleCases.length,profile.sampleRentCount||0,exactMatch,selectedWalk<=15&&selectedAge<=20);const rentPossible=selectedType!=='土地'&&profile.baseRentPerSqm>0&&rentTypeFactor>0;const rentCenter=rentPossible?Math.max(0,Number((profile.baseRentPerSqm*regionFactor*cityTierFactor*stationFactor*walkFactor*ageFactor*sizeFactor*roomFactor*rentTypeFactor*demandFactor*selectedSize).toFixed(1))):null;const rentCases=rentPossible?buildNationwideSampleCases(Math.max(0,Math.round((rentCenter||0)*10)),Math.max(1,Math.round((rentCenter||0)*0.10)*10),profile.sampleRentCount||10).map(v=>Number((v/10).toFixed(1))):[];const rentQ1=rentPossible&&rentCases.length?percentile(rentCases,0.25):null;const rentQ3=rentPossible&&rentCases.length?percentile(rentCases,0.75):null;const annualRent=rentCenter!=null?Number((rentCenter*12).toFixed(1)):null;const yieldRate=rentCenter&&saleCenter?Number(((annualRent/saleCenter)*100).toFixed(1)):null;const rentConfidence=buildNationwideConfidence(profile,profile.sampleSaleCount||0,profile.sampleRentCount||rentCases.length,exactMatch,selectedWalk<=15&&selectedAge<=20&&rentPossible);const areaLabel=[input.prefecture||profile.prefecture,input.city||profile.city,input.area||profile.area].filter(Boolean).join(' / ');return {key:profile.key,areaLabel,prefecture:input.prefecture||profile.prefecture,city:input.city||profile.city,area:input.area||profile.area,station:selectedStation,walkMin:selectedWalk,age:selectedAge,size:selectedSize,type:selectedType,room:selectedRoom,mode:input.mode||'both',regionGroup:profile.regionGroup,cityTier:profile.cityTier,cityTierLabel:getNationwideCityTierLabel(profile.cityTier),fallbackUsed:profile.isFallback,fallbackNote:profile.fallbackNote||'',exactMatch,sale:{count:profile.sampleSaleCount||saleCases.length,center:saleCenter,q1:saleQ1,q3:saleQ3,listingLow:saleCenter?Number((saleCenter*1.05).toFixed(0)):null,listingHigh:saleCenter?Number((saleCenter*1.15).toFixed(0)):null,upperLow:saleCenter?Number((saleCenter*1.2).toFixed(0)):null,upperHigh:saleCenter?Number((saleCenter*1.25).toFixed(0)):null,confidence:saleConfidence,basis:`${profile.regionGroup} / ${getNationwideCityTierLabel(profile.cityTier)}・${areaLabel}・駅徒歩${selectedWalk||'指定なし'}分・築${selectedAge||'指定なし'}年・${selectedSize||'指定なし'}㎡・${selectedType||'指定なし'}・${selectedRoom||'指定なし'}`},rent:{count:profile.sampleRentCount||rentCases.length,center:rentCenter,q1:rentQ1,q3:rentQ3,annualRent,yieldRate,confidence:rentConfidence,perSqm:rentCenter!=null&&selectedSize?Number((rentCenter/selectedSize).toFixed(2)):null,basis:rentPossible?`${profile.regionGroup} / ${getNationwideCityTierLabel(profile.cityTier)}・${areaLabel}・駅徒歩${selectedWalk||'指定なし'}分・築${selectedAge||'指定なし'}年・${selectedSize||'指定なし'}㎡・${selectedType||'指定なし'}・${selectedRoom||'指定なし'}`:'土地は賃貸換算対象外です'},note:profile.isFallback?`${profile.fallbackNote}。国交省データだけでは現在募集家賃の網羅は難しいため、将来は国交省API・公的家賃統計・手入力賃料メモ・管理費・空室率を分けて扱います。`:'※ 賃料は募集賃料・成約賃料を保証するものではありません。国交省データだけでは現在募集家賃の網羅は難しいため、将来は国交省API・公的家賃統計・手入力賃料メモ・管理費・空室率を分けて扱います。'};}
+function persistNationwideSelection(summary){try{localStorage.setItem(RE_NATIONWIDE_AREA_LS_KEY,JSON.stringify({key:summary.key,areaLabel:summary.areaLabel,prefecture:summary.prefecture,city:summary.city,area:summary.area,station:summary.station,walkMin:summary.walkMin,age:summary.age,size:summary.size,type:summary.type,room:summary.room,mode:summary.mode,regionGroup:summary.regionGroup,cityTier:summary.cityTier,fallbackUsed:summary.fallbackUsed,updatedAt:new Date().toISOString(),source:'FK Omiya Real Estate Nationwide Area Price Rent Estimate Lite'}));localStorage.setItem(RE_NATIONWIDE_PRICE_LS_KEY,JSON.stringify({areaKey:summary.key,areaLabel:summary.areaLabel,value:summary.sale.center,updatedAt:new Date().toISOString(),source:'FK Omiya Real Estate Nationwide Area Price Rent Estimate Lite'}));localStorage.setItem(RE_NATIONWIDE_RENT_LS_KEY,JSON.stringify({areaKey:summary.key,areaLabel:summary.areaLabel,value:summary.rent.center,updatedAt:new Date().toISOString(),source:'FK Omiya Real Estate Nationwide Area Price Rent Estimate Lite'}));localStorage.setItem(RE_NATIONWIDE_YIELD_LS_KEY,JSON.stringify({areaKey:summary.key,areaLabel:summary.areaLabel,value:summary.rent.yieldRate,updatedAt:new Date().toISOString(),source:'FK Omiya Real Estate Nationwide Area Price Rent Estimate Lite'}));}catch(_){}}
+function renderNationwideSummary(summary){const el=id=>document.getElementById(id);const sale=summary.sale||{};const rent=summary.rent||{};const saleConfidence=sale.confidence||{grade:'C',className:'re-confidence-c',note:'条件が広い'};const rentConfidence=rent.confidence||{grade:'C',className:'re-confidence-c',note:'条件が広い'};if(el('re-nationwide-area-name'))el('re-nationwide-area-name').textContent=summary.areaLabel||'—';if(el('re-nationwide-area-meta'))el('re-nationwide-area-meta').textContent=`${summary.prefecture||'—'} / ${summary.city||'—'} / ${summary.area||'—'} / ${summary.station||'—'}駅 徒歩${summary.walkMin||'指定なし'}分 / ${summary.size||'—'}㎡ / ${summary.type||'—'} / ${summary.room||'—'}`;if(el('re-nationwide-region'))el('re-nationwide-region').textContent=`${summary.regionGroup||'—'} / ${summary.cityTierLabel||'—'}`;if(el('re-nationwide-sale-center'))el('re-nationwide-sale-center').textContent=sale.center?fmt(sale.center):'—';if(el('re-nationwide-sale-basis'))el('re-nationwide-sale-basis').textContent=sale.basis?`根拠：${sale.basis}`:'—';if(el('re-nationwide-sale-range'))el('re-nationwide-sale-range').textContent=sale.center?`${fmt(sale.q1)}〜${fmt(sale.q3)}`:'—';if(el('re-nationwide-sale-count'))el('re-nationwide-sale-count').textContent=sale.count?`類似売買事例 ${sale.count.toLocaleString('ja-JP')}件`:'類似売買事例 0件';if(el('re-nationwide-sale-listing'))el('re-nationwide-sale-listing').textContent=sale.center?`${fmt(sale.listingLow)}〜${fmt(sale.listingHigh)}`:'—';if(el('re-nationwide-sale-upper'))el('re-nationwide-sale-upper').textContent=sale.center?`強気上限 ${fmt(sale.upperLow)}〜${fmt(sale.upperHigh)}`:'—';if(el('re-nationwide-sale-confidence'))el('re-nationwide-sale-confidence').innerHTML=sale.count?`<span class="re-confidence-pill ${saleConfidence.className}">${saleConfidence.grade}</span>`:'<span class="re-confidence-pill re-confidence-c">C</span>';if(el('re-nationwide-sale-confidence-note'))el('re-nationwide-sale-confidence-note').textContent=saleConfidence.note;if(el('re-nationwide-rent-center'))el('re-nationwide-rent-center').textContent=rent.center!=null?fmtNationwideRent(rent.center):'—';if(el('re-nationwide-rent-per-sqm'))el('re-nationwide-rent-per-sqm').textContent=rent.perSqm!=null?`㎡単価: ${rent.perSqm.toFixed(2)}万円/㎡`:'国交省データだけでは現在募集家賃の網羅が難しいため、賃料は参考推定です';if(el('re-nationwide-rent-range'))el('re-nationwide-rent-range').textContent=rent.center!=null?`${fmtNationwideRent(rent.q1)}〜${fmtNationwideRent(rent.q3)}`:'—';if(el('re-nationwide-annual-rent'))el('re-nationwide-annual-rent').textContent=rent.annualRent!=null?`年間賃料: ${fmtNationwideRent(rent.annualRent)}`:'年間賃料: —';if(el('re-nationwide-yield'))el('re-nationwide-yield').textContent=rent.yieldRate!=null?`${rent.yieldRate.toFixed(1)}%`:'—';if(el('re-nationwide-rent-basis'))el('re-nationwide-rent-basis').textContent=rent.basis?`根拠：${rent.basis}`:'—';if(el('re-nationwide-rent-confidence'))el('re-nationwide-rent-confidence').innerHTML=rent.center!=null?`<span class="re-confidence-pill ${rentConfidence.className}">${rentConfidence.grade}</span>`:'<span class="re-confidence-pill re-confidence-c">C</span>';if(el('re-nationwide-rent-note'))el('re-nationwide-rent-note').textContent=summary.note;if(el('re-nationwide-region-note'))el('re-nationwide-region-note').textContent=summary.fallbackUsed?summary.note:'サンプル一致データを使用';const btn=document.getElementById('re-nationwide-mortgage-btn');if(btn){btn.dataset.estimatedPrice=sale.center?String(Math.round(sale.center)):'';btn.dataset.estimatedRent=rent.center!=null?String(Number(rent.center.toFixed(1))):'';btn.dataset.estimatedYield=rent.yieldRate!=null?String(Number(rent.yieldRate.toFixed(1))):'';btn.dataset.selectedArea=summary.areaLabel||'';btn.disabled=!sale.center;}const hint=document.getElementById('re-nationwide-mortgage-hint');if(hint){hint.textContent=sale.center?`選択中の ${summary.areaLabel} を住宅ローンへ反映できます。localStorage(${RE_NATIONWIDE_PRICE_LS_KEY} / ${RE_NATIONWIDE_RENT_LS_KEY} / ${RE_NATIONWIDE_YIELD_LS_KEY} / ${RE_NATIONWIDE_AREA_LS_KEY}) にも保存します。`:'条件に合う推定価格がありません。';}renderNationwideAreaChips(summary.key);persistNationwideSelection(summary);window.__fkOmiyaRealestateNationwideEstimate=summary;}
+function searchRealestateNationwide(){const input=parseNationwideInputs();const summary=buildNationwideAreaEstimate(input);renderNationwideSummary(summary);return summary;}
+function applyRealestateNationwideEstimateToMortgage(){const summary=window.__fkOmiyaRealestateNationwideEstimate||null;if(!summary||!summary.sale||!summary.sale.center)return;window.__fkOmiyaRealestateEstimate={center:summary.sale.center,q1:summary.sale.q1,q3:summary.sale.q3,listingLow:summary.sale.listingLow,listingHigh:summary.sale.listingHigh,upperLow:summary.sale.upperLow,upperHigh:summary.sale.upperHigh,count:summary.sale.count,confidence:summary.sale.confidence,basis:summary.sale.basis,updatedAt:new Date().toISOString(),source:'FK Omiya Real Estate Nationwide Area Price Rent Estimate Lite',mortgagePrincipal:Math.round(summary.sale.center)};try{localStorage.setItem(RE_LS_KEY,JSON.stringify(window.__fkOmiyaRealestateEstimate));}catch(_){}applyRealestateEstimateToMortgage();}
+
+/* ── Nationwide Real Estate ── */
 function readRealestateBridgeCache() {
   try {
     const raw = localStorage.getItem(RE_MLIT_BRIDGE_CACHE_KEY);
@@ -4757,6 +5012,7 @@ const _inits = [
   calcEducation,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
+try { applyNationwideSample('tokyo-ebisu'); } catch(e) { console.warn('[init] applyNationwideSample', e); }
 try { selectRealestateMapPoint('omiya-west'); } catch(e) { console.warn('[init] selectRealestateMapPoint', e); }
 searchRealestate().catch(e => console.warn('[init] searchRealestate', e));
 setTimeout(() => {

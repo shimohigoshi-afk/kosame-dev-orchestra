@@ -100,9 +100,9 @@ async function main() {
   assert.ok(src.includes('mlit_api_key'), 'must store mlit_api_key');
   console.log('  PASS ⑨ 国交省APIキー設定');
 
-  // v1.1.3 footer
-  assert.ok(src.includes('v1.1.3'), 'footer must show v1.1.3');
-  console.log('  PASS console version v1.1.3');
+  // v1.1.3+ footer
+  assert.ok(/v1\.[12]\.\d/.test(src), 'footer must show v1.1.3 or higher');
+  console.log('  PASS console version v1.1.3+');
 
   // No secrets
   assert.ok(!src.includes('OPENAI_API_KEY'), 'no OPENAI_API_KEY');

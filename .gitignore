@@ -20,6 +20,10 @@ data/underwriting/*.pdf
 data/underwriting/raw/
 data/underwriting/*.json
 
+# LINE 顧客データ（個人情報 — 絶対にコミットしない）
+data/customers.json
+data/line-*.json
+
 # Runner queue runtime state and logs
 .kosame-runner/
 

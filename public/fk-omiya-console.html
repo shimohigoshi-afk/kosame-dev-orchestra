@@ -3881,20 +3881,15 @@ function renderRealestate(data) {
 }
 
 /* ── Init ── */
-calcMortgage();
-calcGiftTax();
-calcInheritanceTax();
-calcInsurance();
+// 認証を最初に実行（calc関数のエラーで遮断されないよう分離）
 initAuth();
-calcBMI();
-calcAsset();
-calcLifetime();
-calcSocialSecurity();
-calcMedical();
-calcDisease();
-renderUnderwriting();
-calcEducation();
-renderRealestate();
+// 各種計算は try/catch で包み、一部の失敗が全体を止めないようにする
+const _inits = [
+  calcMortgage, calcGiftTax, calcInheritanceTax, calcInsurance,
+  calcBMI, calcAsset, calcLifetime, calcSocialSecurity,
+  calcMedical, calcDisease, renderUnderwriting, calcEducation, renderRealestate,
+];
+_inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();
@@ -3968,18 +3963,27 @@ function checkBruteForce(email) {
 }
 
 function initAuth() {
-  const users = getUsers();
+  const setupBox = document.getElementById('auth-setup-box');
+  const loginBox = document.getElementById('auth-login-box');
+  if (!setupBox || !loginBox) {
+    // DOM未準備なら少し待ってリトライ
+    setTimeout(initAuth, 50);
+    return;
+  }
+  let users;
+  try { users = getUsers(); } catch(e) { users = []; }
   if (users.length === 0) {
-    // 初回: 管理者設定画面
-    document.getElementById('auth-login-box').style.display = 'none';
-    document.getElementById('auth-setup-box').style.display = 'block';
+    // ユーザー0件 → 必ず初期設定画面を表示
+    loginBox.style.display = 'none';
+    setupBox.style.display = 'block';
     return;
   }
   const session = getSession();
   if (session) {
     showApp(session);
+    return;
   }
-  // else: ログイン画面はデフォルトで表示
+  // セッションなし → ログイン画面（デフォルト表示のまま）
 }
 
 function showApp(session) {
@@ -4053,8 +4057,8 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'ログイン';
 }
 
-function logoutUser() {
-  if (!confirm('ログアウトしますか？')) return;
+function logoutUser(silent = false) {
+  if (!silent && !confirm('ログアウトしますか？')) return;
   localStorage.removeItem('auth_session');
   location.reload();
 }
@@ -4391,8 +4395,14 @@ function loadSettings() {
   renderImportedCompanies();
 }
 
-/* セッション自動ログアウトチェック（1分ごと） */
-setInterval(() => { if (!getSession()) { logoutUser(); } }, 60000);
+/* セッション自動ログアウトチェック（1分ごと）
+   auth-overlay が非表示 = ログイン済みの場合のみチェック */
+setInterval(() => {
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay && overlay.style.display === 'none') {
+    if (!getSession()) { logoutUser(true); }
+  }
+}, 60000);
 
 /* ── Feedback Widget ── */
 let _fbCategory = '';

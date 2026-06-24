@@ -90,7 +90,8 @@ async function main() {
   console.log('  PASS ⑦ LINE API設定（Token・Secret・ChannelID・Webhook表示）');
 
   // ⑧ LINE API サーバー接続
-  assert.ok(src.includes("const LINE_API = 'http://localhost:3001/api'"), 'must define LINE_API constant');
+  // LINE_API は localStorage から動的読み込み (const→let に変更済み)
+  assert.ok(src.includes('LINE_API') && src.includes('localhost:3001/api'), 'must define LINE_API with localhost fallback');
   assert.ok(src.includes('function checkLineServer('), 'must define checkLineServer');
   console.log('  PASS ⑧ LINE Bot サーバー接続チェック');
 

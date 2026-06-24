@@ -735,6 +735,27 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    if (url.pathname === '/api/runner-notify') {
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      parseJsonBody(req, (parsed) => {
+        const message = String(parsed && parsed.message || '').trim().slice(0, 400);
+        if (message) {
+          _emitRunnerSSE('notify', { ts: new Date().toISOString(), agent: 'RUNNER', msg: message });
+        }
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        res.end(JSON.stringify({ ok: true }));
+      });
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

@@ -47,6 +47,15 @@ async function main() {
   }
   console.log('  PASS ⑤ cloud-run yaml: PORT env var なし');
 
+  // ⑥ deploy script: --allow-unauthenticated フラグ削除 → REST API 関数に置換
+  // コメント行以外に --allow-unauthenticated フラグがないこと
+  const nonCommentScriptLines = script.split('\n').filter(l => !l.trim().startsWith('#'));
+  assert.ok(!nonCommentScriptLines.some(l => l.includes('--allow-unauthenticated')), 'deploy script must NOT use --allow-unauthenticated flag (org policy blocked; uses REST API instead)');
+  assert.ok(script.includes('set_allow_unauthenticated'), 'deploy script must define set_allow_unauthenticated function');
+  assert.ok(script.includes('setIamPolicy'), 'deploy script must call Cloud Run setIamPolicy REST API');
+  assert.ok(script.includes('allUsers'), 'deploy script must grant allUsers invoker role');
+  console.log('  PASS ⑥ deploy script: org policy対応 REST API IAM設定に切り替え済み');
+
   console.log('\n✅ deploy-fk-omiya Cloud Run config smoke PASSED');
 }
 

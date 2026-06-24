@@ -49,6 +49,28 @@ read_env_var() {
   fi
 }
 
+# ── 未認証呼び出し許可（org policy 対応版） ───────────────────────────────────
+# gcloud --allow-unauthenticated は iam.allowedPolicyMemberDomains org policy によって
+# ブロックされる場合がある。REST API 直接呼び出しでプロパゲーション問題を回避する。
+set_allow_unauthenticated() {
+  local service="$1"
+  local token
+  token=$(gcloud auth print-access-token 2>/dev/null)
+  local result
+  result=$(curl -s -o /tmp/iam_result.json -w "%{http_code}" -X POST \
+    "https://run.googleapis.com/v1/projects/${PROJECT}/locations/${REGION}/services/${service}:setIamPolicy" \
+    -H "Authorization: Bearer ${token}" \
+    -H "Content-Type: application/json" \
+    -d '{"policy":{"bindings":[{"role":"roles/run.invoker","members":["allUsers"]}]}}')
+  if [ "$result" = "200" ]; then
+    echo -e "  ${GREEN}✓ ${service}: allUsers invoker 設定完了${NC}"
+  else
+    echo -e "  ${YELLOW}⚠️  ${service}: IAM 設定失敗 (HTTP ${result})${NC}"
+    cat /tmp/iam_result.json 2>/dev/null || true
+    echo -e "  ${YELLOW}   手動で設定: gcloud run services add-iam-policy-binding ${service} --member=allUsers --role=roles/run.invoker --region=${REGION} --project=${PROJECT}${NC}"
+  fi
+}
+
 # ── デプロイ計画の表示 ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
@@ -186,7 +208,6 @@ gcloud run deploy "${CONSOLE_SERVICE}" \
   --platform=managed \
   --region="${REGION}" \
   --project="${PROJECT}" \
-  --allow-unauthenticated \
   --port=8080 \
   --min-instances=0 \
   --max-instances=3 \
@@ -196,6 +217,7 @@ gcloud run deploy "${CONSOLE_SERVICE}" \
   --set-env-vars="NODE_ENV=production" \
   --labels="managed-by=kosame-dev-orchestra,component=fk-omiya-console"
 echo -e "  ${GREEN}✓ fk-omiya-console デプロイ完了${NC}"
+set_allow_unauthenticated "${CONSOLE_SERVICE}"
 
 # ── [4] LINEシークレット Secret Manager 登録 ─────────────────────────────────
 echo ""
@@ -248,7 +270,6 @@ gcloud run deploy "${BOT_SERVICE}" \
   --platform=managed \
   --region="${REGION}" \
   --project="${PROJECT}" \
-  --allow-unauthenticated \
   --port=8080 \
   --min-instances=1 \
   --max-instances=2 \
@@ -259,6 +280,7 @@ gcloud run deploy "${BOT_SERVICE}" \
   ${LINE_SECRET_FLAGS} \
   --labels="managed-by=kosame-dev-orchestra,component=line-bot"
 echo -e "  ${GREEN}✓ kosame-line-bot デプロイ完了${NC}"
+set_allow_unauthenticated "${BOT_SERVICE}"
 
 # ── URL 取得 ──────────────────────────────────────────────────────────────────
 echo ""

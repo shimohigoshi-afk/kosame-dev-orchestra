@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "113.3.48",
+  "version": "113.3.49",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -900,6 +900,7 @@
     "smoke:v113-3-37": "node smoke/v113-3-37-fk-omiya-console-expand-smoke.js",
     "smoke:v113-3-38": "node smoke/v113-3-38-fk-omiya-console-phase2-smoke.js",
     "smoke:v113-3-39": "node smoke/v113-3-39-fk-omiya-console-phase3-smoke.js",
+    "smoke:v113-3-49": "node smoke/v113-3-49-fk-omiya-realestate-map-price-click-lite-smoke.js",
     "smoke:v113-3-48": "node smoke/v113-3-48-fk-omiya-realestate-mlit-api-bridge-lite-smoke.js",
     "smoke:v113-3-40": "npm run smoke:v113-3-40:page && npm run smoke:v113-3-40:server && npm run smoke:v113-3-40:cloudrun",
     "smoke:v113-3-40:page": "node smoke/v113-3-40-fk-omiya-page-smoke.js",

@@ -305,6 +305,23 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-confidence-a{background:rgba(76,175,130,0.12);color:#73d69d;border:1px solid rgba(76,175,130,0.32)}
 .re-confidence-b{background:rgba(79,195,247,0.12);color:#7fd2ff;border:1px solid rgba(79,195,247,0.32)}
 .re-confidence-c{background:rgba(224,85,85,0.10);color:#ff9f9f;border:1px solid rgba(224,85,85,0.28)}
+.re-map-shell{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;margin-top:14px}
+.re-map-board{position:relative;min-height:360px;border:1px solid rgba(79,195,247,0.18);border-radius:14px;overflow:hidden;background:
+  radial-gradient(circle at 50% 48%,rgba(79,195,247,0.12),transparent 22%),
+  linear-gradient(135deg,rgba(201,168,76,0.12),rgba(79,195,247,0.06)),
+  repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0 1px,transparent 1px 48px),
+  repeating-linear-gradient(0deg,rgba(255,255,255,0.04) 0 1px,transparent 1px 48px),
+  linear-gradient(180deg,rgba(10,21,32,0.98),rgba(12,27,42,0.96));box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02)}
+.re-map-board::before{content:"";position:absolute;inset:16px;border:1px solid rgba(201,168,76,0.14);border-radius:12px;pointer-events:none}
+.re-map-core{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:126px;height:126px;border-radius:50%;border:1px solid rgba(201,168,76,0.24);background:radial-gradient(circle,rgba(201,168,76,0.18),rgba(201,168,76,0.04) 62%,transparent 64%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.re-map-core strong{font-size:18px;color:var(--gold);letter-spacing:.14em}
+.re-map-core span{font-size:10px;color:var(--text-muted);margin-top:3px}
+.re-map-spot{position:absolute;transform:translate(-50%,-50%);padding:7px 11px;border-radius:999px;border:1px solid rgba(79,195,247,0.22);background:rgba(10,21,32,0.88);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.18);transition:all .18s ease;white-space:nowrap}
+.re-map-spot:hover{border-color:var(--gold);color:var(--gold);transform:translate(-50%,-50%) scale(1.03)}
+.re-map-spot.active{border-color:rgba(201,168,76,0.8);background:rgba(201,168,76,0.14);color:var(--gold);box-shadow:0 10px 26px rgba(201,168,76,0.16)}
+.re-map-board-note{position:absolute;left:14px;bottom:12px;right:14px;font-size:10px;color:var(--text-dim);line-height:1.6;background:rgba(10,21,32,0.74);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px}
+.re-map-side{display:flex;flex-direction:column;gap:10px}
+.re-map-mini-note{font-size:10px;color:var(--text-dim);line-height:1.7;margin-top:-4px}
 .re-action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .re-action-btn{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.28);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:12px;font-weight:700}
 .re-action-btn:disabled{opacity:.45;cursor:not-allowed}
@@ -1757,6 +1774,73 @@ canvas{display:block;width:100%;border-radius:4px}
         📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携前提の参考版（<strong>FK Omiya Real Estate Pricing Score Lite</strong>）<br>
         現在は公開取引のサンプル/モックデータのみを使い、駅徒歩・築年数・類似事例スコア・信頼度を表示します。<br>
         SUUMO/HOME'S などの自動取得や外部サイト巡回は行いません。
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🗺 地図クリック価格推定 Lite</div>
+        <div class="re-filter-hint">地図上で気になる地域を選ぶと、周辺取引事例をもとに参考価格を推定する将来機能です。現時点では外部地図API未接続のモック地図で動作し、Google Maps や国土地理院タイルは将来差し替え前提、APIキーはブラウザに置きません。</div>
+        <div class="re-map-shell">
+          <div class="re-map-board">
+            <div class="re-map-core"><strong>OMIYA</strong><span>MOCK MAP</span></div>
+            <button type="button" class="re-map-spot active" data-map-key="omiya-west" style="left:20%;top:56%" onclick="selectRealestateMapPoint('omiya-west')">大宮駅西口</button>
+            <button type="button" class="re-map-spot" data-map-key="omiya-east" style="left:38%;top:44%" onclick="selectRealestateMapPoint('omiya-east')">大宮駅東口</button>
+            <button type="button" class="re-map-spot" data-map-key="saitama-shintoshin" style="left:50%;top:30%" onclick="selectRealestateMapPoint('saitama-shintoshin')">さいたま新都心</button>
+            <button type="button" class="re-map-spot" data-map-key="kita-omiya" style="left:28%;top:18%" onclick="selectRealestateMapPoint('kita-omiya')">北大宮</button>
+            <button type="button" class="re-map-spot" data-map-key="railway-museum" style="left:60%;top:62%" onclick="selectRealestateMapPoint('railway-museum')">鉄道博物館周辺</button>
+            <button type="button" class="re-map-spot" data-map-key="toro" style="left:44%;top:10%" onclick="selectRealestateMapPoint('toro')">土呂</button>
+            <div class="re-map-board-note">クリックで選択地域を切り替えできます。将来は <strong>Maps JavaScript API</strong> や <strong>Leaflet + 国土地理院タイル</strong> に差し替えやすい土台です。ブラウザから国交省 API や Google API key を直打ちしません。</div>
+          </div>
+          <div class="re-map-side">
+            <div class="re-summary-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:0">
+              <div class="re-summary-card">
+                <div class="re-summary-label">選択地域</div>
+                <div class="re-summary-value" id="re-map-region">—</div>
+                <div class="re-summary-sub" id="re-map-region-sub">モック地図をクリックしてください</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">仮lat/lng</div>
+                <div class="re-summary-value" id="re-map-latlng" style="font-size:18px">—</div>
+                <div class="re-summary-sub">将来の地図連携の仮座標</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">推定成約価格</div>
+                <div class="re-summary-value" id="re-map-center-price">—</div>
+                <div class="re-summary-sub">中央値ベース</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">相場レンジ</div>
+                <div class="re-summary-value" id="re-map-range-price">—</div>
+                <div class="re-summary-sub">25%値〜75%値</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">売出目安 / 強気上限</div>
+                <div class="re-summary-value" id="re-map-listing-price" style="font-size:18px">—</div>
+                <div class="re-summary-sub" id="re-map-upper-price">—</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">件数 / 半径</div>
+                <div class="re-summary-value" id="re-map-count" style="font-size:18px">—</div>
+                <div class="re-summary-sub" id="re-map-radius">—</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">信頼度 / 根拠</div>
+                <div class="re-summary-value" id="re-map-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+                <div class="re-summary-sub" id="re-map-basis">—</div>
+              </div>
+              <div class="re-summary-card">
+                <div class="re-summary-label">注意書き</div>
+                <div class="re-summary-value" id="re-map-warning" style="font-size:16px;line-height:1.35">査定・鑑定ではなく、公開取引データをもとにした参考推定です</div>
+                <div class="re-summary-sub">Google Maps / 国土地理院 / 国交省 API は将来差し替え前提</div>
+              </div>
+            </div>
+            <div class="re-action-row" style="margin-top:0">
+              <button type="button" class="re-action-btn" id="re-map-mortgage-btn" onclick="applyRealestateMapEstimateToMortgage()" data-estimated-price="" data-estimated-center="" data-map-key="" data-map-region="" data-map-radius="">
+                住宅ローン計算へ反映
+              </button>
+              <div class="re-action-hint" id="re-map-mortgage-hint">地図クリックで出た推定価格を、既存の住宅ローン導線へ渡せます。</div>
+            </div>
+            <div class="re-map-mini-note">将来は Cloud Run 側で国交省 API を取得し、Console へは加工済み JSON だけ返す想定です。API key は Secret Manager または <code>.env</code> 側に閉じます。</div>
+          </div>
+        </div>
       </div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">🧭 MLIT API Bridge Lite 設計</div>
@@ -4047,8 +4131,156 @@ const RE_DATA = [
   { type: '戸建て', city: 'ふじみ野市', area: 'ふじみ野市', station: 'ふじみ野', walkMin: 11, age: 8, size: 112, totalPrice: 3180, periodYears: 5, note: '郊外型・子育て向け' },
 ];
 
+const RE_MAP_LS_KEY = 'fk_omiya_realestate_map_click_estimate_v1';
+const RE_MAP_SELECTION_LS_KEY = 'fk_omiya_realestate_map_selected_point_v1';
+
+function buildMapSampleCases(center, spread, count) {
+  const safeCount = Math.max(1, count);
+  return Array.from({ length: safeCount }, (_, index) => {
+    const ratio = safeCount === 1 ? 0 : index / (safeCount - 1);
+    const wobble = Math.sin((index + 1) * 1.47) * spread * 0.08;
+    const drift = (ratio - 0.5) * spread * 2;
+    return Math.round((center + drift + wobble) / 10) * 10;
+  }).sort((a, b) => a - b);
+}
+
+const RE_MAP_POINTS = [
+  { key: 'omiya-west', label: '大宮駅西口', lat: 35.9064, lng: 139.6238, radiusM: 500, sampleCases: buildMapSampleCases(5200, 260, 13) },
+  { key: 'omiya-east', label: '大宮駅東口', lat: 35.9071, lng: 139.6263, radiusM: 500, sampleCases: buildMapSampleCases(5350, 280, 12) },
+  { key: 'saitama-shintoshin', label: 'さいたま新都心', lat: 35.8932, lng: 139.6331, radiusM: 1000, sampleCases: buildMapSampleCases(6120, 340, 16) },
+  { key: 'kita-omiya', label: '北大宮', lat: 35.9139, lng: 139.6249, radiusM: 1000, sampleCases: buildMapSampleCases(4480, 220, 7) },
+  { key: 'railway-museum', label: '鉄道博物館周辺', lat: 35.9204, lng: 139.6228, radiusM: 1500, sampleCases: buildMapSampleCases(4020, 300, 22) },
+  { key: 'toro', label: '土呂', lat: 35.9284, lng: 139.6334, radiusM: 1500, sampleCases: buildMapSampleCases(3720, 280, 24) },
+];
+
 function cloneRealestateRows(rows = RE_DATA) {
   return Array.isArray(rows) ? rows.map(row => ({ ...row })) : [];
+}
+
+function getRealestateMapPoint(pointKey) {
+  return RE_MAP_POINTS.find(point => point.key === pointKey) || RE_MAP_POINTS[0];
+}
+
+function buildRealestateMapConfidence(count) {
+  if (count >= 20) {
+    return {
+      grade: 'A',
+      className: 're-confidence-a',
+      note: '類似事例20件以上・半径1.5km圏内の参考推定',
+    };
+  }
+  if (count >= 8) {
+    return {
+      grade: 'B',
+      className: 're-confidence-b',
+      note: '類似事例8〜19件・周辺モック地図の参考推定',
+    };
+  }
+  return {
+    grade: 'C',
+    className: 're-confidence-c',
+    note: '類似事例7件以下、または条件が広い',
+  };
+}
+
+function buildRealestateMapSummary(point) {
+  const selected = point || RE_MAP_POINTS[0];
+  const prices = (selected.sampleCases || []).slice().sort((a, b) => a - b);
+  const center = prices.length ? percentile(prices, 0.5) : 0;
+  const q1 = prices.length ? percentile(prices, 0.25) : 0;
+  const q3 = prices.length ? percentile(prices, 0.75) : 0;
+  const confidence = buildRealestateMapConfidence(prices.length);
+  const radiusLabel = selected.radiusM >= 1000 ? `${(selected.radiusM / 1000).toFixed(selected.radiusM === 1500 ? 1 : 0)}km圏` : `${selected.radiusM}m圏`;
+  return {
+    key: selected.key,
+    label: selected.label,
+    lat: selected.lat,
+    lng: selected.lng,
+    radiusM: selected.radiusM,
+    sampleCases: prices,
+    count: prices.length,
+    center,
+    q1,
+    q3,
+    listingLow: center * 1.05,
+    listingHigh: center * 1.15,
+    upperLow: center * 1.2,
+    upperHigh: center * 1.25,
+    confidence,
+    basis: `仮lat/lng ${selected.lat.toFixed(4)} / ${selected.lng.toFixed(4)}・${radiusLabel}・類似事例${prices.length}件`,
+    note: '査定・鑑定ではなく、公開取引データをもとにした参考推定です',
+  };
+}
+
+function persistRealestateMapSelection(summary) {
+  try {
+    localStorage.setItem(RE_MAP_SELECTION_LS_KEY, JSON.stringify({
+      ...summary,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Map Price Click Lite',
+    }));
+  } catch (_) { /* ignore storage errors */ }
+}
+
+function renderRealestateMapSummary(summary) {
+  const el = id => document.getElementById(id);
+  const confidence = summary.confidence || { grade: 'C', className: 're-confidence-c', note: '条件が広い' };
+  el('re-map-region').textContent = summary.label || '—';
+  el('re-map-region-sub').textContent = `選択キー: ${summary.key || '—'}`;
+  el('re-map-latlng').textContent = summary.lat && summary.lng ? `${summary.lat.toFixed(4)} / ${summary.lng.toFixed(4)}` : '—';
+  el('re-map-center-price').textContent = summary.center ? fmt(summary.center) : '—';
+  el('re-map-range-price').textContent = summary.q1 ? `${fmt(summary.q1)}〜${fmt(summary.q3)}` : '—';
+  el('re-map-listing-price').textContent = summary.center ? `${fmt(summary.listingLow)}〜${fmt(summary.listingHigh)}` : '—';
+  el('re-map-upper-price').textContent = summary.center ? `強気上限 ${fmt(summary.upperLow)}〜${fmt(summary.upperHigh)}` : '—';
+  el('re-map-count').textContent = summary.count ? `${summary.count.toLocaleString('ja-JP')}件` : '0件';
+  el('re-map-radius').textContent = summary.radiusM >= 1000 ? `${(summary.radiusM / 1000).toFixed(summary.radiusM === 1500 ? 1 : 0)}km圏` : `${summary.radiusM}m圏`;
+  el('re-map-confidence').innerHTML = summary.count ? `<span class="re-confidence-pill ${confidence.className}">${confidence.grade}</span>` : '<span class="re-confidence-pill re-confidence-c">C</span>';
+  el('re-map-basis').textContent = summary.basis ? `根拠：${summary.basis}` : '—';
+  el('re-map-warning').textContent = summary.note || '査定・鑑定ではなく、公開取引データをもとにした参考推定です';
+
+  const btn = document.getElementById('re-map-mortgage-btn');
+  if (btn) {
+    btn.dataset.estimatedPrice = summary.center ? String(Math.round(summary.center)) : '';
+    btn.dataset.estimatedCenter = summary.center ? String(summary.center.toFixed(1)) : '';
+    btn.dataset.mapKey = summary.key || '';
+    btn.dataset.mapRegion = summary.label || '';
+    btn.dataset.mapRadius = summary.radiusM ? String(summary.radiusM) : '';
+    btn.disabled = !summary.center;
+  }
+
+  document.querySelectorAll('.re-map-spot').forEach(node => {
+    node.classList.toggle('active', node.dataset.mapKey === summary.key);
+  });
+
+  const hint = document.getElementById('re-map-mortgage-hint');
+  if (hint) {
+    hint.textContent = summary.center
+      ? `選択中の ${summary.label} を住宅ローンへ反映できます。localStorage(${RE_MAP_SELECTION_LS_KEY}) にも保存します。`
+      : '地図クリックで価格推定ができます。';
+  }
+}
+
+function selectRealestateMapPoint(pointKey) {
+  const summary = buildRealestateMapSummary(getRealestateMapPoint(pointKey));
+  window.__fkOmiyaRealestateMapEstimate = summary;
+  persistRealestateMapSelection(summary);
+  renderRealestateMapSummary(summary);
+  return summary;
+}
+
+function applyRealestateMapEstimateToMortgage() {
+  const estimate = window.__fkOmiyaRealestateMapEstimate || null;
+  if (!estimate || !estimate.center) return;
+  window.__fkOmiyaRealestateEstimate = {
+    ...estimate,
+    updatedAt: new Date().toISOString(),
+    source: 'FK Omiya Real Estate Map Price Click Lite',
+    mortgagePrincipal: Math.round(estimate.center),
+  };
+  try {
+    localStorage.setItem(RE_LS_KEY, JSON.stringify(window.__fkOmiyaRealestateEstimate));
+  } catch (_) { /* ignore storage errors */ }
+  applyRealestateEstimateToMortgage();
 }
 
 function readRealestateBridgeCache() {
@@ -4525,6 +4757,7 @@ const _inits = [
   calcEducation,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
+try { selectRealestateMapPoint('omiya-west'); } catch(e) { console.warn('[init] selectRealestateMapPoint', e); }
 searchRealestate().catch(e => console.warn('[init] searchRealestate', e));
 setTimeout(() => {
   drawMortgageChart();

@@ -1,0 +1,40 @@
+# FK Omiya Console — Cloud Run Service Config (v1.2.0)
+# THIS IS A TEMPLATE. Filled in at deploy time by deploy-fk-omiya.sh.
+# DO NOT hardcode real project IDs or image URLs here.
+# Human Approval required before deploy.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: fk-omiya-console
+  labels:
+    managed-by: kosame-dev-orchestra
+    version: v1.2.0
+    component: fk-omiya-console
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 60
+      containers:
+        - image: IMAGE_PLACEHOLDER
+          # asia-northeast1-docker.pkg.dev/PROJECT_ID/kosame/fk-omiya-console:TAG
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "8080"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 256Mi
+  traffic:
+    - percent: 100
+      latestRevision: true

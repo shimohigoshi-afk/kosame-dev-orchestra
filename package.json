@@ -906,6 +906,7 @@
     "smoke:v113-3-40:cloudrun": "node smoke/v113-3-40-cloud-run-preview-config-smoke.js",
     "smoke:fk-omiya-preview": "npm run smoke:v113-3-40",
     "preview:fk-omiya": "node tools/kosame-fk-omiya-preview-server.js",
+    "deploy:fk-omiya": "bash scripts/deploy-fk-omiya.sh",
     "deploy:fk-omiya-preview": "bash scripts/deploy-fk-omiya-preview.sh",
     "smoke:v113-3-45": "node smoke/v113-3-45-fk-omiya-v1-2-0-smoke.js",
     "start:line-bot": "node tools/kosame-line-bot.js",

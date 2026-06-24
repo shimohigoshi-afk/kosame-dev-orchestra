@@ -23,7 +23,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const url = require('node:url');
 
-const PORT = parseInt(process.env.LINE_BOT_PORT || '3001');
+const PORT = parseInt(process.env.PORT || process.env.LINE_BOT_PORT || '3001');
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 

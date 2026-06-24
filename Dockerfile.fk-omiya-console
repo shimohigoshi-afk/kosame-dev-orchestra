@@ -1,0 +1,20 @@
+# FK Omiya Console — Cloud Run Static Service
+# Serves public/fk-omiya-console.html via the preview server.
+# NO secrets, NO .env, NO internal tools included.
+# Unauthenticated access allowed (staff-facing console).
+
+FROM node:24-slim
+
+WORKDIR /app
+
+COPY tools/kosame-fk-omiya-preview-server.js ./tools/
+COPY public/ ./public/
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s CMD node -e "require('node:http').get('http://localhost:'+process.env.PORT+'/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
+CMD ["node", "tools/kosame-fk-omiya-preview-server.js"]

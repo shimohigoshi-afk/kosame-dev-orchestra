@@ -1,0 +1,58 @@
+# FK Omiya LINE Bot — Cloud Run Service Config (v1.2.0)
+# THIS IS A TEMPLATE. Filled in at deploy time by deploy-fk-omiya.sh.
+# DO NOT hardcode real project IDs, image URLs, or secret values here.
+# LINE keys must be stored in Secret Manager before deploy.
+# Human Approval required before deploy.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: kosame-line-bot
+  labels:
+    managed-by: kosame-dev-orchestra
+    version: v1.2.0
+    component: line-bot
+spec:
+  template:
+    metadata:
+      annotations:
+        # Keep 1 warm instance to ensure webhook response within LINE's 30s timeout
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "2"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 30
+      containers:
+        - image: IMAGE_PLACEHOLDER
+          # asia-northeast1-docker.pkg.dev/PROJECT_ID/kosame/fk-omiya-line-bot:TAG
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "8080"
+          # Secret Manager references — configured by deploy script:
+          # - name: LINE_CHANNEL_ID
+          #   valueFrom:
+          #     secretKeyRef:
+          #       key: latest
+          #       name: LINE_CHANNEL_ID
+          # - name: LINE_CHANNEL_SECRET
+          #   valueFrom:
+          #     secretKeyRef:
+          #       key: latest
+          #       name: LINE_CHANNEL_SECRET
+          # - name: LINE_CHANNEL_ACCESS_TOKEN
+          #   valueFrom:
+          #     secretKeyRef:
+          #       key: latest
+          #       name: LINE_CHANNEL_ACCESS_TOKEN
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+  traffic:
+    - percent: 100
+      latestRevision: true

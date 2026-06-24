@@ -1963,6 +1963,7 @@ canvas{display:block;width:100%;border-radius:4px}
             <div class="settings-input-group"><label>Channel Access Token</label><input type="password" id="cfg-line-token" class="auth-input" style="background:var(--bg-deep);padding:8px 10px" placeholder="長期アクセストークン..." oninput="saveLineSettings()"></div>
             <div class="settings-input-group"><label>Channel Secret</label><input type="password" id="cfg-line-secret" class="auth-input" style="background:var(--bg-deep);padding:8px 10px" placeholder="Channel Secret..." oninput="saveLineSettings()"></div>
             <div class="settings-input-group"><label>Channel ID</label><input type="text" id="cfg-line-channel-id" class="auth-input" style="background:var(--bg-deep);padding:8px 10px" placeholder="1234567890" oninput="saveLineSettings()"></div>
+            <div class="settings-input-group"><label>LINE Bot サーバーURL <span style="font-size:10px;color:var(--text-muted)">（Cloud Run URLまたは localhost:3001）</span></label><input type="text" id="cfg-line-bot-url" class="auth-input" style="background:var(--bg-deep);padding:8px 10px" placeholder="https://kosame-line-bot-xxx.run.app" oninput="saveLineSettings()"><div style="font-size:10px;color:var(--text-muted);margin-top:4px">ローカル開発時: http://localhost:3001 ／ 本番: Cloud Run URL</div></div>
           </div>
           <div>
             <div class="settings-input-group">
@@ -4595,7 +4596,7 @@ async function analyzeFeedback() {
    LINE 連携 — FK Omiya Console v1.2.0
    LINE Bot サーバー: node tools/kosame-line-bot.js (port 3001)
    ================================================================ */
-const LINE_API = 'http://localhost:3001/api';
+let LINE_API = (localStorage.getItem('line_bot_url') || 'http://localhost:3001/api');
 let _lineConnected = false;
 let _lineCustomers = [];
 let _lineContents = [];
@@ -5010,9 +5011,11 @@ function saveLineSettings() {
   const token = document.getElementById('cfg-line-token')?.value.trim();
   const secret = document.getElementById('cfg-line-secret')?.value.trim();
   const channelId = document.getElementById('cfg-line-channel-id')?.value.trim();
+  const botUrl = document.getElementById('cfg-line-bot-url')?.value.trim().replace(/\/+$/, '');
   if (token) localStorage.setItem('line_token', token);
   if (secret) localStorage.setItem('line_secret', secret);
   if (channelId) localStorage.setItem('line_channel_id', channelId);
+  if (botUrl) { localStorage.setItem('line_bot_url', botUrl + '/api'); LINE_API = botUrl + '/api'; }
 }
 
 function loadLineSettings() {
@@ -5020,6 +5023,11 @@ function loadLineSettings() {
   setVal('cfg-line-token', 'line_token');
   setVal('cfg-line-secret', 'line_secret');
   setVal('cfg-line-channel-id', 'line_channel_id');
+  const botUrlEl = document.getElementById('cfg-line-bot-url');
+  if (botUrlEl) {
+    const saved = localStorage.getItem('line_bot_url') || '';
+    botUrlEl.value = saved ? saved.replace('/api', '') : '';
+  }
 }
 
 function updateWebhookUrl() {

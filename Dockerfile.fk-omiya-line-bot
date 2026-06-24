@@ -1,0 +1,27 @@
+# FK Omiya LINE Bot — Cloud Run Bot Service
+# LINE Messaging API webhook + REST API for FK Console.
+# PORT env var set by Cloud Run (defaults to 8080 at runtime).
+# LINE keys injected via Secret Manager (see deploy-fk-omiya.sh).
+#
+# ⚠️  DATA PERSISTENCE NOTE:
+#   data/*.json files are written inside the container and will be lost
+#   on container restart. For production persistence, migrate to
+#   Cloud Storage or Firestore.
+
+FROM node:24-slim
+
+WORKDIR /app
+
+COPY tools/kosame-line-bot.js ./tools/
+
+# Create data dir (runtime data — not committed, not persistent across revisions)
+RUN mkdir -p data
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s CMD node -e "require('node:http').get('http://localhost:'+process.env.PORT+'/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
+CMD ["node", "tools/kosame-line-bot.js"]

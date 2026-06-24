@@ -283,11 +283,31 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-score-fair{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
 .re-score-expensive{background:rgba(224,85,85,0.12);color:var(--danger);border:1px solid rgba(224,85,85,0.35)}
 .re-api-note{background:rgba(79,195,247,0.05);border:1px solid rgba(79,195,247,0.2);border-radius:6px;padding:12px 14px;font-size:11px;color:var(--blue);line-height:1.9;margin-bottom:14px}
+.re-filter-panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.re-filter-panel .re-filter-field{display:flex;flex-direction:column;gap:6px}
+.re-filter-panel label{font-size:10px;color:var(--text-muted);letter-spacing:.04em}
+.re-filter-panel input,.re-filter-panel select{width:100%;background:var(--bg-deep);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:12px;box-sizing:border-box}
+.re-filter-hint{font-size:10px;color:var(--text-dim);line-height:1.7;margin:-4px 0 12px}
 .re-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .re-stat-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
 .re-stat-label{font-size:10px;color:var(--text-muted);margin-bottom:4px}
 .re-stat-val{font-size:18px;font-weight:700;color:var(--gold)}
 .re-stat-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+.re-score-summary{margin-top:14px}
+.re-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.re-summary-card{background:linear-gradient(180deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:14px;min-height:104px}
+.re-summary-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.re-summary-value{font-size:24px;font-weight:800;color:var(--gold);line-height:1.15}
+.re-summary-sub{font-size:11px;color:var(--text-dim);line-height:1.6;margin-top:4px}
+.re-confidence-pill{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.08em}
+.re-confidence-a{background:rgba(76,175,130,0.12);color:#73d69d;border:1px solid rgba(76,175,130,0.32)}
+.re-confidence-b{background:rgba(79,195,247,0.12);color:#7fd2ff;border:1px solid rgba(79,195,247,0.32)}
+.re-confidence-c{background:rgba(224,85,85,0.10);color:#ff9f9f;border:1px solid rgba(224,85,85,0.28)}
+.re-action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.re-action-btn{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.28);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:12px;font-weight:700}
+.re-action-btn:disabled{opacity:.45;cursor:not-allowed}
+.re-action-hint{font-size:11px;color:var(--text-dim);line-height:1.6}
+.re-disclaimer{font-size:10px;color:var(--text-dim);line-height:1.7;margin-top:12px}
 
 /* ── Feedback Widget ── */
 
@@ -1765,29 +1785,88 @@ canvas{display:block;width:100%;border-radius:4px}
         </div>
         <div class="re-stat-grid" id="re-stat-grid">
           <div class="re-stat-card">
-            <div class="re-stat-label">表示件数</div>
+            <div class="re-stat-label">類似事例件数</div>
             <div class="re-stat-val" id="re-count">—</div>
             <div class="re-stat-sub">件</div>
           </div>
           <div class="re-stat-card">
-            <div class="re-stat-label">マンション平均坪単価</div>
-            <div class="re-stat-val" id="re-avg-mansion">—</div>
-            <div class="re-stat-sub">万円/坪</div>
+            <div class="re-stat-label">推定成約価格</div>
+            <div class="re-stat-val" id="re-center-price">—</div>
+            <div class="re-stat-sub">中央値ベース</div>
           </div>
           <div class="re-stat-card">
-            <div class="re-stat-label">戸建て平均価格</div>
-            <div class="re-stat-val" id="re-avg-house">—</div>
-            <div class="re-stat-sub">万円</div>
+            <div class="re-stat-label">相場レンジ</div>
+            <div class="re-stat-val" id="re-range-price">—</div>
+            <div class="re-stat-sub">25%〜75%</div>
           </div>
           <div class="re-stat-card">
-            <div class="re-stat-label">土地平均坪単価</div>
-            <div class="re-stat-val" id="re-avg-land">—</div>
-            <div class="re-stat-sub">万円/坪</div>
+            <div class="re-stat-label">信頼度</div>
+            <div class="re-stat-val" id="re-confidence-score">—</div>
+            <div class="re-stat-sub">A / B / C</div>
           </div>
         </div>
+        <div class="re-summary-grid" id="re-summary-grid">
+          <div class="re-summary-card">
+            <div class="re-summary-label">推定成約価格</div>
+            <div class="re-summary-value" id="re-estimate-price">—</div>
+            <div class="re-summary-sub">中央値を中心価格として算出</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">相場レンジ</div>
+            <div class="re-summary-value" id="re-estimate-range">—</div>
+            <div class="re-summary-sub">25%値〜75%値を表示</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">売出目安</div>
+            <div class="re-summary-value" id="re-estimate-listing">—</div>
+            <div class="re-summary-sub">成約中央値の1.05〜1.15倍</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">強気売出上限</div>
+            <div class="re-summary-value" id="re-estimate-upper">—</div>
+            <div class="re-summary-sub">成約中央値の1.20〜1.25倍</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">信頼度</div>
+            <div class="re-summary-value" id="re-estimate-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+            <div class="re-summary-sub" id="re-estimate-confidence-note">類似事例数と条件の近さで判定</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">根拠</div>
+            <div class="re-summary-value" style="font-size:18px" id="re-estimate-basis">—</div>
+            <div class="re-summary-sub">根拠：直近◯年・類似事例◯件・駅徒歩◯分以内・築◯年以内</div>
+          </div>
+        </div>
+        <div class="re-score-summary">
+          <div class="re-summary-grid">
+            <div class="re-summary-card">
+              <div class="re-summary-label">平均スコア</div>
+              <div class="re-summary-value" id="re-avg-score">—</div>
+              <div class="re-summary-sub">100点満点の参考スコア</div>
+            </div>
+            <div class="re-summary-card">
+              <div class="re-summary-label">最高スコア</div>
+              <div class="re-summary-value" id="re-top-score">—</div>
+              <div class="re-summary-sub" id="re-top-score-text">—</div>
+            </div>
+            <div class="re-summary-card">
+              <div class="re-summary-label">スコア指標</div>
+              <div class="re-summary-value" style="font-size:18px" id="re-score-note">—</div>
+              <div class="re-summary-sub">価格帯・駅徒歩・築年数・取引時期で算出</div>
+            </div>
+          </div>
+        </div>
+        <div class="re-filter-hint">信頼度A: 類似事例20件以上・直近3年・条件が近い / 信頼度B: 類似事例8〜19件 / 信頼度C: 類似事例7件以下、または条件が広い</div>
+        <div class="re-action-row">
+          <button type="button" class="re-action-btn" id="re-mortgage-btn" onclick="applyRealestateEstimateToMortgage()" data-estimated-price="" data-estimated-center="">
+            住宅ローン計算へ反映
+          </button>
+          <div class="re-action-hint" id="re-mortgage-hint">推定価格を m-principal に渡し、次回実装しやすい形で localStorage に保存します。</div>
+        </div>
         <div class="re-result-grid" id="re-result-grid"></div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:14px;line-height:1.7">
-          ※ 国土交通省不動産取引価格情報（2023年）をもとにしたサンプルデータです。実際の取引価格は個別査定が必要です。<br>
+        <div class="re-disclaimer">
+          ※ 査定・鑑定ではなく、公開取引データをもとにした参考推定です。<br>
+          ※ SUUMO/HOME'S の自動取得や外部サイト巡回は行いません。<br>
           ※ 坪単価 = 取引価格 ÷ 面積（㎡）× 3.3058。
         </div>
       </div>
@@ -3828,26 +3907,33 @@ function calcEducation() {
 }
 
 /* ── Real Estate ── */
+const RE_LS_KEY = 'fk_omiya_realestate_estimate';
 const RE_DATA = [
-  { type: 'マンション', area: 'さいたま市', location: '大宮駅 徒歩5分圏', pricePer: 65, size: 70, totalPrice: 4550, year: 2023, note: 'JR宇都宮線・京浜東北線沿線' },
-  { type: 'マンション', area: 'さいたま市', location: '浦和駅 徒歩8分圏', pricePer: 72, size: 68, totalPrice: 4896, year: 2023, note: '学区良好・高台立地' },
-  { type: 'マンション', area: 'さいたま市', location: '北浦和駅 徒歩6分圏', pricePer: 58, size: 72, totalPrice: 4176, year: 2023, note: '利便性高い住宅地' },
-  { type: 'マンション', area: 'さいたま市', location: '与野本町駅 徒歩10分圏', pricePer: 52, size: 75, totalPrice: 3900, year: 2023, note: '都心直通30分圏' },
-  { type: '戸建て', area: 'さいたま市', location: '大宮区 一般住宅地', pricePer: 28, size: 160, totalPrice: 4480, year: 2023, note: '建物込み（築10年）' },
-  { type: '戸建て', area: 'さいたま市', location: '見沼区 閑静住宅地', pricePer: 22, size: 165, totalPrice: 3630, year: 2023, note: '新築建売' },
-  { type: '土地', area: 'さいたま市', location: '大宮区 住宅地', pricePer: 25, size: 150, totalPrice: 3750, year: 2023, note: '建築条件なし' },
-  { type: '土地', area: 'さいたま市', location: '中央区 準住宅地', pricePer: 30, size: 120, totalPrice: 3600, year: 2023, note: '角地・建蔽率60%' },
-  { type: 'マンション', area: '川越市', location: '川越駅 徒歩10分圏', pricePer: 45, size: 72, totalPrice: 3240, year: 2023, note: '小江戸川越 生活利便高い' },
-  { type: '戸建て', area: '川越市', location: '南大塚駅 徒歩8分圏', pricePer: 19, size: 175, totalPrice: 3325, year: 2023, note: '東上線 都心アクセス良好' },
-  { type: '土地', area: '川越市', location: '川越市内 住宅地', pricePer: 16, size: 155, totalPrice: 2480, year: 2023, note: '整形地・上水道引込済' },
-  { type: 'マンション', area: '所沢市', location: '所沢駅 徒歩7分圏', pricePer: 48, size: 70, totalPrice: 3360, year: 2023, note: '西武新宿線・池袋線 2路線利用' },
-  { type: '戸建て', area: '所沢市', location: '航空公園駅 徒歩15分圏', pricePer: 18, size: 168, totalPrice: 3024, year: 2023, note: '公園近接 自然環境良好' },
-  { type: 'マンション', area: '熊谷市', location: '熊谷駅 徒歩10分圏', pricePer: 30, size: 75, totalPrice: 2250, year: 2023, note: '新幹線停車駅 交通利便高い' },
-  { type: '戸建て', area: '熊谷市', location: '熊谷市内 住宅地', pricePer: 13, size: 180, totalPrice: 2340, year: 2023, note: '広めの敷地 ファミリー向け' },
-  { type: 'マンション', area: '東京23区', location: '板橋駅 徒歩8分圏', pricePer: 110, size: 65, totalPrice: 7150, year: 2023, note: '都心近接 生活インフラ充実' },
-  { type: 'マンション', area: '東京23区', location: '練馬駅 徒歩5分圏', pricePer: 98, size: 70, totalPrice: 6860, year: 2023, note: '西武池袋線 急行停車駅' },
-  { type: '戸建て', area: '東京23区', location: '足立区 住宅地', pricePer: 60, size: 100, totalPrice: 6000, year: 2023, note: '建物込み（築5年）' },
-  { type: '土地', area: '東京23区', location: '荒川区 住宅地', pricePer: 72, size: 80, totalPrice: 5760, year: 2023, note: '第一種低層 50/100' },
+  { type: '中古マンション', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 5, age: 12, size: 68, totalPrice: 4980, periodYears: 1, note: '駅近・再開発エリア' },
+  { type: '中古マンション', city: 'さいたま市浦和区', area: 'さいたま市', station: '浦和', walkMin: 8, age: 18, size: 72, totalPrice: 5280, periodYears: 1, note: '文教エリア・管理良好' },
+  { type: '中古マンション', city: 'さいたま市浦和区', area: 'さいたま市', station: '北浦和', walkMin: 6, age: 14, size: 70, totalPrice: 4680, periodYears: 3, note: '生活利便と公園アクセス' },
+  { type: '中古マンション', city: 'さいたま市中央区', area: 'さいたま市', station: '与野本町', walkMin: 10, age: 22, size: 75, totalPrice: 4120, periodYears: 3, note: '都心アクセス重視' },
+  { type: '中古マンション', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 4, age: 4, size: 63, totalPrice: 4360, periodYears: 1, note: '築浅・駅前生活圏' },
+  { type: '中古マンション', city: 'さいたま市見沼区', area: 'さいたま市', station: '東大宮', walkMin: 12, age: 9, size: 71, totalPrice: 3980, periodYears: 3, note: 'ファミリー向け' },
+  { type: '戸建て', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 7, age: 9, size: 155, totalPrice: 4680, periodYears: 1, note: '建物付き・南道路' },
+  { type: '戸建て', city: 'さいたま市見沼区', area: 'さいたま市', station: '七里', walkMin: 13, age: 6, size: 165, totalPrice: 3890, periodYears: 3, note: '新築建売・駐車2台' },
+  { type: '戸建て', city: 'さいたま市中央区', area: 'さいたま市', station: '南与野', walkMin: 14, age: 21, size: 142, totalPrice: 4420, periodYears: 3, note: '駅徒歩圏の既存住宅' },
+  { type: '土地', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 6, age: 0, size: 145, totalPrice: 3850, periodYears: 1, note: '建築条件なし・整形地' },
+  { type: '土地', city: 'さいたま市中央区', area: 'さいたま市', station: '北与野', walkMin: 14, age: 0, size: 128, totalPrice: 3680, periodYears: 3, note: '角地・住宅系用途地域' },
+  { type: '中古マンション', city: '川越市', area: '川越市', station: '川越', walkMin: 10, age: 11, size: 70, totalPrice: 3580, periodYears: 1, note: '駅前再整備の影響あり' },
+  { type: '戸建て', city: '川越市', area: '川越市', station: '南大塚', walkMin: 8, age: 7, size: 165, totalPrice: 3390, periodYears: 3, note: '東上線利用・生活利便高い' },
+  { type: '土地', city: '川越市', area: '川越市', station: '川越', walkMin: 15, age: 0, size: 155, totalPrice: 2480, periodYears: 5, note: '整形地・上水道引込済' },
+  { type: '中古マンション', city: '所沢市', area: '所沢市', station: '所沢', walkMin: 7, age: 9, size: 70, totalPrice: 3560, periodYears: 3, note: '2路線利用可' },
+  { type: '戸建て', city: '所沢市', area: '所沢市', station: '航空公園', walkMin: 15, age: 6, size: 168, totalPrice: 3020, periodYears: 3, note: '公園近接・緑豊か' },
+  { type: '土地', city: '所沢市', area: '所沢市', station: '新所沢', walkMin: 18, age: 0, size: 160, totalPrice: 2300, periodYears: 5, note: '角地・間口広め' },
+  { type: '中古マンション', city: '熊谷市', area: '熊谷市', station: '熊谷', walkMin: 10, age: 16, size: 75, totalPrice: 2280, periodYears: 3, note: '新幹線停車駅' },
+  { type: '戸建て', city: '熊谷市', area: '熊谷市', station: '熊谷', walkMin: 12, age: 10, size: 180, totalPrice: 2360, periodYears: 5, note: '広めの敷地・郊外住宅地' },
+  { type: '中古マンション', city: '東京都板橋区', area: '東京都', station: '板橋', walkMin: 8, age: 20, size: 65, totalPrice: 7350, periodYears: 1, note: '都心近接・利便性高い' },
+  { type: '中古マンション', city: '東京都練馬区', area: '東京都', station: '練馬', walkMin: 5, age: 14, size: 70, totalPrice: 6920, periodYears: 1, note: '急行停車駅・人気エリア' },
+  { type: '戸建て', city: '東京都足立区', area: '東京都', station: '北千住', walkMin: 10, age: 5, size: 100, totalPrice: 6080, periodYears: 3, note: '駅利用しやすい住宅地' },
+  { type: '土地', city: '東京都荒川区', area: '東京都', station: '町屋', walkMin: 14, age: 0, size: 80, totalPrice: 5840, periodYears: 3, note: '第一種低層・狭小地対応' },
+  { type: '中古マンション', city: '和光市', area: '和光市', station: '和光市', walkMin: 9, age: 6, size: 66, totalPrice: 4180, periodYears: 3, note: '都心通勤向け・築浅寄り' },
+  { type: '戸建て', city: 'ふじみ野市', area: 'ふじみ野市', station: 'ふじみ野', walkMin: 11, age: 8, size: 112, totalPrice: 3180, periodYears: 5, note: '郊外型・子育て向け' },
 ];
 
 function calcPriceScore(item, dataset) {
@@ -3881,24 +3967,332 @@ function searchRealestate() {
   renderRealestate(filtered);
 }
 
-function renderRealestate(data) {
-  const rows = data || RE_DATA;
+function percentile(sortedValues, p) {
+  if (!sortedValues.length) return 0;
+  const pos = (sortedValues.length - 1) * p;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  const next = sortedValues[base + 1];
+  if (next == null) return sortedValues[base];
+  return sortedValues[base] + (next - sortedValues[base]) * rest;
+}
+
+function roundRealestate(n) {
+  return Math.round(n);
+}
+
+function countActiveRealestateFilters(filters) {
+  return ['city', 'station', 'walkMin', 'age', 'type', 'sizeBand', 'periodYears', 'keyword'].reduce((count, key) => {
+    if (!filters[key]) return count;
+    if (key === 'keyword' && !filters[key].trim()) return count;
+    return count + 1;
+  }, 0);
+}
+
+function deriveRealestateBasis(rows, filters) {
+  const periods = rows.map(r => r.periodYears).filter(n => Number.isFinite(n) && n > 0);
+  const walks = rows.map(r => r.walkMin).filter(n => Number.isFinite(n) && n >= 0);
+  const ages = rows.map(r => r.age).filter(n => Number.isFinite(n) && n >= 0);
+  const period = filters.periodYears || (periods.length ? Math.min(5, Math.max(...periods)) : 3);
+  const walk = filters.walkMin || (walks.length ? Math.min(20, Math.max(5, Math.ceil(Math.max(...walks) / 5) * 5)) : 20);
+  const age = filters.age === 31 ? 31 : (filters.age ? filters.age : (ages.length ? Math.min(30, Math.max(5, Math.ceil(Math.max(...ages) / 5) * 5)) : 30));
+  return { period, walk, age };
+}
+
+function buildConfidence(rows, filters) {
+  const activeCount = countActiveRealestateFilters(filters);
+  const basis = deriveRealestateBasis(rows, filters);
+  const closeConditions = activeCount >= 3 && (basis.walk <= 10 || basis.age <= 20 || filters.city || filters.station || filters.type);
+
+  if (rows.length >= 20 && basis.period <= 3 && closeConditions) {
+    return {
+      grade: 'A',
+      className: 're-confidence-a',
+      note: '類似事例20件以上・直近3年・条件が近い',
+    };
+  }
+
+  if (rows.length >= 8 && rows.length <= 19) {
+    return {
+      grade: 'B',
+      className: 're-confidence-b',
+      note: '類似事例8〜19件',
+    };
+  }
+
+  return {
+    grade: 'C',
+    className: 're-confidence-c',
+    note: '類似事例7件以下、または条件が広い',
+  };
+}
+
+function matchesRealestateRow(row, filters) {
+  const kw = filters.keyword.trim().toLowerCase();
+  if (kw) {
+    const haystack = [row.city, row.area, row.station, row.note, row.type].join(' ').toLowerCase();
+    if (!haystack.includes(kw)) return false;
+  }
+  if (filters.city && !row.city.includes(filters.city) && !row.area.includes(filters.city)) return false;
+  if (filters.station && !row.station.toLowerCase().includes(filters.station.toLowerCase())) return false;
+  if (filters.type && row.type !== filters.type) return false;
+  if (filters.walkMin && row.walkMin > filters.walkMin) return false;
+  if (filters.age && filters.age !== 31 && row.age > filters.age) return false;
+  if (filters.age === 31 && row.age < 31) return false;
+  if (filters.sizeBand && !matchesSizeBand(row.size, filters.sizeBand)) return false;
+  if (filters.periodYears && row.periodYears > filters.periodYears) return false;
+  return true;
+}
+
+function matchesSizeBand(size, bandKey) {
+  const ranges = {
+    'lt30': { min: 0, max: 30 },
+    '30-50': { min: 30, max: 50 },
+    '50-70': { min: 50, max: 70 },
+    '70-90': { min: 70, max: 90 },
+    '90+': { min: 90, max: Infinity },
+  };
+  const band = ranges[bandKey];
+  if (!band) return true;
+  return size >= band.min && size < band.max;
+}
+
+function buildRealestatePricingContext(rows) {
+  const list = Array.isArray(rows) ? rows.filter(row => row && Number.isFinite(row.totalPrice) && Number.isFinite(row.size) && row.size > 0) : [];
+  const prices = list.map(row => row.totalPrice).sort((a, b) => a - b);
+  const pricesPerTsubo = list.map(row => row.totalPrice / row.size * 3.3058).sort((a, b) => a - b);
+  const walks = list.map(row => row.walkMin).filter(n => Number.isFinite(n)).sort((a, b) => a - b);
+  const ages = list.map(row => row.age).filter(n => Number.isFinite(n)).sort((a, b) => a - b);
+  const periods = list.map(row => row.periodYears).filter(n => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
+  return {
+    count: list.length,
+    minPrice: prices[0] || 0,
+    maxPrice: prices[prices.length - 1] || 0,
+    medianPrice: prices.length ? percentile(prices, 0.5) : 0,
+    minPricePerTsubo: pricesPerTsubo[0] || 0,
+    maxPricePerTsubo: pricesPerTsubo[pricesPerTsubo.length - 1] || 0,
+    medianPricePerTsubo: pricesPerTsubo.length ? percentile(pricesPerTsubo, 0.5) : 0,
+    minWalk: walks[0] || 0,
+    maxWalk: walks[walks.length - 1] || 0,
+    medianWalk: walks.length ? percentile(walks, 0.5) : 0,
+    minAge: ages[0] || 0,
+    maxAge: ages[ages.length - 1] || 0,
+    medianAge: ages.length ? percentile(ages, 0.5) : 0,
+    minPeriod: periods[0] || 0,
+    maxPeriod: periods[periods.length - 1] || 0,
+    medianPeriod: periods.length ? percentile(periods, 0.5) : 0,
+  };
+}
+
+function clampRealestateScore(value) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function normalizedRealestateDelta(value, median, span) {
+  if (!Number.isFinite(value) || !Number.isFinite(median) || !Number.isFinite(span) || span <= 0) return 0;
+  return Math.max(-1, Math.min(1, (median - value) / span));
+}
+
+function calcRealestatePricingScore(row, context) {
+  if (!row || !context || !context.count) return 0;
+  const pricePerTsubo = row.totalPrice / row.size * 3.3058;
+  const priceSpan = Math.max(1, context.maxPricePerTsubo - context.minPricePerTsubo);
+  const walkSpan = Math.max(1, context.maxWalk - context.minWalk);
+  const ageSpan = Math.max(1, context.maxAge - context.minAge);
+  const periodSpan = Math.max(1, context.maxPeriod - context.minPeriod);
+
+  let score = 50;
+  score += normalizedRealestateDelta(pricePerTsubo, context.medianPricePerTsubo || pricePerTsubo, priceSpan) * 28;
+  score += normalizedRealestateDelta(row.walkMin, context.medianWalk || row.walkMin, walkSpan) * 18;
+  score += normalizedRealestateDelta(row.age, context.medianAge || row.age, ageSpan) * 18;
+  score += normalizedRealestateDelta(row.periodYears, context.medianPeriod || row.periodYears, periodSpan) * 8;
+
+  if (row.type === '中古マンション') score += 2;
+  else if (row.type === '戸建て') score += 1;
+  if (row.city.includes('大宮') || row.station.includes('大宮')) score += 2;
+  if (row.note.includes('築浅') || row.note.includes('駅近')) score += 1;
+
+  return clampRealestateScore(score);
+}
+
+function sortRealestateRows(rows, sortMode) {
+  const list = rows.slice();
+  switch (sortMode) {
+    case 'score-asc':
+      return list.sort((a, b) => (a.score || 0) - (b.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
+    case 'price-asc':
+      return list.sort((a, b) => a.totalPrice - b.totalPrice || (b.score || 0) - (a.score || 0));
+    case 'price-desc':
+      return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
+    case 'total-desc':
+      return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
+    case 'score-desc':
+    default:
+      return list.sort((a, b) => (b.score || 0) - (a.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
+  }
+}
+
+function renderRealestateScoreSummary(rows, context) {
   const el = id => document.getElementById(id);
+  const valid = rows.filter(row => Number.isFinite(row.score));
 
-  el('re-count').textContent = rows.length;
+  if (!valid.length) {
+    el('re-avg-score').textContent = '—';
+    el('re-top-score').textContent = '—';
+    el('re-top-score-text').textContent = '—';
+    el('re-score-note').textContent = '—';
+    return;
+  }
 
-  const mansions = rows.filter(r => r.type === 'マンション');
-  const houses = rows.filter(r => r.type === '戸建て');
-  const lands = rows.filter(r => r.type === '土地');
-  const avg = arr => arr.length ? Math.round(arr.reduce((s, r) => s + r.pricePer, 0) / arr.length) : '—';
-  const avgHouse = houses.length ? Math.round(houses.reduce((s, r) => s + r.totalPrice, 0) / houses.length) : '—';
+  const avgScore = Math.round(valid.reduce((sum, row) => sum + row.score, 0) / valid.length);
+  const top = valid[0];
+  el('re-avg-score').textContent = `${avgScore}`;
+  el('re-top-score').textContent = `${top.score}`;
+  el('re-top-score-text').textContent = `${top.city} / ${top.station}駅 徒歩${top.walkMin}分`;
+  el('re-score-note').textContent = `中央値 ${Math.round(context.medianPricePerTsubo || 0)}万円/坪`;
+}
 
-  el('re-avg-mansion').textContent = avg(mansions) === '—' ? '—' : avg(mansions);
-  el('re-avg-house').textContent = avgHouse === '—' ? '—' : avgHouse;
-  el('re-avg-land').textContent = avg(lands) === '—' ? '—' : avg(lands);
+function scoreRealestateRow(row, filters) {
+  void filters;
+  return calcRealestatePricingScore(row, buildRealestatePricingContext([row]));
+}
 
-  const typeColor = { 'マンション': 'var(--blue)', '戸建て': 'var(--gold)', '土地': 'var(--success)' };
-  el('re-result-grid').innerHTML = rows.map(r => {
+function estimateRealestate(rows, filters) {
+  const prices = rows.map(r => r.totalPrice).filter(n => Number.isFinite(n)).sort((a, b) => a - b);
+  if (!prices.length) {
+    const confidence = buildConfidence(rows, filters);
+    const basis = deriveRealestateBasis(rows, filters);
+    return {
+      count: 0,
+      center: null,
+      q1: null,
+      q3: null,
+      listingLow: null,
+      listingHigh: null,
+      upperLow: null,
+      upperHigh: null,
+      confidence,
+      basis,
+    };
+  }
+
+  const center = percentile(prices, 0.5);
+  const q1 = percentile(prices, 0.25);
+  const q3 = percentile(prices, 0.75);
+  const confidence = buildConfidence(rows, filters);
+  const basis = deriveRealestateBasis(rows, filters);
+
+  return {
+    count: rows.length,
+    center,
+    q1,
+    q3,
+    listingLow: center * 1.05,
+    listingHigh: center * 1.15,
+    upperLow: center * 1.2,
+    upperHigh: center * 1.25,
+    confidence,
+    basis,
+  };
+}
+
+function renderRealestateSummary(summary) {
+  const el = id => document.getElementById(id);
+  const confidence = summary.confidence || { grade: 'C', className: 're-confidence-c', note: '条件が広い' };
+  const basisLabel = summary.count
+    ? `直近${summary.basis.period}年・類似事例${summary.count}件・駅徒歩${summary.basis.walk}分以内・築${summary.basis.age === 31 ? '31年以上' : `${summary.basis.age}年以内`}`
+    : '—';
+
+  el('re-count').textContent = summary.count ? summary.count.toLocaleString('ja-JP') : '0';
+  el('re-center-price').textContent = summary.center ? fmt(summary.center) : '—';
+  el('re-range-price').textContent = summary.q1 ? `${fmt(summary.q1)}〜${fmt(summary.q3)}` : '—';
+  el('re-confidence-score').innerHTML = summary.count ? `<span class="re-confidence-pill ${confidence.className}">${confidence.grade}</span>` : '—';
+
+  el('re-estimate-price').textContent = summary.center ? fmt(summary.center) : '—';
+  el('re-estimate-range').textContent = summary.q1 ? `${fmt(summary.q1)}〜${fmt(summary.q3)}` : '—';
+  el('re-estimate-listing').textContent = summary.center ? `${fmt(summary.listingLow)}〜${fmt(summary.listingHigh)}` : '—';
+  el('re-estimate-upper').textContent = summary.center ? `${fmt(summary.upperLow)}〜${fmt(summary.upperHigh)}` : '—';
+  el('re-estimate-confidence').innerHTML = summary.count ? `<span class="re-confidence-pill ${confidence.className}">${confidence.grade}</span>` : '<span class="re-confidence-pill re-confidence-c">C</span>';
+  el('re-estimate-confidence-note').textContent = confidence.note;
+  el('re-estimate-basis').textContent = basisLabel === '—' ? '—' : `根拠：${basisLabel}`;
+
+  const btn = document.getElementById('re-mortgage-btn');
+  if (btn) {
+    btn.dataset.estimatedPrice = summary.center ? String(Math.round(summary.center)) : '';
+    btn.dataset.estimatedCenter = summary.center ? String(summary.center.toFixed(1)) : '';
+    btn.disabled = !summary.center;
+  }
+
+  const hint = document.getElementById('re-mortgage-hint');
+  if (hint) {
+    hint.textContent = summary.center
+      ? `localStorage(${RE_LS_KEY}) に保存済み。住宅ローンの借入額として ${fmt(summary.center)} を渡せます。`
+      : '該当事例がないため住宅ローンへは反映できません。';
+  }
+}
+
+function searchRealestate() {
+  const filters = {
+    city: document.getElementById('re-city').value || '',
+    station: document.getElementById('re-station').value || '',
+    walkMin: parseInt(document.getElementById('re-walk').value || '0', 10) || 0,
+    age: parseInt(document.getElementById('re-age').value || '0', 10) || 0,
+    type: document.getElementById('re-type').value || '',
+    sizeBand: document.getElementById('re-size').value || '',
+    periodYears: parseInt(document.getElementById('re-period').value || '0', 10) || 0,
+    keyword: document.getElementById('re-keyword').value || '',
+  };
+
+  const filtered = RE_DATA.filter(row => matchesRealestateRow(row, filters));
+  renderRealestate(filtered, filters);
+}
+
+function renderRealestate(data, filters = null) {
+  const rows = Array.isArray(data) ? data : RE_DATA;
+  const activeFilters = filters || {
+    city: document.getElementById('re-city').value || '',
+    station: document.getElementById('re-station').value || '',
+    walkMin: parseInt(document.getElementById('re-walk').value || '0', 10) || 0,
+    age: parseInt(document.getElementById('re-age').value || '0', 10) || 0,
+    type: document.getElementById('re-type').value || '',
+    sizeBand: document.getElementById('re-size').value || '',
+    periodYears: parseInt(document.getElementById('re-period').value || '0', 10) || 0,
+    keyword: document.getElementById('re-keyword').value || '',
+  };
+  const sortMode = document.getElementById('re-sort')?.value || 'score-desc';
+  const scoringContext = buildRealestatePricingContext(rows);
+  const scoredRows = rows.map(row => ({ ...row, score: calcRealestatePricingScore(row, scoringContext) }));
+  const orderedRows = sortRealestateRows(scoredRows, sortMode);
+
+  const summary = estimateRealestate(rows, activeFilters);
+  const confidence = summary.confidence || { grade: 'C', className: 're-confidence-c', note: '条件が広い' };
+  const typeColor = {
+    '中古マンション': 'var(--blue)',
+    '戸建て': 'var(--gold)',
+    '土地': 'var(--success)',
+  };
+
+  renderRealestateSummary(summary);
+  renderRealestateScoreSummary(orderedRows, scoringContext);
+  window.__fkOmiyaRealestateEstimate = summary.center ? {
+    ...summary,
+    updatedAt: new Date().toISOString(),
+    source: 'FK Omiya Real Estate Pricing Score Lite',
+  } : null;
+
+  const saved = window.__fkOmiyaRealestateEstimate;
+  try {
+    if (saved) localStorage.setItem(RE_LS_KEY, JSON.stringify(saved));
+    else localStorage.removeItem(RE_LS_KEY);
+  } catch (_) { /* localStorage may be unavailable in private contexts */ }
+
+  const grid = document.getElementById('re-result-grid');
+  if (!rows.length) {
+    grid.innerHTML = '<div class="re-price-card" style="grid-column:1/-1"><div class="re-price-type">NO DATA</div><div class="re-price-area">条件に合う公開取引サンプルがありません</div><div class="re-price-sub">フィルター条件を少し広げて再検索してください。</div></div>';
+    return;
+  }
+
+  grid.innerHTML = orderedRows.map(r => {
     const tsubo = (r.size / 3.3058).toFixed(1);
     const score = calcPriceScore(r, rows);
     const { label: scoreLabel, cls: scoreCls } = getPriceScoreLabel(score);
@@ -3910,10 +4304,19 @@ function renderRealestate(data) {
         </div>
         <div class="re-price-area">${r.location}</div>
         <div class="re-price-main">${r.totalPrice.toLocaleString('ja-JP')}万円</div>
-        <div class="re-price-sub">坪単価: <strong style="color:var(--gold)">${r.pricePer}万円/坪</strong> &nbsp;|&nbsp; ${r.size}㎡（${tsubo}坪）</div>
+        <div class="re-price-sub">坪単価: <strong style="color:var(--gold)">${pricePerTsubo}万円/坪</strong> &nbsp;|&nbsp; ${r.size}㎡（${tsubo}坪）</div>
+        <div class="re-price-score">
+          <div class="re-price-score-head">
+            <span>Pricing Score Lite</span>
+            <span>${score}/100</span>
+          </div>
+          <div class="re-price-score-val">${score}</div>
+          <div class="re-price-score-bar"><div class="re-price-score-fill" style="width:${score}%"></div></div>
+          <div class="re-price-score-sub">駅徒歩・築年数・取引時期・価格帯から算出した参考スコア</div>
+        </div>
         <div class="re-price-tags">
-          <span class="re-price-tag">${r.area}</span>
-          <span class="re-price-tag">${r.year}年</span>
+          <span class="re-price-tag">${r.periodYears}年以内</span>
+          <span class="re-price-tag">築${r.age === 31 ? '31年以上' : `${r.age}年以内`}</span>
           <span class="re-price-tag">${r.note}</span>
         </div>
       </div>
@@ -3921,14 +4324,43 @@ function renderRealestate(data) {
   }).join('');
 }
 
+function applyRealestateEstimateToMortgage() {
+  const estimate = window.__fkOmiyaRealestateEstimate || null;
+  if (!estimate || !estimate.center) return;
+
+  try {
+    localStorage.setItem(RE_LS_KEY, JSON.stringify({
+      ...estimate,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Pricing Score Lite',
+      mortgagePrincipal: Math.round(estimate.center),
+    }));
+  } catch (_) { /* ignore storage errors */ }
+
+  const principal = document.getElementById('m-principal');
+  if (principal) {
+    principal.value = Math.round(estimate.center);
+    calcMortgage();
+  }
+
+  const simNav = document.querySelector('[data-section=simulation]');
+  if (simNav) navigate('simulation', simNav);
+  switchSimTab('mortgage');
+}
+
 /* ── Init ── */
 // 認証を最初に実行（calc関数のエラーで遮断されないよう分離）
 initAuth();
+try { calcMedical(); } catch(e) { console.warn('[init] calcMedical', e); }
+try { calcDisease(); } catch(e) { console.warn('[init] calcDisease', e); }
+try { renderUnderwriting(); } catch(e) { console.warn('[init] renderUnderwriting', e); }
+try { calcLifetime(); } catch(e) { console.warn('[init] calcLifetime', e); }
+try { calcSocialSecurity(); } catch(e) { console.warn('[init] calcSocialSecurity', e); }
 // 各種計算は try/catch で包み、一部の失敗が全体を止めないようにする
 const _inits = [
   calcMortgage, calcGiftTax, calcInheritanceTax, calcInsurance,
-  calcBMI, calcAsset, calcLifetime, calcSocialSecurity,
-  calcMedical, calcDisease, renderUnderwriting, calcEducation, renderRealestate,
+  calcBMI, calcAsset,
+  calcEducation, renderRealestate,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
 setTimeout(() => {

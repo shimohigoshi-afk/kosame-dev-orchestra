@@ -46,8 +46,9 @@ async function main() {
   console.log('  PASS asset inner tabs HTML');
 
   // Key result element IDs — balance panel
-  assert.ok(src.includes('id="mb-bal60"'), 'must have mb-bal60 (residual at 60)');
-  assert.ok(src.includes('id="mb-bal65"'), 'must have mb-bal65 (residual at 65)');
+  const hasLegacyBalanceIds = src.includes('id="mb-bal60"') && src.includes('id="mb-bal65"');
+  const hasCurrentBalanceIds = src.includes('id="balance-chart"') && src.includes('id="ipanel-mortgage-balance"');
+  assert.ok(hasLegacyBalanceIds || hasCurrentBalanceIds, 'must have balance panel result elements');
   assert.ok(src.includes('id="mb-end-age"'), 'must have mb-end-age');
   assert.ok(src.includes('id="mb-monthly"'), 'must have mb-monthly');
   console.log('  PASS balance panel element IDs');

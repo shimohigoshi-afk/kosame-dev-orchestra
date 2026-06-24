@@ -1728,9 +1728,10 @@ canvas{display:block;width:100%;border-radius:4px}
     <!-- REAL ESTATE -->
     <section id="section-realestate" class="section">
       <div class="re-api-note">
-        📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携（準備中）<br>
-        APIキーを <code>MLIT_API_KEY</code> として設定するとリアルタイム取得に切り替わります。現在は参考サンプルデータを表示中です。<br>
-        APIマニュアル: <code>https://www.reinfolib.mlit.go.jp/help/apiManual/</code>
+        📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携<br>
+        設定タブで <code>MLIT APIキー</code> と <code>MLITブリッジURL</code> を設定後、下記ボタンでリアルタイム取得できます。<br>
+        <span id="mlit-bridge-status" style="font-size:11px;color:var(--text-dim)">ブリッジ未接続 — ローカルサンプルデータを表示中</span>
+        &nbsp;<button class="btn" onclick="fetchMlitData()" style="font-size:11px;padding:4px 12px;background:var(--card-bg2);border:1px solid var(--border);color:var(--text-muted)">🔄 MLITリアルタイム取得</button>
       </div>
       <div class="card">
         <div class="card-title">🔍 エリア・種別検索</div>
@@ -2007,9 +2008,13 @@ canvas{display:block;width:100%;border-radius:4px}
             <label>国交省 不動産情報ライブラリ API キー</label>
             <input type="password" id="cfg-mlit-key" placeholder="取得後ここに貼り付け" oninput="saveMlitKey()">
           </div>
+          <div class="settings-input-group">
+            <label>MLIT ブリッジサーバー URL（ローカル）</label>
+            <input type="text" id="cfg-mlit-bridge-url" placeholder="http://localhost:3002" oninput="saveMlitBridgeUrl()">
+          </div>
           <div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin:8px 0">
             ※ 設定値はブラウザのlocalStorageに保存。サーバーには送信されません。<br>
-            ※ 国交省キー設定後、不動産検索が本番データに切り替わります。
+            ※ ブリッジサーバー: <code>node tools/kosame-mlit-api-bridge.js</code> でローカル起動後、不動産セクションから取得できます。
           </div>
           <button class="fb-submit-btn" onclick="testGasConnection()" style="margin-top:8px;background:var(--bg-deep);color:var(--text);border:1px solid var(--border)">🔗 GAS接続テスト</button>
           <div id="cfg-test-result" style="font-size:12px;margin-top:8px;color:var(--text-muted)"></div>
@@ -4317,6 +4322,37 @@ function saveMlitKey() {
   if (key) localStorage.setItem('mlit_api_key', key);
 }
 
+function saveMlitBridgeUrl() {
+  const u = (document.getElementById('cfg-mlit-bridge-url').value || '').trim().replace(/\/+$/, '');
+  if (u) localStorage.setItem('mlit_bridge_url', u);
+}
+
+async function fetchMlitData() {
+  const bridgeUrl = (localStorage.getItem('mlit_bridge_url') || 'http://localhost:3002').replace(/\/+$/, '');
+  const apiKey = localStorage.getItem('mlit_api_key') || '';
+  const statusEl = document.getElementById('mlit-bridge-status');
+  if (statusEl) { statusEl.textContent = '取得中...'; statusEl.style.color = 'var(--text-muted)'; }
+  try {
+    const healthRes = await fetch(bridgeUrl + '/api/health');
+    if (!healthRes.ok) throw new Error(`Bridge health check failed: ${healthRes.status}`);
+    const params = new URLSearchParams({ prefecture: '11', year: new Date().getFullYear().toString() });
+    if (apiKey) params.set('apiKey', apiKey);
+    const dataRes = await fetch(bridgeUrl + '/api/realestate?' + params.toString());
+    const json = await dataRes.json();
+    if (json.error) throw new Error(json.error);
+    if (json.data && json.data.length > 0) {
+      RE_DATA.length = 0;
+      json.data.forEach(item => RE_DATA.push(item));
+      renderRealestate();
+      if (statusEl) { statusEl.textContent = `✅ MLIT取得完了 ${json.count}件 (リアルタイム)`; statusEl.style.color = 'var(--success)'; }
+    } else {
+      if (statusEl) { statusEl.textContent = '取得件数0件（検索条件を変更してください）'; statusEl.style.color = 'var(--warn)'; }
+    }
+  } catch (err) {
+    if (statusEl) { statusEl.textContent = `⚠ ${err.message} — ブリッジ未起動またはAPIキー未設定`; statusEl.style.color = 'var(--danger)'; }
+  }
+}
+
 /* ── 査定PDF取り込みUI ── */
 async function handlePdfImport(file) {
   if (!file) return;
@@ -4388,6 +4424,8 @@ function saveSettings() {
 function loadSettings() {
   const gasEl = document.getElementById('cfg-gas-url');
   const geminiEl = document.getElementById('cfg-gemini-key');
+  const mlitBridgeEl = document.getElementById('cfg-mlit-bridge-url');
+  if (mlitBridgeEl) mlitBridgeEl.value = localStorage.getItem('mlit_bridge_url') || '';
   const mlitEl = document.getElementById('cfg-mlit-key');
   if (gasEl) gasEl.value = localStorage.getItem('fb_gas_url') || '';
   if (geminiEl) geminiEl.value = localStorage.getItem('gemini_api_key') || '';

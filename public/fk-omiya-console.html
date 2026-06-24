@@ -278,6 +278,10 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-price-sub{font-size:11px;color:var(--text-dim);line-height:1.6}
 .re-price-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .re-price-tag{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border)}
+.re-score-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px}
+.re-score-cheap{background:rgba(76,175,130,0.15);color:var(--success);border:1px solid rgba(76,175,130,0.4)}
+.re-score-fair{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
+.re-score-expensive{background:rgba(224,85,85,0.12);color:var(--danger);border:1px solid rgba(224,85,85,0.35)}
 .re-api-note{background:rgba(79,195,247,0.05);border:1px solid rgba(79,195,247,0.2);border-radius:6px;padding:12px 14px;font-size:11px;color:var(--blue);line-height:1.9;margin-bottom:14px}
 .re-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .re-stat-card{background:var(--card-bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
@@ -1749,6 +1753,13 @@ canvas{display:block;width:100%;border-radius:4px}
             <option value="所沢市">所沢市</option>
             <option value="熊谷市">熊谷市</option>
             <option value="東京23区">東京23区</option>
+          </select>
+          <select id="re-sort" onchange="searchRealestate()">
+            <option value="">並び順: 標準</option>
+            <option value="score-asc">割安スコア順</option>
+            <option value="price-asc">価格: 安い順</option>
+            <option value="price-desc">価格: 高い順</option>
+            <option value="per-asc">坪単価: 安い順</option>
           </select>
         </div>
         <div class="re-stat-grid" id="re-stat-grid">
@@ -3834,16 +3845,34 @@ const RE_DATA = [
   { type: '土地', area: '東京23区', location: '荒川区 住宅地', pricePer: 72, size: 80, totalPrice: 5760, year: 2023, note: '第一種低層 50/100' },
 ];
 
+function calcPriceScore(item, dataset) {
+  const peers = (dataset || RE_DATA).filter(r => r.type === item.type && r.area === item.area);
+  if (peers.length < 2) return 100;
+  const avg = peers.reduce((s, r) => s + r.pricePer, 0) / peers.length;
+  return Math.round(item.pricePer / avg * 100);
+}
+
+function getPriceScoreLabel(score) {
+  if (score < 88) return { label: '割安', cls: 're-score-cheap' };
+  if (score <= 115) return { label: '標準', cls: 're-score-fair' };
+  return { label: '割高', cls: 're-score-expensive' };
+}
+
 function searchRealestate() {
   const kw = (document.getElementById('re-keyword').value || '').toLowerCase();
   const type = document.getElementById('re-type').value || '';
   const area = document.getElementById('re-area').value || '';
+  const sort = (document.getElementById('re-sort') || {}).value || '';
   const filtered = RE_DATA.filter(r => {
     const matchKw = !kw || r.location.toLowerCase().includes(kw) || r.area.toLowerCase().includes(kw) || r.note.toLowerCase().includes(kw);
     const matchType = !type || r.type === type;
     const matchArea = !area || r.area === area;
     return matchKw && matchType && matchArea;
   });
+  if (sort === 'score-asc') filtered.sort((a, b) => calcPriceScore(a, filtered) - calcPriceScore(b, filtered));
+  else if (sort === 'price-asc') filtered.sort((a, b) => a.totalPrice - b.totalPrice);
+  else if (sort === 'price-desc') filtered.sort((a, b) => b.totalPrice - a.totalPrice);
+  else if (sort === 'per-asc') filtered.sort((a, b) => a.pricePer - b.pricePer);
   renderRealestate(filtered);
 }
 
@@ -3866,9 +3895,14 @@ function renderRealestate(data) {
   const typeColor = { 'マンション': 'var(--blue)', '戸建て': 'var(--gold)', '土地': 'var(--success)' };
   el('re-result-grid').innerHTML = rows.map(r => {
     const tsubo = (r.size / 3.3058).toFixed(1);
+    const score = calcPriceScore(r, rows);
+    const { label: scoreLabel, cls: scoreCls } = getPriceScoreLabel(score);
     return `
       <div class="re-price-card">
-        <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
+          <span class="re-score-badge ${scoreCls}">${scoreLabel} ${score}%</span>
+        </div>
         <div class="re-price-area">${r.location}</div>
         <div class="re-price-main">${r.totalPrice.toLocaleString('ja-JP')}万円</div>
         <div class="re-price-sub">坪単価: <strong style="color:var(--gold)">${r.pricePer}万円/坪</strong> &nbsp;|&nbsp; ${r.size}㎡（${tsubo}坪）</div>

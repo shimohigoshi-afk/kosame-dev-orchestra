@@ -278,10 +278,12 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-price-sub{font-size:11px;color:var(--text-dim);line-height:1.6}
 .re-price-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .re-price-tag{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg-deep);color:var(--text-muted);border:1px solid var(--border)}
-.re-score-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px}
-.re-score-cheap{background:rgba(76,175,130,0.15);color:var(--success);border:1px solid rgba(76,175,130,0.4)}
-.re-score-fair{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
-.re-score-expensive{background:rgba(224,85,85,0.12);color:var(--danger);border:1px solid rgba(224,85,85,0.35)}
+.re-price-score{margin-top:10px;padding:10px;border-radius:8px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.16)}
+.re-price-score-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.re-price-score-val{font-size:20px;font-weight:800;color:var(--gold);line-height:1}
+.re-price-score-sub{font-size:10px;color:var(--text-dim);margin-top:4px;line-height:1.6}
+.re-price-score-bar{height:6px;background:var(--bg-deep);border-radius:999px;overflow:hidden;margin-top:8px}
+.re-price-score-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--gold))}
 .re-api-note{background:rgba(79,195,247,0.05);border:1px solid rgba(79,195,247,0.2);border-radius:6px;padding:12px 14px;font-size:11px;color:var(--blue);line-height:1.9;margin-bottom:14px}
 .re-filter-panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .re-filter-panel .re-filter-field{display:flex;flex-direction:column;gap:6px}
@@ -1752,36 +1754,129 @@ canvas{display:block;width:100%;border-radius:4px}
     <!-- REAL ESTATE -->
     <section id="section-realestate" class="section">
       <div class="re-api-note">
-        📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携<br>
-        設定タブで <code>MLIT APIキー</code> と <code>MLITブリッジURL</code> を設定後、下記ボタンでリアルタイム取得できます。<br>
-        <span id="mlit-bridge-status" style="font-size:11px;color:var(--text-dim)">ブリッジ未接続 — ローカルサンプルデータを表示中</span>
-        &nbsp;<button class="btn" onclick="fetchMlitData()" style="font-size:11px;padding:4px 12px;background:var(--card-bg2);border:1px solid var(--border);color:var(--text-muted)">🔄 MLITリアルタイム取得</button>
+        📡 <strong>国土交通省 不動産情報ライブラリ API</strong> 連携前提の参考版（<strong>FK Omiya Real Estate Pricing Score Lite</strong>）<br>
+        現在は公開取引のサンプル/モックデータのみを使い、駅徒歩・築年数・類似事例スコア・信頼度を表示します。<br>
+        SUUMO/HOME'S などの自動取得や外部サイト巡回は行いません。
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🧭 MLIT API Bridge Lite 設計</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;font-size:11px;line-height:1.8;color:var(--text-muted)">
+          <div>
+            <div>・現在は <strong>モックデータ / API未接続</strong> の状態です。</div>
+            <div>・ブラウザに APIキーは置かず、将来はサーバー側取得に切り替えます。</div>
+            <div>・キャッシュ済みデータを優先し、失敗時もモックへ fallback します。</div>
+          </div>
+          <div>
+            <div>・将来の取得口は <code>/api/fk-omiya/realestate/cases</code> を想定しています。</div>
+            <div>・Console へ返すのは加工済み JSON のみです。</div>
+            <div>・市区町村 / 駅名変換とキャッシュ方針はサーバー側で吸収します。</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px">
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">接続ステータス</div>
+            <div class="re-summary-value" id="re-bridge-status" style="font-size:16px">モックデータ / API未接続</div>
+            <div class="re-summary-sub">ブラウザ直APIキー禁止</div>
+          </div>
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">将来の取得口</div>
+            <div class="re-summary-value" id="re-bridge-endpoint" style="font-size:15px">/api/fk-omiya/realestate/cases</div>
+            <div class="re-summary-sub">サーバー側 endpoint 前提</div>
+          </div>
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">キャッシュ方針</div>
+            <div class="re-summary-value" id="re-bridge-cache" style="font-size:15px">キャッシュ済みデータ優先</div>
+            <div class="re-summary-sub">失敗時はモックに戻す</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text-dim);line-height:1.7">
+          設計メモ: APIキーは Cloud Run 側で Secret Manager または <code>.env</code> から読み込み、レスポンスは駅徒歩・築年数・類似事例スコアなどの加工後 JSON に限定します。取得失敗時はモックに戻し、ブラウザからの外部API直叩きは行いません。
+        </div>
       </div>
       <div class="card">
-        <div class="card-title">🔍 エリア・種別検索</div>
-        <div class="re-search-bar">
-          <input type="text" id="re-keyword" placeholder="市区町村・駅名で検索（例：大宮、浦和、川越）" oninput="searchRealestate()">
-          <select id="re-type" onchange="searchRealestate()">
-            <option value="">すべての種別</option>
-            <option value="マンション">マンション</option>
-            <option value="戸建て">戸建て</option>
-            <option value="土地">土地</option>
-          </select>
-          <select id="re-area" onchange="searchRealestate()">
-            <option value="">すべてのエリア</option>
-            <option value="さいたま市">さいたま市</option>
-            <option value="川越市">川越市</option>
-            <option value="所沢市">所沢市</option>
-            <option value="熊谷市">熊谷市</option>
-            <option value="東京23区">東京23区</option>
-          </select>
-          <select id="re-sort" onchange="searchRealestate()">
-            <option value="">並び順: 標準</option>
-            <option value="score-asc">割安スコア順</option>
-            <option value="price-asc">価格: 安い順</option>
-            <option value="price-desc">価格: 高い順</option>
-            <option value="per-asc">坪単価: 安い順</option>
-          </select>
+        <div class="card-title">🔍 検索・類似事例フィルター</div>
+        <div class="re-filter-hint">国交省API本番接続の前提を崩さず、UI と集計ロジックだけを先に実装したローカル版です。API Bridge Lite は将来のサーバー側取得へ差し替えやすい形にしています。</div>
+        <div class="re-filter-panel">
+          <div class="re-filter-field">
+            <label for="re-city">市区町村</label>
+            <select id="re-city" onchange="searchRealestate()">
+              <option value="">指定なし</option>
+              <option value="さいたま市">さいたま市</option>
+              <option value="川越市">川越市</option>
+              <option value="所沢市">所沢市</option>
+              <option value="熊谷市">熊谷市</option>
+              <option value="和光市">和光市</option>
+              <option value="東京都">東京都</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-station">駅名</label>
+            <input type="text" id="re-station" placeholder="例：大宮" oninput="searchRealestate()">
+          </div>
+          <div class="re-filter-field">
+            <label for="re-walk">駅徒歩</label>
+            <select id="re-walk" onchange="searchRealestate()">
+              <option value="">指定なし</option>
+              <option value="5">5分以内</option>
+              <option value="10">10分以内</option>
+              <option value="15">15分以内</option>
+              <option value="20">20分以内</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-age">築年数</label>
+            <select id="re-age" onchange="searchRealestate()">
+              <option value="">指定なし</option>
+              <option value="5">5年以内</option>
+              <option value="10">10年以内</option>
+              <option value="20">20年以内</option>
+              <option value="30">30年以内</option>
+              <option value="31">31年以上</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-type">物件種別</label>
+            <select id="re-type" onchange="searchRealestate()">
+              <option value="">すべて</option>
+              <option value="中古マンション">中古マンション</option>
+              <option value="戸建て">戸建て</option>
+              <option value="土地">土地</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-size">面積帯</label>
+            <select id="re-size" onchange="searchRealestate()">
+              <option value="">指定なし</option>
+              <option value="lt30">30㎡未満</option>
+              <option value="30-50">30〜50㎡</option>
+              <option value="50-70">50〜70㎡</option>
+              <option value="70-90">70〜90㎡</option>
+              <option value="90+">90㎡以上</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-period">取引時期</label>
+            <select id="re-period" onchange="searchRealestate()">
+              <option value="">指定なし</option>
+              <option value="1">直近1年</option>
+              <option value="3">直近3年</option>
+              <option value="5">直近5年</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-keyword">キーワード</label>
+            <input type="text" id="re-keyword" placeholder="市区町村・駅名・メモ" oninput="searchRealestate()">
+          </div>
+          <div class="re-filter-field">
+            <label for="re-sort">並び順</label>
+            <select id="re-sort" onchange="searchRealestate()">
+              <option value="score-desc">スコアが高い順</option>
+              <option value="score-asc">スコアが低い順</option>
+              <option value="price-asc">価格が安い順</option>
+              <option value="price-desc">価格が高い順</option>
+              <option value="total-desc">総額が高い順</option>
+            </select>
+          </div>
         </div>
         <div class="re-stat-grid" id="re-stat-grid">
           <div class="re-stat-card">
@@ -1868,6 +1963,24 @@ canvas{display:block;width:100%;border-radius:4px}
           ※ 査定・鑑定ではなく、公開取引データをもとにした参考推定です。<br>
           ※ SUUMO/HOME'S の自動取得や外部サイト巡回は行いません。<br>
           ※ 坪単価 = 取引価格 ÷ 面積（㎡）× 3.3058。
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">🛠 API Bridge Lite フロー</div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;font-size:11px;line-height:1.7;color:var(--text-muted)">
+          <div>
+            <div style="color:var(--gold);font-weight:700;margin-bottom:4px">1. Console</div>
+            <div>検索条件とモックデータを使い、画面上の推定値を即表示します。</div>
+          </div>
+          <div>
+            <div style="color:var(--blue);font-weight:700;margin-bottom:4px">2. Server Bridge</div>
+            <div>将来は <code>/api/fk-omiya/realestate/cases</code> が MLIT 取得と変換を担当します。</div>
+          </div>
+          <div>
+            <div style="color:#73d69d;font-weight:700;margin-bottom:4px">3. Cache / Fallback</div>
+            <div>API失敗時はキャッシュ済み JSON、さらにモックデータへ安全に戻します。</div>
+          </div>
         </div>
       </div>
     </section>
@@ -2098,13 +2211,9 @@ canvas{display:block;width:100%;border-radius:4px}
             <label>国交省 不動産情報ライブラリ API キー</label>
             <input type="password" id="cfg-mlit-key" placeholder="取得後ここに貼り付け" oninput="saveMlitKey()">
           </div>
-          <div class="settings-input-group">
-            <label>MLIT ブリッジサーバー URL（ローカル）</label>
-            <input type="text" id="cfg-mlit-bridge-url" placeholder="http://localhost:3002" oninput="saveMlitBridgeUrl()">
-          </div>
           <div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin:8px 0">
             ※ 設定値はブラウザのlocalStorageに保存。サーバーには送信されません。<br>
-            ※ ブリッジサーバー: <code>node tools/kosame-mlit-api-bridge.js</code> でローカル起動後、不動産セクションから取得できます。
+            ※ 国交省キー設定後、不動産検索が本番データに切り替わります。
           </div>
           <button class="fb-submit-btn" onclick="testGasConnection()" style="margin-top:8px;background:var(--bg-deep);color:var(--text);border:1px solid var(--border)">🔗 GAS接続テスト</button>
           <div id="cfg-test-result" style="font-size:12px;margin-top:8px;color:var(--text-muted)"></div>
@@ -3908,6 +4017,8 @@ function calcEducation() {
 
 /* ── Real Estate ── */
 const RE_LS_KEY = 'fk_omiya_realestate_estimate';
+const RE_MLIT_BRIDGE_ENDPOINT = '/api/fk-omiya/realestate/cases';
+const RE_MLIT_BRIDGE_CACHE_KEY = 'fk_omiya_realestate_cases_cache_v1';
 const RE_DATA = [
   { type: '中古マンション', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 5, age: 12, size: 68, totalPrice: 4980, periodYears: 1, note: '駅近・再開発エリア' },
   { type: '中古マンション', city: 'さいたま市浦和区', area: 'さいたま市', station: '浦和', walkMin: 8, age: 18, size: 72, totalPrice: 5280, periodYears: 1, note: '文教エリア・管理良好' },
@@ -3936,35 +4047,86 @@ const RE_DATA = [
   { type: '戸建て', city: 'ふじみ野市', area: 'ふじみ野市', station: 'ふじみ野', walkMin: 11, age: 8, size: 112, totalPrice: 3180, periodYears: 5, note: '郊外型・子育て向け' },
 ];
 
-function calcPriceScore(item, dataset) {
-  const peers = (dataset || RE_DATA).filter(r => r.type === item.type && r.area === item.area);
-  if (peers.length < 2) return 100;
-  const avg = peers.reduce((s, r) => s + r.pricePer, 0) / peers.length;
-  return Math.round(item.pricePer / avg * 100);
+function cloneRealestateRows(rows = RE_DATA) {
+  return Array.isArray(rows) ? rows.map(row => ({ ...row })) : [];
 }
 
-function getPriceScoreLabel(score) {
-  if (score < 88) return { label: '割安', cls: 're-score-cheap' };
-  if (score <= 115) return { label: '標準', cls: 're-score-fair' };
-  return { label: '割高', cls: 're-score-expensive' };
+function readRealestateBridgeCache() {
+  try {
+    const raw = localStorage.getItem(RE_MLIT_BRIDGE_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
 }
 
-function searchRealestate() {
-  const kw = (document.getElementById('re-keyword').value || '').toLowerCase();
-  const type = document.getElementById('re-type').value || '';
-  const area = document.getElementById('re-area').value || '';
-  const sort = (document.getElementById('re-sort') || {}).value || '';
-  const filtered = RE_DATA.filter(r => {
-    const matchKw = !kw || r.location.toLowerCase().includes(kw) || r.area.toLowerCase().includes(kw) || r.note.toLowerCase().includes(kw);
-    const matchType = !type || r.type === type;
-    const matchArea = !area || r.area === area;
-    return matchKw && matchType && matchArea;
-  });
-  if (sort === 'score-asc') filtered.sort((a, b) => calcPriceScore(a, filtered) - calcPriceScore(b, filtered));
-  else if (sort === 'price-asc') filtered.sort((a, b) => a.totalPrice - b.totalPrice);
-  else if (sort === 'price-desc') filtered.sort((a, b) => b.totalPrice - a.totalPrice);
-  else if (sort === 'per-asc') filtered.sort((a, b) => a.pricePer - b.pricePer);
-  renderRealestate(filtered);
+function writeRealestateBridgeCache(cases) {
+  try {
+    localStorage.setItem(RE_MLIT_BRIDGE_CACHE_KEY, JSON.stringify(cloneRealestateRows(cases)));
+  } catch (_) { /* cache unavailable */ }
+}
+
+function buildRealestateBridgeLitePayload(filters = {}) {
+  return {
+    endpoint: RE_MLIT_BRIDGE_ENDPOINT,
+    mode: 'bridge-lite',
+    source: 'fk-omiya-console',
+    requestedAt: new Date().toISOString(),
+    filters: {
+      city: filters.city || '',
+      station: filters.station || '',
+      walkMin: filters.walkMin || 0,
+      age: filters.age || 0,
+      type: filters.type || '',
+      sizeBand: filters.sizeBand || '',
+      periodYears: filters.periodYears || 0,
+      keyword: filters.keyword || '',
+    },
+  };
+}
+
+function renderRealestateBridgeStatus(bridge = {}) {
+  const statusEl = document.getElementById('re-bridge-status');
+  const endpointEl = document.getElementById('re-bridge-endpoint');
+  const cacheEl = document.getElementById('re-bridge-cache');
+  if (statusEl) statusEl.textContent = bridge.status || 'モックデータ / API未接続';
+  if (endpointEl) endpointEl.textContent = bridge.endpoint || RE_MLIT_BRIDGE_ENDPOINT;
+  if (cacheEl) cacheEl.textContent = bridge.cacheText || 'キャッシュ済みデータ優先';
+}
+
+async function fetchMlitRealEstateCasesLite(filters = {}) {
+  const cached = readRealestateBridgeCache();
+  const payload = buildRealestateBridgeLitePayload(filters);
+  // 将来はここで Cloud Run の /api/fk-omiya/realestate/cases を呼び出す。
+  // いまは外部通信を行わず、キャッシュ優先・なければモックを返す。
+  if (cached.length) {
+    return {
+      cases: cloneRealestateRows(cached),
+      bridge: {
+        ...payload,
+        status: 'キャッシュ済みデータ / API未接続',
+        cacheText: 'キャッシュ済みデータを優先',
+        cacheHit: true,
+      },
+    };
+  }
+  writeRealestateBridgeCache(RE_DATA);
+  return {
+    cases: cloneRealestateRows(RE_DATA),
+    bridge: {
+      ...payload,
+      status: 'モックデータ / API未接続',
+      cacheText: 'キャッシュ済みデータがあれば優先',
+      cacheHit: false,
+    },
+  };
+}
+
+function realestateRangeLabel(value, bands) {
+  const band = bands.find(b => value >= b.min && value < b.max);
+  return band ? band.label : '—';
 }
 
 function percentile(sortedValues, p) {
@@ -4231,7 +4393,7 @@ function renderRealestateSummary(summary) {
   }
 }
 
-function searchRealestate() {
+async function searchRealestate() {
   const filters = {
     city: document.getElementById('re-city').value || '',
     station: document.getElementById('re-station').value || '',
@@ -4243,7 +4405,10 @@ function searchRealestate() {
     keyword: document.getElementById('re-keyword').value || '',
   };
 
-  const filtered = RE_DATA.filter(row => matchesRealestateRow(row, filters));
+  const bridge = await fetchMlitRealEstateCasesLite(filters);
+  renderRealestateBridgeStatus(bridge.bridge);
+  const rows = Array.isArray(bridge.cases) ? bridge.cases : cloneRealestateRows();
+  const filtered = rows.filter(row => matchesRealestateRow(row, filters));
   renderRealestate(filtered, filters);
 }
 
@@ -4294,15 +4459,12 @@ function renderRealestate(data, filters = null) {
 
   grid.innerHTML = orderedRows.map(r => {
     const tsubo = (r.size / 3.3058).toFixed(1);
-    const score = calcPriceScore(r, rows);
-    const { label: scoreLabel, cls: scoreCls } = getPriceScoreLabel(score);
+    const pricePerTsubo = roundRealestate(r.totalPrice / r.size * 3.3058);
+    const score = Number.isFinite(r.score) ? r.score : 0;
     return `
-      <div class="re-price-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
-          <span class="re-score-badge ${scoreCls}">${scoreLabel} ${score}%</span>
-        </div>
-        <div class="re-price-area">${r.location}</div>
+      <div class="re-price-card" data-estimated-price="${Math.round(r.totalPrice)}" data-station="${r.station}" data-city="${r.city}">
+        <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
+        <div class="re-price-area">${r.city} / ${r.station}駅 徒歩${r.walkMin}分</div>
         <div class="re-price-main">${r.totalPrice.toLocaleString('ja-JP')}万円</div>
         <div class="re-price-sub">坪単価: <strong style="color:var(--gold)">${pricePerTsubo}万円/坪</strong> &nbsp;|&nbsp; ${r.size}㎡（${tsubo}坪）</div>
         <div class="re-price-score">
@@ -4360,9 +4522,10 @@ try { calcSocialSecurity(); } catch(e) { console.warn('[init] calcSocialSecurity
 const _inits = [
   calcMortgage, calcGiftTax, calcInheritanceTax, calcInsurance,
   calcBMI, calcAsset,
-  calcEducation, renderRealestate,
+  calcEducation,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
+searchRealestate().catch(e => console.warn('[init] searchRealestate', e));
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();
@@ -4788,37 +4951,6 @@ function saveMlitKey() {
   if (key) localStorage.setItem('mlit_api_key', key);
 }
 
-function saveMlitBridgeUrl() {
-  const u = (document.getElementById('cfg-mlit-bridge-url').value || '').trim().replace(/\/+$/, '');
-  if (u) localStorage.setItem('mlit_bridge_url', u);
-}
-
-async function fetchMlitData() {
-  const bridgeUrl = (localStorage.getItem('mlit_bridge_url') || 'http://localhost:3002').replace(/\/+$/, '');
-  const apiKey = localStorage.getItem('mlit_api_key') || '';
-  const statusEl = document.getElementById('mlit-bridge-status');
-  if (statusEl) { statusEl.textContent = '取得中...'; statusEl.style.color = 'var(--text-muted)'; }
-  try {
-    const healthRes = await fetch(bridgeUrl + '/api/health');
-    if (!healthRes.ok) throw new Error(`Bridge health check failed: ${healthRes.status}`);
-    const params = new URLSearchParams({ prefecture: '11', year: new Date().getFullYear().toString() });
-    if (apiKey) params.set('apiKey', apiKey);
-    const dataRes = await fetch(bridgeUrl + '/api/realestate?' + params.toString());
-    const json = await dataRes.json();
-    if (json.error) throw new Error(json.error);
-    if (json.data && json.data.length > 0) {
-      RE_DATA.length = 0;
-      json.data.forEach(item => RE_DATA.push(item));
-      renderRealestate();
-      if (statusEl) { statusEl.textContent = `✅ MLIT取得完了 ${json.count}件 (リアルタイム)`; statusEl.style.color = 'var(--success)'; }
-    } else {
-      if (statusEl) { statusEl.textContent = '取得件数0件（検索条件を変更してください）'; statusEl.style.color = 'var(--warn)'; }
-    }
-  } catch (err) {
-    if (statusEl) { statusEl.textContent = `⚠ ${err.message} — ブリッジ未起動またはAPIキー未設定`; statusEl.style.color = 'var(--danger)'; }
-  }
-}
-
 /* ── 査定PDF取り込みUI ── */
 async function handlePdfImport(file) {
   if (!file) return;
@@ -4890,8 +5022,6 @@ function saveSettings() {
 function loadSettings() {
   const gasEl = document.getElementById('cfg-gas-url');
   const geminiEl = document.getElementById('cfg-gemini-key');
-  const mlitBridgeEl = document.getElementById('cfg-mlit-bridge-url');
-  if (mlitBridgeEl) mlitBridgeEl.value = localStorage.getItem('mlit_bridge_url') || '';
   const mlitEl = document.getElementById('cfg-mlit-key');
   if (gasEl) gasEl.value = localStorage.getItem('fb_gas_url') || '';
   if (geminiEl) geminiEl.value = localStorage.getItem('gemini_api_key') || '';

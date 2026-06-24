@@ -8,8 +8,10 @@ const path = require('node:path');
 const { AUTO_YES_CONTRACT, COMPLETE_RUN_FIRST_POLICY, ZERO_CONFIRM_ROUTE_LOCKDOWN, assertNoZeroConfirmRequests } = require('./kosame-prompt-lint');
 const { OFFICIAL_ROUTE, MANUAL_CODE_UI_ALLOWED } = require('./kosame-execution-host-guard');
 const { buildOrchestraEvidence } = require('./kosame-orchestra-evidence');
+const { buildCompleteRunInboxPlan } = require('./kosame-agent-router');
 const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
+const { saveHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
 const { callKosameGPT } = require('./kosame-chat-gpt');
 const { appendPipelineStageEvent, formatPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 // Trigger Gemini key check at server startup (non-blocking)
@@ -713,9 +715,9 @@ function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
     '安全条件:',
     '- commit/tag/pushは未実行で止める',
     '- git add . / git add -Aは禁止',
-    '- 機密情報・環境変数ファイル・認証情報・APIキーは読まない',
-    '- 外部APIを呼ばない',
-    '- 対象repo以外を触らない',
+    '- 機密の値や設定ファイルは読まない',
+    '- 外部のAPIを呼ばない',
+    '- 対象外は触らない',
     '',
     '保持項目:',
     '- executor / route / autoResponder / promptClassifier / policyKernel / promptFirewall / safetyStopDetector',
@@ -759,6 +761,12 @@ function buildWorkOrderReply(input, snapshotSummary) {
       : input.message,
   );
   const body = normalizeContent(draft && (draft.body || draft.prompt) ? (draft.body || draft.prompt) : prompt) || prompt;
+  const workOrderId = truncate(
+    draft && (draft.id || draft.workOrderId || draft.work_order_id)
+      ? (draft.id || draft.workOrderId || draft.work_order_id)
+      : `${target.selectedProjectId || 'work-order'}-${Date.now()}`,
+    80,
+  );
   const selectedProjectPath = normalizeContent(
     draft && (draft.selectedProjectPath || draft.selected_project_path)
       ? (draft.selectedProjectPath || draft.selected_project_path)
@@ -798,12 +806,22 @@ function buildWorkOrderReply(input, snapshotSummary) {
       'Release Lane',
     ],
   });
+  const completeRunPlan = buildCompleteRunInboxPlan({
+    message: input.message || input.prompt || '',
+    selectedProjectPath,
+    selectedProjectId,
+    selectedProjectLabel,
+  }, { completionMode: 'complete-run-first' });
 
   return {
     reply: `${title} の作業票ドラフトを作りました。route: zero-confirm / KOSAME Runner / dispatch watcher が official route で自動実行します。Orchestra証跡を Run History / Result Decision / Operations Board に残します。`,
     suggested_action: '採用すると、KOSAME Runner / dispatch watcher が official route で zero-confirm 実行します。Orchestra証跡も記録されます。',
     human_gate_required: true,
     work_order: {
+      id: workOrderId,
+      work_order_id: workOrderId,
+      approval_id: workOrderId,
+      handoff_id: workOrderId,
       title,
       agent: 'Codex',
       executor: 'claude-zero-confirm',
@@ -815,6 +833,7 @@ function buildWorkOrderReply(input, snapshotSummary) {
       promptFirewall: 'active',
       safetyStopDetector: 'active',
       completionMode: 'complete-run-first',
+      executionMode: completeRunPlan.executionMode,
       noHumanWait: true,
       noManualPaste: true,
       resultPOSTRequired: true,
@@ -846,6 +865,14 @@ function buildWorkOrderReply(input, snapshotSummary) {
       laneStatuses: orchestraEvidence.lane_statuses,
       orchestra_evidence: orchestraEvidence,
       orchestraEvidence,
+      agentRouter: completeRunPlan.agentRouter,
+      commandInbox: {
+        route: completeRunPlan.route,
+        executor: completeRunPlan.executor,
+        completionMode: completeRunPlan.completionMode,
+        nextCommand: completeRunPlan.nextCommand,
+      },
+      completionMode: completeRunPlan.completionMode,
       target_repo: target.repo,
       risk_level: target.riskLevel,
       requires_human_confirmation: true,
@@ -1079,6 +1106,52 @@ async function handleChatRequest(body) {
     assertNoZeroConfirmRequests(replyPacket.work_order.body || '', 'work order body', { allowNegatedContext: true });
     const promptClassification = classifyPrompt(replyPacket.work_order.body || replyPacket.work_order.prompt || '', 'work_order');
     replyPacket.work_order.promptType = promptClassification.promptType;
+    const handoffDir = source.handoffDir || source.handoff_dir || normalized.handoffDir || '';
+    if (handoffDir) {
+      try {
+        appendPipelineStageEvent({
+          stage: 'handoff.save.started',
+          status: 'running',
+          workOrderId: replyPacket.work_order.id || replyPacket.work_order.work_order_id || replyPacket.work_order.title || '',
+          attachmentCount: attachmentIds.length,
+          attachmentIds,
+          route: replyPacket.work_order.route || 'zero-confirm',
+          timestamp: requestAt,
+          message: 'Runner: handoff save を開始します☂️',
+        }, { agent: 'Runner', task: 'handoff.save.started' });
+        const saved = saveHandoffInbox(replyPacket.work_order, { handoffDir });
+        replyPacket.work_order.handoff = saved;
+        replyPacket.work_order.handoffDir = saved.handoffDir;
+        replyPacket.work_order.queuePath = saved.queuePath;
+        replyPacket.work_order.latestPath = saved.latestPath;
+        replyPacket.work_order.attachmentManifestPath = saved.attachmentManifestPath;
+        appendPipelineStageEvent({
+          stage: 'handoff.save.completed',
+          status: 'success',
+          workOrderId: replyPacket.work_order.id || replyPacket.work_order.work_order_id || replyPacket.work_order.title || '',
+          attachmentCount: attachmentIds.length,
+          attachmentIds,
+          manifestPath: saved.attachmentManifestPath || '',
+          route: replyPacket.work_order.route || 'zero-confirm',
+          timestamp: requestAt,
+          message: 'Runner: handoff save を完了しました☂️',
+        }, { agent: 'Runner', task: 'handoff.save.completed' });
+      } catch (handoffErr) {
+        appendPipelineStageEvent({
+          stage: 'handoff.save.failed',
+          status: 'failed',
+          errorStage: 'handoff.save',
+          errorCode: 'HANDOFF_SAVE_FAILED',
+          errorMessage: handoffErr && handoffErr.message ? handoffErr.message : String(handoffErr),
+          workOrderId: replyPacket.work_order.id || replyPacket.work_order.work_order_id || replyPacket.work_order.title || '',
+          attachmentCount: attachmentIds.length,
+          attachmentIds,
+          route: replyPacket.work_order.route || 'zero-confirm',
+          timestamp: requestAt,
+          message: 'Runner: handoff save で失敗しました',
+        }, { agent: 'Runner', task: 'handoff.save.failed' });
+      }
+    }
   }
 
   const result = {
@@ -1261,7 +1334,13 @@ async function handleChatRequest(body) {
     }
 
     console.log('[GPT] calling... isLive=' + isLiveEnabled());
-    const gptResult = await callKosameGPT(gptMessages, { contextSummary: contextSummary.slice(0, 400) });
+    const gptResult = await callKosameGPT(gptMessages, {
+      contextSummary: contextSummary.slice(0, 400),
+      project,
+      selectedProjectId: normalized.selectedProjectId || '',
+      selectedProjectPath: normalized.selectedProjectPath || '',
+      selectedProjectLabel: normalized.selectedProjectLabel || '',
+    });
     process.stderr.write(`[chat-gpt] ok=${gptResult.ok} dryRun=${gptResult.dryRun} reason=${gptResult.reason || 'none'}\n`);
     if (gptResult.ok && gptResult.reply) {
       const zeroConfirmRouteLine = `route: ${replyPacket.work_order && replyPacket.work_order.route ? replyPacket.work_order.route : 'zero-confirm'}`;

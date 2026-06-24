@@ -7,6 +7,10 @@ const TOOL_META = {
   feature: 'v110-31-deepseek-router-executor',
 };
 
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+
 const REPOS = {
   kosame: {
     id: 'kosame-dev-orchestra',
@@ -169,6 +173,70 @@ function buildInboxPlan(options = {}) {
   };
 }
 
+const COMMAND_INBOX_DIR = path.join(process.cwd(), '.kosame-command-inbox');
+const COMMAND_INBOX_LOG = path.join(COMMAND_INBOX_DIR, 'jobs.jsonl');
+
+function normalizeJobText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function ensureCommandInboxDir() {
+  try {
+    fs.mkdirSync(COMMAND_INBOX_DIR, { recursive: true });
+  } catch {}
+}
+
+function buildCommandInboxJob(input = {}, options = {}) {
+  const plan = buildInboxPlan({ input: input.prompt || input.message || input.input || '' });
+  const job = {
+    id: normalizeJobText(input.id || options.id || `job-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`),
+    source: normalizeJobText(input.source || options.source || 'kosame-console'),
+    status: normalizeJobText(input.status || 'queued'),
+    prompt: normalizeJobText(input.prompt || input.message || input.input || ''),
+    result: normalizeJobText(input.result || ''),
+    safety: plan.safety,
+    repo: plan.repo,
+    workType: plan.workType,
+    nextCommand: plan.nextCommand,
+    createdAt: normalizeJobText(input.createdAt || new Date().toISOString()),
+    updatedAt: normalizeJobText(input.updatedAt || new Date().toISOString()),
+  };
+  return { ...job, plan };
+}
+
+function appendCommandInboxJob(input = {}, options = {}) {
+  ensureCommandInboxDir();
+  const job = buildCommandInboxJob(input, options);
+  fs.appendFileSync(COMMAND_INBOX_LOG, `${JSON.stringify(job)}\n`);
+  return job;
+}
+
+function readCommandInboxJobs(limit = 20) {
+  try {
+    if (!fs.existsSync(COMMAND_INBOX_LOG)) return [];
+    const lines = fs.readFileSync(COMMAND_INBOX_LOG, 'utf8').split(/\r?\n/).filter(Boolean);
+    return lines.slice(-Math.max(1, Number(limit) || 20)).map((line) => {
+      try { return JSON.parse(line); } catch { return null; }
+    }).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function claimCommandInboxJob(id, updates = {}) {
+  const jobs = readCommandInboxJobs(200);
+  const targetId = normalizeJobText(id);
+  const job = jobs.slice().reverse().find((item) => normalizeJobText(item.id) === targetId);
+  if (!job) return null;
+  return {
+    ...job,
+    status: normalizeJobText(updates.status || 'claimed'),
+    claimedAt: normalizeJobText(updates.claimedAt || new Date().toISOString()),
+    result: normalizeJobText(updates.result || job.result || ''),
+    updatedAt: normalizeJobText(updates.updatedAt || new Date().toISOString()),
+  };
+}
+
 function renderPlan(plan) {
   const lines = [];
   lines.push('===== KOSAME Command Inbox =====');
@@ -285,6 +353,10 @@ module.exports = {
   buildProviderPlan,
   buildNextCommand,
   buildInboxPlan,
+  buildCommandInboxJob,
+  appendCommandInboxJob,
+  readCommandInboxJobs,
+  claimCommandInboxJob,
   renderPlan,
   runNextCommand,
   runFullPipeline,

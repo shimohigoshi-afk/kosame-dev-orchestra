@@ -105,10 +105,10 @@ const AUTO_YES_CONTRACT = [
   '- 修正→テスト→再修正→verify→smoke→commit→tag→push→Actions確認→結果報告まで進める',
   '- 迷ったら安全側の代替案で進む。ユーザーへ聞かない。',
   '【Safety Stop条件（これのみ停止可）】',
-  '- 機密情報/環境変数ファイル/認証情報/APIキーを読む操作',
+  '- 機密の値や設定ファイルを読む操作',
   '- 本番deploy / 課金発生 / force push / tag force update',
   '- 広範囲削除 / 対象repo以外の変更',
-  '- Sales DX/transcriber/顧客情報を外部AIへ送信',
+  '- 対象外プロジェクトの内容を外部へ送らない',
   '',
 ].join('\n');
 

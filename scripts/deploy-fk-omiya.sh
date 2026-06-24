@@ -193,7 +193,7 @@ gcloud run deploy "${CONSOLE_SERVICE}" \
   --memory=256Mi \
   --cpu=1 \
   --timeout=60s \
-  --set-env-vars="NODE_ENV=production,PORT=8080" \
+  --set-env-vars="NODE_ENV=production" \
   --labels="managed-by=kosame-dev-orchestra,component=fk-omiya-console"
 echo -e "  ${GREEN}✓ fk-omiya-console デプロイ完了${NC}"
 
@@ -255,7 +255,7 @@ gcloud run deploy "${BOT_SERVICE}" \
   --memory=512Mi \
   --cpu=1 \
   --timeout=30s \
-  --set-env-vars="NODE_ENV=production,PORT=8080" \
+  --set-env-vars="NODE_ENV=production" \
   ${LINE_SECRET_FLAGS} \
   --labels="managed-by=kosame-dev-orchestra,component=line-bot"
 echo -e "  ${GREEN}✓ kosame-line-bot デプロイ完了${NC}"

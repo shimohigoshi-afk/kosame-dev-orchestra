@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const pkg = require('../package.json');
+const { isVersionAtLeast } = require('./version-compare');
 const { buildCompleteRunInboxPlan } = require('../tools/kosame-agent-router');
 const { detectStopReason } = require('../tools/kosame-stop-reason-detector');
 const { buildGapItems } = require('../tools/kosame-gap-builder');
@@ -21,7 +22,7 @@ const { buildWorkOrderResultDecision } = require('../tools/kosame-work-order-res
 
 async function main() {
   console.log('===== v113.3.52 complete run os smoke =====');
-  assert.ok(pkg.version === '113.3.52' || pkg.version === '113.3.51', `version must be >= 113.3.51 (got ${pkg.version})`);
+  assert.ok(isVersionAtLeast(pkg.version, '113.3.51'), `version must be >= 113.3.51 (got ${pkg.version})`);
   assert.ok(pkg.scripts['complete:daemon'], 'complete:daemon must exist');
   assert.ok(pkg.scripts['smoke:v113-3-52'], 'smoke:v113-3-52 must exist');
   assert.ok(pkg.scripts.verify.includes('smoke:v113-3-52'), 'verify must include smoke:v113-3-52');
@@ -127,23 +128,38 @@ async function main() {
   assert.ok(chat.work_order.agentRouter, 'agentRouter must be attached');
   assert.ok(Array.isArray(chat.work_order.assignedLanes) && chat.work_order.assignedLanes.includes('Complete Run Lane') === false, 'existing lane list remains stable');
 
-  const queueResults = processQueue({
-    handoffOpts: { handoffDir },
+  const daemonResult = await runCompleteRunDaemon({
+    message: workOrderMessage,
+    selectedProjectId: 'dev-orchestra',
+    selectedProjectPath: '/home/lavie/kosame-dev-orchestra',
+    selectedProjectLabel: 'KOSAME Dev Orchestra',
+    stopSample: {
+      errorStage: 'runner.dispatch',
+      errorCode: 'RUNNER_DISPATCH_FAILED',
+      errorMessage: 'runner timeout after 30000ms',
+      executionHost: 'kosame-runner',
+      interactive: false,
+      safeSpawn: true,
+    },
+  }, {
+    simulateQueue: true,
+    handoffDir,
     runsDir,
-    state: {},
     executor: (ticket, runDir) => {
       fs.writeFileSync(path.join(runDir, 'output.md'), `executed ${ticket.id}`);
       fs.writeFileSync(path.join(runDir, 'verify.log'), 'verify: PASS');
       return { ok: true, exitCode: 0, error: null };
     },
   });
+  const queueResults = daemonResult.queueResults || [];
   assert.ok(Array.isArray(queueResults) && queueResults.length >= 1, 'queue should execute at least one item');
   assert.ok(queueResults.every((item) => item.status === 'completed'), 'queue items should complete');
 
+  const workOrderId = chat.work_order.id || chat.work_order.work_order_id || chat.work_order.approval_id;
   const resultRecord = recordWorkOrderResult({
-    work_order_id: 'wo-complete-run',
-    approval_id: 'wo-complete-run',
-    handoff_id: 'wo-complete-run',
+    work_order_id: workOrderId,
+    approval_id: workOrderId,
+    handoff_id: workOrderId,
     work_order: chat.work_order,
     title: chat.work_order.title,
     target_repo: chat.work_order.target_repo,

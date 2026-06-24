@@ -305,6 +305,10 @@ canvas{display:block;width:100%;border-radius:4px}
 .re-confidence-a{background:rgba(76,175,130,0.12);color:#73d69d;border:1px solid rgba(76,175,130,0.32)}
 .re-confidence-b{background:rgba(79,195,247,0.12);color:#7fd2ff;border:1px solid rgba(79,195,247,0.32)}
 .re-confidence-c{background:rgba(224,85,85,0.10);color:#ff9f9f;border:1px solid rgba(224,85,85,0.28)}
+.re-score-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.06em;margin-top:6px}
+.re-score-cheap{background:rgba(76,175,130,0.18);color:#73d69d;border:1px solid rgba(76,175,130,0.32)}
+.re-score-fair{background:rgba(120,120,120,0.16);color:var(--text-muted);border:1px solid rgba(120,120,120,0.28)}
+.re-score-expensive{background:rgba(224,85,85,0.12);color:#ff9f9f;border:1px solid rgba(224,85,85,0.28)}
 .re-action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .re-action-btn{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.28);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:12px;font-weight:700}
 .re-action-btn:disabled{opacity:.45;cursor:not-allowed}
@@ -1791,6 +1795,17 @@ canvas{display:block;width:100%;border-radius:4px}
         </div>
         <div style="margin-top:10px;font-size:10px;color:var(--text-dim);line-height:1.7">
           設計メモ: APIキーは Cloud Run 側で Secret Manager または <code>.env</code> から読み込み、レスポンスは駅徒歩・築年数・類似事例スコアなどの加工後 JSON に限定します。取得失敗時はモックに戻し、ブラウザからの外部API直叩きは行いません。
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)">
+          <label style="font-size:11px;color:var(--text-muted);white-space:nowrap">ローカル Bridge URL:</label>
+          <input type="text" id="cfg-mlit-bridge-url" placeholder="http://localhost:3002"
+                 style="flex:1;min-width:180px;font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text)"
+                 oninput="saveMlitBridgeUrl()">
+          <button onclick="fetchMlitData()"
+                  style="font-size:11px;padding:4px 12px;background:var(--accent,#4fc3f7);color:#fff;border:none;border-radius:4px;cursor:pointer;white-space:nowrap">
+            MLITリアルタイム取得
+          </button>
+          <span id="mlit-bridge-status" style="font-size:11px;color:var(--text-muted)">未接続</span>
         </div>
       </div>
       <div class="card">
@@ -4096,6 +4111,27 @@ function renderRealestateBridgeStatus(bridge = {}) {
   if (cacheEl) cacheEl.textContent = bridge.cacheText || 'キャッシュ済みデータ優先';
 }
 
+function saveMlitBridgeUrl() {
+  const el = document.getElementById('cfg-mlit-bridge-url');
+  if (el) localStorage.setItem('mlit_bridge_url', el.value.trim());
+}
+
+async function fetchMlitData() {
+  const bridgeUrl = (localStorage.getItem('mlit_bridge_url') || 'http://localhost:3002').replace(/\/$/, '');
+  const statusEl = document.getElementById('mlit-bridge-status');
+  if (statusEl) statusEl.textContent = '取得中...';
+  try {
+    const res = await fetch(`${bridgeUrl}/api/realestate?prefecture=11&year=2024&type=Mansion&from=1&to=10`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const count = Array.isArray(data.cases) ? data.cases.length : (Array.isArray(data.data) ? data.data.length : 0);
+    if (statusEl) statusEl.textContent = `取得完了 (${count}件)`;
+    renderRealestateBridgeStatus({ status: `Bridge接続 (${count}件)`, endpoint: bridgeUrl + '/api/realestate' });
+  } catch (e) {
+    if (statusEl) statusEl.textContent = `エラー: ${e.message}`;
+  }
+}
+
 async function fetchMlitRealEstateCasesLite(filters = {}) {
   const cached = readRealestateBridgeCache();
   const payload = buildRealestateBridgeLitePayload(filters);
@@ -4277,21 +4313,28 @@ function calcRealestatePricingScore(row, context) {
   return clampRealestateScore(score);
 }
 
+function calcPriceScore(row, context) {
+  return calcRealestatePricingScore(row, context || buildRealestatePricingContext([row]));
+}
+
+function getPriceScoreLabel(score) {
+  if (score >= 65) return '割安';
+  if (score >= 40) return '標準';
+  return '割高';
+}
+
 function sortRealestateRows(rows, sortMode) {
   const list = rows.slice();
-  switch (sortMode) {
-    case 'score-asc':
-      return list.sort((a, b) => (a.score || 0) - (b.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
-    case 'price-asc':
-      return list.sort((a, b) => a.totalPrice - b.totalPrice || (b.score || 0) - (a.score || 0));
-    case 'price-desc':
-      return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
-    case 'total-desc':
-      return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
-    case 'score-desc':
-    default:
-      return list.sort((a, b) => (b.score || 0) - (a.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
-  }
+  const sort = sortMode;
+  if (sort === 'score-asc')
+    return list.sort((a, b) => (a.score || 0) - (b.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
+  if (sort === 'price-asc')
+    return list.sort((a, b) => a.totalPrice - b.totalPrice || (b.score || 0) - (a.score || 0));
+  if (sort === 'price-desc')
+    return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
+  if (sort === 'total-desc')
+    return list.sort((a, b) => b.totalPrice - a.totalPrice || (b.score || 0) - (a.score || 0));
+  return list.sort((a, b) => (b.score || 0) - (a.score || 0) || a.totalPrice - b.totalPrice || a.walkMin - b.walkMin);
 }
 
 function renderRealestateScoreSummary(rows, context) {
@@ -4461,6 +4504,8 @@ function renderRealestate(data, filters = null) {
     const tsubo = (r.size / 3.3058).toFixed(1);
     const pricePerTsubo = roundRealestate(r.totalPrice / r.size * 3.3058);
     const score = Number.isFinite(r.score) ? r.score : 0;
+    const scoreCls = score >= 65 ? 're-score-cheap' : score >= 40 ? 're-score-fair' : 're-score-expensive';
+    const scoreLabel = getPriceScoreLabel(score);
     return `
       <div class="re-price-card" data-estimated-price="${Math.round(r.totalPrice)}" data-station="${r.station}" data-city="${r.city}">
         <div class="re-price-type" style="color:${typeColor[r.type] || 'var(--text-muted)'}">${r.type}</div>
@@ -4475,6 +4520,7 @@ function renderRealestate(data, filters = null) {
           <div class="re-price-score-val">${score}</div>
           <div class="re-price-score-bar"><div class="re-price-score-fill" style="width:${score}%"></div></div>
           <div class="re-price-score-sub">駅徒歩・築年数・取引時期・価格帯から算出した参考スコア</div>
+          <span class="re-score-badge ${scoreCls}">${scoreLabel}</span>
         </div>
         <div class="re-price-tags">
           <span class="re-price-tag">${r.periodYears}年以内</span>

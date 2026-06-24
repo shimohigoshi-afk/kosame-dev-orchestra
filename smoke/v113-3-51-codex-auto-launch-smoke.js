@@ -6,6 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const pkg = require('../package.json');
+const { isVersionAtLeast } = require('./version-compare');
 
 const ROOT = path.resolve(__dirname, '..');
 const LAUNCHER = path.join(ROOT, 'tools', 'kosame-codex-auto-launch.js');
@@ -19,7 +20,7 @@ function read(filePath) {
 function main() {
   console.log('=== v113.3.51 codex auto-launch smoke ===');
 
-  assert.ok(pkg.version.startsWith('113.3.51'), `version >= 113.3.51 (got ${pkg.version})`);
+  assert.ok(isVersionAtLeast(pkg.version, '113.3.51'), `version >= 113.3.51 (got ${pkg.version})`);
   assert.ok(pkg.scripts['start:codex-pipeline'], 'start:codex-pipeline must exist');
   assert.ok(pkg.scripts['smoke:v113-3-51'], 'smoke:v113-3-51 must exist');
   assert.ok(pkg.scripts['start:claude-pipeline'], 'start:claude-pipeline must exist');

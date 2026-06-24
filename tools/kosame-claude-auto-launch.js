@@ -43,9 +43,20 @@ const SAFETY_STOP_PATTERNS = [
   /承認.*必要/,
 ];
 
-// 安全条件の前文（dispatch watcherと同じ）
+// 安全条件の前文 + AUTO_YES_CONTRACT（YES地獄防止）
 const DISPATCH_SAFETY_PREAMBLE = [
   '# KOSAME自動ディスパッチ',
+  '',
+  '【Auto-YES Runtime Contract】',
+  '通常作業はYES前提で最後まで完走する。',
+  '- YES確認・続行確認・承認要求・コピペ依頼をユーザーへ行わない',
+  '- 修正→テスト→再修正→verify→smoke→commit→tag→push→Actions確認→結果報告まで進める',
+  '- 迷ったら安全側の代替案で進む。ユーザーへ聞かない。',
+  '【Safety Stop条件（これのみ停止可）】',
+  '- 機密情報/環境変数ファイル/認証情報/APIキーを読む操作',
+  '- 本番deploy / 課金発生 / force push / tag force update',
+  '- 広範囲削除 / 対象repo以外の変更',
+  '- Sales DX/transcriber/顧客情報を外部AIへ送信',
   '',
   '必須安全条件:',
   '- 機密情報・環境変数ファイル・認証情報・APIキーは読まない',
@@ -155,12 +166,14 @@ async function runClaude(promptText, cwd) {
   const prompt = buildPrompt(promptText);
 
   return new Promise((resolve) => {
-    log(`[CLAUDE-LAUNCHER] claude --dangerously-skip-permissions 起動 cwd="${cwd}"`);
+    log(`[CLAUDE-LAUNCHER] claude -p --dangerously-skip-permissions 起動 cwd="${cwd}"`);
 
-    const child = spawn('claude', ['--dangerously-skip-permissions', '-p'], {
+    // -p (print/pipe mode) must come before --dangerously-skip-permissions
+    // to ensure non-interactive mode is established before permission bypass
+    const child = spawn('claude', ['-p', '--dangerously-skip-permissions'], {
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: process.env,
+      env: { ...process.env, CLAUDE_SKIP_INTERACTIVE: '1' },
       shell: false,
     });
 

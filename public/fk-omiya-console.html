@@ -1843,6 +1843,154 @@ canvas{display:block;width:100%;border-radius:4px}
         </div>
       </div>
       <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🏘 エリア選択 価格・賃料推定 Lite</div>
+        <div class="re-filter-hint">地図またはエリア一覧から地域を選び、駅徒歩・築年数・面積・物件種別・間取りをもとに、売買価格・参考賃料・表面利回りを参考推定します。地図クリック時は町名 / 町丁目を判定して同じ推定ロジックへ流します。Google Maps を使う場合は <strong>Maps JavaScript API</strong>、低コスト運用なら <strong>Leaflet + 国土地理院タイル</strong> に差し替えやすく、ブラウザから API key は直打ちしません。</div>
+        <div class="re-filter-panel">
+          <div class="re-filter-field">
+            <label for="re-area">エリア</label>
+            <select id="re-area" onchange="searchRealestateArea()">
+              <option value="sakuragicho">さいたま市大宮区 桜木町</option>
+              <option value="daimoncho">さいたま市大宮区 大門町</option>
+              <option value="kishikicho">さいたま市大宮区 吉敷町</option>
+              <option value="miyacho">さいたま市大宮区 宮町</option>
+              <option value="shintoshin">さいたま市中央区 新都心</option>
+              <option value="toromachi">さいたま市北区 土呂町</option>
+              <option value="higashi-omiya">さいたま市北区 東大成町</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-station">最寄駅</label>
+            <input type="text" id="re-area-station" placeholder="例：大宮 / さいたま新都心" oninput="searchRealestateArea()">
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-walk">駅徒歩</label>
+            <select id="re-area-walk" onchange="searchRealestateArea()">
+              <option value="">指定なし</option>
+              <option value="5">5分以内</option>
+              <option value="10">10分以内</option>
+              <option value="15">15分以内</option>
+              <option value="20">20分以内</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-age">築年数</label>
+            <select id="re-area-age" onchange="searchRealestateArea()">
+              <option value="">指定なし</option>
+              <option value="5">5年以内</option>
+              <option value="10">10年以内</option>
+              <option value="20">20年以内</option>
+              <option value="30">30年以内</option>
+              <option value="31">31年以上</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-size">面積</label>
+            <select id="re-area-size" onchange="searchRealestateArea()">
+              <option value="">指定なし</option>
+              <option value="lt30">30㎡未満</option>
+              <option value="30-50">30〜50㎡</option>
+              <option value="50-70">50〜70㎡</option>
+              <option value="70-90">70〜90㎡</option>
+              <option value="90+">90㎡以上</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-type">物件種別</label>
+            <select id="re-area-type" onchange="searchRealestateArea()">
+              <option value="">指定なし</option>
+              <option value="中古マンション">中古マンション</option>
+              <option value="戸建て">戸建て</option>
+              <option value="土地">土地</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-room">間取り</label>
+            <select id="re-area-room" onchange="searchRealestateArea()">
+              <option value="">指定なし</option>
+              <option value="1R">1R</option>
+              <option value="1K">1K</option>
+              <option value="1DK">1DK</option>
+              <option value="1LDK">1LDK</option>
+              <option value="2LDK">2LDK</option>
+              <option value="3LDK">3LDK</option>
+              <option value="4LDK">4LDK</option>
+            </select>
+          </div>
+          <div class="re-filter-field">
+            <label for="re-area-mode">売買 / 賃貸 / 両方</label>
+            <select id="re-area-mode" onchange="searchRealestateArea()">
+              <option value="both">両方</option>
+              <option value="sale">売買</option>
+              <option value="rent">賃貸</option>
+            </select>
+          </div>
+        </div>
+        <div class="re-summary-grid" id="re-area-summary-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:0">
+          <div class="re-summary-card">
+            <div class="re-summary-label">選択エリア</div>
+            <div class="re-summary-value" id="re-area-name">—</div>
+            <div class="re-summary-sub" id="re-area-latlng">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">条件</div>
+            <div class="re-summary-value" id="re-area-condition">—</div>
+            <div class="re-summary-sub" id="re-area-mode">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">推定成約価格</div>
+            <div class="re-summary-value" id="re-area-sale-center">—</div>
+            <div class="re-summary-sub" id="re-area-sale-basis">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">相場レンジ</div>
+            <div class="re-summary-value" id="re-area-sale-range">—</div>
+            <div class="re-summary-sub" id="re-area-sale-count">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">売出目安 / 強気上限</div>
+            <div class="re-summary-value" id="re-area-sale-listing">—</div>
+            <div class="re-summary-sub" id="re-area-sale-upper">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">売買信頼度</div>
+            <div class="re-summary-value" id="re-area-sale-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+            <div class="re-summary-sub" id="re-area-sale-confidence-note">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">参考月額賃料</div>
+            <div class="re-summary-value" id="re-area-rent-center">—</div>
+            <div class="re-summary-sub" id="re-area-rent-per-sqm">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">賃料レンジ / 年間賃料</div>
+            <div class="re-summary-value" id="re-area-rent-range">—</div>
+            <div class="re-summary-sub" id="re-area-annual-rent">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">表面利回り</div>
+            <div class="re-summary-value" id="re-area-yield">—</div>
+            <div class="re-summary-sub" id="re-area-rent-basis">—</div>
+          </div>
+          <div class="re-summary-card">
+            <div class="re-summary-label">賃貸信頼度 / 注意書き</div>
+            <div class="re-summary-value" id="re-area-rent-confidence"><span class="re-confidence-pill re-confidence-c">C</span></div>
+            <div class="re-summary-sub" id="re-area-rent-note">—</div>
+          </div>
+        </div>
+        <div class="re-action-row" style="margin-top:0">
+          <button type="button" class="re-action-btn" id="re-area-mortgage-btn" onclick="applyRealestateAreaEstimateToMortgage()" data-estimated-price="" data-estimated-rent="" data-estimated-yield="" data-area-key="" data-area-label="">
+            住宅ローン計算へ反映
+          </button>
+          <div class="re-action-hint" id="re-area-mortgage-hint">選択したエリア推定の売買価格を、既存の住宅ローン導線へ渡せます。賃料・利回りは localStorage にも保存します。</div>
+        </div>
+        <div class="re-disclaimer">
+          ※ 売買価格は査定・鑑定ではなく参考推定です。<br>
+          ※ 賃料は募集賃料・成約賃料を保証するものではありません。<br>
+          ※ 国交省データだけでは現在募集家賃の網羅は難しいため、公的家賃統計・手入力賃料メモ・管理費・空室率は将来分離して扱います。
+        </div>
+        <div class="re-map-mini-note">地図クリック時は町名 / 町丁目を判定して同じ推定ロジックに流します。売買価格は国交省 不動産情報ライブラリ API を Cloud Run 側で取得し、Console へは加工済み JSON のみ返す設計です。API key は Secret Manager または <code>.env</code> 側に閉じます。</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
         <div class="card-title">🧭 MLIT API Bridge Lite 設計</div>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;font-size:11px;line-height:1.8;color:var(--text-muted)">
           <div>
@@ -4283,6 +4431,499 @@ function applyRealestateMapEstimateToMortgage() {
   applyRealestateEstimateToMortgage();
 }
 
+const RE_AREA_LS_KEY = 'fk_omiya_realestate_area_estimate_v1';
+const RE_AREA_SELECTION_LS_KEY = 'fk_omiya_realestate_area_selected_v1';
+const RE_AREA_PRICE_LS_KEY = 'fkOmiyaSelectedAreaPrice';
+const RE_AREA_RENT_LS_KEY = 'fkOmiyaSelectedAreaRent';
+const RE_AREA_YIELD_LS_KEY = 'fkOmiyaSelectedAreaYield';
+
+function buildAreaSampleCases(center, spread, count) {
+  const safeCount = Math.max(1, count);
+  return Array.from({ length: safeCount }, (_, index) => {
+    const ratio = safeCount === 1 ? 0 : index / (safeCount - 1);
+    const wobble = Math.sin((index + 1) * 1.31) * spread * 0.08;
+    const drift = (ratio - 0.5) * spread * 2;
+    return Math.max(0, Math.round((center + drift + wobble) / 10) * 10);
+  }).sort((a, b) => a - b);
+}
+
+const RE_AREA_POINTS = [
+  {
+    key: 'sakuragicho',
+    label: 'さいたま市大宮区 桜木町',
+    city: 'さいたま市大宮区',
+    town: '桜木町',
+    station: '大宮',
+    walkMin: 8,
+    age: 14,
+    size: 68,
+    rooms: '2LDK',
+    type: '中古マンション',
+    lat: 35.9068,
+    lng: 139.6236,
+    baseSalePrice: 5480,
+    baseRentPrice: 12.8,
+    sampleSaleCases: buildAreaSampleCases(5480, 380, 17),
+    sampleRentCases: buildAreaSampleCases(12.8, 1.0, 16),
+  },
+  {
+    key: 'daimoncho',
+    label: 'さいたま市大宮区 大門町',
+    city: 'さいたま市大宮区',
+    town: '大門町',
+    station: '大宮',
+    walkMin: 5,
+    age: 9,
+    size: 56,
+    rooms: '1LDK',
+    type: '中古マンション',
+    lat: 35.9081,
+    lng: 139.6268,
+    baseSalePrice: 5920,
+    baseRentPrice: 13.4,
+    sampleSaleCases: buildAreaSampleCases(5920, 420, 18),
+    sampleRentCases: buildAreaSampleCases(13.4, 1.1, 18),
+  },
+  {
+    key: 'kishikicho',
+    label: 'さいたま市大宮区 吉敷町',
+    city: 'さいたま市大宮区',
+    town: '吉敷町',
+    station: 'さいたま新都心',
+    walkMin: 10,
+    age: 11,
+    size: 71,
+    rooms: '3LDK',
+    type: '中古マンション',
+    lat: 35.8923,
+    lng: 139.6338,
+    baseSalePrice: 5650,
+    baseRentPrice: 12.2,
+    sampleSaleCases: buildAreaSampleCases(5650, 360, 15),
+    sampleRentCases: buildAreaSampleCases(12.2, 0.9, 15),
+  },
+  {
+    key: 'miyacho',
+    label: 'さいたま市大宮区 宮町',
+    city: 'さいたま市大宮区',
+    town: '宮町',
+    station: '大宮',
+    walkMin: 7,
+    age: 19,
+    size: 93,
+    rooms: '3LDK',
+    type: '戸建て',
+    lat: 35.9078,
+    lng: 139.6231,
+    baseSalePrice: 6320,
+    baseRentPrice: 14.2,
+    sampleSaleCases: buildAreaSampleCases(6320, 460, 14),
+    sampleRentCases: buildAreaSampleCases(14.2, 1.0, 14),
+  },
+  {
+    key: 'shintoshin',
+    label: 'さいたま市中央区 新都心',
+    city: 'さいたま市中央区',
+    town: '新都心',
+    station: 'さいたま新都心',
+    walkMin: 6,
+    age: 7,
+    size: 61,
+    rooms: '2LDK',
+    type: '中古マンション',
+    lat: 35.8947,
+    lng: 139.6305,
+    baseSalePrice: 6280,
+    baseRentPrice: 14.4,
+    sampleSaleCases: buildAreaSampleCases(6280, 440, 21),
+    sampleRentCases: buildAreaSampleCases(14.4, 1.0, 20),
+  },
+  {
+    key: 'toromachi',
+    label: 'さいたま市北区 土呂町',
+    city: 'さいたま市北区',
+    town: '土呂町',
+    station: '土呂',
+    walkMin: 9,
+    age: 23,
+    size: 101,
+    rooms: '4LDK',
+    type: '戸建て',
+    lat: 35.9277,
+    lng: 139.6331,
+    baseSalePrice: 4280,
+    baseRentPrice: 10.4,
+    sampleSaleCases: buildAreaSampleCases(4280, 310, 13),
+    sampleRentCases: buildAreaSampleCases(10.4, 0.8, 13),
+  },
+  {
+    key: 'higashi-omiya',
+    label: 'さいたま市北区 東大成町',
+    city: 'さいたま市北区',
+    town: '東大成町',
+    station: '北大宮',
+    walkMin: 12,
+    age: 28,
+    size: 136,
+    rooms: '3LDK',
+    type: '土地',
+    lat: 35.9145,
+    lng: 139.6169,
+    baseSalePrice: 3920,
+    baseRentPrice: 0,
+    sampleSaleCases: buildAreaSampleCases(3920, 280, 12),
+    sampleRentCases: [],
+  },
+];
+
+function normalizeRealestateAreaText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getRealestateAreaPoint(areaKey) {
+  return RE_AREA_POINTS.find(point => point.key === areaKey) || RE_AREA_POINTS[0];
+}
+
+function parseRealestateAreaFilters() {
+  return {
+    areaKey: document.getElementById('re-area').value || 'sakuragicho',
+    station: document.getElementById('re-area-station').value || '',
+    walkMin: parseInt(document.getElementById('re-area-walk').value || '0', 10) || 0,
+    age: parseInt(document.getElementById('re-area-age').value || '0', 10) || 0,
+    sizeBand: document.getElementById('re-area-size').value || '',
+    type: document.getElementById('re-area-type').value || '',
+    room: document.getElementById('re-area-room').value || '',
+    mode: document.getElementById('re-area-mode').value || 'both',
+  };
+}
+
+function getRealestateWalkFactor(walkMin) {
+  if (!walkMin) return 1;
+  if (walkMin <= 5) return 1.08;
+  if (walkMin <= 10) return 1.03;
+  if (walkMin <= 15) return 0.98;
+  if (walkMin <= 20) return 0.94;
+  return 0.9;
+}
+
+function getRealestateAgeFactor(age) {
+  if (!age) return 1;
+  if (age <= 5) return 1.12;
+  if (age <= 10) return 1.06;
+  if (age <= 20) return 1.0;
+  if (age <= 30) return 0.94;
+  return 0.88;
+}
+
+function getRealestateSizeFactor(size) {
+  if (!size) return 1;
+  if (size < 30) return 1.08;
+  if (size < 50) return 1.04;
+  if (size < 70) return 1.0;
+  if (size < 90) return 0.97;
+  return 0.93;
+}
+
+function getRealestateTypeSaleFactor(type) {
+  if (type === '中古マンション') return 1;
+  if (type === '戸建て') return 0.96;
+  if (type === '土地') return 0.88;
+  return 1;
+}
+
+function getRealestateTypeRentFactor(type) {
+  if (type === '中古マンション') return 1;
+  if (type === '戸建て') return 0.9;
+  if (type === '土地') return 0;
+  return 1;
+}
+
+function getRealestateRoomFactor(room) {
+  const factors = {
+    '1R': 1.08,
+    '1K': 1.05,
+    '1DK': 1.02,
+    '1LDK': 1,
+    '2LDK': 0.96,
+    '3LDK': 0.92,
+    '4LDK': 0.88,
+  };
+  return factors[room] || 1;
+}
+
+function getRealestateStationFactor(station, defaultStation) {
+  const s = normalizeRealestateAreaText(station);
+  const d = normalizeRealestateAreaText(defaultStation);
+  if (!s || !d || s === d) return 1;
+  if (s.includes(d) || d.includes(s)) return 0.98;
+  return 0.95;
+}
+
+function buildRealestateAreaConfidence(count, closeEnough, mode) {
+  if (count >= 20 && closeEnough) {
+    return {
+      grade: 'A',
+      className: 're-confidence-a',
+      note: mode === 'rent' ? '類似賃貸参考20件以上・条件が近い' : '類似売買事例20件以上・条件が近い',
+    };
+  }
+  if (count >= 8) {
+    return {
+      grade: 'B',
+      className: 're-confidence-b',
+      note: mode === 'rent' ? '類似賃貸参考8〜19件' : '類似売買事例8〜19件',
+    };
+  }
+  return {
+    grade: 'C',
+    className: 're-confidence-c',
+    note: mode === 'rent' ? '類似賃貸参考7件以下、または条件が広い' : '類似売買事例7件以下、または条件が広い',
+  };
+}
+
+function matchesRealestateAreaSizeBand(size, bandKey) {
+  const ranges = {
+    'lt30': { min: 0, max: 30 },
+    '30-50': { min: 30, max: 50 },
+    '50-70': { min: 50, max: 70 },
+    '70-90': { min: 70, max: 90 },
+    '90+': { min: 90, max: Infinity },
+  };
+  const band = ranges[bandKey];
+  if (!band) return true;
+  return size >= band.min && size < band.max;
+}
+
+function buildRealestateAreaSummary(area, filters = {}) {
+  const selected = area || RE_AREA_POINTS[0];
+  const station = filters.station || selected.station;
+  const walkMin = filters.walkMin || selected.walkMin;
+  const age = filters.age || selected.age;
+  const sizeBand = filters.sizeBand || '';
+  const type = filters.type || selected.type;
+  const room = filters.room || selected.rooms;
+  const mode = filters.mode || 'both';
+  const effectiveSize = selected.size;
+  const modeLabel = {
+    sale: '売買',
+    rent: '賃貸',
+    both: '売買 / 賃貸',
+  }[mode] || '売買 / 賃貸';
+
+  const sizeFit = matchesRealestateAreaSizeBand(effectiveSize, sizeBand);
+  const sizeFactor = getRealestateSizeFactor(effectiveSize) / getRealestateSizeFactor(selected.size);
+  const stationFactor = getRealestateStationFactor(station, selected.station);
+  const walkFactor = getRealestateWalkFactor(walkMin) / getRealestateWalkFactor(selected.walkMin);
+  const ageFactor = getRealestateAgeFactor(age) / getRealestateAgeFactor(selected.age);
+  const typeSaleFactor = getRealestateTypeSaleFactor(type) / getRealestateTypeSaleFactor(selected.type);
+  const roomFactor = getRealestateRoomFactor(room) / getRealestateRoomFactor(selected.rooms);
+  const saleFactor = stationFactor * walkFactor * ageFactor * sizeFactor * typeSaleFactor * (sizeFit ? 1 : 0.93);
+
+  const saleCases = (selected.sampleSaleCases || []).map(value => Math.max(0, Math.round(value * saleFactor)));
+  const saleSorted = saleCases.slice().sort((a, b) => a - b);
+  const saleCenter = saleSorted.length ? percentile(saleSorted, 0.5) : 0;
+  const saleQ1 = saleSorted.length ? percentile(saleSorted, 0.25) : 0;
+  const saleQ3 = saleSorted.length ? percentile(saleSorted, 0.75) : 0;
+  const saleConfidence = buildRealestateAreaConfidence(saleSorted.length, stationFactor >= 0.98 && walkMin <= 15 && age <= 20, 'sale');
+
+  const rentApplicable = selected.type !== '土地' && getRealestateTypeRentFactor(type) > 0;
+  const rentFactor = rentApplicable
+    ? stationFactor * walkFactor * ageFactor * sizeFactor * roomFactor * (getRealestateTypeRentFactor(type) / getRealestateTypeRentFactor(selected.type))
+    : 0;
+  const rentCases = rentApplicable ? (selected.sampleRentCases || []).map(value => Math.max(0, Math.round((value * rentFactor) * 10) / 10)) : [];
+  const rentSorted = rentCases.slice().sort((a, b) => a - b);
+  const rentCenter = rentSorted.length ? percentile(rentSorted, 0.5) : null;
+  const rentQ1 = rentSorted.length ? percentile(rentSorted, 0.25) : null;
+  const rentQ3 = rentSorted.length ? percentile(rentSorted, 0.75) : null;
+  const annualRent = rentCenter ? rentCenter * 12 : null;
+  const yieldRate = rentCenter && saleCenter ? (annualRent / saleCenter) * 100 : null;
+  const rentConfidence = buildRealestateAreaConfidence(rentSorted.length, stationFactor >= 0.98 && walkMin <= 15 && age <= 20 && rentApplicable, 'rent');
+
+  return {
+    key: selected.key,
+    label: selected.label,
+    city: selected.city,
+    town: selected.town,
+    station,
+    walkMin,
+    age,
+    size: effectiveSize,
+    type,
+    room,
+    mode,
+    modeLabel,
+    lat: selected.lat,
+    lng: selected.lng,
+    sizeBand,
+    sale: {
+      count: saleSorted.length,
+      center: saleCenter,
+      q1: saleQ1,
+      q3: saleQ3,
+      listingLow: saleCenter ? saleCenter * 1.05 : null,
+      listingHigh: saleCenter ? saleCenter * 1.15 : null,
+      upperLow: saleCenter ? saleCenter * 1.2 : null,
+      upperHigh: saleCenter ? saleCenter * 1.25 : null,
+      confidence: saleConfidence,
+      basis: `町名エリア ${selected.label}・最寄駅 ${station}・徒歩${walkMin || '指定なし'}分・築${age || '指定なし'}年・${effectiveSize}㎡・${type || selected.type}・${room || selected.rooms}`,
+    },
+    rent: {
+      count: rentSorted.length,
+      center: rentCenter,
+      q1: rentQ1,
+      q3: rentQ3,
+      annualRent,
+      yieldRate,
+      confidence: rentConfidence,
+      perSqm: rentCenter && effectiveSize ? rentCenter / effectiveSize : null,
+      basis: rentApplicable
+        ? `町名エリア ${selected.label}・最寄駅 ${station}・徒歩${walkMin || '指定なし'}分・築${age || '指定なし'}年・${effectiveSize}㎡・${type || selected.type}・${room || selected.rooms}`
+        : '土地は賃貸換算対象外です',
+    },
+    note: '※ 賃料は募集賃料・成約賃料を保証するものではありません。公開取引や周辺メモをもとにした参考推定です。',
+  };
+}
+
+function persistRealestateAreaSelection(summary) {
+  try {
+    localStorage.setItem(RE_AREA_SELECTION_LS_KEY, JSON.stringify({
+      key: summary.key,
+      label: summary.label,
+      station: summary.station,
+      walkMin: summary.walkMin,
+      age: summary.age,
+      size: summary.size,
+      type: summary.type,
+      room: summary.room,
+      mode: summary.mode,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Area Price Rent Estimate Lite',
+    }));
+  } catch (_) { /* ignore storage errors */ }
+}
+
+function persistRealestateAreaEstimates(summary) {
+  try {
+    localStorage.setItem(RE_AREA_PRICE_LS_KEY, JSON.stringify({
+      areaKey: summary.key,
+      label: summary.label,
+      value: summary.sale.center ? Math.round(summary.sale.center) : null,
+      range: summary.sale.center ? [Math.round(summary.sale.q1), Math.round(summary.sale.q3)] : [],
+      mode: summary.mode,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Area Price Rent Estimate Lite',
+    }));
+    localStorage.setItem(RE_AREA_RENT_LS_KEY, JSON.stringify({
+      areaKey: summary.key,
+      label: summary.label,
+      value: summary.rent.center != null ? Number(summary.rent.center.toFixed(1)) : null,
+      range: summary.rent.center != null ? [Number(summary.rent.q1.toFixed(1)), Number(summary.rent.q3.toFixed(1))] : [],
+      annualRent: summary.rent.annualRent != null ? Number(summary.rent.annualRent.toFixed(1)) : null,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Area Price Rent Estimate Lite',
+    }));
+    localStorage.setItem(RE_AREA_YIELD_LS_KEY, JSON.stringify({
+      areaKey: summary.key,
+      label: summary.label,
+      value: summary.rent.yieldRate != null ? Number(summary.rent.yieldRate.toFixed(1)) : null,
+      updatedAt: new Date().toISOString(),
+      source: 'FK Omiya Real Estate Area Price Rent Estimate Lite',
+    }));
+  } catch (_) { /* ignore storage errors */ }
+}
+
+function renderRealestateAreaSummary(summary) {
+  const el = id => document.getElementById(id);
+  const sale = summary.sale || {};
+  const rent = summary.rent || {};
+  const saleConfidence = sale.confidence || { grade: 'C', className: 're-confidence-c', note: '条件が広い' };
+  const rentConfidence = rent.confidence || { grade: 'C', className: 're-confidence-c', note: '条件が広い' };
+  const annualRentText = rent.annualRent != null ? `${fmt(rent.annualRent)}` : '—';
+  const yieldText = rent.yieldRate != null ? `${rent.yieldRate.toFixed(1)}%` : '—';
+
+  el('re-area-name').textContent = summary.label || '—';
+  el('re-area-latlng').textContent = summary.lat && summary.lng ? `${summary.lat.toFixed(4)} / ${summary.lng.toFixed(4)}` : '—';
+  el('re-area-condition').textContent = `${summary.station || '—'}駅 徒歩${summary.walkMin || '指定なし'}分 / ${summary.size || '—'}㎡ / ${summary.type || '—'} / ${summary.room || '—'}`;
+  el('re-area-mode').textContent = `表示モード：${summary.modeLabel || '売買 / 賃貸'}`;
+  el('re-area-sale-center').textContent = sale.center ? fmt(sale.center) : '—';
+  el('re-area-sale-basis').textContent = sale.basis ? `根拠：${sale.basis}` : '—';
+  el('re-area-sale-range').textContent = sale.center ? `${fmt(sale.q1)}〜${fmt(sale.q3)}` : '—';
+  el('re-area-sale-count').textContent = sale.count ? `類似売買事例 ${sale.count.toLocaleString('ja-JP')}件` : '類似売買事例 0件';
+  el('re-area-sale-listing').textContent = sale.center ? `${fmt(sale.listingLow)}〜${fmt(sale.listingHigh)}` : '—';
+  el('re-area-sale-upper').textContent = sale.center ? `強気上限 ${fmt(sale.upperLow)}〜${fmt(sale.upperHigh)}` : '—';
+  el('re-area-sale-confidence').innerHTML = sale.count ? `<span class="re-confidence-pill ${saleConfidence.className}">${saleConfidence.grade}</span>` : '<span class="re-confidence-pill re-confidence-c">C</span>';
+  el('re-area-sale-confidence-note').textContent = saleConfidence.note;
+  el('re-area-rent-center').textContent = rent.center != null ? fmt(rent.center) : '土地は賃貸換算対象外';
+  el('re-area-rent-per-sqm').textContent = rent.perSqm != null ? `㎡単価: ${rent.perSqm.toFixed(2)}万円/㎡` : '国交省データだけでは現在募集家賃の網羅が難しいため、賃料は参考推定です';
+  el('re-area-rent-range').textContent = rent.center != null ? `${fmt(rent.q1)}〜${fmt(rent.q3)}` : '—';
+  el('re-area-annual-rent').textContent = annualRentText !== '—' ? `年間賃料: ${annualRentText}` : '年間賃料: —';
+  el('re-area-yield').textContent = yieldText;
+  el('re-area-rent-basis').textContent = rent.basis ? `根拠：${rent.basis}` : '—';
+  el('re-area-rent-confidence').innerHTML = rent.count ? `<span class="re-confidence-pill ${rentConfidence.className}">${rentConfidence.grade}</span>` : '<span class="re-confidence-pill re-confidence-c">C</span>';
+  el('re-area-rent-note').textContent = rent.center != null ? rentConfidence.note : '土地は賃貸換算対象外。国交省データだけでは現在募集家賃の網羅が難しいため、将来は公的家賃統計・手入力賃料メモ・管理費・空室率を分けて扱います。';
+
+  const btn = document.getElementById('re-area-mortgage-btn');
+  if (btn) {
+    btn.dataset.estimatedPrice = sale.center ? String(Math.round(sale.center)) : '';
+    btn.dataset.estimatedRent = rent.center != null ? String(Number(rent.center.toFixed(1))) : '';
+    btn.dataset.estimatedYield = rent.yieldRate != null ? String(Number(rent.yieldRate.toFixed(1))) : '';
+    btn.dataset.areaKey = summary.key || '';
+    btn.dataset.areaLabel = summary.label || '';
+    btn.disabled = !sale.center;
+  }
+
+  const hint = document.getElementById('re-area-mortgage-hint');
+  if (hint) {
+    hint.textContent = sale.center
+      ? `選択中の ${summary.label} を住宅ローンへ反映できます。localStorage(${RE_AREA_PRICE_LS_KEY} / ${RE_AREA_RENT_LS_KEY} / ${RE_AREA_YIELD_LS_KEY}) にも保存します。`
+      : '条件に合う推定価格がありません。';
+  }
+
+  window.__fkOmiyaRealestateAreaEstimate = summary;
+  persistRealestateAreaSelection(summary);
+  persistRealestateAreaEstimates(summary);
+}
+
+function selectRealestateArea(areaKey) {
+  const summary = buildRealestateAreaSummary(getRealestateAreaPoint(areaKey), parseRealestateAreaFilters());
+  renderRealestateAreaSummary(summary);
+  return summary;
+}
+
+function searchRealestateArea() {
+  const filters = parseRealestateAreaFilters();
+  const summary = buildRealestateAreaSummary(getRealestateAreaPoint(filters.areaKey), filters);
+  renderRealestateAreaSummary(summary);
+  return summary;
+}
+
+function applyRealestateAreaEstimateToMortgage() {
+  const summary = window.__fkOmiyaRealestateAreaEstimate || null;
+  if (!summary || !summary.sale || !summary.sale.center) return;
+
+  window.__fkOmiyaRealestateEstimate = {
+    center: summary.sale.center,
+    q1: summary.sale.q1,
+    q3: summary.sale.q3,
+    listingLow: summary.sale.listingLow,
+    listingHigh: summary.sale.listingHigh,
+    upperLow: summary.sale.upperLow,
+    upperHigh: summary.sale.upperHigh,
+    count: summary.sale.count,
+    confidence: summary.sale.confidence,
+    basis: summary.sale.basis,
+    updatedAt: new Date().toISOString(),
+    source: 'FK Omiya Real Estate Area Price Rent Estimate Lite',
+    mortgagePrincipal: Math.round(summary.sale.center),
+  };
+
+  try {
+    localStorage.setItem(RE_LS_KEY, JSON.stringify(window.__fkOmiyaRealestateEstimate));
+  } catch (_) { /* ignore storage errors */ }
+
+  applyRealestateEstimateToMortgage();
+}
+
 function readRealestateBridgeCache() {
   try {
     const raw = localStorage.getItem(RE_MLIT_BRIDGE_CACHE_KEY);
@@ -4757,6 +5398,7 @@ const _inits = [
   calcEducation,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
+try { selectRealestateArea('sakuragicho'); } catch(e) { console.warn('[init] selectRealestateArea', e); }
 try { selectRealestateMapPoint('omiya-west'); } catch(e) { console.warn('[init] selectRealestateMapPoint', e); }
 searchRealestate().catch(e => console.warn('[init] searchRealestate', e));
 setTimeout(() => {

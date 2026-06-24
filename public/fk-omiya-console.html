@@ -1758,9 +1758,44 @@ canvas{display:block;width:100%;border-radius:4px}
         現在は公開取引のサンプル/モックデータのみを使い、駅徒歩・築年数・類似事例スコア・信頼度を表示します。<br>
         SUUMO/HOME'S などの自動取得や外部サイト巡回は行いません。
       </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">🧭 MLIT API Bridge Lite 設計</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;font-size:11px;line-height:1.8;color:var(--text-muted)">
+          <div>
+            <div>・現在は <strong>モックデータ / API未接続</strong> の状態です。</div>
+            <div>・ブラウザに APIキーは置かず、将来はサーバー側取得に切り替えます。</div>
+            <div>・キャッシュ済みデータを優先し、失敗時もモックへ fallback します。</div>
+          </div>
+          <div>
+            <div>・将来の取得口は <code>/api/fk-omiya/realestate/cases</code> を想定しています。</div>
+            <div>・Console へ返すのは加工済み JSON のみです。</div>
+            <div>・市区町村 / 駅名変換とキャッシュ方針はサーバー側で吸収します。</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px">
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">接続ステータス</div>
+            <div class="re-summary-value" id="re-bridge-status" style="font-size:16px">モックデータ / API未接続</div>
+            <div class="re-summary-sub">ブラウザ直APIキー禁止</div>
+          </div>
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">将来の取得口</div>
+            <div class="re-summary-value" id="re-bridge-endpoint" style="font-size:15px">/api/fk-omiya/realestate/cases</div>
+            <div class="re-summary-sub">サーバー側 endpoint 前提</div>
+          </div>
+          <div class="re-summary-card" style="min-height:auto;padding:12px 14px">
+            <div class="re-summary-label">キャッシュ方針</div>
+            <div class="re-summary-value" id="re-bridge-cache" style="font-size:15px">キャッシュ済みデータ優先</div>
+            <div class="re-summary-sub">失敗時はモックに戻す</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:var(--text-dim);line-height:1.7">
+          設計メモ: APIキーは Cloud Run 側で Secret Manager または <code>.env</code> から読み込み、レスポンスは駅徒歩・築年数・類似事例スコアなどの加工後 JSON に限定します。取得失敗時はモックに戻し、ブラウザからの外部API直叩きは行いません。
+        </div>
+      </div>
       <div class="card">
         <div class="card-title">🔍 検索・類似事例フィルター</div>
-        <div class="re-filter-hint">国交省API本番接続の前提を崩さず、UI と集計ロジックだけを先に実装したローカル版です。</div>
+        <div class="re-filter-hint">国交省API本番接続の前提を崩さず、UI と集計ロジックだけを先に実装したローカル版です。API Bridge Lite は将来のサーバー側取得へ差し替えやすい形にしています。</div>
         <div class="re-filter-panel">
           <div class="re-filter-field">
             <label for="re-city">市区町村</label>
@@ -1928,6 +1963,24 @@ canvas{display:block;width:100%;border-radius:4px}
           ※ 査定・鑑定ではなく、公開取引データをもとにした参考推定です。<br>
           ※ SUUMO/HOME'S の自動取得や外部サイト巡回は行いません。<br>
           ※ 坪単価 = 取引価格 ÷ 面積（㎡）× 3.3058。
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">🛠 API Bridge Lite フロー</div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;font-size:11px;line-height:1.7;color:var(--text-muted)">
+          <div>
+            <div style="color:var(--gold);font-weight:700;margin-bottom:4px">1. Console</div>
+            <div>検索条件とモックデータを使い、画面上の推定値を即表示します。</div>
+          </div>
+          <div>
+            <div style="color:var(--blue);font-weight:700;margin-bottom:4px">2. Server Bridge</div>
+            <div>将来は <code>/api/fk-omiya/realestate/cases</code> が MLIT 取得と変換を担当します。</div>
+          </div>
+          <div>
+            <div style="color:#73d69d;font-weight:700;margin-bottom:4px">3. Cache / Fallback</div>
+            <div>API失敗時はキャッシュ済み JSON、さらにモックデータへ安全に戻します。</div>
+          </div>
         </div>
       </div>
     </section>
@@ -3964,6 +4017,8 @@ function calcEducation() {
 
 /* ── Real Estate ── */
 const RE_LS_KEY = 'fk_omiya_realestate_estimate';
+const RE_MLIT_BRIDGE_ENDPOINT = '/api/fk-omiya/realestate/cases';
+const RE_MLIT_BRIDGE_CACHE_KEY = 'fk_omiya_realestate_cases_cache_v1';
 const RE_DATA = [
   { type: '中古マンション', city: 'さいたま市大宮区', area: 'さいたま市', station: '大宮', walkMin: 5, age: 12, size: 68, totalPrice: 4980, periodYears: 1, note: '駅近・再開発エリア' },
   { type: '中古マンション', city: 'さいたま市浦和区', area: 'さいたま市', station: '浦和', walkMin: 8, age: 18, size: 72, totalPrice: 5280, periodYears: 1, note: '文教エリア・管理良好' },
@@ -3991,6 +4046,83 @@ const RE_DATA = [
   { type: '中古マンション', city: '和光市', area: '和光市', station: '和光市', walkMin: 9, age: 6, size: 66, totalPrice: 4180, periodYears: 3, note: '都心通勤向け・築浅寄り' },
   { type: '戸建て', city: 'ふじみ野市', area: 'ふじみ野市', station: 'ふじみ野', walkMin: 11, age: 8, size: 112, totalPrice: 3180, periodYears: 5, note: '郊外型・子育て向け' },
 ];
+
+function cloneRealestateRows(rows = RE_DATA) {
+  return Array.isArray(rows) ? rows.map(row => ({ ...row })) : [];
+}
+
+function readRealestateBridgeCache() {
+  try {
+    const raw = localStorage.getItem(RE_MLIT_BRIDGE_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeRealestateBridgeCache(cases) {
+  try {
+    localStorage.setItem(RE_MLIT_BRIDGE_CACHE_KEY, JSON.stringify(cloneRealestateRows(cases)));
+  } catch (_) { /* cache unavailable */ }
+}
+
+function buildRealestateBridgeLitePayload(filters = {}) {
+  return {
+    endpoint: RE_MLIT_BRIDGE_ENDPOINT,
+    mode: 'bridge-lite',
+    source: 'fk-omiya-console',
+    requestedAt: new Date().toISOString(),
+    filters: {
+      city: filters.city || '',
+      station: filters.station || '',
+      walkMin: filters.walkMin || 0,
+      age: filters.age || 0,
+      type: filters.type || '',
+      sizeBand: filters.sizeBand || '',
+      periodYears: filters.periodYears || 0,
+      keyword: filters.keyword || '',
+    },
+  };
+}
+
+function renderRealestateBridgeStatus(bridge = {}) {
+  const statusEl = document.getElementById('re-bridge-status');
+  const endpointEl = document.getElementById('re-bridge-endpoint');
+  const cacheEl = document.getElementById('re-bridge-cache');
+  if (statusEl) statusEl.textContent = bridge.status || 'モックデータ / API未接続';
+  if (endpointEl) endpointEl.textContent = bridge.endpoint || RE_MLIT_BRIDGE_ENDPOINT;
+  if (cacheEl) cacheEl.textContent = bridge.cacheText || 'キャッシュ済みデータ優先';
+}
+
+async function fetchMlitRealEstateCasesLite(filters = {}) {
+  const cached = readRealestateBridgeCache();
+  const payload = buildRealestateBridgeLitePayload(filters);
+  // 将来はここで Cloud Run の /api/fk-omiya/realestate/cases を呼び出す。
+  // いまは外部通信を行わず、キャッシュ優先・なければモックを返す。
+  if (cached.length) {
+    return {
+      cases: cloneRealestateRows(cached),
+      bridge: {
+        ...payload,
+        status: 'キャッシュ済みデータ / API未接続',
+        cacheText: 'キャッシュ済みデータを優先',
+        cacheHit: true,
+      },
+    };
+  }
+  writeRealestateBridgeCache(RE_DATA);
+  return {
+    cases: cloneRealestateRows(RE_DATA),
+    bridge: {
+      ...payload,
+      status: 'モックデータ / API未接続',
+      cacheText: 'キャッシュ済みデータがあれば優先',
+      cacheHit: false,
+    },
+  };
+}
 
 function realestateRangeLabel(value, bands) {
   const band = bands.find(b => value >= b.min && value < b.max);
@@ -4261,7 +4393,7 @@ function renderRealestateSummary(summary) {
   }
 }
 
-function searchRealestate() {
+async function searchRealestate() {
   const filters = {
     city: document.getElementById('re-city').value || '',
     station: document.getElementById('re-station').value || '',
@@ -4273,7 +4405,10 @@ function searchRealestate() {
     keyword: document.getElementById('re-keyword').value || '',
   };
 
-  const filtered = RE_DATA.filter(row => matchesRealestateRow(row, filters));
+  const bridge = await fetchMlitRealEstateCasesLite(filters);
+  renderRealestateBridgeStatus(bridge.bridge);
+  const rows = Array.isArray(bridge.cases) ? bridge.cases : cloneRealestateRows();
+  const filtered = rows.filter(row => matchesRealestateRow(row, filters));
   renderRealestate(filtered, filters);
 }
 
@@ -4387,9 +4522,10 @@ try { calcSocialSecurity(); } catch(e) { console.warn('[init] calcSocialSecurity
 const _inits = [
   calcMortgage, calcGiftTax, calcInheritanceTax, calcInsurance,
   calcBMI, calcAsset,
-  calcEducation, renderRealestate,
+  calcEducation,
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
+searchRealestate().catch(e => console.warn('[init] searchRealestate', e));
 setTimeout(() => {
   drawMortgageChart();
   drawAssetChart();

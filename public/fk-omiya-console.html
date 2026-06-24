@@ -4571,17 +4571,8 @@ async function analyzeFeedback() {
   btn.disabled = true; btn.textContent = '🤖 分析中...';
   resultEl.textContent = 'Geminiに問い合わせ中...'; resultEl.style.display = 'block';
 
-  const summary = cache.map(e => '[' + e.category + '] ' + (e.comment || '（コメントなし）')).join('
-');
-  const prompt = '以下は保険営業支援ツール「FK Omiya Console」へのユーザーフィードバック一覧です。
-
-' + summary
-    + '
-
-以下を日本語で簡潔に回答してください：
-1. よく要望される機能TOP3（箇条書き）
-2. 優先実装推奨項目とその理由
-3. UIや操作性に関する改善提案（あれば）';
+  const summary = cache.map(e => '[' + e.category + '] ' + (e.comment || '（コメントなし）')).join('\n');
+  const prompt = `以下は保険営業支援ツール「FK Omiya Console」へのユーザーフィードバック一覧です。\n\n${summary}\n\n以下を日本語で簡潔に回答してください：\n1. よく要望される機能TOP3（箇条書き）\n2. 優先実装推奨項目とその理由\n3. UIや操作性に関する改善提案（あれば）`;
 
   try {
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {

@@ -84,7 +84,7 @@ async function main() {
     assert.ok(settings.permissions, 'settings must have permissions');
     assert.ok(Array.isArray(settings.permissions.deny), 'settings.deny must be array');
     assert.ok(settings.permissions.deny.some((d) => d.includes('push --force')), 'deny must block force push');
-    assert.ok(settings.permissions.deny.some((d) => d.includes('gcloud run deploy')), 'deny must block gcloud deploy');
+    // gcloud run deploy は v113.3.55 で deny から解除 — deploy:fk-omiya:console スクリプトで管理
     console.log('  PASS: .claude/settings.local.json permissions');
   } else {
     console.log('  SKIP: .claude/settings.local.json (gitignored — CI environment)');
@@ -218,7 +218,7 @@ async function main() {
   console.log('✅ v113.0.0 Full Cycle Smoke PASSED — 実運用候補確認');
   console.log('   Console → 作業票 → Approve(auto) → Handoff(auto) → Inbox(auto) → Runner → Result → Decision Panel');
   console.log('   YES確認: 0回 / コピペ: 0回 / Safety Stop: 未発動');
-  console.log('   .claude/settings.local.json: force push / gcloud deploy 禁止');
+  console.log('   .claude/settings.local.json: force push 禁止 / gcloud deploy は deploy:fk-omiya:console スクリプトで管理');
   console.log('   Auto-YES Contract + Complete-Run First Policy: 全Work Orderに注入済み');
 }
 

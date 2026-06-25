@@ -2,12 +2,13 @@
 'use strict';
 
 // FK Omiya Console — Public Preview Server
-// Serves ONLY public/fk-omiya-console.html and static assets under public/.
-// No secrets, no .env, no internal tools are ever served.
+// Serves public/ static assets and /api/* transcribe endpoints.
+// No secrets, no .env, no raw internal tools are ever served.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const { handleRequest: transcribeHandleRequest } = require('./kosame-transcribe-api-server');
 
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.resolve(ROOT, 'public');
@@ -59,6 +60,11 @@ function createPreviewServer() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
+
+    // Transcribe API routes
+    if (pathname.startsWith('/api/')) {
+      return transcribeHandleRequest(req, res);
+    }
 
     // Health check for Cloud Run
     if (pathname === '/healthz') {

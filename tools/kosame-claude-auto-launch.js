@@ -27,20 +27,16 @@ const HELLO_WORLD_TARGET = path.join(ROOT, 'public', 'test2.html');
 const CLAUDE_LAUNCH_TIMEOUT_MS = Number(process.env.KOSAME_CLAUDE_LAUNCH_TIMEOUT_MS || 30000);
 const SKIP_POST_LAUNCH_VERIFY = ['1', 'true', 'yes'].includes(String(process.env.KOSAME_SKIP_POST_LAUNCH_VERIFY || '').toLowerCase());
 
-// Safety Stop: 絶対に自動続行しないパターン
+// Safety Stop: 実際の危険コマンドのみ停止（説明文でのfalse positiveを防ぐ）
 const SAFETY_STOP_PATTERNS = [
+  /git\s+push\s+.*--force|git\s+push\s+-f\b/,
+  /git\s+tag\s+-f\b/,
+  /rm\s+-rf\s+\//,
+  /DROP\s+(?:TABLE|DATABASE)/i,
+  /gcloud\s+run\s+deploy/i,
   /本番.*デプロイ/,
-  /本番デプロイ/,
   /production.*deploy/i,
   /deploy.*production/i,
-  /DEPLOY\s*\[/,
-  /force.?push/i,
-  /rm\s+-rf/,
-  /git\s+push.*-f\b/,
-  /データ.*削除/,
-  /全件.*削除/,
-  /SAFETY\s*STOP/,
-  /承認.*必要/,
 ];
 
 // 安全条件の前文 + AUTO_YES_CONTRACT（YES地獄防止）

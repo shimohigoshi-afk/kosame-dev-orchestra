@@ -54,13 +54,12 @@ async function main() {
   assert.ok(cockpitSrc.includes("'notify'") || cockpitSrc.includes('"notify"'), 'cockpit must emit notify SSE event');
   console.log('  PASS ③ cockpit: /api/runner-notify endpoint');
 
-  // ④ Safety Stop patterns present in launcher
+  // ④ Safety Stop patterns present in launcher (precise command-only patterns, no broad false-positive ones)
   const stopPatterns = [
     '本番.*デプロイ',
     'production.*deploy',
-    'force.?push',
     'rm\\s+-rf',
-    'SAFETY\\s*STOP',
+    'git\\s+push\\s+.*--force',
   ];
   for (const p of stopPatterns) {
     assert.ok(launchSrc.includes(p.replace(/\\\\/g, '\\')), `launcher must have pattern ${p}`);

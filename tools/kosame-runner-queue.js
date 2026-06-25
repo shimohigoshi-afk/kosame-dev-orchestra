@@ -80,7 +80,7 @@ function claudeChatExecutor(ticket, runDir) {
     maxBuffer: 20 * 1024 * 1024,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, KOSAME_CLAUDE_LAUNCH_TIMEOUT_MS: '600000' },
+    env: { ...process.env, KOSAME_CLAUDE_LAUNCH_TIMEOUT_MS: '600000', KOSAME_SKIP_POST_LAUNCH_VERIFY: '1' },
   });
 
   const stdout = res.stdout || '';

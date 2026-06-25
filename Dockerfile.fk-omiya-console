@@ -8,6 +8,11 @@ FROM node:24-slim
 WORKDIR /app
 
 COPY tools/kosame-fk-omiya-preview-server.js ./tools/
+COPY tools/kosame-transcribe-api-server.js   ./tools/
+COPY tools/kosame-transcribe-pipeline.js     ./tools/
+COPY tools/kosame-gcs-client.js              ./tools/
+COPY tools/kosame-firestore-client.js        ./tools/
+COPY tools/kosame-cloud-tasks-client.js      ./tools/
 COPY public/ ./public/
 
 ENV NODE_ENV=production

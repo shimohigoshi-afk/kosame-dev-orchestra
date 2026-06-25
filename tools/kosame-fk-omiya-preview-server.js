@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { handleRequest: transcribeHandleRequest } = require('./kosame-transcribe-api-server');
+const { handleDevOsRequest }                     = require('./kosame-dev-os-router');
 
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.resolve(ROOT, 'public');
@@ -60,6 +61,11 @@ function createPreviewServer() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
+
+    // Dev OS Router API routes
+    if (pathname.startsWith('/api/dev-os')) {
+      return handleDevOsRequest(req, res);
+    }
 
     // Transcribe API routes
     if (pathname.startsWith('/api/')) {

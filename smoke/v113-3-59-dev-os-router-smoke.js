@@ -44,7 +44,7 @@ async function main() {
   pass('package wiring');
 
   // ── TOOL_META ───────────────────────────────────────────────────────────────
-  assert.equal(TOOL_META.version, '113.3.59', 'TOOL_META.version must be 113.3.59');
+  assert.ok(isVersionAtLeast(TOOL_META.version, '113.3.59'), `TOOL_META.version must be >= 113.3.59 (got ${TOOL_META.version})`);
   assert.ok(TOOL_META.feature,                'TOOL_META.feature must exist');
   pass('TOOL_META');
 

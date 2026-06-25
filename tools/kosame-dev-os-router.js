@@ -23,11 +23,12 @@
  */
 
 const readline = require('node:readline');
+const http     = require('node:http');
 const path     = require('node:path');
 
 const TOOL_META = {
-  version: '113.3.59',
-  feature: 'v113-3-59-dev-os-router',
+  version: '113.3.60',
+  feature: 'v113-3-60-dev-os-server',
   slug:    'kosame-dev-os-router',
 };
 
@@ -658,8 +659,129 @@ async function main() {
   }
 }
 
+// ── HTTP Server ───────────────────────────────────────────────────────────────
+
+const DEV_OS_PORT = Number(process.env.DEV_OS_PORT) || 8091;
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let total = 0;
+    req.on('data', (chunk) => {
+      total += chunk.length;
+      if (total > 1024 * 1024) { req.destroy(); return reject(new Error('request body too large')); }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); }
+      catch (e) { reject(new Error('invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJson(res, status, body) {
+  const payload = JSON.stringify(body);
+  res.writeHead(status, { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) });
+  res.end(payload);
+}
+
+/**
+ * POST /api/dev-os
+ * Body: { task: string, verbose?: boolean }
+ * Returns: { ok, route, route_label, route_description, instruction_format, instruction,
+ *             score, all_scores, blocked, block_reason, redirected_from }
+ *
+ * GET /api/dev-os/routes
+ * Returns: { ok, routes: [{ key, label, icon, description }] }
+ *
+ * GET /api/dev-os/health
+ * Returns: { ok, version, mode }
+ */
+async function handleDevOsRequest(req, res) {
+  const url  = req.url || '/';
+  const meth = req.method || 'GET';
+
+  res.setHeader('X-Kosame-Version', TOOL_META.version);
+
+  if (url === '/api/dev-os/health' && meth === 'GET') {
+    return sendJson(res, 200, { ok: true, version: TOOL_META.version, mode: 'server', slug: TOOL_META.slug });
+  }
+
+  if (url === '/api/dev-os/routes' && meth === 'GET') {
+    return sendJson(res, 200, {
+      ok: true,
+      routes: Object.entries(ROUTES).map(([key, meta]) => ({
+        key, label: meta.label, icon: meta.icon, description: meta.description,
+      })),
+    });
+  }
+
+  if (url === '/api/dev-os' && meth === 'POST') {
+    let body;
+    try { body = await readBody(req); }
+    catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
+
+    const { task, verbose } = body;
+    if (!task || typeof task !== 'string' || !task.trim()) {
+      return sendJson(res, 400, { ok: false, error: 'task must be a non-empty string' });
+    }
+
+    try {
+      const result = routeTask(task.trim());
+      return sendJson(res, 200, {
+        ok:               true,
+        route:            result.route,
+        route_label:      result.routeMeta.label,
+        route_icon:       result.routeMeta.icon,
+        route_description: result.routeMeta.description,
+        instruction_format: result.instructionFormat,
+        instruction:      result.instruction,
+        score:            result.score,
+        all_scores:       result.allScores,
+        blocked:          result.blocked,
+        block_reason:     result.blockReason,
+        redirected_from:  result.redirectedFrom,
+      });
+    } catch (e) {
+      process.stderr.write(`[DevOsRouter] routeTask error: ${e.message}\n`);
+      return sendJson(res, 500, { ok: false, error: e.message });
+    }
+  }
+
+  return sendJson(res, 404, { ok: false, error: `not found: ${meth} ${url}` });
+}
+
+function createDevOsServer() {
+  return http.createServer((req, res) => {
+    handleDevOsRequest(req, res).catch((e) => {
+      process.stderr.write(`[DevOsRouter] unhandled error: ${e.message}\n`);
+      try { sendJson(res, 500, { ok: false, error: 'internal server error' }); } catch {}
+    });
+  });
+}
+
+function startDevOsServer(port = DEV_OS_PORT) {
+  const server = createDevOsServer();
+  return new Promise((resolve, reject) => {
+    server.listen(port, '0.0.0.0', () => {
+      const addr = server.address();
+      process.stderr.write(`[DevOsRouter] HTTP server listening on port ${addr.port}\n`);
+      process.stderr.write(`[DevOsRouter] POST /api/dev-os  GET /api/dev-os/routes  GET /api/dev-os/health\n`);
+      resolve(server);
+    });
+    server.once('error', reject);
+  });
+}
+
+// ── main & CLI ────────────────────────────────────────────────────────────────
+
 if (require.main === module) {
-  main().catch((e) => { process.stderr.write(`[DevOsRouter] fatal: ${e.message}\n`); process.exit(1); });
+  if (process.env.DEV_OS_MODE === 'server') {
+    startDevOsServer().catch((e) => { process.stderr.write(`[DevOsRouter] fatal: ${e.message}\n`); process.exit(1); });
+  } else {
+    main().catch((e) => { process.stderr.write(`[DevOsRouter] fatal: ${e.message}\n`); process.exit(1); });
+  }
 }
 
 // ── exports ───────────────────────────────────────────────────────────────────
@@ -677,4 +799,8 @@ module.exports = {
   generateGeminiCliInstruction,
   generateDeepSeekGrokTaskPack,
   generateLlamaGroqAuditPack,
+  handleDevOsRequest,
+  createDevOsServer,
+  startDevOsServer,
+  DEV_OS_PORT,
 };

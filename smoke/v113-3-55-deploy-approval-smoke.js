@@ -28,29 +28,31 @@ async function main() {
   console.log('  PASS: package wiring');
 
   // ── .claude/settings.local.json: gcloud deploy must NOT be denied ────────────
-  assert.ok(fs.existsSync(SETTINGS_LOCAL), '.claude/settings.local.json must exist');
-  const settings = JSON.parse(fs.readFileSync(SETTINGS_LOCAL, 'utf8'));
-  const denyList = settings?.permissions?.deny || [];
+  // ファイルはgitignored（CI環境には存在しない）。存在する場合のみ検証。
+  if (fs.existsSync(SETTINGS_LOCAL)) {
+    const settings = JSON.parse(fs.readFileSync(SETTINGS_LOCAL, 'utf8'));
+    const denyList = settings?.permissions?.deny || [];
 
-  assert.ok(
-    !denyList.includes('Bash(gcloud run deploy*)'),
-    'settings.local.json must NOT deny Bash(gcloud run deploy*) — this was the root cause of the permission block'
-  );
-  assert.ok(
-    !denyList.includes('Bash(gcloud builds submit*)'),
-    'settings.local.json must NOT deny Bash(gcloud builds submit*) — needed for Cloud Build'
-  );
-
-  // Safety Stop patterns that MUST remain in deny list
-  assert.ok(
-    denyList.some(r => r.includes('git push --force') || r.includes('git push -f')),
-    'force push must remain in deny list'
-  );
-  assert.ok(
-    denyList.some(r => r.includes('rm -rf')),
-    'rm -rf must remain in deny list'
-  );
-  console.log('  PASS: gcloud deploy unblocked, safety stops remain');
+    assert.ok(
+      !denyList.includes('Bash(gcloud run deploy*)'),
+      'settings.local.json must NOT deny Bash(gcloud run deploy*) — this was the root cause of the permission block'
+    );
+    assert.ok(
+      !denyList.includes('Bash(gcloud builds submit*)'),
+      'settings.local.json must NOT deny Bash(gcloud builds submit*) — needed for Cloud Build'
+    );
+    assert.ok(
+      denyList.some(r => r.includes('git push --force') || r.includes('git push -f')),
+      'force push must remain in deny list'
+    );
+    assert.ok(
+      denyList.some(r => r.includes('rm -rf')),
+      'rm -rf must remain in deny list'
+    );
+    console.log('  PASS: gcloud deploy unblocked, safety stops remain');
+  } else {
+    console.log('  SKIP: .claude/settings.local.json (gitignored — CI environment)');
+  }
 
   // ── deploy scripts exist and are executable ──────────────────────────────────
   assert.ok(fs.existsSync(DEPLOY_SCRIPT), 'scripts/deploy-fk-omiya.sh must exist');

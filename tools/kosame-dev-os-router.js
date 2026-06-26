@@ -27,10 +27,12 @@ const http     = require('node:http');
 const path     = require('node:path');
 
 const TOOL_META = {
-  version: '113.3.60',
-  feature: 'v113-3-60-dev-os-server',
+  version: '113.3.61',
+  feature: 'v113-3-61-workdir-param',
   slug:    'kosame-dev-os-router',
 };
+
+const DEFAULT_WORKDIR = '/home/lavie/kosame-dev-orchestra';
 
 // ── ANSI colors ───────────────────────────────────────────────────────────────
 
@@ -225,9 +227,32 @@ function classifyTask(task) {
   return { route, score: topScore, allScores: scores };
 }
 
+// ── Workdir resolver ──────────────────────────────────────────────────────────
+
+/**
+ * workdir または repo からターゲットディレクトリを解決する。
+ * workdir 優先。未指定時は repo 名から推定。それも未指定なら DEFAULT_WORKDIR。
+ *
+ * @param {string|undefined} workdir  絶対パスまたは相対パス
+ * @param {string|undefined} repo     リポジトリ名 (例: "transcriber", "kosame-dev-orchestra")
+ * @returns {string}
+ */
+function resolveWorkdir(workdir, repo) {
+  if (workdir && typeof workdir === 'string' && workdir.trim()) {
+    return workdir.trim();
+  }
+  if (repo && typeof repo === 'string' && repo.trim()) {
+    const r = repo.trim();
+    if (r.startsWith('/')) return r;
+    if (r === 'kosame-dev-orchestra') return DEFAULT_WORKDIR;
+    return `/home/lavie/repos/${r}`;
+  }
+  return DEFAULT_WORKDIR;
+}
+
 // ── Instruction generators ────────────────────────────────────────────────────
 
-function generateClaudeCodeInstruction(task) {
+function generateClaudeCodeInstruction(task, workdir = DEFAULT_WORKDIR) {
   return [
     '#!/usr/bin/env bash',
     '# KOSAME Dev OS — Claude Code 指示文',
@@ -248,13 +273,13 @@ function generateClaudeCodeInstruction(task) {
     `- 実装後に npm run verify を実行して全パス確認`,
     ``,
     `【作業ディレクトリ】`,
-    `/home/lavie/kosame-dev-orchestra`,
+    workdir,
     `KOSAME_EOF`,
     `)"`,
   ].join('\n');
 }
 
-function generateGeminiCliInstruction(task) {
+function generateGeminiCliInstruction(task, workdir = DEFAULT_WORKDIR) {
   return [
     '# KOSAME Dev OS — Gemini CLI 指示文',
     '# 以下のコマンドをターミナルで実行してください',
@@ -267,10 +292,11 @@ function generateGeminiCliInstruction(task) {
     task,
     ``,
     `【環境情報】`,
-    `プロジェクト : kosame-prod-2026`,
-    `リージョン   : asia-northeast1`,
-    `サービス     : fk-omiya-console (Cloud Run)`,
-    `レジストリ   : asia-northeast1-docker.pkg.dev/kosame-prod-2026/kosame`,
+    `プロジェクト     : kosame-prod-2026`,
+    `リージョン       : asia-northeast1`,
+    `サービス         : fk-omiya-console (Cloud Run)`,
+    `レジストリ       : asia-northeast1-docker.pkg.dev/kosame-prod-2026/kosame`,
+    `作業ディレクトリ : ${workdir}`,
     ``,
     `【注意】`,
     `- 実際の変更・デプロイ操作は npm run deploy:fk-omiya:console を使う`,
@@ -280,7 +306,7 @@ function generateGeminiCliInstruction(task) {
   ].join('\n');
 }
 
-function generateDeepSeekGrokTaskPack(task) {
+function generateDeepSeekGrokTaskPack(task, workdir = DEFAULT_WORKDIR) {
   const pack = {
     type:      'sanitized_civil_task_pack',
     version:   TOOL_META.version,
@@ -309,7 +335,7 @@ function generateDeepSeekGrokTaskPack(task) {
     },
     context: {
       project:   'kosame-dev-orchestra',
-      root_path: '/home/lavie/kosame-dev-orchestra',
+      root_path: workdir,
       verify_cmd: 'npm run verify',
     },
     prompt_template: [
@@ -328,7 +354,7 @@ function generateDeepSeekGrokTaskPack(task) {
   return JSON.stringify(pack, null, 2);
 }
 
-function generateLlamaGroqAuditPack(task) {
+function generateLlamaGroqAuditPack(task, workdir = DEFAULT_WORKDIR) {
   const pack = {
     type:      'diff_audit_pack',
     version:   TOOL_META.version,
@@ -390,11 +416,11 @@ function generateLlamaGroqAuditPack(task) {
  * タスクをルーティングして指示文を生成する。
  *
  * @param {string} task
- * @param {object} opts  { verbose }
+ * @param {object} opts  { verbose, workdir, repo }
  * @returns {{
  *   route, routeMeta, score, allScores,
  *   blocked, blockReason, redirectedFrom,
- *   instruction, instructionFormat
+ *   instruction, instructionFormat, workdir
  * }}
  */
 function routeTask(task, opts = {}) {
@@ -411,24 +437,26 @@ function routeTask(task, opts = {}) {
   const routeMeta = ROUTES[finalRoute];
   if (!routeMeta) throw new Error(`unknown route: "${finalRoute}"`);
 
+  const workdir = resolveWorkdir(opts.workdir, opts.repo);
+
   // 指示文生成
   let instruction;
   let instructionFormat;
   switch (finalRoute) {
     case 'claude_code':
-      instruction       = generateClaudeCodeInstruction(task.trim());
+      instruction       = generateClaudeCodeInstruction(task.trim(), workdir);
       instructionFormat = 'bash_script';
       break;
     case 'gemini_cli':
-      instruction       = generateGeminiCliInstruction(task.trim());
+      instruction       = generateGeminiCliInstruction(task.trim(), workdir);
       instructionFormat = 'bash_script';
       break;
     case 'deepseek_grok':
-      instruction       = generateDeepSeekGrokTaskPack(task.trim());
+      instruction       = generateDeepSeekGrokTaskPack(task.trim(), workdir);
       instructionFormat = 'json_task_pack';
       break;
     case 'llama_groq':
-      instruction       = generateLlamaGroqAuditPack(task.trim());
+      instruction       = generateLlamaGroqAuditPack(task.trim(), workdir);
       instructionFormat = 'json_audit_pack';
       break;
     default:
@@ -445,6 +473,7 @@ function routeTask(task, opts = {}) {
     redirectedFrom:  guard.blocked ? classifiedRoute : null,
     instruction,
     instructionFormat,
+    workdir,
   };
 }
 
@@ -722,13 +751,13 @@ async function handleDevOsRequest(req, res) {
     try { body = await readBody(req); }
     catch (e) { return sendJson(res, 400, { ok: false, error: e.message }); }
 
-    const { task, verbose } = body;
+    const { task, verbose, workdir, repo } = body;
     if (!task || typeof task !== 'string' || !task.trim()) {
       return sendJson(res, 400, { ok: false, error: 'task must be a non-empty string' });
     }
 
     try {
-      const result = routeTask(task.trim());
+      const result = routeTask(task.trim(), { workdir, repo });
       return sendJson(res, 200, {
         ok:               true,
         route:            result.route,
@@ -742,6 +771,7 @@ async function handleDevOsRequest(req, res) {
         blocked:          result.blocked,
         block_reason:     result.blockReason,
         redirected_from:  result.redirectedFrom,
+        workdir:          result.workdir,
       });
     } catch (e) {
       process.stderr.write(`[DevOsRouter] routeTask error: ${e.message}\n`);
@@ -788,6 +818,7 @@ if (require.main === module) {
 
 module.exports = {
   TOOL_META,
+  DEFAULT_WORKDIR,
   ROUTES,
   ROUTE_KEYWORDS,
   SALES_DX_BLOCK_KEYWORDS,

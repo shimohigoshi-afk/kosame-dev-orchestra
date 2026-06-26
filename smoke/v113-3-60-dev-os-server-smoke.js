@@ -82,8 +82,8 @@ async function main() {
   console.log('  PASS: package wiring');
 
   // ── TOOL_META version ───────────────────────────────────────────────────────
-  assert.equal(TOOL_META.version, '113.3.60', 'TOOL_META.version must be 113.3.60');
-  console.log('  PASS: TOOL_META.version === 113.3.60');
+  assert.ok(isVersionAtLeast(TOOL_META.version, '113.3.60'), `TOOL_META.version must be >= 113.3.60 (got ${TOOL_META.version})`);
+  console.log(`  PASS: TOOL_META.version >= 113.3.60 (${TOOL_META.version})`);
 
   // ── exports ─────────────────────────────────────────────────────────────────
   assert.ok(typeof handleDevOsRequest === 'function', 'handleDevOsRequest must be exported');
@@ -98,7 +98,7 @@ async function main() {
   );
   assert.equal(healthRes.status, 200,        'health must return 200');
   assert.equal(healthRes.body.ok, true,      'health must return ok=true');
-  assert.equal(healthRes.body.version, '113.3.60', 'health version must be 113.3.60');
+  assert.ok(isVersionAtLeast(healthRes.body.version, '113.3.60'), `health version must be >= 113.3.60 (got ${healthRes.body.version})`);
   assert.equal(healthRes.body.mode, 'server','health mode must be server');
   console.log('  PASS: GET /api/dev-os/health');
 

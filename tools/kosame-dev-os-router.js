@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Dev OS Router v113.3.59
+ * KOSAME Dev OS Router v113.3.62
  *
  * タスクを受け取り、担当AIを自動決定して指示文を生成する。
  *
@@ -27,8 +27,8 @@ const http     = require('node:http');
 const path     = require('node:path');
 
 const TOOL_META = {
-  version: '113.3.61',
-  feature: 'v113-3-61-workdir-param',
+  version: '113.3.62',
+  feature: 'v113-3-62-impl-verb-priority',
   slug:    'kosame-dev-os-router',
 };
 
@@ -155,6 +155,20 @@ const ROUTE_KEYWORDS = {
   },
 };
 
+// ── Implementation verb priority ──────────────────────────────────────────────
+
+const IMPL_VERBS = ['修正', '追加', '実装', '改善'];
+
+/**
+ * タスクに実装動詞（修正・追加・実装・改善）が含まれるか判定する。
+ *
+ * @param {string} task  (lowercase済みでなくても可)
+ * @returns {boolean}
+ */
+function hasImplVerb(task) {
+  return IMPL_VERBS.some(v => task.includes(v));
+}
+
 // ── Safety guard ──────────────────────────────────────────────────────────────
 
 const SALES_DX_BLOCK_KEYWORDS = [
@@ -217,12 +231,20 @@ function classifyTask(task) {
     scores[routeKey] = score;
   }
 
+  const implVerbHit = hasImplVerb(lc);
+  // 実装動詞（修正・追加・実装・改善）があれば claude_code を必ず最優先にする。
+  // スコアの底上げに加えて、最終 route を明示的に claude_code に固定する。
+  if (implVerbHit) {
+    const currentTopScore = Math.max(0, ...Object.values(scores));
+    scores.claude_code = Math.max(scores.claude_code || 0, currentTopScore + 1);
+  }
+
   // 最高スコアのルートを決定
   const sorted = Object.entries(scores).sort(([, a], [, b]) => b - a);
   const [topRoute, topScore] = sorted[0];
 
   // スコアが0の場合はデフォルトで claude_code
-  const route = topScore > 0 ? topRoute : 'claude_code';
+  const route = implVerbHit ? 'claude_code' : (topScore > 0 ? topRoute : 'claude_code');
 
   return { route, score: topScore, allScores: scores };
 }
@@ -821,6 +843,8 @@ module.exports = {
   DEFAULT_WORKDIR,
   ROUTES,
   ROUTE_KEYWORDS,
+  IMPL_VERBS,
+  hasImplVerb,
   SALES_DX_BLOCK_KEYWORDS,
   EXTERNAL_AI_ROUTES,
   classifyTask,

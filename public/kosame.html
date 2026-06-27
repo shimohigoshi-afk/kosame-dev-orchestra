@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOSAME｜営業と支店運営を支えるAI業務支援シリーズ</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{--navy:#071A2F;--navy-light:#0B1F3A;--navy-mid:#0F2544;--gold:#C8A96A;--gold-light:#D4BC8A;--teal:#4a9e8e;--teal-dim:rgba(74,158,142,0.08);--blue:#4a7ec9;--blue-dim:rgba(74,126,201,0.08);--card-bg:#FFFDF9;--text-muted:rgba(255,255,255,0.55);--gold-border:2px solid rgba(200,169,106,0.58);--gold-border-hover:rgba(212,188,138,0.95);--card-shadow:0 14px 34px rgba(0,0,0,0.18);--ease:cubic-bezier(0.4,0,0.2,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Serif JP','Noto Sans JP','Hiragino Mincho ProN','Yu Mincho',-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;background:var(--navy);color:rgba(255,255,255,0.85);line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+.container{max-width:1140px;margin:0 auto;padding:0 20px}
+section{padding:90px 0;position:relative}
+.section-title{font-size:1.5em;font-weight:700;letter-spacing:0.04em;margin-bottom:8px;color:var(--white);line-height:1.35}
+.section-title.gold{color:var(--gold)}
+.section-sub{font-size:0.88em;color:var(--text-muted);margin-bottom:36px;max-width:600px;line-height:1.8;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.text-center{text-align:center}
+.text-center .section-sub{margin-left:auto;margin-right:auto}
+.section-divider{width:36px;height:2px;background:var(--gold);margin:0 auto 16px;border-radius:1px}
+
+.hero{min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;background:radial-gradient(ellipse at 70% 20%, rgba(200,169,106,0.04) 0%, transparent 50%),radial-gradient(ellipse at 30% 80%, rgba(200,169,106,0.03) 0%, transparent 40%),linear-gradient(160deg, var(--navy) 0%, #091c35 50%, #0a2240 100%)}
+.hero::before{content:'';position:absolute;right:-2%;top:-4%;width:600px;height:600px;border-radius:50%;border:1.5px solid rgba(200,169,106,0.07)}
+.hero .container{position:relative;z-index:1;text-align:center}
+.hero-badge{display:inline-block;font-size:0.7em;font-weight:600;color:rgba(200,169,106,0.5);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:24px;border:1px solid rgba(200,169,106,0.15);padding:6px 20px;border-radius:20px;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.hero-brand{font-size:3.4em;font-weight:700;color:var(--gold);letter-spacing:0.12em;margin-bottom:8px;font-family:'Noto Serif JP','Hiragino Mincho ProN',serif}
+.hero-brand-sub{font-size:0.7em;color:rgba(200,169,106,0.35);letter-spacing:0.18em;margin-bottom:28px;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.hero h2{font-size:2em;font-weight:700;line-height:1.35;margin-bottom:16px;color:var(--white);letter-spacing:0.04em;font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;max-width:640px;margin-left:auto;margin-right:auto;text-shadow:0 2px 16px rgba(0,0,0,0.25)}
+.hero h2 .hl{color:var(--gold-light)}
+.hero p{font-size:0.92em;color:rgba(255,255,255,0.55);margin-bottom:32px;line-height:1.85;max-width:500px;margin-left:auto;margin-right:auto;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 32px;border-radius:4px;font-size:0.88em;font-weight:600;cursor:pointer;transition:all 0.3s var(--ease);border:none;font-family:inherit;letter-spacing:0.04em}
+.btn-gold{background:linear-gradient(135deg, #a8894a, var(--gold), #d4bc7a);color:var(--navy);box-shadow:0 4px 20px rgba(200,169,106,0.2);border:1px solid rgba(200,169,106,0.15)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,169,106,0.3)}
+.btn-outline{background:transparent;color:rgba(255,255,255,0.88);border:2px solid rgba(200,169,106,0.4)}
+.btn-outline:hover{background:rgba(200,169,106,0.06);border-color:var(--gold-light);color:var(--gold-light);transform:translateY(-2px)}
+
+/* series */
+.series-wrap{background:linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);padding:90px 0}
+.series-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:44px}
+.series-card{border-radius:20px;padding:44px 36px;position:relative;transition:all 0.4s var(--ease);overflow:hidden}
+.series-card:hover{transform:translateY(-6px)}
+.series-card.bc{background:linear-gradient(145deg, rgba(74,158,142,0.06), rgba(74,158,142,0.02));border:2px solid rgba(74,158,142,0.25)}
+.series-card.bc:hover{border-color:rgba(74,158,142,0.5);box-shadow:0 20px 48px rgba(0,0,0,0.25),0 0 40px rgba(74,158,142,0.04)}
+.series-card.sd{background:linear-gradient(145deg, rgba(74,126,201,0.06), rgba(74,126,201,0.02));border:2px solid rgba(74,126,201,0.25)}
+.series-card.sd:hover{border-color:rgba(74,126,201,0.5);box-shadow:0 20px 48px rgba(0,0,0,0.25),0 0 40px rgba(74,126,201,0.04)}
+.series-card .label{font-size:0.68em;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.series-card.bc .label{color:#4a9e8e}
+.series-card.sd .label{color:#4a7ec9}
+.series-card h4{font-size:1.2em;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.45;letter-spacing:0.03em}
+.series-card p{font-size:0.85em;color:rgba(255,255,255,0.55);line-height:1.8;margin-bottom:20px;max-width:400px}
+.series-card .series-link{display:inline-flex;align-items:center;gap:6px;font-size:0.82em;font-weight:600;transition:color 0.2s;font-family:'Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif}
+.series-card.bc .series-link{color:#6abfb0}
+.series-card.bc .series-link:hover{color:var(--gold-light)}
+.series-card.sd .series-link{color:#6a9ee0}
+.series-card.sd .series-link:hover{color:var(--gold-light)}
+
+/* other sections */
+.brand-quote{background:rgba(255,255,255,0.03);border:var(--gold-border);border-radius:24px;padding:48px 36px;text-align:center;box-shadow:var(--card-shadow);max-width:700px;margin:0 auto}
+.brand-quote .mark{font-size:2.8em;margin-bottom:10px;opacity:0.10}
+.brand-quote p{font-size:0.88em;color:var(--text-muted);max-width:520px;margin:0 auto;line-height:1.85}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.info-text h3{font-size:1.3em;font-weight:700;color:var(--white);margin-bottom:14px;line-height:1.55;letter-spacing:0.04em}
+.info-text p{font-size:0.88em;color:rgba(255,255,255,0.65);line-height:2;margin-bottom:10px}
+
+.cta{background:rgba(255,255,255,0.03);border-top:1px solid rgba(200,169,106,0.1);text-align:center}
+.cta .section-title{color:var(--gold)}
+.cta p{color:var(--text-muted);font-size:0.9em;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
+.cta-actions{display:flex;flex-direction:column;align-items:center;gap:14px}
+.cta .btn-outline{color:rgba(255,255,255,0.6);border-color:rgba(200,169,106,0.25)}
+.cta .btn-outline:hover{color:var(--gold-light);border-color:var(--gold)}
+
+footer{background:rgba(0,0,0,0.2);border-top:1px solid rgba(200,169,106,0.06);padding:36px 0 20px;text-align:center}
+footer p{font-size:0.78em;color:var(--text-muted);line-height:1.7}
+footer .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-size:0.82em;font-weight:600;margin-top:10px;transition:color 0.2s}
+footer .back-link:hover{color:var(--gold-light)}
+
+@media(max-width:1024px){
+  .info-grid{grid-template-columns:1fr;gap:28px}.series-grid{grid-template-columns:1fr;gap:20px}
+}
+@media(max-width:768px){
+  section{padding:60px 0}.series-wrap{padding:60px 0}
+  .section-title{font-size:1.3em}.hero-brand{font-size:2.4em}.hero h2{font-size:1.5em}.hero p{font-size:0.88em}
+  .series-card{padding:32px 28px}
+  .hero-actions{flex-direction:column;align-items:stretch}.hero-actions .btn{justify-content:center}
+  .container{padding:0 16px}.brand-quote{padding:32px 24px}
+}
+@media(max-width:480px){
+  section{padding:48px 0}.series-wrap{padding:48px 0}
+  .section-title{font-size:1.15em}.hero-brand{font-size:1.8em}.hero h2{font-size:1.3em}.hero p{font-size:0.85em}
+  .series-card{padding:28px 22px}.brand-quote{padding:28px 20px;border-radius:16px}
+  .container{padding:0 14px}
+}
+@media(max-width:430px){
+  .series-card{padding:24px 18px}.hero-brand img{max-width:200px}
+}
+@media(max-width:390px){
+  .hero h2{font-size:1.15em}.series-card{padding:20px 14px}.hero-brand img{max-width:160px}
+}
+</style>
+</head>
+<body>
+
+<section class="hero" id="top">
+<div class="container">
+<div class="hero-badge">AI Business Support Series</div>
+<img src="images/kosame/kosame-logo-main.png" alt="KOSAME" style="max-width:280px;margin:0 auto 16px;display:block;height:auto">
+<div class="hero-brand-sub">AI Business Support Series</div>
+<h2>情報が多すぎる時代に、<br><span class="hl">目の前のお客様に合う答えへ。</span></h2>
+<p>KOSAMEは、営業と支店運営を支えるAI業務支援シリーズです。<br>記録、整理、確認、提案準備を通じて、相談品質を支えます。</p>
+<div class="hero-actions">
+<a href="#series" class="btn btn-gold">KOSAME Series</a>
+<a href="#about" class="btn btn-outline">KOSAMEとは</a>
+</div>
+</div>
+</section>
+
+<section style="padding-top:0;padding-bottom:0;margin-top:-40px">
+<div class="container">
+<div class="brand-quote">
+<div class="mark">&#x2615;</div>
+<p>人の目と、もうひとつの目線で、業務品質を整えます。<br>KOSAMEは、現場の判断を支えるAI業務支援シリーズです。</p>
+</div>
+</div>
+</section>
+
+<section class="series-wrap" id="series">
+<div class="container text-center">
+<div class="section-divider"></div>
+<h2 class="section-title gold">KOSAME Series</h2>
+<p class="section-sub">営業と支店運営を支える、2つの中核サービス。</p>
+</div>
+<div class="container">
+<div class="series-grid">
+
+<div class="series-card bc">
+<img src="images/kosame/kosame-logo-branch-console.png" alt="KOSAME Branch Console" style="max-width:200px;margin-bottom:14px;display:block;height:auto">
+<div class="label">KOSAME Branch Console</div>
+<h4>支店業務を整える業務支援基盤。</h4>
+<p>試算、検索、ナレッジ、フォロー支援をひとつに。支店や代理店の現場業務で頻繁に使う確認・計算・検索を集約しました。</p>
+<a href="kosame-branch-console.html" class="series-link">詳しく見る &#x2192;</a>
+</div>
+
+<div class="series-card sd">
+<img src="images/kosame/kosame-logo-sales-dx.png" alt="KOSAME Sales DX" style="max-width:200px;margin-bottom:14px;display:block;height:auto">
+<div class="label">KOSAME Sales DX</div>
+<h4>面談後処理と次回提案準備を支援。</h4>
+<p>記録、確認事項、フォロー文案を整える。商談音声や面談メモをもとに、議事録・フォロー文案・次回アクションを整理します。</p>
+<a href="kosame-sales-dx.html" class="series-link">詳しく見る &#x2192;</a>
+</div>
+
+</div>
+</div>
+</section>
+
+<section id="about">
+<div class="container">
+<div class="info-grid">
+<div class="info-text">
+<div class="section-divider left"></div>
+<h3>KOSAMEとは</h3>
+<p>KOSAMEは、営業担当者や支店スタッフの判断を置き換えるものではありません。面談内容や確認事項を整理し、次に必要な対応を見える化することで、人がより正確に判断できる環境を支える業務支援シリーズです。</p>
+</div>
+<div class="info-text">
+<div class="section-divider left"></div>
+<h3>情報が多ければ多いほど、<br>お客様に合った整理が求められる。</h3>
+<p>SNS、動画、ネット記事などで金融・住宅・保険の情報は簡単に手に入るようになりました。KOSAMEは、お客様ごとの状況に合わせて考えるための材料を整えます。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="cta" id="contact">
+<div class="container">
+<div class="section-divider"></div>
+<h2 class="section-title gold">現場に合わせた業務支援を、必要なところから。</h2>
+<p>サービス内容や導入についてのご相談は、お気軽にお問い合わせください。</p>
+<div class="cta-actions">
+<a href="fk-omiya-branch.html#contact" class="btn btn-gold">お問い合わせ</a>
+<a href="fk-omiya-branch.html" class="btn btn-outline">FK大宮支店LPへ戻る</a>
+</div>
+</div>
+</section>
+
+<footer>
+<div class="container">
+<p>KOSAME は、現場の判断を支える業務支援シリーズです。</p>
+<a href="fk-omiya-branch.html" class="back-link">&#x2190; FK大宮支店LPへ戻る</a>
+</div>
+</footer>
+
+</body>
+</html>

@@ -111,7 +111,10 @@ async function main() {
   const handoffDir = path.join(tmpRoot, '.kosame-handoff');
   const runsDir = path.join(tmpRoot, '.runs');
   const shellLogPath = path.join(tmpRoot, 'shell-agent-activity.jsonl');
+  const resultLogPath = path.join(tmpRoot, 'work-order-results.jsonl');
   process.env.KOSAME_SHELL_AGENT_ACTIVITY_LOG_PATH = shellLogPath;
+  const prevResultLogPath = process.env.KOSAME_WORK_ORDER_RESULT_LOG_PATH;
+  process.env.KOSAME_WORK_ORDER_RESULT_LOG_PATH = resultLogPath;
 
   const chat = await handleChatRequest({
     message: workOrderMessage,
@@ -216,6 +219,9 @@ async function main() {
 
   const shellLogText = fs.existsSync(shellLogPath) ? fs.readFileSync(shellLogPath, 'utf8') : '';
   assert.ok(shellLogText.includes('command.inbox.received') || shellLogText.includes('complete.run.detected'), 'shell log must include complete run stages');
+
+  if (prevResultLogPath === undefined) delete process.env.KOSAME_WORK_ORDER_RESULT_LOG_PATH;
+  else process.env.KOSAME_WORK_ORDER_RESULT_LOG_PATH = prevResultLogPath;
 
   console.log('  PASS complete run routing / gap / resume / finalizer');
 }

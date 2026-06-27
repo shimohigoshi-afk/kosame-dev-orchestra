@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Dev OS Router v113.3.62
+ * KOSAME Dev OS Router v113.3.63
  *
  * タスクを受け取り、担当AIを自動決定して指示文を生成する。
  *
@@ -27,8 +27,8 @@ const http     = require('node:http');
 const path     = require('node:path');
 
 const TOOL_META = {
-  version: '113.3.62',
-  feature: 'v113-3-62-impl-verb-priority',
+  version: '113.3.63',
+  feature: 'v113-3-63-codex-exec-instruction',
   slug:    'kosame-dev-os-router',
 };
 
@@ -280,7 +280,7 @@ function generateClaudeCodeInstruction(task, workdir = DEFAULT_WORKDIR) {
     '# KOSAME Dev OS — Claude Code 指示文',
     '# 以下のコマンドをターミナルで実行してください',
     '',
-    `claude -p --dangerously-skip-permissions "$(cat <<'KOSAME_EOF'`,
+    `codex exec "$(cat <<'KOSAME_EOF'`,
     `あなたはKOSAME Dev Orchestraの実装担当AIです。`,
     `以下のタスクをSafety Stop以外では止まらず完走してください。`,
     ``,

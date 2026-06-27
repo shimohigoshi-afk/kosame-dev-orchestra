@@ -66,12 +66,15 @@ async function main() {
   pass('EXTERNAL_AI_ROUTES');
 
   // ── classifyTask: 実装系 → claude_code ─────────────────────────────────────
+  // v113.3.62: 実装動詞（修正・追加・実装・改善）があれば claude_code を優先
   const implCases = [
     '温度感分析を改善して',
     'バグを修正してください',
     '新機能を実装する',
     'HTMLページを追加して',
     'APIエンドポイントを作成する',
+    'smoke追加して',           // 追加(impl verb) → claude_code優先 (v113.3.62)
+    'Dockerfileのboilerplate追加', // 追加(impl verb) → claude_code優先 (v113.3.62)
   ];
   for (const task of implCases) {
     const { route } = classifyTask(task);
@@ -94,11 +97,10 @@ async function main() {
   pass(`classifyTask: Google Cloud系 → gemini_cli (${gcpCases.length}ケース)`);
 
   // ── classifyTask: 土木系 → deepseek_grok ────────────────────────────────────
+  // 実装動詞なし → deepseek_grok (実装動詞あり → claude_code、v113.3.62参照)
   const civilCases = [
-    'smoke追加して',
     'smokeテストを書いて',
     'GitHub Actions のワークフローを設定して',
-    'Dockerfileのboilerplate追加',
     'CI/CD設定を更新して',
   ];
   for (const task of civilCases) {
@@ -157,7 +159,8 @@ async function main() {
   pass('salesDxGuard: Claude/Geminiはブロックしない');
 
   // ── routeTask: 営業DX → 自動リダイレクト ───────────────────────────────────
-  const result = routeTask('transcriberのsmoke追加して');
+  // v113.3.62: 実装動詞なしタスクで検証 (impl verbがあると直接claude_codeに分類)
+  const result = routeTask('transcriberのsmokeテストを書いて');
   assert.equal(result.blocked, true,         'transcriberタスクはブロックされるべき');
   assert.ok(result.blockReason,              'blockReason must be set');
   assert.equal(result.route, 'claude_code',  'ブロック後はclaude_codeにリダイレクト');
@@ -172,7 +175,7 @@ async function main() {
 
   // ── Instruction generators ──────────────────────────────────────────────────
   const claudeInstr = generateClaudeCodeInstruction('テストタスク');
-  assert.ok(claudeInstr.includes('claude -p --dangerously-skip-permissions'), 'Claude instruction must have claude -p command');
+  assert.ok(claudeInstr.includes('codex exec'), 'Claude instruction must have codex exec command');
   assert.ok(claudeInstr.includes('Safety Stop'), 'Claude instruction must mention Safety Stop');
   assert.ok(claudeInstr.includes('テストタスク'), 'Claude instruction must include task');
   assert.ok(claudeInstr.includes('git add -A禁止'), 'Claude instruction must include git add -A禁止');
@@ -206,7 +209,7 @@ async function main() {
   // ── routeTask: End-to-end ──────────────────────────────────────────────────
   const e2eCases = [
     { task: '温度感分析を改善して',           expectedRoute: 'claude_code',   expectedFormat: 'bash_script' },
-    { task: 'smoke追加して',                 expectedRoute: 'deepseek_grok', expectedFormat: 'json_task_pack' },
+    { task: 'smokeテストを書いて',             expectedRoute: 'deepseek_grok', expectedFormat: 'json_task_pack' },
     { task: 'Google Cloud Run設定確認',       expectedRoute: 'gemini_cli',    expectedFormat: 'bash_script' },
     { task: 'コードをセキュリティレビューして', expectedRoute: 'llama_groq',   expectedFormat: 'json_audit_pack' },
   ];

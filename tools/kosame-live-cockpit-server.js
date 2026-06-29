@@ -150,24 +150,29 @@ function createLiveCockpitServer(options = {}) {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
     if (url.pathname === '/api/snapshot') {
-      const confirmationBridge = detectConfirmation();
-      const snapshot = collectLiveCockpitSnapshot({
-        activeRepoPath: options.activeRepoPath,
-        devRepoPath: options.devRepoPath,
-        salesRepoPath: options.salesRepoPath,
-        projectRegistryPath: options.projectRegistryPath,
-        workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
-        workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
-        workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
-        shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
-        confirmationBridge,
-      });
-      res.writeHead(200, {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-      });
-      res.end(JSON.stringify(snapshot, null, 2));
+      try {
+        const confirmationBridge = detectConfirmation();
+        const snapshot = collectLiveCockpitSnapshot({
+          activeRepoPath: options.activeRepoPath,
+          devRepoPath: options.devRepoPath,
+          salesRepoPath: options.salesRepoPath,
+          projectRegistryPath: options.projectRegistryPath,
+          workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+          workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
+          workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+          shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
+          confirmationBridge,
+        });
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        res.end(JSON.stringify(snapshot, null, 2));
+      } catch (snapshotErr) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: snapshotErr && snapshotErr.message ? snapshotErr.message : String(snapshotErr) }));
+      }
       return;
     }
 
@@ -867,8 +872,17 @@ function main() {
   console.log(`[SERVER] .env: ${_envPath}`);
   console.log(`[SERVER] KEY_PRESENT=${_keyPresent} LIVE_CALLS_ENABLED=${_liveEnabled}`);
   const { server, port, host } = createLiveCockpitServer();
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[SERVER] ポート ${port} は使用中です。既存プロセスを確認してください: lsof -i :${port}`);
+      console.error(`[SERVER] 別プロセスを停止してから再起動してください。`);
+    } else {
+      console.error(`[SERVER] 起動エラー: ${err.message}`);
+    }
+    process.exit(1);
+  });
   server.listen(port, host, () => {
-    console.log(`☂️ KOSAME Console listening on http://${host}:${port}`);
+    console.log(`☂️ KOSAME Console v${require('../package.json').version} listening on http://${host}:${port}`);
     _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'SERVER', msg: `起動 KEY_PRESENT=${_keyPresent} LIVE_CALLS_ENABLED=${_liveEnabled}` });
   });
 }

@@ -2779,7 +2779,7 @@ function updateNotificationUI() {
   const modeLabel = notificationMode === 'clear' ? 'Clear' : 'Soft';
   const enabledLabel = notificationEnabled ? 'ON' : 'OFF';
   if (stateNode) stateNode.textContent = enabledLabel;
-  if (summaryNode) summaryNode.textContent = enabledLabel;
+  if (summaryNode) summaryNode.textContent = modeLabel;
   if (toneNode) toneNode.textContent = modeLabel;
   ['soft', 'clear'].forEach((m) => {
     const btn = document.getElementById(`sound-btn-${m}`);
@@ -3427,18 +3427,12 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
       btn.type = 'button';
       btn.className = 'chat-sound-mode-btn';
       btn.textContent = spec.label;
-      btn.addEventListener('click', () => setNotificationSoundEnabled(spec.enabled));
+      btn.addEventListener('click', async () => {
+        setNotificationSoundEnabled(spec.enabled);
+        if (spec.enabled) await unlockNotificationAudio();
+      });
       powerRow.appendChild(btn);
     });
-    const testBtn = document.createElement('button');
-    testBtn.type = 'button';
-    testBtn.className = 'chat-sound-btn';
-    testBtn.id = 'sound-test';
-    testBtn.textContent = 'テスト';
-    testBtn.addEventListener('click', async () => {
-      await playNotificationTestChime();
-    });
-    powerRow.appendChild(testBtn);
     card.appendChild(powerRow);
 
     const modeDetails = document.createElement('details');
@@ -3448,11 +3442,11 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     const summaryLabel = document.createElement('span');
     summaryLabel.className = 'chat-sound-summary-label';
     const summaryText = document.createElement('span');
-    summaryText.textContent = '通知音:';
+    summaryText.textContent = '音色:';
     const summaryMode = document.createElement('strong');
     summaryMode.id = 'sound-summary-mode';
     summaryMode.className = 'chat-sound-summary-mode';
-    summaryMode.textContent = 'OFF';
+    summaryMode.textContent = 'Soft';
     summaryLabel.appendChild(summaryText);
     summaryLabel.appendChild(summaryMode);
     const summaryIcon = document.createElement('span');
@@ -3495,6 +3489,15 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
       });
       modeRow.appendChild(btn);
     });
+    const testBtn = document.createElement('button');
+    testBtn.type = 'button';
+    testBtn.className = 'chat-sound-btn';
+    testBtn.id = 'sound-test';
+    testBtn.textContent = 'テスト';
+    testBtn.addEventListener('click', async () => {
+      await playNotificationTestChime();
+    });
+    modeRow.appendChild(testBtn);
     detailsBody.appendChild(modeRow);
 
     const typeRow = document.createElement('div');
@@ -6719,16 +6722,16 @@ if (chatCalloutButton) {
   }
 
   var ASL_DEMO = [
-    { agent: 'KOSAME',   msg: '☂️ じゅんやさん、本日のタスクを確認しました。処理を開始します。' },
-    { agent: 'DIRECTOR', msg: '作業票を精査しました。優先度順に3件処理いたします。' },
-    { agent: 'Claude',   msg: '…実装内容を確認しました。テストケースに漏れがないか確認します。' },
-    { agent: 'Gemini',   msg: 'あれー！ このAPIレスポンス、想定と違います！ すぐ確認します！' },
-    { agent: 'Grok',     msg: 'この仕様、少し曖昧な気がしますが…' },
-    { agent: 'DeepSeek', msg: '処理完了。' },
-    { agent: 'Llama',    msg: 'テストカバレッジ不足。追加6件が必要。以上。' },
-    { agent: 'Claude',   msg: 'テストカバレッジ確認が完了しました。問題ありません🔍' },
-    { agent: 'Gemini',   msg: '確認完了！仕様と一致していました！ ❤️' },
-    { agent: 'KOSAME',   msg: '☂️ 全エージェントの報告を受け取りました。じゅんやさん、いかがでしょうか？ 💙' },
+    { agent: 'KOSAME',   msg: '☂️ じゅんやさん、全体方針と危険ゲートを見ています。作業員には戻しません。' },
+    { agent: 'DIRECTOR', msg: '作業票を分解し、担当AI・優先度・停止条件を整理しました。' },
+    { agent: 'Claude',   msg: '実装とテストを丁寧に照合します。壊さず仕上げる担当です。' },
+    { agent: 'Gemini',   msg: '広く速く確認します。API・ログ・仕様差分をまとめて洗います。' },
+    { agent: 'Grok',     msg: '曖昧な仕様や矛盾点を突きます。突破口を探す担当です。' },
+    { agent: 'DeepSeek', msg: '低機密の土木作業を一気に片付けます。判断と秘密情報には触れません。' },
+    { agent: 'Llama',    msg: '監査します。抜け・過剰・危険操作を淡々と検出します。' },
+    { agent: 'Claude',   msg: '品質確認が完了しました。差分とテスト結果を見て整えます。' },
+    { agent: 'Gemini',   msg: '広域確認完了です。仕様・ログ・周辺情報の整合を取りました。' },
+    { agent: 'KOSAME',   msg: '☂️ 全AIの報告を統合しました。次はGO/NO-GOだけ判断してください。' },
   ];
 
   function runAslDemo() {

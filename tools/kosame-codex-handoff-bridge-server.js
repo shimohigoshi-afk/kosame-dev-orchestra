@@ -573,8 +573,8 @@ function readHandoffQueue(options = {}) {
         ...safe,
         saved_at: compactText(record.saved_at || record.created_at || '', 40),
       });
-    } catch {
-      throw new Error('secret っぽい内容が含まれているため表示できません。');
+    } catch (e) {
+      process.stderr.write(`[readHandoffQueue] skip invalid entry id=${record && record.id}: ${e.message}\n`);
     }
   }
   return {

@@ -2266,6 +2266,7 @@ h1 {
           <span id="chat-context-badge" class="chat-status-badge warn">Context: missing</span>
           <span id="chat-memory-badge" class="chat-status-badge warn">Memory: missing</span>
           <span id="chat-llama-audit-badge" class="chat-status-badge warn">Llama audit: missing</span>
+          <span id="chat-sound-badge" class="chat-status-badge warn">Sound: OFF</span>
         </div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
@@ -2287,8 +2288,10 @@ h1 {
               <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
               <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
               <div class="chat-input-with-btn">
+                <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（複数可・クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付"><svg width="16" height="20" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 8.5V18C20 22.418 16.418 26 12 26C7.582 26 4 22.418 4 18V6C4 3.239 6.239 1 9 1C11.761 1 14 3.239 14 6V17C14 18.657 12.657 20 11 20C9.343 20 8 18.657 8 17V7.5H10V17C10 17.552 10.448 18 11 18C11.552 18 12 17.552 12 17V6C12 4.343 10.657 3 9 3C7.343 3 6 4.343 6 6V18C6 21.314 8.686 24 12 24C15.314 24 18 21.314 18 18V8.5H20Z" fill="#00bcd4"/></svg><span id="chat-attach-count" class="chat-attach-count" aria-hidden="true"></span></button>
                 <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
               </div>
+              <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4" multiple style="display:none" aria-hidden="true">
             </div>
             <button type="button" class="chat-primary-btn" id="chat-proceed">この方針で進める</button>
           </div>
@@ -6848,11 +6851,12 @@ if ('serviceWorker' in navigator) {
   if (typeof EventSource === 'undefined') return;
   var es = new EventSource('/api/runner-stream');
   es.addEventListener('connected', function() {
-    if (typeof window.stopAslDemo === 'function') window.stopAslDemo();
+    /* demo keeps running until real log events arrive */
   });
   es.addEventListener('log', function(e) {
     try {
       var d = JSON.parse(e.data);
+      if (typeof window.stopAslDemo === 'function') window.stopAslDemo();
       if (typeof window.addAgentStreamLog === 'function') {
         window.addAgentStreamLog(d.agent || 'RUNNER', d.msg || '');
       }

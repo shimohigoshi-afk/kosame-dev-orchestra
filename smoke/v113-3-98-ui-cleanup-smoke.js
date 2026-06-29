@@ -28,18 +28,10 @@ console.log('  PASS: version >= 113.3.98');
 
 const html = read('public/kosame-live-cockpit.html');
 
-// ── ① clip icon removed ───────────────────────────────────────────────────────
-assert.ok(
-  !html.includes('id="chat-attach-btn"'),
-  'chat-attach-btn must be removed from HTML',
-);
-assert.ok(
-  !html.includes('id="chat-file-input"'),
-  'chat-file-input must be removed from HTML',
-);
+// ── ① clip icon check (superseded by v113.3.100 which restores chat-attach-btn) ──
 // textarea still present
 assert.ok(html.includes('id="chat-input"'), 'chat-input textarea must remain');
-console.log('  PASS: clip icon (chat-attach-btn) removed, textarea remains');
+console.log('  PASS: textarea remains (clip icon assertion superseded by v113.3.100)');
 
 // ── ② chat font size restored ─────────────────────────────────────────────────
 assert.ok(

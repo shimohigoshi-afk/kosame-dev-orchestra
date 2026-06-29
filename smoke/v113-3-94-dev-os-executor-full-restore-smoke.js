@@ -18,7 +18,11 @@ const runner = read('tools/kosame-dev-os-auto-approval-judge-runner.js');
 
 console.log('=== v113.3.94 Dev OS Executor Full Restore smoke ===');
 
-assert.equal(pkg.version, '113.3.94', 'package version must be 113.3.94');
+const [_maj, _min, _patch] = pkg.version.split('.').map(Number);
+assert.ok(
+  _maj > 113 || (_maj === 113 && _min > 3) || (_maj === 113 && _min === 3 && _patch >= 94),
+  `package version must be >= 113.3.94 (got ${pkg.version})`,
+);
 assert.ok(pkg.scripts['dev-os:executor'], 'dev-os:executor must exist');
 assert.ok(pkg.scripts['dev-os:runner'], 'dev-os:runner must exist');
 assert.ok(pkg.scripts['dev-os:autopilot'], 'dev-os:autopilot must exist');

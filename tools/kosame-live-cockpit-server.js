@@ -112,6 +112,36 @@ function _emitRunnerSSE(event, data) {
   }
 }
 
+// ── Dev OS router bridge ──────────────────────────────────────────────────────
+// POST task → localhost:8091/api/dev-os → { route, route_label }
+// 2-second timeout; on failure returns null so caller uses fallback.
+function _callDevOsRouter(task, workdir) {
+  return new Promise((resolve, reject) => {
+    const body = Buffer.from(JSON.stringify({ task, workdir }));
+    const devOsPort = Number(process.env.DEV_OS_PORT || 8091);
+    const req = http.request(
+      { hostname: '127.0.0.1', port: devOsPort, path: '/api/dev-os', method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': body.length } },
+      (res) => {
+        let raw = '';
+        res.setEncoding('utf8');
+        res.on('data', (c) => { raw += c; });
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(raw);
+            if (!parsed.ok) return reject(new Error(parsed.error || 'dev-os !ok'));
+            resolve({ route: parsed.route, route_label: parsed.route_label || parsed.route });
+          } catch (e) { reject(e); }
+        });
+      },
+    );
+    req.setTimeout(2000, () => { req.destroy(); reject(new Error('dev-os router timeout')); });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 function createLiveCockpitServer(options = {}) {
   const port = Number(options.port || process.env.PORT || 8080);
   const host = options.host || '0.0.0.0';
@@ -605,12 +635,29 @@ function createLiveCockpitServer(options = {}) {
         res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
         return;
       }
-      parseJsonBody(req, (parsed) => {
+      parseJsonBody(req, async (parsed) => {
         try {
           const ticketId = `chat-${Date.now()}`;
           const promptText = String(parsed.prompt_text || parsed.message || '').trim();
           const title = String(parsed.title || promptText || 'KOSAME Chat Dispatch').slice(0, 80);
           const targetRepo = String(parsed.target_repo || '').trim() || ROOT;
+
+          // ── Dev OS route classification ─────────────────────────────────────
+          let devOsRoute = 'claude_code';
+          let devOsRouteLabel = 'Claude Code';
+          let devOsWarning = null;
+          try {
+            const devOsResult = await _callDevOsRouter(promptText, targetRepo);
+            devOsRoute = devOsResult.route || devOsRoute;
+            devOsRouteLabel = devOsResult.route_label || devOsRoute;
+          } catch (e) {
+            devOsWarning = String(e.message || e);
+          }
+          _emitRunnerSSE('log', {
+            ts: new Date().toISOString(), agent: 'DEV-OS',
+            msg: `[route] ${devOsRouteLabel}${devOsWarning ? ' [fallback]' : ''} — ${title}`,
+          });
+
           appendPipelineStageEvent({
             stage: 'runner.dispatch.started',
             status: 'running',
@@ -618,7 +665,7 @@ function createLiveCockpitServer(options = {}) {
             attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
             attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
             manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
-            route: 'zero-confirm',
+            route: devOsRoute,
             timestamp: new Date().toISOString(),
             message: `Runner dispatch を開始します: ${title}`,
           }, { agent: 'RUNNER', task: 'runner.dispatch.started' });
@@ -627,7 +674,7 @@ function createLiveCockpitServer(options = {}) {
             title,
             prompt_text: promptText,
             target_repo: targetRepo,
-            assigned_agent: String(parsed.assigned_agent || 'Codex').trim(),
+            assigned_agent: devOsRoute,
             risk_level: String(parsed.risk_level || 'low').trim(),
             human_gate_required: false,
             source: 'kosame-chat-dispatch',

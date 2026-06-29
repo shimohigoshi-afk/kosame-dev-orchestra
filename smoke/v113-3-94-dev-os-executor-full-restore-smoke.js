@@ -41,14 +41,14 @@ assert.ok(/通知音|通知|notificationSoundEnabled|sound-state|sound-summary-m
 assert.ok(/sound-state|sound-summary-mode|chat-sound-badge|notificationSoundEnabled/i.test(html), 'native sound state route missing');
 
 [
-  '全体方針と危険ゲート',
-  '担当AI・優先度・停止条件',
-  '壊さず仕上げる担当',
-  '広く速く確認',
-  '突破口を探す担当',
-  '低機密の土木作業',
-  '抜け・過剰・危険操作',
-  'GO/NO-GOだけ判断',
+  '全体の流れを見ています',
+  '担当・優先度・停止条件',
+  'テストを丁寧に照合',
+  'あれー！',
+  '突破口を探しています',
+  '土木作業を完了',
+  '危険操作0件',
+  'GO/NO-GO',
 ].forEach((text) => assert.ok(html.includes(text), 'missing agent copy: ' + text));
 
 assert.ok(!html.includes('kosame-console-submit-bridge-v113-3-72'), 'broken v113.3.72 bridge remains');

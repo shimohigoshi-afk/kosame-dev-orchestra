@@ -6718,6 +6718,16 @@ if (chatCalloutButton) {
 })();
 
 // ===== Agent Stream Log =====
+// キャラ設定 v113.3.99
+// KOSAME(GPT)      #00bcd4 ☂️💙 こさめ口調、じゅんやさんに寄り添う
+// DIRECTOR(Claude) #00bcd4 ☂️💙
+// DIRECTOR(GPT)    #10a37f fallback時のみ
+// GPT              #10a37f 短く判断、シゴデキ、絵文字なし
+// Claude(品質)     #D97757 几帳面・丁寧・「…」で始まることも 🔍完了時/たまに🧡
+// Gemini           #EA4335 テンション高め敬語・「あれー！」あり ❤️完了時
+// Grok             #8899aa 敬語の独り言・語尾に…
+// DeepSeek         #4D6BFE 丁寧・寡黙・従順・短文・絵文字なし
+// Llama            #6e57d2 厳しめ監査・必ず「以上。」で締める
 (function() {
   var ASL_AGENTS = {
     'KOSAME':        'asl-agent-KOSAME',
@@ -6729,6 +6739,19 @@ if (chatCalloutButton) {
     'Grok':          'asl-agent-Grok',
     'DeepSeek':      'asl-agent-DeepSeek',
     'Llama':         'asl-agent-Llama',
+    'RUNNER':        'asl-agent-KOSAME',
+  };
+  var ASL_DISPLAY_NAMES = {
+    'KOSAME':        'KOSAME',
+    'DIRECTOR':      'DIRECTOR(Claude)',
+    'DIRECTOR(GPT)': 'DIRECTOR(GPT)',
+    'GPT':           'GPT',
+    'Claude':        'Claude(品質)',
+    'Gemini':        'Gemini',
+    'Grok':          'Grok',
+    'DeepSeek':      'DeepSeek',
+    'Llama':         'Llama',
+    'RUNNER':        'RUNNER',
   };
 
   function aslTs() {
@@ -6747,7 +6770,7 @@ if (chatCalloutButton) {
     ts.textContent = '[' + aslTs() + '] ';
     var agentSpan = document.createElement('span');
     agentSpan.className = cls;
-    agentSpan.textContent = agent + ': ';
+    agentSpan.textContent = (ASL_DISPLAY_NAMES[agent] || agent) + ': ';
     var msgSpan = document.createElement('span');
     msgSpan.className = 'asl-msg';
     var cursor = document.createElement('span');
@@ -6776,16 +6799,17 @@ if (chatCalloutButton) {
   }
 
   var ASL_DEMO = [
-    { agent: 'KOSAME',   msg: '☂️ じゅんやさん、全体方針と危険ゲートを見ています。作業員には戻しません。' },
-    { agent: 'DIRECTOR', msg: '作業票を分解し、担当AI・優先度・停止条件を整理しました。' },
-    { agent: 'Claude',   msg: '実装とテストを丁寧に照合します。壊さず仕上げる担当です。' },
-    { agent: 'Gemini',   msg: '広く速く確認します。API・ログ・仕様差分をまとめて洗います。' },
-    { agent: 'Grok',     msg: '曖昧な仕様や矛盾点を突きます。突破口を探す担当です。' },
-    { agent: 'DeepSeek', msg: '低機密の土木作業を一気に片付けます。判断と秘密情報には触れません。' },
-    { agent: 'Llama',    msg: '監査します。抜け・過剰・危険操作を淡々と検出します。' },
-    { agent: 'Claude',   msg: '品質確認が完了しました。差分とテスト結果を見て整えます。' },
-    { agent: 'Gemini',   msg: '広域確認完了です。仕様・ログ・周辺情報の整合を取りました。' },
-    { agent: 'KOSAME',   msg: '☂️ 全AIの報告を統合しました。次はGO/NO-GOだけ判断してください。' },
+    { agent: 'KOSAME',   msg: '☂️💙 じゅんやさん、全体の流れを見ています。安心して進めてください。' },
+    { agent: 'DIRECTOR', msg: '☂️ 作業票を分解します。担当・優先度・停止条件を確定しました。' },
+    { agent: 'GPT',      msg: '仕様確認。問題なし。実行します。' },
+    { agent: 'Claude',   msg: '…実装とテストを丁寧に照合しています。見落としがないか確認中です。' },
+    { agent: 'Gemini',   msg: 'あれー！ここに仕様差分がありますね！API・ログ一気に確認しました！' },
+    { agent: 'Grok',     msg: 'この仕様、少し曖昧な部分がありますね。突破口を探しています…' },
+    { agent: 'DeepSeek', msg: '土木作業を完了しました。判断は不要です。' },
+    { agent: 'Llama',    msg: '監査完了。過剰実装1件、危険操作0件。軽微なリスクあり。以上。' },
+    { agent: 'Claude',   msg: '品質確認が完了しました。差分整合・テスト通過を確認です🔍' },
+    { agent: 'Gemini',   msg: '広域確認完了です！仕様・ログ・周辺情報の整合取れました❤️' },
+    { agent: 'KOSAME',   msg: '☂️💙 全AIの報告を統合しました。次はじゅんやさんのGO/NO-GOだけです。' },
   ];
 
   function runAslDemo() {

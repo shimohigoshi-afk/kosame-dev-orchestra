@@ -56,33 +56,21 @@ assert.ok(!html.includes('kosame-safe-chat-bridge-v113-3-81'), 'broken v113.3.81
 assert.ok(!html.includes('/api/dev-os-local/client.js'), 'HTML injected client remains');
 assert.ok(!html.includes('kosame-sound-ui-repair'), 'manual sound repair block remains');
 
-// ── 通知音UI修復チェック (v113.3.94 notification sound UI fix) ────────────────
-// 1. ONボタンクリックでAudioContextをunlock (音が鳴る前提条件)
+// ── 通知音UI基本チェック (詳細はv113.3.101 smoke参照) ─────────────────────────
+// v113.3.101以降: OFF/Soft/Clear 3モード設計に移行
 assert.ok(
-  html.includes('if (spec.enabled) await unlockNotificationAudio()'),
-  'ON button must call unlockNotificationAudio() on click',
+  html.includes('setNotificationMode') && html.includes('unlockNotificationAudio'),
+  'notification mode setter and audio unlock must exist',
 );
-// 2. テストボタンはmodeRow（Soft/Clearの隣）に配置
 assert.ok(
-  html.includes('modeRow.appendChild(testBtn)'),
-  'test button must be appended to modeRow (next to Soft/Clear)',
+  html.includes("{ label: 'ERROR音', type: 'error' }") || html.includes("type: 'error'"),
+  'ERROR sound type test must exist',
 );
-// 3. サマリーラベルは音色を表示
-assert.ok(
-  html.includes("summaryText.textContent = '音色:'"),
-  "summary label must show '音色:' (tone label)",
-);
-// 4. updateNotificationUI は modeLabel（音色）をサマリーに反映
-assert.ok(
-  html.includes('summaryNode.textContent = modeLabel'),
-  'updateNotificationUI must write modeLabel to summaryNode',
-);
-// 5. テストボタンはpowerRow（ON/OFF行）に混入していない
 assert.ok(
   !html.includes('powerRow.appendChild(testBtn)'),
   'test button must NOT be in powerRow',
 );
-console.log('  PASS: 通知音UI — ON→unlock, テスト位置, サマリー音色表示, powerRow混入なし');
+console.log('  PASS: 通知音UI基本チェック — setNotificationMode/unlock/ERROR存在, powerRow混入なし');
 
 assert.ok(server.includes("113.3.94"), 'local server version not aligned');
 assert.ok(router.includes("113.3.94"), 'router version not aligned');

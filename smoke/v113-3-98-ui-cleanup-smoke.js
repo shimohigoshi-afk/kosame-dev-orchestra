@@ -40,28 +40,20 @@ assert.ok(
 );
 console.log('  PASS: .chat-bubble-text font-size = 15px');
 
-// ── ③ notification sound UI: ON/OFF buttons (short labels) ───────────────────
-assert.ok(
-  html.includes("{ label: 'ON', enabled: true }"),
-  "sound ON button label must be 'ON' (not '通知音をONにする')",
-);
-assert.ok(
-  html.includes("{ label: 'OFF', enabled: false }"),
-  "sound OFF button label must be 'OFF' (not '通知音をOFFにする')",
-);
+// ── ③ notification sound UI: long-label buttons must be gone (superseded by v113.3.101 OFF/Soft/Clear)
 assert.ok(
   !html.includes('通知音をONにする'),
-  'old ON button label must be gone',
+  'old long ON button label must be gone',
 );
 assert.ok(
   !html.includes('通知音をOFFにする'),
-  'old OFF button label must be gone',
+  'old long OFF button label must be gone',
 );
-// Order: powerRow (ON/OFF) before modeDetails (音色 Soft/Clear/テスト)
-const onIdx = html.indexOf("{ label: 'ON', enabled: true }");
-const softIdx = html.indexOf("{ label: 'Soft', mode: 'soft' }");
-assert.ok(onIdx > 0 && softIdx > 0 && onIdx < softIdx, '[ON][OFF] row must appear before Soft/Clear row');
-console.log('  PASS: 通知音UI — [ON][OFF] → 音色:[Soft][Clear][テスト] 順序確認');
+assert.ok(
+  html.includes('通知音') || html.includes('通知設定'),
+  'notification sound UI must still exist in some form',
+);
+console.log('  PASS: 通知音UI — 旧ロングラベル除去確認 (OFF/Soft/Clear形式はv113.3.101)');
 
 // ── queue.jsonl: target 7 IDs gone ───────────────────────────────────────────
 const REMOVED_IDS = new Set([

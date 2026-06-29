@@ -1911,7 +1911,7 @@ h1 {
 /* File attachment UI */
 .chat-input-wrapper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .chat-input-with-btn { display: flex; align-items: flex-start; gap: 6px; }
-.chat-input-with-btn textarea { flex: 1; min-width: 0; }
+.chat-input-with-btn textarea { flex: 1; min-width: 0; width: auto; }
 .chat-attach-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; margin-top: 2px; position: relative; }
 .chat-attach-btn:hover { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); }
 .chat-attach-btn.has-files { border-color: rgba(125,211,252,0.5); background: rgba(125,211,252,0.1); }
@@ -2668,10 +2668,12 @@ function readNotificationEnabled() {
 
 function readNotificationMode() {
   try {
+    const enabled = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+    if (enabled === 'false' || enabled === '0') return 'off';
     const mode = localStorage.getItem(NOTIFICATION_MODE_KEY);
-    return mode === 'clear' ? 'clear' : 'soft';
+    return mode === 'clear' ? 'clear' : mode === 'soft' ? 'soft' : 'off';
   } catch {
-    return 'soft';
+    return 'off';
   }
 }
 
@@ -2774,15 +2776,11 @@ function isQuestionCue(text) {
 function updateNotificationUI() {
   const stateNode = document.getElementById('sound-state');
   const hintNode = document.getElementById('sound-hint');
-  const summaryNode = document.getElementById('sound-summary-mode');
-  const toneNode = document.getElementById('sound-tone-state');
   const soundBadge = document.getElementById('chat-sound-badge');
-  const modeLabel = notificationMode === 'clear' ? 'Clear' : 'Soft';
+  const modeLabel = notificationMode === 'clear' ? 'Clear' : notificationMode === 'soft' ? 'Soft' : 'OFF';
   const enabledLabel = notificationEnabled ? 'ON' : 'OFF';
-  if (stateNode) stateNode.textContent = enabledLabel;
-  if (summaryNode) summaryNode.textContent = modeLabel;
-  if (toneNode) toneNode.textContent = modeLabel;
-  ['soft', 'clear'].forEach((m) => {
+  if (stateNode) stateNode.textContent = modeLabel;
+  ['off', 'soft', 'clear'].forEach((m) => {
     const btn = document.getElementById(`sound-btn-${m}`);
     if (btn) btn.classList.toggle('active', notificationMode === m);
   });
@@ -2792,7 +2790,7 @@ function updateNotificationUI() {
       : '通知音はブラウザ操作後に有効化できます。';
   }
   if (soundBadge) {
-    soundBadge.textContent = `Sound: ${enabledLabel}`;
+    soundBadge.textContent = `Sound: ${modeLabel}`;
     soundBadge.className = `chat-status-badge ${notificationEnabled ? 'ok' : 'warn'}`;
   }
   const heroSoundChip = document.getElementById('hero-chip-sound');
@@ -2865,9 +2863,13 @@ async function unlockNotificationAudio() {
 }
 
 function setNotificationMode(mode, { persist = true } = {}) {
-  if (mode !== 'soft' && mode !== 'clear') return;
+  if (mode !== 'off' && mode !== 'soft' && mode !== 'clear') return;
   notificationMode = mode;
-  if (persist) writeNotificationMode(mode);
+  notificationEnabled = mode !== 'off';
+  if (persist) {
+    writeNotificationEnabled(notificationEnabled);
+    if (mode !== 'off') writeNotificationMode(mode);
+  }
   updateNotificationUI();
 }
 
@@ -3406,6 +3408,7 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
   }
 
   if (selectedAssistTab === 'notifications') {
+    // 通知音 state chip
     const soundMeta = document.createElement('div');
     soundMeta.className = 'chat-sound-chip';
     const soundLabel = document.createElement('span');
@@ -3418,63 +3421,11 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     soundMeta.appendChild(soundState);
     card.appendChild(soundMeta);
 
-    const powerRow = document.createElement('div');
-    powerRow.className = 'sound-mode-row';
-    [
-      { label: 'ON', enabled: true },
-      { label: 'OFF', enabled: false },
-    ].forEach((spec) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'chat-sound-mode-btn';
-      btn.textContent = spec.label;
-      btn.addEventListener('click', async () => {
-        setNotificationSoundEnabled(spec.enabled);
-        if (spec.enabled) await unlockNotificationAudio();
-      });
-      powerRow.appendChild(btn);
-    });
-    card.appendChild(powerRow);
-
-    const modeDetails = document.createElement('details');
-    modeDetails.className = 'chat-sound-details chat-sound-details-compact';
-    modeDetails.open = true;
-    const summary = document.createElement('summary');
-    const summaryLabel = document.createElement('span');
-    summaryLabel.className = 'chat-sound-summary-label';
-    const summaryText = document.createElement('span');
-    summaryText.textContent = '音色:';
-    const summaryMode = document.createElement('strong');
-    summaryMode.id = 'sound-summary-mode';
-    summaryMode.className = 'chat-sound-summary-mode';
-    summaryMode.textContent = 'Soft';
-    summaryLabel.appendChild(summaryText);
-    summaryLabel.appendChild(summaryMode);
-    const summaryIcon = document.createElement('span');
-    summaryIcon.className = 'chat-sound-summary-icon';
-    summaryIcon.textContent = '▼';
-    summary.appendChild(summaryLabel);
-    summary.appendChild(summaryIcon);
-    modeDetails.appendChild(summary);
-
-    const detailsBody = document.createElement('div');
-    detailsBody.className = 'chat-sound-details-body';
-
-    const toneChip = document.createElement('div');
-    toneChip.className = 'chat-sound-chip';
-    const toneLabel = document.createElement('span');
-    toneLabel.className = 'sound-label';
-    toneLabel.textContent = '音色';
-    const toneState = document.createElement('span');
-    toneState.id = 'sound-tone-state';
-    toneState.textContent = 'Soft';
-    toneChip.appendChild(toneLabel);
-    toneChip.appendChild(toneState);
-    detailsBody.appendChild(toneChip);
-
+    // 音色 mode row: OFF / Soft / Clear
     const modeRow = document.createElement('div');
     modeRow.className = 'sound-mode-row';
     [
+      { label: 'OFF', mode: 'off' },
       { label: 'Soft', mode: 'soft' },
       { label: 'Clear', mode: 'clear' },
     ].forEach((spec) => {
@@ -3486,10 +3437,13 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
       btn.textContent = spec.label;
       btn.addEventListener('click', async () => {
         setNotificationMode(spec.mode);
-        await unlockNotificationAudio();
+        if (spec.mode !== 'off') await unlockNotificationAudio();
       });
       modeRow.appendChild(btn);
     });
+    card.appendChild(modeRow);
+
+    // テスト button
     const testBtn = document.createElement('button');
     testBtn.type = 'button';
     testBtn.className = 'chat-sound-btn';
@@ -3498,9 +3452,9 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
     testBtn.addEventListener('click', async () => {
       await playNotificationTestChime();
     });
-    modeRow.appendChild(testBtn);
-    detailsBody.appendChild(modeRow);
+    card.appendChild(testBtn);
 
+    // 通知種別テスト row
     const typeRow = document.createElement('div');
     typeRow.className = 'chat-sound-type-row';
     typeRow.setAttribute('aria-label', '通知音タイプテスト');
@@ -3518,17 +3472,15 @@ function renderChatAssistPanel(snapshot = latestSnapshot || {}) {
       btn.addEventListener('click', () => playSoundTypeTest(spec.type));
       typeRow.appendChild(btn);
     });
-    detailsBody.appendChild(typeRow);
+    card.appendChild(typeRow);
 
     const hint = document.createElement('div');
     hint.id = 'sound-hint';
     hint.className = 'small';
     hint.style.color = 'var(--muted)';
     hint.textContent = '通知音の状態は上の表示で確認できます。';
-    detailsBody.appendChild(hint);
+    card.appendChild(hint);
 
-    modeDetails.appendChild(detailsBody);
-    card.appendChild(modeDetails);
     updateNotificationUI();
   }
 
@@ -6849,14 +6801,21 @@ if ('serviceWorker' in navigator) {
 // ── Runner Queue SSE — AGENT STREAM LOG リアルタイム表示 ─────────────────────
 (function() {
   if (typeof EventSource === 'undefined') return;
+  var _sseConnectedAt = 0;
   var es = new EventSource('/api/runner-stream');
-  es.addEventListener('connected', function() {
-    /* demo keeps running until real log events arrive */
+  es.addEventListener('connected', function(e) {
+    try { _sseConnectedAt = new Date(JSON.parse(e.data).ts).getTime(); } catch(_e) { _sseConnectedAt = Date.now(); }
+    /* demo keeps running until real post-connect log events arrive */
   });
   es.addEventListener('log', function(e) {
     try {
       var d = JSON.parse(e.data);
-      if (typeof window.stopAslDemo === 'function') window.stopAslDemo();
+      // Only stop demo for events that occurred AFTER this SSE connection
+      // (replayed historical events from _sseLog have older timestamps)
+      var eventTs = d.ts ? new Date(d.ts).getTime() : 0;
+      if (_sseConnectedAt > 0 && eventTs >= _sseConnectedAt - 500) {
+        if (typeof window.stopAslDemo === 'function') window.stopAslDemo();
+      }
       if (typeof window.addAgentStreamLog === 'function') {
         window.addAgentStreamLog(d.agent || 'RUNNER', d.msg || '');
       }

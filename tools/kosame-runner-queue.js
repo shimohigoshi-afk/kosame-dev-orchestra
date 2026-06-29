@@ -62,10 +62,10 @@ function formatInput(ticket) {
   ].join('\n');
 }
 
-// ── Claude Chat Executor (v113.3.53) ─────────────────────────────────────────
-// Uses stdio:'pipe' to capture output without passing raw claude output through
-// the cockpit server's evaluateNoYesGate (which would kill the process on
-// forbidden patterns). KOSAME_CLAUDE_LAUNCH_TIMEOUT_MS extended to 10 minutes.
+// ── Claude Chat Executor (v113.3.96) ─────────────────────────────────────────
+// stdout: 'inherit' so claude-auto-launch's stdout (= claude's output) streams
+// live through runner-queue's stdout → cockpit-server SSE → AGENT STREAM LOG.
+// stderr: 'pipe' so we can write it to output.md without flooding SSE.
 
 function claudeChatExecutor(ticket, runDir) {
   const promptText = String(ticket.prompt_text || ticket.body || '');
@@ -74,19 +74,16 @@ function claudeChatExecutor(ticket, runDir) {
     : ROOT;
 
   const jsonArg = JSON.stringify({ promptText, cwd: targetRepo, runDir });
+  process.stdout.write(`[START] zero-confirm: claude起動中 ticket=${ticket.id} — ${promptText.slice(0, 60)}\n`);
   const res = spawnSync(process.execPath, [path.join(__dirname, 'kosame-claude-auto-launch.js'), '--json-arg', jsonArg], {
     cwd: ROOT,
     timeout: 720000,
-    maxBuffer: 20 * 1024 * 1024,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['ignore', 'inherit', 'pipe'],
     env: { ...process.env, KOSAME_CLAUDE_LAUNCH_TIMEOUT_MS: '600000', KOSAME_SKIP_POST_LAUNCH_VERIFY: '1' },
   });
 
-  const stdout = res.stdout || '';
-  const stderr = res.stderr || '';
-  // Write safe summary line so cockpit SSE receives runner completion notice
-  process.stdout.write(`[runner-queue] claude-auto-launch completed exit_code=${res.status} ticket=${ticket.id}\n`);
+  const stderr = res.stderr ? res.stderr.toString() : '';
+  process.stdout.write(`[DONE] zero-confirm: exit_code=${res.status} ticket=${ticket.id}\n`);
 
   const outputMd = [
     '# Runner Queue Lite — Claude Auto-Launch Log',
@@ -96,14 +93,11 @@ function claudeChatExecutor(ticket, runDir) {
     `exit_code: ${res.status}`,
     `prompt_text: ${promptText.slice(0, 200)}`,
     '',
-    '## stdout (tail)',
-    stdout.slice(-3000),
-    '',
     '## stderr (tail)',
     stderr.slice(-1000),
   ].join('\n');
   fs.writeFileSync(path.join(runDir, 'output.md'), outputMd);
-  fs.writeFileSync(path.join(runDir, 'verify.log'), `exit_code: ${res.status}\n${stdout.slice(-500)}`);
+  fs.writeFileSync(path.join(runDir, 'verify.log'), `exit_code: ${res.status}\n${stderr.slice(-500)}`);
 
   return {
     ok: res.status === 0,

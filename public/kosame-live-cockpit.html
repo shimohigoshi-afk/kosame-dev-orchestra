@@ -1221,7 +1221,7 @@ h1 {
 .chat-primary-btn:hover { background: linear-gradient(180deg, rgba(125,211,252,0.22), rgba(125,211,252,0.12)); }
 .chat-primary-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 250px);
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: stretch;
 }
@@ -1403,7 +1403,7 @@ h1 {
 }
 @media (min-width: 1200px) {
   .chat-primary-row {
-    grid-template-columns: minmax(0, 1fr) minmax(180px, 250px);
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 760px) {
@@ -6115,6 +6115,54 @@ function detectResultPasteStatus(text) {
   return '';
 }
 
+// ── Zero-confirm dispatch ─────────────────────────────────────────────────────
+// 「この方針で進める」ボタン・トリガーワード → /api/runner-dispatch に直接POST。
+// AI返答なし・確認なし・即実行。
+const EXEC_TRIGGER_RE = /(?:実行して|進めて|やって|作って|直して|デプロイして|実施して|スタートして|始めて|やりきって|完走して|動かして)[ください。！]*$/i;
+
+function detectExecTrigger(text) {
+  return EXEC_TRIGGER_RE.test(String(text || '').trim());
+}
+
+async function _zeroConfirmDispatch(text) {
+  if (!text) return;
+  const statusEl = document.getElementById('chat-status');
+  const sendBtn = document.getElementById('chat-send');
+  if (statusEl) statusEl.textContent = '🚀 Runner実行開始...';
+  if (sendBtn) sendBtn.textContent = '実行中...';
+  chatHistory.push({ role: 'user', content: text });
+  renderChatThread();
+  try {
+    const _sp = getSelectedProject(latestSnapshot || {});
+    const res = await fetch('/api/runner-dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: text.slice(0, 80),
+        prompt_text: text,
+        message: text,
+        route: 'zero-confirm',
+        target_repo: _sp ? (_sp.repoPath || _sp.path || '') : '',
+      }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      chatHistory.push({ role: 'assistant', content: `[START] Runner実行開始 — ${data.ticketId || ''}\nAGENT STREAM LOGをご覧ください。` });
+      if (statusEl) statusEl.textContent = `実行中 — ${data.ticketId || ''}`;
+    } else {
+      chatHistory.push({ role: 'assistant', content: `[ERROR] ${data.error || 'dispatch failed'}` });
+      if (statusEl) statusEl.textContent = `エラー: ${data.error || 'dispatch failed'}`;
+    }
+  } catch (e) {
+    chatHistory.push({ role: 'assistant', content: '[ERROR] Runner接続失敗 — サーバーを確認してください' });
+    if (statusEl) statusEl.textContent = 'エラー: Runner接続失敗';
+  } finally {
+    hideTypingIndicator();
+    renderChatThread();
+    if (sendBtn) sendBtn.textContent = '送信';
+  }
+}
+
 function detectWorkOrderRequest(text) {
   const rawText = String(text || '').trim();
   if (!rawText) return false;
@@ -6373,6 +6421,13 @@ function submitPrioritizedChatInput(text) {
   const rawText = String(text || '').trim();
   // Allow file-only sends (no text but files attached)
   if (!rawText && !_chatAttachments.length) return;
+  // Trigger words → zero-confirm Runner dispatch (no AI reply, no confirmation)
+  if (rawText && detectExecTrigger(rawText)) {
+    const input = document.getElementById('chat-input');
+    if (input) input.value = '';
+    _zeroConfirmDispatch(rawText);
+    return;
+  }
   if (rawText && detectWorkOrderRequest(rawText)) {
     sendChatMessage(rawText, null);
     return;
@@ -6490,8 +6545,9 @@ if (chatProceedButton) {
     const input = document.getElementById('chat-input');
     if (!input) return;
     const t = input.value.trim() || 'この方針で進めてください。';
-    input.value = t;
-    submitPrioritizedChatInput(t);
+    input.value = '';
+    // Zero-confirm: POST /api/runner-dispatch 直接。確認なし・AI返答なし・即実行。
+    _zeroConfirmDispatch(t);
   });
 }
 

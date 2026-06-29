@@ -646,17 +646,25 @@ function createLiveCockpitServer(options = {}) {
           const promptText = String(parsed.prompt_text || parsed.message || '').trim();
           const title = String(parsed.title || promptText || 'KOSAME Chat Dispatch').slice(0, 80);
           const targetRepo = String(parsed.target_repo || '').trim() || ROOT;
+          const requestedRoute = String(parsed.route || '').trim();
+
+          _emitRunnerSSE('log', {
+            ts: new Date().toISOString(), agent: 'RUNNER',
+            msg: `[START] zero-confirm dispatch 開始 — ${title}`,
+          });
 
           // ── Dev OS route classification ─────────────────────────────────────
-          let devOsRoute = 'claude_code';
-          let devOsRouteLabel = 'Claude Code';
+          let devOsRoute = requestedRoute || 'claude_code';
+          let devOsRouteLabel = requestedRoute || 'Claude Code';
           let devOsWarning = null;
-          try {
-            const devOsResult = await _callDevOsRouter(promptText, targetRepo);
-            devOsRoute = devOsResult.route || devOsRoute;
-            devOsRouteLabel = devOsResult.route_label || devOsRoute;
-          } catch (e) {
-            devOsWarning = String(e.message || e);
+          if (!requestedRoute) {
+            try {
+              const devOsResult = await _callDevOsRouter(promptText, targetRepo);
+              devOsRoute = devOsResult.route || devOsRoute;
+              devOsRouteLabel = devOsResult.route_label || devOsRoute;
+            } catch (e) {
+              devOsWarning = String(e.message || e);
+            }
           }
           _emitRunnerSSE('log', {
             ts: new Date().toISOString(), agent: 'DEV-OS',
@@ -767,7 +775,15 @@ function createLiveCockpitServer(options = {}) {
               timestamp: new Date().toISOString(),
               message: code === 0 ? `Runner dispatch completed for ${ticketId}` : `Runner dispatch failed with exitCode=${code}`,
             }, { agent: 'RUNNER', task: 'runner.dispatch.completed' });
+            _emitRunnerSSE('log', {
+              ts: new Date().toISOString(), agent: 'RUNNER',
+              msg: `[DONE] zero-confirm dispatch 完了 exit_code=${code} — ${title}`,
+            });
             _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: code, ticketId, title });
+          });
+          _emitRunnerSSE('log', {
+            ts: new Date().toISOString(), agent: 'RUNNER',
+            msg: `[RUNNING] Runner Queue 起動済み — ticketId=${ticketId}`,
           });
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',

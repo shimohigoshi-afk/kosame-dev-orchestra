@@ -25,25 +25,24 @@ console.log('  PASS: version >= 113.3.101');
 
 const html = read('public/kosame-live-cockpit.html');
 
-// ── ① clip icon: left of textarea (width: auto fix) ──────────────────────────
+// ── ① clip icon: beside textarea (width: auto fix; right-side position from v113.3.102) ─────
 assert.ok(
   html.includes('id="chat-attach-btn"'),
   'chat-attach-btn must be present',
 );
-// button before textarea inside chat-input-with-btn
+// button inside chat-input-with-btn (position relative to textarea updated in v113.3.102)
 const inputWithBtnIdx = html.indexOf('class="chat-input-with-btn"');
 const attachBtnIdx = html.indexOf('id="chat-attach-btn"');
-const textareaIdx = html.indexOf('id="chat-input"');
 assert.ok(
-  inputWithBtnIdx > 0 && attachBtnIdx > inputWithBtnIdx && textareaIdx > attachBtnIdx,
-  'chat-attach-btn must appear inside chat-input-with-btn, before textarea',
+  inputWithBtnIdx > 0 && attachBtnIdx > inputWithBtnIdx,
+  'chat-attach-btn must appear inside chat-input-with-btn',
 );
 // flex layout fix: width: auto on chat-input-with-btn textarea
 assert.ok(
   /\.chat-input-with-btn textarea\s*\{[^}]*width:\s*auto/.test(html),
   '.chat-input-with-btn textarea must have width: auto to prevent width:100% override',
 );
-console.log('  PASS: クリップアイコン — テキストエリア左横inline配置 (width:auto fix)');
+console.log('  PASS: クリップアイコン — テキストエリア横inline配置 (width:auto fix)');
 
 // ── ② ASL demo: SSE replay fix ────────────────────────────────────────────────
 // Must track _sseConnectedAt from connected event

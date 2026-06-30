@@ -29,13 +29,12 @@ const html = read('public/kosame-live-cockpit.html');
 assert.ok(html.includes('id="chat-attach-btn"'), 'chat-attach-btn must be restored in HTML');
 assert.ok(html.includes('id="chat-file-input"'), 'chat-file-input must be restored in HTML');
 assert.ok(html.includes('id="chat-input"'), 'chat-input textarea must remain');
-// button must be INSIDE chat-input-with-btn (before textarea)
+// button must be INSIDE chat-input-with-btn (position relative to textarea superseded by v113.3.102)
 const inputWithBtnIdx = html.indexOf('class="chat-input-with-btn"');
 const attachBtnIdx = html.indexOf('id="chat-attach-btn"');
-const textareaIdx = html.indexOf('id="chat-input"');
-assert.ok(inputWithBtnIdx > 0 && attachBtnIdx > inputWithBtnIdx && textareaIdx > attachBtnIdx,
-  'chat-attach-btn must appear inside chat-input-with-btn, before textarea');
-console.log('  PASS: chat-attach-btn restored beside textarea');
+assert.ok(inputWithBtnIdx > 0 && attachBtnIdx > inputWithBtnIdx,
+  'chat-attach-btn must appear inside chat-input-with-btn');
+console.log('  PASS: chat-attach-btn restored inside chat-input-with-btn');
 
 // ── ② chat-sound-badge present in static HTML ─────────────────────────────────
 assert.ok(html.includes('id="chat-sound-badge"'), 'chat-sound-badge must exist in static HTML');

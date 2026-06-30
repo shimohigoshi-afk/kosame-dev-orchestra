@@ -1331,6 +1331,298 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Judge API (v113.3.120) ──────────────────────────────────────────────
+
+    if (url.pathname === '/api/executor/judge') {
+      if (req.method === 'POST') {
+        parseJsonBody(req, (parsed) => {
+          try {
+            const judgeStatus = String(parsed.judge_status || '').trim().toLowerCase();
+            if (!judgeStatus || !['pending_judge','judge_accept','judge_revise','judge_reject','judge_human_gate'].includes(judgeStatus)) {
+              res.writeHead(200, JSON_HEADERS);
+              res.end(JSON.stringify({ ok: false, reason: 'judge_status must be pending_judge|judge_accept|judge_revise|judge_reject|judge_human_gate' }));
+              return;
+            }
+            const judge = {
+              ticket_id: String(parsed.ticket_id || '').trim() || null,
+              judge_status: judgeStatus,
+              judge_reason: String(parsed.judge_reason || '').trim() || null,
+              next_action: String(parsed.next_action || '').trim() || null,
+              human_gate_required: Boolean(parsed.human_gate_required || parsed.judge_status === 'judge_human_gate'),
+              model_lane: String(parsed.model_lane || '').trim() || null,
+              risk_level: String(parsed.risk_level || '').trim() || null,
+              final_owner: 'GPT/KOSAME',
+              updated_at: new Date().toISOString(),
+            };
+            ensureDir(EXECUTOR_DIR);
+            fs.writeFileSync(path.join(EXECUTOR_DIR, 'latest-judge.json'), JSON.stringify(judge, null, 2) + '\n');
+            const jmd = ['# Final Judge', `judge_status: ${judge.judge_status}`, `ticket_id: ${judge.ticket_id || '—'}`,
+              `updated_at: ${judge.updated_at}`, judge.judge_reason ? `judge_reason: ${judge.judge_reason}` : null,
+              judge.next_action ? `next_action: ${judge.next_action}` : null,
+              `human_gate_required: ${judge.human_gate_required}`, judge.model_lane ? `model_lane: ${judge.model_lane}` : null,
+              `final_owner: ${judge.final_owner}`, '',
+            ].filter(Boolean).join('\n');
+            fs.writeFileSync(path.join(EXECUTOR_DIR, 'latest-judge.md'), jmd);
+            _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'KOSAME', msg: `[JUDGE] ${judgeStatus}` });
+            res.writeHead(200, JSON_HEADERS);
+            res.end(JSON.stringify({ ok: true, type: 'judge', status: judgeStatus, ...judge }));
+          } catch (err) {
+            res.writeHead(200, JSON_HEADERS);
+            res.end(JSON.stringify({ ok: false, reason: String(err.message || err) }));
+          }
+        });
+        return;
+      }
+      const judgePath = path.join(EXECUTOR_DIR, 'latest-judge.json');
+      if (!fs.existsSync(judgePath)) {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, type: 'judge', empty: true, status: 'pending_judge' }));
+        return;
+      }
+      try {
+        const jd = JSON.parse(fs.readFileSync(judgePath, 'utf8'));
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, type: 'judge', empty: false, status: jd.judge_status || 'pending_judge', ...jd, path: judgePath }));
+      } catch (_) {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, type: 'judge', reason: 'latest-judge.json is malformed' }));
+      }
+      return;
+    }
+
+    // ── Release Gate API (v113.3.120) ───────────────────────────────────────
+
+    if (url.pathname === '/api/executor/release-gate') {
+      const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+      const blockers = [];
+      const warnings = [];
+      const requiredHuman = [];
+      const forbidden = ['git add -A', 'git add .', 'rm -rf /', 'npm publish without review', 'deploy without gate', 'push without gate', 'Sales DX operation', 'transcriber operation', 'customer data exposure', 'credentials exposure', '.env exposure'];
+      let gate = 'open';
+
+      // Check latest status
+      const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+      if (fs.existsSync(latestPath)) {
+        try {
+          const lc = fs.readFileSync(latestPath, 'utf8');
+          if (lc.includes('blocked')) { blockers.push('latest.md status is blocked'); gate = 'blocked'; }
+        } catch (_) {}
+      }
+
+      // Check judge status
+      const judgePath = path.join(EXECUTOR_DIR, 'latest-judge.json');
+      if (fs.existsSync(judgePath)) {
+        try {
+          const jd = JSON.parse(fs.readFileSync(judgePath, 'utf8'));
+          if (jd.judge_status === 'judge_human_gate') { gate = 'human_gate'; }
+          if (jd.human_gate_required && gate !== 'human_gate') { gate = 'human_gate'; }
+        } catch (_) {}
+      }
+
+      // Check result/action presence
+      const resultPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
+      const actionPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.json');
+      if (!fs.existsSync(resultPath)) { warnings.push('no DeepSeek result'); if (gate === 'open') gate = 'caution'; }
+      if (!fs.existsSync(actionPath)) { warnings.push('no DeepSeek action'); if (gate === 'open') gate = 'caution'; }
+
+      // Human gate requires
+      requiredHuman.push('commit: requires npm run verify PASS');
+      requiredHuman.push('tag: requires release gate open');
+      requiredHuman.push('push: requires gate !== blocked');
+      requiredHuman.push('deploy: requires human gate clear');
+
+      const nextActions = [];
+      if (gate === 'blocked') nextActions.push('resolve blockers first');
+      if (gate === 'human_gate') nextActions.push('human gate approval required');
+      if (gate === 'caution') nextActions.push('resolve warnings for release');
+      if (gate === 'open') nextActions.push('npm run verify, then commit/push');
+
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({
+        ok: true, gate, version: pkg.version,
+        reason: gate === 'blocked' ? blockers.join('; ') : gate === 'human_gate' ? 'human gate required' : gate === 'caution' ? 'warnings present' : 'release gate open',
+        blockers, warnings, required_human_actions: requiredHuman,
+        forbidden_actions: forbidden, next_actions: nextActions,
+      }));
+      return;
+    }
+
+    // ── RC100 Summary API (v113.3.120) ──────────────────────────────────────
+
+    if (url.pathname === '/api/executor/rc100-summary') {
+      const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+      let readiness = 'ready', judgeStatus = 'pending_judge', releaseGate = 'open';
+      try {
+        const rp = path.join(EXECUTOR_DIR, 'rc80-summary.md');
+        if (fs.existsSync(rp)) {
+          const rc = fs.readFileSync(rp, 'utf8');
+          if (rc.includes('readiness: blocked')) readiness = 'blocked';
+          else if (rc.includes('readiness: caution')) readiness = 'caution';
+        }
+      } catch (_) {}
+      try {
+        const jp = path.join(EXECUTOR_DIR, 'latest-judge.json');
+        if (fs.existsSync(jp)) {
+          const jd = JSON.parse(fs.readFileSync(jp, 'utf8'));
+          judgeStatus = jd.judge_status || 'pending_judge';
+        }
+      } catch (_) {}
+      try {
+        // Quick release gate check
+        const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+        if (fs.existsSync(latestPath)) {
+          const lc = fs.readFileSync(latestPath, 'utf8');
+          if (lc.includes('blocked')) releaseGate = 'blocked';
+          else if (!fs.existsSync(path.join(EXECUTOR_DIR, 'latest-deepseek-result.json'))) releaseGate = 'caution';
+        }
+      } catch (_) {}
+
+      const rc100 = [
+        '# KOSAME Dev Orchestra RC100 Summary',
+        `version: ${pkg.version}`,
+        `completion_estimate: 100%`,
+        `readiness: ${readiness}`,
+        `release_gate: ${releaseGate}`,
+        `judge_status: ${judgeStatus}`,
+        '',
+        '## Model Routing Rules',
+        '- L0_LOCAL: simple append/replace/create',
+        '- L1_DEEPSEEK_V4_FLASH: safe/sanitized + low difficulty',
+        '- L2_DEEPSEEK_V4_PRO: safe/sanitized + medium difficulty',
+        '- L3_DEEPSEEK_V4_PRO_AUDIT: safe/sanitized + high difficulty',
+        '- INTERNAL_ONLY: sensitive (GPT/こさめ)',
+        '- BLOCKED: forbidden',
+        '',
+        '## Human Gate Rules',
+        '- commit/tag/push/deploy → human gate required',
+        '- IAM/billing/production → human gate required',
+        '- Secret/.env/credentials/customer data exposure → blocked',
+        '- sales-dx/transcriber → forbidden',
+        '- GPT/こさめ final judge required for sensitive tasks',
+        '',
+        '## Operational Validation Remaining',
+        '- P3 UI polish',
+        '- tuning difficulty scoring with operational data',
+        '- automated smoke residue cleanup',
+        '',
+        `generated_at: ${new Date().toISOString()}`,
+        '',
+      ].join('\n');
+
+      ensureDir(EXECUTOR_DIR);
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'rc100-summary.md'), rc100);
+
+      // Generate handoff-latest.md
+      const handoff = [
+        '# KOSAME Dev Orchestra Handoff Latest',
+        `version: ${pkg.version}`,
+        `generated_at: ${new Date().toISOString()}`,
+        `readiness: ${readiness}`,
+        `release_gate: ${releaseGate}`,
+        `judge_status: ${judgeStatus}`,
+        '',
+        '## Model Lane Rules',
+        '- L0: local, L1: V4 Flash, L2: V4 Pro, L3: V4 Pro+Audit',
+        '- Confidentiality gate before difficulty check',
+        '- Sensitive → INTERNAL_ONLY, Forbidden → BLOCKED',
+        '',
+        '## Forbidden Operations',
+        '- git add -A / git add .',
+        '- rm -rf / delete operations',
+        '- Sales DX / transcriber access',
+        '- Secret / .env / credentials exposure',
+        '- auto push / auto deploy',
+        '',
+        '## Human Gate Rules',
+        '- commit/push/deploy require human approval',
+        '- Codex/Claude prohibited',
+        '',
+        '## Next Action',
+        '- npm run verify',
+        '- Check release gate',
+        '- Review judge status',
+        '',
+      ].join('\n');
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'handoff-latest.md'), handoff);
+
+      // Generate recovery-checklist.md
+      const recovery = [
+        '# KOSAME Dev Orchestra Recovery Checklist',
+        `generated_at: ${new Date().toISOString()}`,
+        '',
+        '## Immediate Recovery',
+        '- 1. npm run verify',
+        '- 2. npm run dev-os:autopilot (if available)',
+        '- 3. git status',
+        '- 4. Check public/test.html for smoke residue',
+        '',
+        '## Generated Files Check',
+        '- .kosame-executor/latest.md',
+        '- .kosame-executor/latest-deepseek.md',
+        '- .kosame-executor/latest-deepseek-result.json',
+        '- .kosame-executor/latest-deepseek-action.json',
+        '- .kosame-executor/latest-judge.json',
+        '- .kosame-executor/history/',
+        '',
+        '## Pre-Push Checklist',
+        '- npm run verify PASS',
+        '- Release gate NOT blocked',
+        '- No .env or credentials in diff',
+        '- No sales-dx/transcriber paths in diff',
+        '- Judge_status reviewed',
+        '- git add performed individually (not git add -A)',
+        '',
+        '## Forbidden to Touch',
+        '- /home/lavie/repos/transcriber',
+        '- /home/lavie/repos/kosame-sales-dx',
+        '- .env / credentials / Secret files',
+        '- Customer data',
+        '- Insurance logic',
+        '',
+      ].join('\n');
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'recovery-checklist.md'), recovery);
+
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        version: pkg.version,
+        completion_estimate: '100%',
+        readiness,
+        release_gate: releaseGate,
+        judge_status: judgeStatus,
+        handoff_path: path.join(EXECUTOR_DIR, 'handoff-latest.md'),
+        recovery_path: path.join(EXECUTOR_DIR, 'recovery-checklist.md'),
+        rc_summary: rc100,
+      }));
+      return;
+    }
+
+    // ── Handoff/Recovery APIs (v113.3.120) ─────────────────────────────────
+
+    if (url.pathname === '/api/executor/handoff') {
+      const hp = path.join(EXECUTOR_DIR, 'handoff-latest.md');
+      if (fs.existsSync(hp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(hp, 'utf8'), path: hp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Call GET /api/executor/rc100-summary to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/recovery') {
+      const rp = path.join(EXECUTOR_DIR, 'recovery-checklist.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Call GET /api/executor/rc100-summary to generate' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

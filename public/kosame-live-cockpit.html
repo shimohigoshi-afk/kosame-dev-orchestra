@@ -2324,6 +2324,11 @@ h1 {
               <div class="small" style="color:var(--muted);margin-bottom:2px">Workflow History (最新20件):</div>
               <div class="agent-stream-log-body" id="deepseek-history-content" style="height:auto;max-height:200px;white-space:pre-wrap;font-size:11px"></div>
             </div>
+            <div id="rc100-dashboard-display" style="margin-top:8px">
+              <div class="small" style="color:var(--accent);margin-bottom:2px">RC100 Final Dashboard:</div>
+              <div class="agent-stream-log-body" id="rc100-gate-content" style="height:auto;max-height:120px;white-space:pre-wrap;font-size:10px;color:var(--muted)"></div>
+              <div class="small" style="margin-top:4px" id="rc100-judge-status"></div>
+            </div>
           </div>
         </details>
       </article>
@@ -5103,6 +5108,41 @@ function renderReleaseReadiness() {
   });
 }
 
+function renderRC100Dashboard() {
+  var el = document.getElementById('rc100-gate-content');
+  var judgeEl = document.getElementById('rc100-judge-status');
+  if (!el) return;
+
+  Promise.all([
+    fetch('/api/executor/release-gate').then(function(r) { return r.json(); }).catch(function() { return null; }),
+    fetch('/api/executor/judge').then(function(r) { return r.json(); }).catch(function() { return null; }),
+  ]).then(function(results) {
+    var gate = results[0];
+    var judge = results[1];
+    var lines = [];
+    if (gate && gate.ok) {
+      var gColor = gate.gate === 'open' ? 'var(--ok)' : gate.gate === 'caution' ? 'var(--accent-2)' : gate.gate === 'human_gate' ? '#facc15' : 'var(--danger)';
+      lines.push('Release Gate: <span style="color:' + gColor + ';font-weight:bold">' + gate.gate + '</span>');
+      if (gate.blockers && gate.blockers.length) lines.push('Blockers: ' + gate.blockers.join(', '));
+      if (gate.next_actions && gate.next_actions.length) lines.push('Next: ' + gate.next_actions.join(' → '));
+    } else {
+      lines.push('Release Gate: unavailable');
+    }
+    el.innerHTML = lines.join('<br>');
+
+    if (judgeEl && judge && judge.ok && !judge.empty) {
+      var jColor = judge.judge_status === 'judge_accept' ? 'var(--ok)' : judge.judge_status === 'judge_revise' ? 'var(--accent-2)' : judge.judge_status === 'judge_reject' ? 'var(--danger)' : judge.judge_status === 'judge_human_gate' ? '#facc15' : 'var(--muted)';
+      judgeEl.innerHTML = 'Final Judge: <span style="color:' + jColor + ';font-weight:bold">' + judge.judge_status + '</span>' +
+        (judge.human_gate_required ? ' ⚠ Human Gate' : '') +
+        (judge.next_action ? ' → ' + judge.next_action : '');
+    } else if (judgeEl) {
+      judgeEl.innerHTML = 'Final Judge: <span style="color:var(--muted)">pending_judge</span>';
+    }
+  }).catch(function() {
+    el.innerHTML = 'RC100 dashboard loading error';
+  });
+}
+
 function renderWorkflowDashboard() {
   var el = document.getElementById('deepseek-dashboard-content');
   if (!el) return;
@@ -6993,6 +7033,7 @@ renderDeepSeekWorkflowHistory();
 getDeepSeekWorkflowStatus();
 renderWorkflowDashboard();
 renderReleaseReadiness();
+renderRC100Dashboard();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

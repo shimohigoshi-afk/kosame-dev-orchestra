@@ -20,6 +20,7 @@ const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } 
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { saveHandoffInbox, readLatestHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
+const { processTicket } = require('./kosame-runner-queue');
 const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 const { evaluateNoYesGate } = require('./kosame-no-yes-gate');
 
@@ -695,96 +696,36 @@ function createLiveCockpitServer(options = {}) {
           };
           saveHandoffInbox(payload, { handoffDir: options.handoffDir });
           _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[dispatch] ${ticketId} — ${title}` });
-          const child = spawn(process.execPath, [path.join(__dirname, 'kosame-runner-queue.js')], {
-            cwd: ROOT,
-            stdio: ['ignore', 'pipe', 'pipe'],
-            env: process.env,
-            shell: false,
-          });
-          child.stdout.on('data', (chunk) => {
-            String(chunk).split('\n').filter(Boolean).forEach(line => {
-              const gate = evaluateNoYesGate({ text: line, source: 'stdout', executionHost: 'kosame-api-runner', executionSource: 'kosame-api-runner', safeSpawn: true });
-              if (!gate.ok && gate.decision !== 'allow') {
-                appendPipelineStageEvent({
-                  stage: gate.decision === 'safety_stop' ? 'runner.dispatch.safety_stop' : 'runner.dispatch.blocked',
-                  status: 'blocked',
-                  workOrderId: ticketId,
-                  attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
-                  attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
-                  manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
-                  route: 'zero-confirm',
-                  executionHost: gate.executionHost,
-                  executionHostAllowed: gate.executionHostAllowed,
-                  interactiveHostBlocked: gate.interactiveHostBlocked,
-                  noYesGateRuntime: gate.noYesGateRuntime,
-                  safeSpawnActive: gate.safeSpawnActive,
-                  manualCodeUiAllowed: gate.manualCodeUiAllowed,
-                  officialRoute: gate.officialRoute,
-                  promptType: gate.promptType,
-                  promptOrigin: gate.promptOrigin,
-                  userInputRequired: gate.userInputRequired,
-                  blockedReason: gate.blockedReason,
-                  timestamp: new Date().toISOString(),
-                  message: `Execution host guard blocked runner output: ${gate.decision}`,
-                }, { agent: 'RUNNER', task: 'runner.dispatch.blocked' });
-                try { child.kill('SIGTERM'); } catch (_) {}
-              }
-              _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
-            });
-          });
-          child.stderr.on('data', (chunk) => {
-            String(chunk).split('\n').filter(Boolean).forEach(line => {
-              const gate = evaluateNoYesGate({ text: line, source: 'stderr', executionHost: 'kosame-api-runner', executionSource: 'kosame-api-runner', safeSpawn: true });
-              if (!gate.ok && gate.decision !== 'allow') {
-                appendPipelineStageEvent({
-                  stage: gate.decision === 'safety_stop' ? 'runner.dispatch.safety_stop' : 'runner.dispatch.blocked',
-                  status: 'blocked',
-                  workOrderId: ticketId,
-                  attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
-                  attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
-                  manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
-                  route: 'zero-confirm',
-                  executionHost: gate.executionHost,
-                  executionHostAllowed: gate.executionHostAllowed,
-                  interactiveHostBlocked: gate.interactiveHostBlocked,
-                  noYesGateRuntime: gate.noYesGateRuntime,
-                  safeSpawnActive: gate.safeSpawnActive,
-                  manualCodeUiAllowed: gate.manualCodeUiAllowed,
-                  officialRoute: gate.officialRoute,
-                  promptType: gate.promptType,
-                  promptOrigin: gate.promptOrigin,
-                  userInputRequired: gate.userInputRequired,
-                  blockedReason: gate.blockedReason,
-                  timestamp: new Date().toISOString(),
-                  message: `Execution host guard blocked runner output: ${gate.decision}`,
-                }, { agent: 'RUNNER', task: 'runner.dispatch.blocked' });
-                try { child.kill('SIGTERM'); } catch (_) {}
-              }
-              _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: line });
-            });
-          });
-          child.on('close', (code) => {
-            appendPipelineStageEvent({
-              stage: 'runner.dispatch.completed',
-              status: code === 0 ? 'success' : 'failed',
-              workOrderId: ticketId,
-              attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
-              attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
-              manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
-              route: 'zero-confirm',
-              timestamp: new Date().toISOString(),
-              message: code === 0 ? `Runner dispatch completed for ${ticketId}` : `Runner dispatch failed with exitCode=${code}`,
-            }, { agent: 'RUNNER', task: 'runner.dispatch.completed' });
-            _emitRunnerSSE('log', {
-              ts: new Date().toISOString(), agent: 'RUNNER',
-              msg: `[DONE] zero-confirm dispatch 完了 exit_code=${code} — ${title}`,
-            });
-            _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: code, ticketId, title });
-          });
+
           _emitRunnerSSE('log', {
             ts: new Date().toISOString(), agent: 'RUNNER',
-            msg: `[RUNNING] Runner Queue 起動済み — ticketId=${ticketId}`,
+            msg: `[RUNNING] processTicket 起動 — ticketId=${ticketId}`,
           });
+
+          let result;
+          try {
+            result = processTicket(payload, { runsDir: path.join(ROOT, '.kosame-runner', 'runs') });
+          } catch (procErr) {
+            result = { status: 'failed', exitCode: 1, error: String(procErr.message || procErr) };
+          }
+
+          const ok = result && (result.status === 'completed' || result.exitCode === 0);
+          appendPipelineStageEvent({
+            stage: 'runner.dispatch.completed',
+            status: ok ? 'success' : 'failed',
+            workOrderId: ticketId,
+            attachmentCount: Array.isArray(parsed.attachments) ? parsed.attachments.length : 0,
+            attachmentIds: Array.isArray(parsed.attachments) ? parsed.attachments.map((att) => String(att && (att.attachmentId || att.id || att.name || '')).trim()).filter(Boolean) : [],
+            manifestPath: String(parsed.attachmentManifestPath || parsed.attachment_manifest_path || ''),
+            route: devOsRoute,
+            timestamp: new Date().toISOString(),
+            message: ok ? `Runner dispatch completed for ${ticketId}` : `Runner dispatch failed: ${result.error || ''}`,
+          }, { agent: 'RUNNER', task: 'runner.dispatch.completed' });
+          _emitRunnerSSE('log', {
+            ts: new Date().toISOString(), agent: 'RUNNER',
+            msg: `[DONE] zero-confirm dispatch 完了 status=${result.status} — ${title}`,
+          });
+          _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: result.exitCode, ticketId, title });
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store',

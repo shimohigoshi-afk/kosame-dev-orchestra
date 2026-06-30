@@ -1910,9 +1910,9 @@ h1 {
 
 /* File attachment UI */
 .chat-input-wrapper { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.chat-input-with-btn { display: flex; align-items: flex-end; gap: 6px; }
+.chat-input-with-btn { display: flex; align-items: center; gap: 6px; }
 .chat-input-with-btn textarea { flex: 1; min-width: 0; width: auto; }
-.chat-attach-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; margin-bottom: 2px; position: relative; }
+.chat-attach-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; position: relative; }
 .chat-attach-btn:hover { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); }
 .chat-attach-btn.has-files { border-color: rgba(125,211,252,0.5); background: rgba(125,211,252,0.1); }
 .chat-attach-count { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; border-radius: 8px; background: #0ea5e9; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; padding: 0 3px; display: none; pointer-events: none; }
@@ -2288,8 +2288,8 @@ h1 {
               <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
               <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
               <div class="chat-input-with-btn">
-                <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
                 <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（複数可・クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付"><svg width="16" height="20" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 8.5V18C20 22.418 16.418 26 12 26C7.582 26 4 22.418 4 18V6C4 3.239 6.239 1 9 1C11.761 1 14 3.239 14 6V17C14 18.657 12.657 20 11 20C9.343 20 8 18.657 8 17V7.5H10V17C10 17.552 10.448 18 11 18C11.552 18 12 17.552 12 17V6C12 4.343 10.657 3 9 3C7.343 3 6 4.343 6 6V18C6 21.314 8.686 24 12 24C15.314 24 18 21.314 18 18V8.5H20Z" fill="#00bcd4"/></svg><span id="chat-attach-count" class="chat-attach-count" aria-hidden="true"></span></button>
+                <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4" multiple style="display:none" aria-hidden="true">
             </div>
@@ -6569,18 +6569,18 @@ if (_chatInputWrapper) {
 }
 
 // ─── Sound badge click → 補助メニュー 通知設定タブを開く ────────────────────
-(function() {
-  var _sb = document.getElementById('chat-sound-badge');
-  if (!_sb) return;
-  _sb.style.cursor = 'pointer';
-  _sb.title = '通知設定を開く';
-  _sb.addEventListener('click', function() {
-    var shell = document.querySelector('.chat-assist-shell');
-    if (shell && !shell.open) shell.open = true;
-    if (typeof selectAssistTab === 'function') selectAssistTab('notifications');
-    if (shell) shell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+const _chatSoundBadge = document.getElementById('chat-sound-badge');
+if (_chatSoundBadge) {
+  _chatSoundBadge.style.cursor = 'pointer';
+  _chatSoundBadge.title = '通知設定を開く';
+  _chatSoundBadge.addEventListener('click', function() {
+    const _assistShell = document.querySelector('.chat-assist-shell');
+    if (_assistShell) _assistShell.open = true;
+    selectAssistTab('notifications');
+    const _assistStrip = document.getElementById('assist-menu-strip');
+    if (_assistStrip) _assistStrip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
-})();
+}
 
 document.getElementById('chat-summarize').addEventListener('click', () => {
   const inputText = getChatInputText();

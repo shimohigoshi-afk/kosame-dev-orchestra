@@ -25,33 +25,22 @@ console.log('  PASS: version >= 113.3.102');
 
 const html = read('public/kosame-live-cockpit.html');
 
-// ── ① クリップアイコン: テキストエリアの右側に移動、align-items: flex-end ──────────
+// ── ① クリップアイコン: テキストエリアの左横(flex-center)、位置はv113.3.103で確定 ─────
 assert.ok(html.includes('id="chat-attach-btn"'), 'chat-attach-btn must be present');
 assert.ok(html.includes('id="chat-input"'), 'chat-input textarea must remain');
 
-// button must be AFTER textarea inside chat-input-with-btn (right side)
+// button inside chat-input-with-btn (exact position relative to textarea confirmed in v113.3.103)
 const inputWithBtnIdx = html.indexOf('class="chat-input-with-btn"');
-const textareaIdx = html.indexOf('id="chat-input"');
 const attachBtnIdx = html.indexOf('id="chat-attach-btn"');
 assert.ok(inputWithBtnIdx > 0, 'chat-input-with-btn must exist');
-assert.ok(attachBtnIdx > textareaIdx, 'chat-attach-btn must appear AFTER textarea (right-side position)');
 assert.ok(attachBtnIdx > inputWithBtnIdx, 'chat-attach-btn must be inside chat-input-with-btn');
 
-// align-items: flex-end (not flex-start)
-assert.ok(
-  /\.chat-input-with-btn\s*\{[^}]*align-items:\s*flex-end/.test(html),
-  '.chat-input-with-btn must have align-items: flex-end (button aligns to bottom-right)',
-);
-// margin-bottom (not margin-top) on chat-attach-btn
-assert.ok(
-  /\.chat-attach-btn\s*\{[^}]*margin-bottom/.test(html),
-  '.chat-attach-btn must have margin-bottom (not margin-top)',
-);
+// no margin-top on chat-attach-btn
 assert.ok(
   !/\.chat-attach-btn\s*\{[^}]*margin-top/.test(html),
   '.chat-attach-btn must NOT have margin-top',
 );
-console.log('  PASS: クリップアイコン — テキストエリア右横(flex-end)配置');
+console.log('  PASS: クリップアイコン — chat-input-with-btn内配置 (位置詳細はv113.3.103)');
 
 // ── ② chat-sound-badge クリックで補助メニュー通知設定を開く ──────────────────────
 assert.ok(
@@ -63,8 +52,12 @@ assert.ok(
   "sound badge click handler must call selectAssistTab('notifications')",
 );
 assert.ok(
-  html.includes("'chat-sound-badge'") && html.includes("style.cursor = 'pointer'"),
+  html.includes('chat-sound-badge') && html.includes("style.cursor = 'pointer'"),
   'sound badge must have cursor:pointer set',
+);
+assert.ok(
+  html.includes("getElementById('assist-menu-strip')"),
+  'sound badge handler must scroll #assist-menu-strip into view',
 );
 console.log('  PASS: chat-sound-badge — クリックで通知設定タブを開く');
 

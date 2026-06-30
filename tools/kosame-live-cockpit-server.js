@@ -26,6 +26,9 @@ const { evaluateNoYesGate } = require('./kosame-no-yes-gate');
 
 const ROOT = path.resolve(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'kosame-live-cockpit.html');
+const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
+
+function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
 function readHtml() {
   return fs.readFileSync(HTML_PATH, 'utf8');
@@ -790,6 +793,128 @@ function createLiveCockpitServer(options = {}) {
       const content = fs.readFileSync(handoffPath, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
       res.end(JSON.stringify({ ok: true, content }));
+      return;
+    }
+
+    // ── DeepSeek result intake (v113.3.115) ─────────────────────────────────
+
+    if (url.pathname === '/api/executor/deepseek-result') {
+      if (req.method === 'POST') {
+        parseJsonBody(req, (parsed) => {
+          try {
+            const rawText = String(parsed.raw_text || '').trim();
+            const ticketId = String(parsed.ticket_id || '').trim();
+            if (!rawText) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+              res.end(JSON.stringify({ ok: false, reason: 'raw_text is required' }));
+              return;
+            }
+
+            // Extract KOSAME_DEEPSEEK_RESULT block
+            const blockRe = /KOSAME_DEEPSEEK_RESULT_BEGIN\n([\s\S]*?)\nKOSAME_DEEPSEEK_RESULT_END/;
+            const blockMatch = rawText.match(blockRe);
+            if (!blockMatch) {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+              res.end(JSON.stringify({ ok: false, reason: 'KOSAME_DEEPSEEK_RESULT_BEGIN/END block not found in raw_text' }));
+              return;
+            }
+
+            const blockContent = blockMatch[1].trim();
+
+            // Blocked checks on the result
+            const blockedPatterns = [/\.env\b/i, /credentials/i, /SECRET/i, /private\s*key/i, /\/home\/lavie\/repos\/transcriber/, /\/home\/lavie\/repos\/kosame-sales-dx/];
+            for (const bp of blockedPatterns) {
+              if (bp.test(blockContent)) {
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+                res.end(JSON.stringify({ ok: false, reason: 'result contains blocked content (secret/api keys/credentials/transcriber/sales-dx)' }));
+                return;
+              }
+            }
+
+            // Parse individual fields
+            const getField = (label) => { const m = blockContent.match(new RegExp(`^${label}:\\s*(.+)$`, 'm')); return m ? m[1].trim() : ''; };
+            const getMultiLineField = (label) => {
+              const re = new RegExp(`^${label}:\\s*\\n((?:-\\s.*\\n?)*)`, 'm');
+              const m = blockContent.match(re);
+              if (!m) return [];
+              return m[1].split('\n').map(l => l.replace(/^-\s*/, '').trim()).filter(Boolean);
+            };
+
+            const parsedResult = {
+              status: getField('status'),
+              ticket_id: getField('ticket_id') || ticketId,
+              summary: getField('summary'),
+              changed_files: getMultiLineField('changed_files'),
+              verification: getMultiLineField('verification'),
+              commit: getField('commit'),
+              notes: getField('notes'),
+              raw_block: blockMatch[0],
+              received_at: new Date().toISOString(),
+            };
+
+            ensureDir(EXECUTOR_DIR);
+            const resultMdPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.md');
+            const resultJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
+
+            // Write markdown
+            const mdLines = [
+              '# DeepSeek Result',
+              `received_at: ${parsedResult.received_at}`,
+              `status: ${parsedResult.status}`,
+              `ticket_id: ${parsedResult.ticket_id}`,
+              `summary: ${parsedResult.summary}`,
+              '',
+              '## Changed Files',
+              parsedResult.changed_files.length ? parsedResult.changed_files.map(f => `- ${f}`).join('\n') : '- (none)',
+              '',
+              '## Verification',
+              parsedResult.verification.length ? parsedResult.verification.map(v => `- ${v}`).join('\n') : '- (none)',
+              '',
+              `commit: ${parsedResult.commit}`,
+              `notes: ${parsedResult.notes}`,
+              '',
+              '## Raw Block',
+              '',
+              '```',
+              blockMatch[0],
+              '```',
+              '',
+            ].join('\n');
+            fs.writeFileSync(resultMdPath, mdLines);
+
+            // Write JSON
+            fs.writeFileSync(resultJsonPath, JSON.stringify(parsedResult, null, 2) + '\n');
+
+            // Update latest.md with result status
+            const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+            const latestContent = fs.existsSync(latestPath) ? fs.readFileSync(latestPath, 'utf8') : '';
+            const latestUpdated = latestContent
+              ? latestContent.replace(/^status: .+$/m, `status: deepseek_result_received`)
+              : `# KOSAME Runner — Latest Executor Status\nupdated_at: ${parsedResult.received_at}\nstatus: deepseek_result_received\nticket_id: ${parsedResult.ticket_id}\n`;
+            fs.writeFileSync(latestPath, latestUpdated);
+
+            _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[DEEPSEEK RESULT] received status=${parsedResult.status} ticket=${parsedResult.ticket_id} — ${parsedResult.summary.slice(0, 80)}` });
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+            res.end(JSON.stringify({ ok: true, result: parsedResult }));
+          } catch (err) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+            res.end(JSON.stringify({ ok: false, reason: String(err.message || err) }));
+          }
+        });
+        return;
+      }
+
+      // GET
+      const resultJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
+      if (!fs.existsSync(resultJsonPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek-result.json not found' }));
+        return;
+      }
+      const resultContent = fs.readFileSync(resultJsonPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      res.end(resultContent);
       return;
     }
 

@@ -2263,6 +2263,28 @@ h1 {
       </article>
     </section>
 
+    <!-- DeepSeek Result Intake (v113.3.115) -->
+    <section class="agent-stream-log-strip" id="deepseek-result-strip" style="margin-top:8px;display:none">
+      <article class="panel">
+        <details class="support-details" id="deepseek-result-details">
+          <summary>DeepSeek Result <span id="deepseek-result-badge" style="color:var(--accent);font-weight:bold"></span></summary>
+          <div class="support-details-body">
+            <div id="deepseek-result-display" style="margin-bottom:8px">
+              <div id="deepseek-result-status" class="small" style="color:var(--muted);margin-bottom:4px"></div>
+              <div class="agent-stream-log-body" id="deepseek-result-content" style="height:auto;max-height:300px;white-space:pre-wrap;font-size:13px"></div>
+            </div>
+            <div id="deepseek-result-intake">
+              <textarea id="deepseek-result-textarea" style="width:100%;box-sizing:border-box;min-height:120px;border:1px solid rgba(125,211,252,0.2);background:rgba(0,0,0,0.3);color:#ddd;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;resize:vertical" placeholder="DeepSeekの結果をここに貼って「結果を取り込む」を押してください"></textarea>
+              <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button type="button" class="chat-work-order-copy" id="deepseek-result-submit-btn">結果を取り込む</button>
+                <span id="deepseek-result-intake-status" class="small" style="color:var(--muted)"></span>
+              </div>
+            </div>
+          </div>
+        </details>
+      </article>
+    </section>
+
     <!-- AGENT STREAM LOG (チャット入力欄の直上) -->
     <section class="agent-stream-log-strip" id="agent-stream-log-strip" style="margin-top:8px">
       <article class="panel">
@@ -5004,6 +5026,91 @@ function renderDeepSeekHandoff() {
   });
 }
 
+function renderDeepSeekResult() {
+  const strip = document.getElementById('deepseek-result-strip');
+  const contentNode = document.getElementById('deepseek-result-content');
+  const statusNode = document.getElementById('deepseek-result-status');
+  const badgeNode = document.getElementById('deepseek-result-badge');
+  const submitBtn = document.getElementById('deepseek-result-submit-btn');
+  const textarea = document.getElementById('deepseek-result-textarea');
+  const intakeStatus = document.getElementById('deepseek-result-intake-status');
+  if (!strip || !contentNode || !submitBtn || !textarea) return;
+
+  // Load existing result
+  fetch('/api/executor/deepseek-result').then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.ok || !data.status) {
+      strip.style.display = '';
+      if (contentNode) contentNode.textContent = 'まだ結果はありません。DeepSeekが返した結果を貼って取り込んでください。';
+      if (statusNode) statusNode.textContent = 'waiting for result';
+      if (badgeNode) badgeNode.textContent = '';
+      return;
+    }
+    strip.style.display = '';
+    displayDeepSeekResult(data, contentNode, statusNode, badgeNode);
+  }).catch(function() {
+    strip.style.display = '';
+  });
+
+  // Submit button
+  submitBtn.onclick = function() {
+    const rawText = (textarea.value || '').trim();
+    if (!rawText) {
+      if (intakeStatus) intakeStatus.textContent = 'テキストを貼ってから押してください';
+      return;
+    }
+    if (intakeStatus) intakeStatus.textContent = '送信中...';
+    submitBtn.disabled = true;
+
+    fetch('/api/executor/deepseek-result', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw_text: rawText }),
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      submitBtn.disabled = false;
+      if (!data.ok) {
+        if (intakeStatus) intakeStatus.textContent = 'エラー: ' + (data.reason || 'unknown');
+        return;
+      }
+      if (intakeStatus) intakeStatus.textContent = '取り込み成功';
+      textarea.value = '';
+      displayDeepSeekResult(data.result, contentNode, statusNode, badgeNode);
+      // Also refresh handoff display
+      if (typeof renderDeepSeekHandoff === 'function') renderDeepSeekHandoff();
+    }).catch(function(err) {
+      submitBtn.disabled = false;
+      if (intakeStatus) intakeStatus.textContent = '通信エラー: ' + (err.message || 'unknown');
+    });
+  };
+}
+
+function displayDeepSeekResult(data, contentNode, statusNode, badgeNode) {
+  if (!contentNode) return;
+  var parts = [];
+  parts.push('status: ' + (data.status || '—'));
+  parts.push('ticket_id: ' + (data.ticket_id || '—'));
+  parts.push('summary: ' + (data.summary || '—'));
+  parts.push('');
+  parts.push('Changed Files:');
+  if (data.changed_files && data.changed_files.length) {
+    data.changed_files.forEach(function(f) { parts.push('  - ' + f); });
+  } else {
+    parts.push('  (none)');
+  }
+  parts.push('');
+  parts.push('Verification:');
+  if (data.verification && data.verification.length) {
+    data.verification.forEach(function(v) { parts.push('  - ' + v); });
+  } else {
+    parts.push('  (none)');
+  }
+  parts.push('');
+  parts.push('commit: ' + (data.commit || '—'));
+  parts.push('notes: ' + (data.notes || '—'));
+  contentNode.textContent = parts.join('\n');
+  if (statusNode) statusNode.textContent = 'received at: ' + (data.received_at || '') + ' — status: ' + (data.status || '');
+  if (badgeNode) badgeNode.textContent = '(' + (data.status || '') + ')';
+}
+
 function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-result-panel');
   const statusNode = document.getElementById('work-order-result-status');
@@ -6554,6 +6661,7 @@ renderLatestApprovedWorkOrder({});
 renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderDeepSeekHandoff();
+renderDeepSeekResult();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

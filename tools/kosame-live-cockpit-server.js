@@ -804,12 +804,29 @@ function createLiveCockpitServer(options = {}) {
       const latestPath = path.join(ROOT, '.kosame-executor', 'latest.md');
       if (!fs.existsSync(latestPath)) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-        res.end(JSON.stringify({ ok: false, reason: 'latest.md not found' }));
+        res.end(JSON.stringify({ ok: true, type: 'latest', empty: true, status: 'no_handoff', reason: 'latest.md not found' }));
         return;
       }
       const content = fs.readFileSync(latestPath, 'utf8');
+      // Parse lane/status/ticket_id from latest.md
+      const laneMatch = content.match(/^lane:\s*(.+)$/m);
+      const statusMatch = content.match(/^status:\s*(.+)$/m);
+      const ticketMatch = content.match(/^ticket_id:\s*(.+)$/m);
+      const updatedMatch = content.match(/^updated_at:\s*(.+)$/m);
+      const reasonMatch = content.match(/^reason:\s*(.+)$/m);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-      res.end(JSON.stringify({ ok: true, content }));
+      res.end(JSON.stringify({
+        ok: true,
+        type: 'latest',
+        empty: false,
+        content,
+        status: statusMatch ? statusMatch[1].trim() : 'unknown',
+        lane: laneMatch ? laneMatch[1].trim() : null,
+        ticket_id: ticketMatch ? ticketMatch[1].trim() : null,
+        updated_at: updatedMatch ? updatedMatch[1].trim() : null,
+        reason: reasonMatch ? reasonMatch[1].trim() : null,
+        path: latestPath,
+      }));
       return;
     }
 
@@ -817,12 +834,23 @@ function createLiveCockpitServer(options = {}) {
       const handoffPath = path.join(ROOT, '.kosame-executor', 'latest-deepseek.md');
       if (!fs.existsSync(handoffPath)) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek.md not found' }));
+        res.end(JSON.stringify({ ok: true, type: 'handoff', empty: true, status: 'no_handoff', reason: 'latest-deepseek.md not found' }));
         return;
       }
       const content = fs.readFileSync(handoffPath, 'utf8');
+      const ticketMatch = content.match(/^ticket_id:\s*(.+)$/m);
+      const genMatch = content.match(/^generated_at:\s*(.+)$/m);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-      res.end(JSON.stringify({ ok: true, content }));
+      res.end(JSON.stringify({
+        ok: true,
+        type: 'handoff',
+        empty: false,
+        status: 'handoff_ready',
+        content,
+        ticket_id: ticketMatch ? ticketMatch[1].trim() : null,
+        generated_at: genMatch ? genMatch[1].trim() : null,
+        path: handoffPath,
+      }));
       return;
     }
 
@@ -929,7 +957,7 @@ function createLiveCockpitServer(options = {}) {
             _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[DEEPSEEK RESULT] received status=${parsedResult.status} ticket=${parsedResult.ticket_id} — ${parsedResult.summary.slice(0, 80)}` });
 
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-            res.end(JSON.stringify({ ok: true, result: parsedResult }));
+            res.end(JSON.stringify({ ok: true, type: 'result', status: parsedResult.status, result: parsedResult, path: resultJsonPath }));
           } catch (err) {
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
             res.end(JSON.stringify({ ok: false, reason: String(err.message || err) }));
@@ -942,12 +970,17 @@ function createLiveCockpitServer(options = {}) {
       const resultJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
       if (!fs.existsSync(resultJsonPath)) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek-result.json not found' }));
+        res.end(JSON.stringify({ ok: true, type: 'result', empty: true, status: 'no_result', reason: 'latest-deepseek-result.json not found' }));
         return;
       }
-      const resultContent = fs.readFileSync(resultJsonPath, 'utf8');
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-      res.end(resultContent);
+      try {
+        const resultData = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, type: 'result', empty: false, status: resultData.status || 'received', ...resultData, path: resultJsonPath }));
+      } catch (_) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: false, type: 'result', reason: 'latest-deepseek-result.json is malformed' }));
+      }
       return;
     }
 
@@ -1068,9 +1101,12 @@ function createLiveCockpitServer(options = {}) {
 
             const response = {
               ok: true,
+              type: 'action',
+              status: 'action_' + action,
               action,
               ticket_id: ticketId,
               reason: reason || null,
+              created_at: actionObj.created_at,
               saved_json_path: actionJsonPath,
               saved_md_path: actionMdPath,
               revision_path: revisionPath,
@@ -1090,12 +1126,17 @@ function createLiveCockpitServer(options = {}) {
       const actionJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.json');
       if (!fs.existsSync(actionJsonPath)) {
         res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek-action.json not found' }));
+        res.end(JSON.stringify({ ok: true, type: 'action', empty: true, status: 'no_action', reason: 'latest-deepseek-action.json not found' }));
         return;
       }
-      const actionContent = fs.readFileSync(actionJsonPath, 'utf8');
-      res.writeHead(200, JSON_HEADERS);
-      res.end(actionContent);
+      try {
+        const actionData = JSON.parse(fs.readFileSync(actionJsonPath, 'utf8'));
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, type: 'action', empty: false, status: 'action_' + (actionData.action || 'unknown'), ...actionData, path: actionJsonPath }));
+      } catch (_) {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, type: 'action', reason: 'latest-deepseek-action.json is malformed' }));
+      }
       return;
     }
 
@@ -1105,7 +1146,7 @@ function createLiveCockpitServer(options = {}) {
       const historyDir = path.join(EXECUTOR_DIR, 'history');
       if (!fs.existsSync(historyDir)) {
         res.writeHead(200, JSON_HEADERS);
-        res.end(JSON.stringify({ ok: true, items: [] }));
+        res.end(JSON.stringify({ ok: true, type: 'history', count: 0, items: [] }));
         return;
       }
       const files = fs.readdirSync(historyDir).sort().reverse().slice(0, 20);
@@ -1115,11 +1156,13 @@ function createLiveCockpitServer(options = {}) {
         if (!f.endsWith('.json') || !fs.statSync(fp).isFile()) continue;
         try {
           const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+          // Normalize history item shape
+          data._path = fp;
           items.push(data);
         } catch (_) { /* skip malformed */ }
       }
       res.writeHead(200, JSON_HEADERS);
-      res.end(JSON.stringify({ ok: true, items }));
+      res.end(JSON.stringify({ ok: true, type: 'history', count: items.length, items }));
       return;
     }
 

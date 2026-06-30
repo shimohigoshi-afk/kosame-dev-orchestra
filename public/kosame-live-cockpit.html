@@ -2289,7 +2289,7 @@ h1 {
     <section class="agent-stream-log-strip" id="deepseek-action-strip" style="margin-top:8px;display:none">
       <article class="panel">
         <details class="support-details" id="deepseek-action-details">
-          <summary>DeepSeek Action <span id="deepseek-action-badge" style="color:var(--warn);font-weight:bold"></span></summary>
+          <summary>DeepSeek Action <span id="deepseek-action-badge" style="color:var(--warn);font-weight:bold"></span> <span id="deepseek-workflow-status-badge" class="status-chip" style="margin-left:4px;font-size:9px;padding:1px 6px">checking</span> <span id="deepseek-workflow-revision-badge" class="status-chip" style="display:none;margin-left:4px;font-size:9px;padding:1px 6px"></span></summary>
           <div class="support-details-body">
             <div id="deepseek-action-buttons" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
               <button type="button" class="chat-work-order-copy" id="deepseek-action-accept" style="border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.1)">採用</button>
@@ -5016,6 +5016,65 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function getDeepSeekWorkflowStatus() {
+  const badgeEl = document.getElementById('deepseek-workflow-status-badge');
+  if (!badgeEl) return;
+  var state = 'checking';
+  var color = 'var(--muted)';
+
+  fetch('/api/executor/latest').then(function(r) { return r.json(); }).then(function(latest) {
+    if (!latest.ok || latest.empty) {
+      state = 'no_handoff';
+      color = 'var(--muted)';
+      return state;
+    }
+    var lane = latest.lane || '';
+    var status = latest.status || '';
+
+    if (status === 'blocked' || lane === 'blocked_with_reason') {
+      state = 'blocked';
+      color = 'var(--danger)';
+    } else if (status === 'deepseek_result_received' || status.includes('result')) {
+      state = 'result_received';
+      color = 'var(--accent)';
+    } else if (status === 'deepseek_result_actioned') {
+      var action = (latest.content && latest.content.match(/^action:\s*(.+)$/m)) ? RegExp.$1 : '';
+      state = 'action_' + (action || 'pending');
+      color = action === 'accept' ? 'var(--ok)' : action === 'revise' ? '#facc15' : action === 'reject' ? 'var(--danger)' : 'var(--warn)';
+    } else if (lane === 'deepseek_patch_required' || status === 'pending') {
+      state = 'handoff_ready';
+      color = 'var(--accent-2)';
+    } else {
+      state = 'no_handoff';
+      color = 'var(--muted)';
+    }
+    badgeEl.textContent = state;
+    badgeEl.style.color = color;
+    badgeEl.style.borderColor = color;
+  }).catch(function() {
+    state = 'error';
+    color = 'var(--danger)';
+    badgeEl.textContent = state;
+    badgeEl.style.color = color;
+    badgeEl.style.borderColor = color;
+  });
+
+  // Also check for revision
+  var revisionEl = document.getElementById('deepseek-workflow-revision-badge');
+  if (revisionEl) {
+    fetch('/api/executor/deepseek-handoff').then(function(r) { return r.json(); }).then(function(h) {
+      if (h && h.ok && !h.empty && h.content && h.content.includes('Revision Handoff')) {
+        revisionEl.textContent = 'revision_ready';
+        revisionEl.style.display = '';
+        revisionEl.style.color = '#facc15';
+        revisionEl.style.borderColor = '#facc15';
+      } else {
+        revisionEl.style.display = 'none';
+      }
+    }).catch(function() { revisionEl.style.display = 'none'; });
+  }
+}
+
 function renderDeepSeekHandoff() {
   const strip = document.getElementById('deepseek-handoff-strip');
   const contentNode = document.getElementById('deepseek-handoff-content');
@@ -5025,20 +5084,20 @@ function renderDeepSeekHandoff() {
   if (!strip || !contentNode) return;
 
   fetch('/api/executor/latest').then(r => r.json()).then(latest => {
-    if (!latest.ok) { strip.style.display = 'none'; return; }
+    if (!latest.ok || latest.empty) { strip.style.display = 'none'; return; }
     const isDeepSeekLane = latest.content && latest.content.includes('deepseek_patch_required');
     if (!isDeepSeekLane) { strip.style.display = 'none'; return; }
     strip.style.display = '';
     return fetch('/api/executor/deepseek-handoff').then(r => r.json());
   }).then(handoff => {
-    if (!handoff || !handoff.ok) {
+    if (!handoff || !handoff.ok || handoff.empty) {
       contentNode.textContent = 'DeepSeek handoff ファイルがまだありません。';
       if (statusNode) statusNode.textContent = 'waiting for handoff file';
       if (badgeNode) badgeNode.textContent = '(pending)';
       return;
     }
     contentNode.textContent = handoff.content;
-    if (badgeNode) badgeNode.textContent = '(ready)';
+    if (badgeNode) badgeNode.textContent = '(handoff_ready)';
     if (statusNode) statusNode.textContent = 'ready to copy';
 
     if (copyBtn) {
@@ -5075,11 +5134,11 @@ function renderDeepSeekResult() {
 
   // Load existing result
   fetch('/api/executor/deepseek-result').then(function(r) { return r.json(); }).then(function(data) {
-    if (!data.ok || !data.status) {
+    if (!data.ok || data.empty) {
       strip.style.display = '';
       if (contentNode) contentNode.textContent = 'まだ結果はありません。DeepSeekが返した結果を貼って取り込んでください。';
       if (statusNode) statusNode.textContent = 'waiting for result';
-      if (badgeNode) badgeNode.textContent = '';
+      if (badgeNode) badgeNode.textContent = '(no_result)';
       return;
     }
     strip.style.display = '';
@@ -5169,12 +5228,12 @@ function renderDeepSeekResultAction() {
 
   // Check if we have a result to act on
   fetch('/api/executor/deepseek-result').then(function(r) { return r.json(); }).then(function(data) {
-    if (!data.ok || !data.status) {
+    if (!data.ok || data.empty) {
       strip.style.display = 'none';
       return;
     }
     strip.style.display = '';
-    if (badgeNode) badgeNode.textContent = '(result ready)';
+    if (badgeNode) badgeNode.textContent = '(result_received)';
     statusNode.textContent = 'Result received. Choose action:';
   }).catch(function() { strip.style.display = 'none'; });
 
@@ -6854,6 +6913,7 @@ renderDeepSeekHandoff();
 renderDeepSeekResult();
 renderDeepSeekResultAction();
 renderDeepSeekWorkflowHistory();
+getDeepSeekWorkflowStatus();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

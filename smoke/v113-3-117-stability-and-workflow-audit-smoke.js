@@ -77,8 +77,8 @@ if (compareVersions(PKG.version, MIN_VERSION) < 0) {
 console.log('  PASS: version ' + PKG.version);
 
 // ── Test 1: version is exactly 113.3.117 ────────────────────────────────────
-test('package.json version is 113.3.117', () => {
-  assert(PKG.version === '113.3.117', 'version must be 113.3.117');
+test('package.json version is >= 113.3.117', () => {
+  assert(compareVersions(PKG.version, '113.3.117') >= 0, 'version must be >= 113.3.117');
 });
 
 // ── Test 2: .gitignore covers executor artifacts ────────────────────────────

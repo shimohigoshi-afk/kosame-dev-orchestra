@@ -699,7 +699,7 @@ function createLiveCockpitServer(options = {}) {
 
           _emitRunnerSSE('log', {
             ts: new Date().toISOString(), agent: 'RUNNER',
-            msg: `[RUNNING] processTicket 起動 — ticketId=${ticketId}`,
+            msg: `[RUNNING] Runner Queue — processTicket 起動 id=${ticketId}`,
           });
 
           let result;

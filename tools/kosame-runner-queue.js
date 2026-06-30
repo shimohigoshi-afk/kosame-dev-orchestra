@@ -568,7 +568,22 @@ function executorLaneRouter(ticket, runDir) {
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
-  return executorLaneRouter(ticket, runDir);
+  // 1. Try lane router for all tickets
+  const laneResult = executorLaneRouter(ticket, runDir);
+
+  // 2. For chat-dispatch tickets that lane router can't handle locally,
+  //    fall back to Claude (backward compat for kosame-chat-dispatch)
+  if (laneResult.executorStatus === 'deepseek_patch_required' && ticket.source === 'kosame-chat-dispatch') {
+    process.stdout.write(`[FALLBACK] deepseek → Claude for chat-dispatch ticket=${ticket.id}\n`);
+    const claudeResult = claudeChatExecutor(ticket, runDir);
+    if (claudeResult.ok) return claudeResult;
+    laneResult.claudeFallbackAttempted = true;
+    laneResult.claudeExitCode = claudeResult.exitCode;
+    laneResult.claudeError = claudeResult.error;
+    return laneResult;
+  }
+
+  return laneResult;
 }
 
 // ── Single ticket execution ───────────────────────────────────────────────────

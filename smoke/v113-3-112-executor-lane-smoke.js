@@ -310,9 +310,9 @@ test('no sales-dx / transcriber contamination', () => {
   }
 });
 
-// ── Teardown: restore original test.html ──────────────────────────────────────
-fs.writeFileSync(TEST_HTML_PATH, fs.readFileSync(TEST_HTML_BAK));
-fs.unlinkSync(TEST_HTML_BAK);
+// ── Teardown: restore canonical test.html (Hello World, clean) ──────────────
+fs.writeFileSync(TEST_HTML_PATH, CANONICAL_HTML);
+try { fs.unlinkSync(TEST_HTML_BAK); } catch (_) {}
 
 // ── Summary ──────────────────────────────────────────────────────────────────
 const total = passed + failed;

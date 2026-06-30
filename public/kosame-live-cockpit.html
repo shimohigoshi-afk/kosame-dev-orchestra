@@ -1928,6 +1928,7 @@ h1 {
 .chat-attach-remove { background: none; border: none; cursor: pointer; color: var(--muted); padding: 0 0 0 2px; font-size: 14px; line-height: 1; }
 .chat-attach-remove:hover { color: var(--text); }
 .chat-url-banner { background: rgba(125,211,252,0.07); border: 1px solid rgba(125,211,252,0.2); border-radius: 7px; padding: 5px 10px; font-size: 12px; color: rgba(125,211,252,0.85); display: flex; align-items: center; gap: 5px; }
+.chat-url-banner[hidden] { display: none !important; }
 .chat-drop-highlight .chat-input-with-btn textarea { border-color: rgba(125,211,252,0.55) !important; background: rgba(125,211,252,0.06) !important; }
 
 /* API Cost section */
@@ -2308,7 +2309,7 @@ h1 {
     <!-- 補助メニュー (order 11) -->
     <section class="assist-menu-strip" id="assist-menu-strip" style="margin-top:8px">
       <article class="panel">
-        <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル">
+        <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル" open>
           <summary class="chat-assist-shell-summary">補助メニュー</summary>
           <div class="chat-assist-shell-body">
             <div class="chat-quick-actions chat-assist-tabs" role="tablist" aria-label="相談タブ">

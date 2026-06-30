@@ -106,27 +106,46 @@ function claudeChatExecutor(ticket, runDir) {
   };
 }
 
-// ── Local deterministic executor (v113.3.109) ──────────────────────────────
+// ── Local deterministic executor (v113.3.110) ──────────────────────────────
 // Handles simple file-append tasks without Claude.
 // Falls back when Claude is unavailable.
 // Returns { ok, exitCode, error, executor } where executor === 'local' on success.
 
+// Allowed file patterns (low risk, repo-root relative)
+const ALLOWED_FILE_PATTERNS = [
+  /^public\/[^/]+\.html$/i,
+  /^public\/[^/]+\.htm$/i,
+  /^README(?:\.md)?$/i,
+  /^[^/]+\.txt$/i,
+  /^[^/]+\.md$/i,
+];
+
+function isAllowedFilePath(filePath) {
+  // Reject path traversal
+  if (filePath.includes('..')) return false;
+  return ALLOWED_FILE_PATTERNS.some((re) => re.test(filePath));
+}
+
 function extractFileAppendInfo(promptText) {
-  // Match patterns like:
-  //   "XXX を public/test.html の本文に追記"
-  //   "public/test.html に追記"
-  //   "public/test.html に書き込む"
-  const fileMatch = promptText.match(/(public\/[^\s,。、]+\.html|[^\s,。、]+\.md|[^\s,。、]+\.txt)\b/i);
-  if (!fileMatch) return null;
-  const filePath = fileMatch[1];
+  // Accept KOSAME_* markers (any suffix)
+  const markerRe = /(KOSAME_[A-Z0-9_]+)/i;
+  const markerMatch = promptText.match(markerRe);
+  if (!markerMatch) return null;
+  const textToAppend = markerMatch[1];
 
-  // Extract the unique string to append
-  // Look for KOSAME_UNIQUE_TEST or similar marker
-  const markerMatch = promptText.match(/(KOSAME_UNIQUE_[A-Z0-9_]+)/i);
-  const textToAppend = markerMatch ? markerMatch[1] : '';
+  // Allowed file extensions
+  const fileRe = /(public\/[^\s,。、、"]+\.html|public\/[^\s,。、"]+\.htm|[^\s,。、"]+\.md|[^\s,。、"]+\.txt)\b/i;
+  const fileMatch = promptText.match(fileRe);
+  if (!fileMatch) {
+    return { filePath: null, textToAppend, error: 'no file path matched in prompt' };
+  }
+  let filePath = fileMatch[1];
 
-  // Determine the target repo
-  return { filePath, textToAppend };
+  if (!isAllowedFilePath(filePath)) {
+    return { filePath, textToAppend, error: `file path not allowed: ${filePath}` };
+  }
+
+  return { filePath, textToAppend, error: null };
 }
 
 function localDeterministicExecutor(ticket, runDir) {
@@ -140,7 +159,7 @@ function localDeterministicExecutor(ticket, runDir) {
   let ok = false;
   let error = null;
 
-  logLines.push('# Local Deterministic Executor (v113.3.109)');
+  logLines.push('# Local Deterministic Executor (v113.3.110)');
   logLines.push(`ticket_id: ${ticket.id}`);
   logLines.push(`target_repo: ${targetRepo}`);
   logLines.push(`prompt_text: ${promptText.slice(0, 200)}`);
@@ -148,9 +167,20 @@ function localDeterministicExecutor(ticket, runDir) {
 
   if (!info || !info.textToAppend) {
     logLines.push('## result: cannot_handle');
-    logLines.push('reason: prompt does not contain a recognized file+marker pattern');
-    logLines.push('note: expected format: "<MARKER> を <path> に追記してください"');
-    error = 'local executor cannot handle this prompt — unrecognized pattern';
+    logLines.push('reason: prompt does not contain KOSAME_ marker');
+    logLines.push('note: prompt must include a KOSAME_* marker string');
+    error = 'local executor cannot handle this prompt — no KOSAME_ marker';
+    ok = false;
+  } else if (info.error) {
+    logLines.push('## result: cannot_handle');
+    logLines.push(`reason: ${info.error}`);
+    error = info.error;
+    ok = false;
+  } else if (!info.filePath) {
+    logLines.push('## result: cannot_handle');
+    logLines.push('reason: no recognized file pattern in prompt');
+    logLines.push('note: expected a .html / .md / .txt file path');
+    error = 'local executor cannot handle this prompt — no file path';
     ok = false;
   } else {
     const absPath = path.resolve(targetRepo, info.filePath);
@@ -198,11 +228,14 @@ function localDeterministicExecutor(ticket, runDir) {
 
   const outputMd = logLines.join('\n');
   fs.writeFileSync(path.join(runDir, 'output.md'), outputMd);
+  const grepResult = info && info.textToAppend && info.filePath
+    ? fs.existsSync(path.resolve(targetRepo, info.filePath)) && fs.readFileSync(path.resolve(targetRepo, info.filePath), 'utf8').includes(info.textToAppend)
+    : 'N/A';
   fs.writeFileSync(path.join(runDir, 'verify.log'), [
     `executor: local`,
     `ok: ${ok}`,
     error ? `error: ${error}` : '',
-    `grep_marker: ${info && info.textToAppend ? fs.existsSync(path.resolve(targetRepo, info ? info.filePath : '')) && fs.readFileSync(path.resolve(targetRepo, info.filePath), 'utf8').includes(info.textToAppend) : 'N/A'}`,
+    `grep_marker: ${grepResult}`,
   ].filter(Boolean).join('\n'));
 
   return {

@@ -765,6 +765,34 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Executor status / deepseek handoff API (v113.3.114) ──────────────────
+
+    if (url.pathname === '/api/executor/latest') {
+      const latestPath = path.join(ROOT, '.kosame-executor', 'latest.md');
+      if (!fs.existsSync(latestPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: false, reason: 'latest.md not found' }));
+        return;
+      }
+      const content = fs.readFileSync(latestPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      res.end(JSON.stringify({ ok: true, content }));
+      return;
+    }
+
+    if (url.pathname === '/api/executor/deepseek-handoff') {
+      const handoffPath = path.join(ROOT, '.kosame-executor', 'latest-deepseek.md');
+      if (!fs.existsSync(handoffPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek.md not found' }));
+        return;
+      }
+      const content = fs.readFileSync(handoffPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      res.end(JSON.stringify({ ok: true, content }));
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

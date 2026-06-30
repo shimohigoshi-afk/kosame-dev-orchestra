@@ -23,6 +23,7 @@ const ROOT       = path.resolve(__dirname, '..');
 const RUNNER_DIR = path.join(ROOT, '.kosame-runner');
 const RUNS_DIR   = path.join(RUNNER_DIR, 'runs');
 const STATE_FILE = path.join(RUNNER_DIR, 'queue-state.json');
+const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
 
 const MAX_ATTEMPTS = 3;
 
@@ -495,7 +496,88 @@ function executeLocalSmallPatch(ticket, runDir, lane) {
   return { ok, exitCode: ok ? 0 : 1, error };
 }
 
+// ── Executor dir helpers (v113.3.114) ────────────────────────────────────────
+
+function writeLatestStatus(lane, status, ticket, outputPath, deepseekPath, reason) {
+  const now = new Date().toISOString();
+  const lines = [
+    '# KOSAME Runner — Latest Executor Status',
+    `updated_at: ${now}`,
+    `lane: ${lane}`,
+    `status: ${status}`,
+    `ticket_id: ${ticket.id}`,
+    `title: ${ticket.title || ticket.id}`,
+    `target_repo: ${ticket.target_repo || ROOT}`,
+    `output_path: ${outputPath || ''}`,
+    deepseekPath ? `deepseek_handoff_path: ${deepseekPath}` : null,
+    reason ? `reason: ${reason}` : null,
+    '',
+  ].filter(Boolean).join('\n');
+
+  ensureDir(EXECUTOR_DIR);
+  fs.writeFileSync(path.join(EXECUTOR_DIR, 'latest.md'), lines);
+}
+
+function writeDeepSeekHandoffFile(ticket, lane, runDir) {
+  const promptText = String(ticket.prompt_text || ticket.body || '');
+  const targetRepo = ticket.target_repo || ROOT;
+  const lines = [
+    '# DeepSeek Handoff Work Order',
+    `generated_at: ${new Date().toISOString()}`,
+    `ticket_id: ${ticket.id}`,
+    `title: ${ticket.title || ticket.id}`,
+    `target_repo: ${targetRepo}`,
+    `reason: ${lane && lane.reason ? lane.reason : 'local executor cannot handle'}`,
+    '',
+    '## User Prompt',
+    '',
+    '```text',
+    promptText,
+    '```',
+    '',
+    '## Safety Constraints',
+    '',
+    '- target_repo: /home/lavie/kosame-dev-orchestra only',
+    '- Do NOT touch Sales DX / transcriber / Secret / .env / credentials / customer data',
+    '- Do NOT delete files (rm, remove, del)',
+    '- Do NOT deploy / push / commit / tag',
+    '- Do NOT run gcloud, npm publish, or git push',
+    '- git add -A is prohibited (use individual git add)',
+    '- Codex is prohibited',
+    '- Claude is prohibited',
+    '- Safety Stop conditions must be respected',
+    '',
+    '## Allowed Files',
+    '',
+    '- public/*.html, public/*.htm',
+    '- *.md, *.txt (repo root only)',
+    '',
+    '## Forbidden Patterns',
+    '',
+    '- Path traversal (../)',
+    '- /home/lavie/repos/kosame-sales-dx or any sales-dx path',
+    '- transcriber or transcribe paths',
+    '- .env, credentials.json, secret files',
+    '- node_modules/',
+    '',
+    '## Expected Verification',
+    '',
+    '- node --check on all modified .js files',
+    '- file hash must change after modification (no silent no-ops)',
+    '- git diff -- <file> to confirm changes',
+    '- npm run smoke:v113-3-114 if available',
+    '- npm run verify to confirm no regressions',
+    '',
+  ].join('\n');
+
+  ensureDir(EXECUTOR_DIR);
+  const handoffPath = path.join(EXECUTOR_DIR, 'latest-deepseek.md');
+  fs.writeFileSync(handoffPath, lines);
+  return handoffPath;
+}
+
 function executeDeepSeekHandoff(ticket, runDir, lane) {
+  const promptText = String(ticket.prompt_text || ticket.body || '');
   const handoffLines = [
     '# DeepSeek Patch Required (v113.3.112)',
     `ticket_id: ${ticket.id}`,
@@ -507,7 +589,7 @@ function executeDeepSeekHandoff(ticket, runDir, lane) {
     'The following work ticket requires DeepSeek to process:',
     '',
     '```text',
-    String(ticket.prompt_text || ticket.body || ''),
+    promptText,
     '```',
     '',
     '## Constraints',
@@ -517,10 +599,18 @@ function executeDeepSeekHandoff(ticket, runDir, lane) {
     '- Do NOT delete files',
     '- Do NOT deploy / push / commit / tag',
     '- git add -A is prohibited',
+    '- Codex prohibited',
+    '- Claude prohibited',
   ].join('\n');
 
-  fs.writeFileSync(path.join(runDir, 'output.md'), handoffLines);
+  const outputMdPath = path.join(runDir, 'output.md');
+  fs.writeFileSync(outputMdPath, handoffLines);
   fs.writeFileSync(path.join(runDir, 'verify.log'), `status: deepseek_patch_required\nreason: ${lane.reason}`);
+
+  // Write executor dir files
+  const deepseekPath = writeDeepSeekHandoffFile(ticket, lane, runDir);
+  writeLatestStatus('deepseek_patch_required', 'pending', ticket, outputMdPath, deepseekPath, lane.reason);
+
   return { ok: false, exitCode: 0, error: null, executorStatus: 'deepseek_patch_required' };
 }
 
@@ -537,8 +627,13 @@ function executeBlocked(ticket, runDir, lane) {
     'No changes were made to any files.',
   ].join('\n');
 
-  fs.writeFileSync(path.join(runDir, 'output.md'), blockedLines);
+  const outputMdPath = path.join(runDir, 'output.md');
+  fs.writeFileSync(outputMdPath, blockedLines);
   fs.writeFileSync(path.join(runDir, 'verify.log'), `status: blocked_with_reason\nreason: ${lane.reason}`);
+
+  // Update latest.md but do NOT create latest-deepseek.md
+  writeLatestStatus('blocked_with_reason', 'blocked', ticket, outputMdPath, null, lane.reason);
+
   return { ok: false, exitCode: 1, error: lane.reason, executorStatus: 'blocked_with_reason' };
 }
 
@@ -757,10 +852,13 @@ module.exports = {
   executeLocalSmallPatch,
   executeDeepSeekHandoff,
   executeBlocked,
+  writeLatestStatus,
+  writeDeepSeekHandoffFile,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,
   STATE_FILE,
+  EXECUTOR_DIR,
 };
 
 // ── CLI entry ─────────────────────────────────────────────────────────────────

@@ -2247,6 +2247,22 @@ h1 {
       </article>
     </section>
 
+    <!-- DeepSeek Handoff (v113.3.114) -->
+    <section class="agent-stream-log-strip" id="deepseek-handoff-strip" style="margin-top:8px;display:none">
+      <article class="panel">
+        <details class="support-details" id="deepseek-handoff-details">
+          <summary>DeepSeek Handoff <span id="deepseek-handoff-badge" style="color:var(--warn);font-weight:bold"></span></summary>
+          <div class="support-details-body">
+            <div class="agent-stream-log-body" id="deepseek-handoff-content" style="height:auto;max-height:400px;white-space:pre-wrap;font-size:13px"></div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="chat-work-order-copy" id="deepseek-copy-btn">コピー</button>
+              <span id="deepseek-handoff-status" class="small" style="color:var(--muted);line-height:2"></span>
+            </div>
+          </div>
+        </details>
+      </article>
+    </section>
+
     <!-- AGENT STREAM LOG (チャット入力欄の直上) -->
     <section class="agent-stream-log-strip" id="agent-stream-log-strip" style="margin-top:8px">
       <article class="panel">
@@ -4941,6 +4957,53 @@ function renderHandoffInboxBridge(snapshot = latestSnapshot || {}) {
   node.appendChild(card);
 }
 
+function renderDeepSeekHandoff() {
+  const strip = document.getElementById('deepseek-handoff-strip');
+  const contentNode = document.getElementById('deepseek-handoff-content');
+  const statusNode = document.getElementById('deepseek-handoff-status');
+  const badgeNode = document.getElementById('deepseek-handoff-badge');
+  const copyBtn = document.getElementById('deepseek-copy-btn');
+  if (!strip || !contentNode) return;
+
+  fetch('/api/executor/latest').then(r => r.json()).then(latest => {
+    if (!latest.ok) { strip.style.display = 'none'; return; }
+    const isDeepSeekLane = latest.content && latest.content.includes('deepseek_patch_required');
+    if (!isDeepSeekLane) { strip.style.display = 'none'; return; }
+    strip.style.display = '';
+    return fetch('/api/executor/deepseek-handoff').then(r => r.json());
+  }).then(handoff => {
+    if (!handoff || !handoff.ok) {
+      contentNode.textContent = 'DeepSeek handoff ファイルがまだありません。';
+      if (statusNode) statusNode.textContent = 'waiting for handoff file';
+      if (badgeNode) badgeNode.textContent = '(pending)';
+      return;
+    }
+    contentNode.textContent = handoff.content;
+    if (badgeNode) badgeNode.textContent = '(ready)';
+    if (statusNode) statusNode.textContent = 'ready to copy';
+
+    if (copyBtn) {
+      copyBtn.onclick = function() {
+        const text = contentNode.textContent || '';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        copyBtn.textContent = 'コピー済み';
+        setTimeout(() => { copyBtn.textContent = 'コピー'; }, 1200);
+      };
+    }
+  }).catch(function() {
+    strip.style.display = 'none';
+  });
+}
+
 function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-result-panel');
   const statusNode = document.getElementById('work-order-result-status');
@@ -6490,6 +6553,7 @@ renderChatAssistPanel({});
 renderLatestApprovedWorkOrder({});
 renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
+renderDeepSeekHandoff();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

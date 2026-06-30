@@ -2313,6 +2313,13 @@ h1 {
               <div class="agent-stream-log-body" id="deepseek-revision-content" style="height:auto;max-height:200px;white-space:pre-wrap;font-size:12px"></div>
               <div style="margin-top:4px"><button type="button" class="chat-work-order-copy" id="deepseek-revision-copy-btn">コピー</button></div>
             </div>
+            <div id="deepseek-dashboard-display" style="margin-top:8px">
+              <div class="small" style="color:var(--muted);margin-bottom:2px">Workflow Dashboard:</div>
+              <div class="agent-stream-log-body" id="deepseek-dashboard-content" style="height:auto;max-height:160px;white-space:pre-wrap;font-size:11px"></div>
+            </div>
+            <div style="margin-top:6px">
+              <div class="small" style="color:var(--muted);margin-bottom:2px" id="release-readiness-display"></div>
+            </div>
             <div id="deepseek-history-display" style="margin-top:8px">
               <div class="small" style="color:var(--muted);margin-bottom:2px">Workflow History (最新20件):</div>
               <div class="agent-stream-log-body" id="deepseek-history-content" style="height:auto;max-height:200px;white-space:pre-wrap;font-size:11px"></div>
@@ -5075,6 +5082,76 @@ function getDeepSeekWorkflowStatus() {
   }
 }
 
+function renderReleaseReadiness() {
+  var el = document.getElementById('release-readiness-display');
+  if (!el) return;
+  fetch('/api/executor/readiness').then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.ok) { el.innerHTML = '<span style="color:var(--danger)">readiness fetch failed</span>'; return; }
+    var color = data.readiness === 'ready' ? 'var(--ok)' : data.readiness === 'caution' ? 'var(--accent-2)' : 'var(--danger)';
+    var lines = [];
+    lines.push('Release Readiness: <span style="color:' + color + ';font-weight:bold">' + data.readiness + '</span>');
+    lines.push('Version: ' + (data.version || '—'));
+    lines.push('Latest Status: ' + (data.latest_status || '—') + ' / Lane: ' + (data.latest_lane || '—'));
+    if (data.latest_confidentiality) lines.push('Confidentiality: ' + data.latest_confidentiality);
+    if (data.latest_difficulty) lines.push('Difficulty: ' + data.latest_difficulty);
+    if (data.blockers && data.blockers.length) lines.push('Blockers: ' + data.blockers.join(', '));
+    if (data.warnings && data.warnings.length) lines.push('Warnings: ' + data.warnings.join(', '));
+    if (data.next_actions && data.next_actions.length) lines.push('Next: ' + data.next_actions.join(' → '));
+    el.innerHTML = lines.join('<br>');
+  }).catch(function() {
+    el.innerHTML = '<span style="color:var(--muted)">readiness unavailable</span>';
+  });
+}
+
+function renderWorkflowDashboard() {
+  var el = document.getElementById('deepseek-dashboard-content');
+  if (!el) return;
+  fetch('/api/executor/latest').then(function(r) { return r.json(); }).then(function(latest) {
+    var lines = [];
+    if (latest.ok && !latest.empty) {
+      lines.push('Lane: ' + (latest.lane || '—'));
+      lines.push('Status: ' + (latest.status || '—'));
+      lines.push('Confidentiality: ' + (latest.confidentiality || '—'));
+      lines.push('Difficulty: ' + (latest.difficulty || '—'));
+    } else {
+      lines.push('Status: no_handoff');
+    }
+    lines.push('');
+
+    fetch('/api/executor/deepseek-result').then(function(r) { return r.json(); }).then(function(result) {
+      if (result.ok && !result.empty) {
+        lines.push('Latest Result: ' + (result.status || '—'));
+      } else {
+        lines.push('Latest Result: waiting');
+      }
+
+      fetch('/api/executor/deepseek-result/action').then(function(r) { return r.json(); }).then(function(action) {
+        if (action.ok && !action.empty) {
+          lines.push('Latest Action: ' + (action.action || '—'));
+          lines.push('Revision Ready: ' + (action.revision_path ? 'yes' : 'no'));
+        } else {
+          lines.push('Latest Action: none');
+        }
+
+        // Auto-refresh readiness
+        var readinessEl = document.getElementById('release-readiness-display');
+        if (readinessEl && typeof renderReleaseReadiness === 'function') {
+          renderReleaseReadiness();
+        }
+
+        el.textContent = lines.join('\n');
+      }).catch(function() {
+        el.textContent = lines.join('\n') + '\nLatest Action: error';
+      });
+    }).catch(function() {
+      el.textContent = lines.join('\n') + '\nLatest Result: error';
+      if (typeof renderReleaseReadiness === 'function') renderReleaseReadiness();
+    });
+  }).catch(function() {
+    el.textContent = 'dashboard loading error';
+  });
+}
+
 function renderDeepSeekHandoff() {
   const strip = document.getElementById('deepseek-handoff-strip');
   const contentNode = document.getElementById('deepseek-handoff-content');
@@ -6914,6 +6991,8 @@ renderDeepSeekResult();
 renderDeepSeekResultAction();
 renderDeepSeekWorkflowHistory();
 getDeepSeekWorkflowStatus();
+renderWorkflowDashboard();
+renderReleaseReadiness();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

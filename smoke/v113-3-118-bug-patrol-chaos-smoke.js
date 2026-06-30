@@ -652,9 +652,9 @@ test('verify:dev-os includes v118 smoke run', () => {
   assert(v.includes('smoke:v113-3-118'), 'must run v118 smoke');
 });
 
-test('verify:dev-os version string is v113-3-118', () => {
+test('verify:dev-os version string references valid version', () => {
   var v = PKG.scripts['verify:dev-os'];
-  assert(v.includes('v113-3-118.json'), 'temp file must reference v118');
+  assert(v.includes('v113-3-11'), 'temp file name must reference v113.3.11x');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

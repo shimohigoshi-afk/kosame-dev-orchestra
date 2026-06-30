@@ -1166,6 +1166,171 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Release Readiness API (v113.3.119) ──────────────────────────────────
+
+    if (url.pathname === '/api/executor/readiness') {
+      const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+      const blockers = [];
+      const warnings = [];
+      let readiness = 'ready';
+
+      // ── Blocker checks ──
+      const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+      if (fs.existsSync(latestPath)) {
+        try {
+          const latestContent = fs.readFileSync(latestPath, 'utf8');
+          if (latestContent.includes('blocked')) {
+            blockers.push('latest.md status is blocked');
+            readiness = 'blocked';
+          }
+        } catch (_) {}
+      }
+
+      // Check for blocked content in source files
+      const checkFiles = ['tools/kosame-runner-queue.js', 'tools/kosame-live-cockpit-server.js', 'public/kosame-live-cockpit.html'];
+      for (const fp of checkFiles) {
+        try {
+          const c = fs.readFileSync(path.join(ROOT, fp), 'utf8');
+          if (/\.env\b/i.test(c) && /secret|key|password/i.test(c)) {
+            blockers.push(fp + ' may contain env/secret references');
+            readiness = 'blocked';
+          }
+        } catch (_) {}
+      }
+
+      // ── Warning checks ──
+      const resultPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
+      const actionPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.json');
+      if (!fs.existsSync(resultPath)) {
+        warnings.push('no DeepSeek result intake yet');
+        if (readiness === 'ready') readiness = 'caution';
+      }
+      if (!fs.existsSync(actionPath)) {
+        warnings.push('no DeepSeek action recorded yet');
+        if (readiness === 'ready') readiness = 'caution';
+      }
+
+      const historyDir = path.join(EXECUTOR_DIR, 'history');
+      if (!fs.existsSync(historyDir) || fs.readdirSync(historyDir).filter(f => f.endsWith('.json')).length === 0) {
+        warnings.push('workflow history is empty');
+        if (readiness === 'ready') readiness = 'caution';
+      }
+
+      // Check public/test.html for smoke residue
+      try {
+        const testHtml = path.join(ROOT, 'public', 'test.html');
+        if (fs.existsSync(testHtml)) {
+          const testContent = fs.readFileSync(testHtml, 'utf8');
+          if (testContent.includes('KOSAME_') && testContent.includes('Hello World')) {
+            warnings.push('public/test.html has smoke test markers');
+          }
+        }
+      } catch (_) {}
+
+      // ── Verify smoke scripts registered ──
+      const requiredSmokes = ['v113-3-112', 'v113-3-114', 'v113-3-115', 'v113-3-116', 'v113-3-117', 'v113-3-118', 'v113-3-119'];
+      for (const sv of requiredSmokes) {
+        const key = 'smoke:' + sv;
+        if (!pkg.scripts || !pkg.scripts[key]) {
+          warnings.push(key + ' not in package.json');
+          if (readiness === 'ready') readiness = 'caution';
+        }
+      }
+
+      // Parse latest status
+      let latestStatus = 'unknown', latestLane = 'unknown', latestConfidentiality = null, latestDifficulty = null;
+      if (fs.existsSync(latestPath)) {
+        try {
+          const lc = fs.readFileSync(latestPath, 'utf8');
+          const sm = lc.match(/^status:\s*(.+)$/m);
+          const lm = lc.match(/^lane:\s*(.+)$/m);
+          const cm = lc.match(/^confidentiality:\s*(.+)$/m);
+          const dm = lc.match(/^difficulty:\s*(.+)$/m);
+          if (sm) latestStatus = sm[1].trim();
+          if (lm) latestLane = lm[1].trim();
+          if (cm) latestConfidentiality = cm[1].trim();
+          if (dm) latestDifficulty = dm[1].trim();
+        } catch (_) {}
+      }
+
+      const nextActions = [];
+      if (readiness !== 'blocked') {
+        if (!fs.existsSync(resultPath)) nextActions.push('intake DeepSeek result');
+        if (!fs.existsSync(actionPath)) nextActions.push('review and action result');
+        if (fs.existsSync(actionPath) && fs.existsSync(resultPath)) nextActions.push('run npm run verify');
+      }
+      if (readiness === 'blocked') nextActions.push('resolve blockers first');
+      if (readiness === 'caution') nextActions.push('resolve warnings for full readiness');
+      if (readiness === 'ready') nextActions.push('ready for release gate');
+
+      const rcSummary = [
+        '# KOSAME Dev Orchestra RC80 Summary',
+        `version: ${pkg.version}`,
+        `readiness: ${readiness}`,
+        `latest_status: ${latestStatus}`,
+        `latest_lane: ${latestLane}`,
+        `confidentiality: ${latestConfidentiality || '—'}`,
+        `difficulty: ${latestDifficulty || '—'}`,
+        '',
+        '## Available Lanes',
+        '- L0_LOCAL: Local Executor',
+        '- L1_DEEPSEEK_V4_FLASH: DeepSeek V4 Flash (low difficulty)',
+        '- L2_DEEPSEEK_V4_PRO: DeepSeek V4 Pro (medium difficulty)',
+        '- L3_DEEPSEEK_V4_PRO_AUDIT: DeepSeek V4 Pro + Audit (high difficulty)',
+        '- INTERNAL_ONLY: GPT/こさめ (sensitive)',
+        '- BLOCKED: forbidden',
+        '',
+        '## Blockers',
+        blockers.length ? blockers.map(b => '- ' + b).join('\n') : '- (none)',
+        '',
+        '## Warnings',
+        warnings.length ? warnings.map(w => '- ' + w).join('\n') : '- (none)',
+        '',
+        '## Next Actions',
+        nextActions.map(a => '- ' + a).join('\n'),
+        '',
+        `generated_at: ${new Date().toISOString()}`,
+        '',
+      ].join('\n');
+
+      // Write rc80-summary.md (generated artifact, not committed)
+      try {
+        ensureDir(EXECUTOR_DIR);
+        fs.writeFileSync(path.join(EXECUTOR_DIR, 'rc80-summary.md'), rcSummary);
+      } catch (_) {}
+
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({
+        ok: true,
+        readiness,
+        version: pkg.version,
+        latest_status: latestStatus,
+        latest_lane: latestLane,
+        latest_confidentiality: latestConfidentiality,
+        latest_difficulty: latestDifficulty,
+        verify_hint: 'npm run verify',
+        blockers,
+        warnings,
+        next_actions: nextActions,
+        rc_summary: rcSummary,
+      }));
+      return;
+    }
+
+    // ── RC80 Summary API (v113.3.119) ───────────────────────────────────────
+
+    if (url.pathname === '/api/executor/rc-summary') {
+      const rcPath = path.join(EXECUTOR_DIR, 'rc80-summary.md');
+      if (fs.existsSync(rcPath)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rcPath, 'utf8'), path: rcPath }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'rc80-summary.md not found. Call GET /api/executor/readiness first.' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

@@ -233,6 +233,173 @@ function detectExecutorLane(ticket) {
   return { lane: 'deepseek_patch_required', reason: 'local executor cannot handle this prompt', promptText };
 }
 
+// ── Model Lane Router (v113.3.119) ─────────────────────────────────────────
+
+const CONFIDENTIALITY_LEVELS = ['safe', 'sanitized', 'sensitive', 'forbidden'];
+
+const DIFFICULTY_LEVELS = ['low', 'medium', 'high', 'blocked'];
+
+const MODEL_LANES = {
+  L0_LOCAL:                 { label: 'Local Executor',       model: 'local',           audit_required: false },
+  L1_DEEPSEEK_V4_FLASH:     { label: 'DeepSeek V4 Flash',    model: 'deepseek-v4-flash',     audit_required: false },
+  L2_DEEPSEEK_V4_PRO:       { label: 'DeepSeek V4 Pro',      model: 'deepseek-v4-pro',       audit_required: false },
+  L3_DEEPSEEK_V4_PRO_AUDIT: { label: 'DeepSeek V4 Pro+Audit',model: 'deepseek-v4-pro',       audit_required: true  },
+  INTERNAL_ONLY:            { label: 'Internal Only',        model: 'internal',         audit_required: false },
+  BLOCKED:                  { label: 'Blocked',              model: null,               audit_required: false },
+};
+
+/**
+ * detectConfidentiality(ticket) → 'safe' | 'sanitized' | 'sensitive' | 'forbidden'
+ */
+function detectConfidentiality(ticket) {
+  const text = String(ticket.prompt_text || ticket.body || ticket.title || '').toLowerCase();
+
+  // ── Forbidden patterns ──
+  if (/\.env\b/i.test(text) || /credentials\.json/i.test(text) || /private[\s_-]*key/i.test(text) || /api[\s_-]*key/i.test(text)) {
+    return 'forbidden';
+  }
+  if (/(?:secret|パスワード|password)/i.test(text) && !/(?:secretary|secretary)/i.test(text)) {
+    return 'forbidden';
+  }
+  if (/\/home\/lavie\/repos\/(?:transcriber|kosame-sales-dx)/i.test(text) || /\b(?:transcriber|sales[-_]?dx)\b/i.test(text)) {
+    return 'forbidden';
+  }
+  // Sensitive operations
+  if (/\b(?:deploy|git\s+push|npm\s+publish|gcloud)\b/i.test(text)) {
+    return 'forbidden';
+  }
+
+  // ── Sensitive patterns ──
+  if (/\b(?:顧客|customer|client|契約|contract|保険|insurance|課金|billing|revenue|payment)\b/i.test(text)) {
+    return 'sensitive';
+  }
+  if (/\b(?:production|本番|release|tag)\b/i.test(text)) {
+    return 'sensitive';
+  }
+
+  // ── Sanitized patterns ──
+  if (/\b(?:smoke|test|テスト|boilerplate|template|CI|config|eslint|prettier)\b/i.test(text)) {
+    return 'sanitized';
+  }
+  if (/\b(?:lock|health|status|readiness|audit|review|check|verify|確認|チェック)\b/i.test(text)) {
+    return 'sanitized';
+  }
+
+  return 'safe';
+}
+
+/**
+ * detectTaskDifficulty(ticket) → 'low' | 'medium' | 'high' | 'blocked'
+ */
+function detectTaskDifficulty(ticket) {
+  const text = String(ticket.prompt_text || ticket.body || ticket.title || '').toLowerCase();
+  const countMatches = (re) => { const m = text.match(new RegExp(re.source, 'gi')); return m ? m.length : 0; };
+
+  // ── Blocked checks ──
+  if (text.includes('..')) return 'blocked';
+  if (/(?:削除|delete|rm\s|remove|del\b)/i.test(text)) return 'blocked';
+
+  let score = 0;
+
+  // ── High signals (+5 each keyword) ──
+  score += countMatches(/\b(?:refactor|リファクタ|rearchitect|再設計)\b/) * 5;
+  score += countMatches(/\b(?:migration|移行)\b/) * 5;
+  score += countMatches(/\b(?:security[.\-_\s]?vulnerability|脆弱性)\b/) * 5;
+  score += countMatches(/\b(?:penetration|pentest|owasp)\b/) * 5;
+
+  // ── Elevated signals (+3 each keyword) ──
+  score += countMatches(/\b(?:api|endpoint|server|router|handler|middleware)\b/) * 3;
+  score += countMatches(/\b(?:state|状態|store|reducer|context)\b/) * 3;
+  score += countMatches(/\b(?:performance|パフォーマンス|最適化|optimize|profiling)\b/) * 3;
+  score += countMatches(/\b(?:database|schema|index|query)\b/) * 3;
+  score += countMatches(/\b(?:concurrency|race|deadlock|async|parallel)\b/) * 3;
+  score += countMatches(/\b(?:error|exception|fallback|recovery)\b/) * 3;
+
+  // ── Medium signals (+1 each keyword) ──
+  score += countMatches(/\b(?:implement|実装)\b/) * 1;
+  score += countMatches(/\b(?:function|関数)\b/) * 1;
+  score += countMatches(/\b(?:build|construct|作成)\b/) * 1;
+  score += countMatches(/\b(?:modify|修正|fix|change|変更|update|改善)\b/) * 1;
+  score += countMatches(/\b(?:component|コンポーネント|module|モジュール)\b/) * 1;
+  score += countMatches(/\b(?:style|css|layout|レイアウト|ui|render)\b/) * 1;
+
+  // ── Text complexity bonus ──
+  if (text.length > 300) score += 3;
+  else if (text.length > 150) score += 1;
+
+  if (score >= 6) return 'high';
+  if (score >= 2) return 'medium';
+  return 'low';
+}
+
+/**
+ * selectModelLane(ticket) → { lane, label, model, audit_required, reason, ... }
+ */
+function selectModelLane(ticket) {
+  const confidentiality = detectConfidentiality(ticket);
+  const difficulty = detectTaskDifficulty(ticket);
+
+  // ── Gate 1: confidentiality block ──
+  if (confidentiality === 'forbidden') {
+    return {
+      lane: 'BLOCKED', label: 'Blocked', model: null, audit_required: false,
+      confidentiality, difficulty,
+      reason: 'forbidden content detected',
+      human_gate_required: true,
+    };
+  }
+
+  // ── Gate 2: difficulty block ──
+  if (difficulty === 'blocked') {
+    return {
+      lane: 'BLOCKED', label: 'Blocked', model: null, audit_required: false,
+      confidentiality, difficulty,
+      reason: 'blocked operation detected',
+      human_gate_required: true,
+    };
+  }
+
+  // ── Gate 3: sensitive → internal only ──
+  if (confidentiality === 'sensitive') {
+    return {
+      lane: 'INTERNAL_ONLY', label: 'Internal Only', model: 'internal', audit_required: false,
+      confidentiality, difficulty,
+      reason: 'sensitive data — external AI routing blocked',
+      human_gate_required: true,
+    };
+  }
+
+  // ── Gate 4: safe/sanitized routing ──
+  const isSanitized = confidentiality === 'sanitized';
+  const isSafe = confidentiality === 'safe';
+
+  if (difficulty === 'low') {
+    return {
+      lane: 'L1_DEEPSEEK_V4_FLASH', label: 'DeepSeek V4 Flash', model: 'deepseek-v4-flash', audit_required: false,
+      confidentiality, difficulty,
+      reason: 'low difficulty — V4 Flash sufficient',
+      human_gate_required: false,
+    };
+  }
+
+  if (difficulty === 'medium') {
+    return {
+      lane: 'L2_DEEPSEEK_V4_PRO', label: 'DeepSeek V4 Pro', model: 'deepseek-v4-pro', audit_required: false,
+      confidentiality, difficulty,
+      reason: 'medium difficulty — V4 Pro recommended',
+      human_gate_required: false,
+    };
+  }
+
+  // high difficulty
+  return {
+    lane: 'L3_DEEPSEEK_V4_PRO_AUDIT', label: 'DeepSeek V4 Pro+Audit', model: 'deepseek-v4-pro', audit_required: true,
+    confidentiality, difficulty,
+    reason: 'high difficulty — V4 Pro + Llama/Groq audit recommended',
+    human_gate_required: false,
+  };
+}
+
 function localDeterministicExecutor(ticket, runDir) {
   // Check multiple fields for the prompt text
   const promptText = String(ticket.prompt_text || ticket.body || ticket.title || ticket.instruction || ticket.safe_prompt_summary || '');
@@ -500,6 +667,7 @@ function executeLocalSmallPatch(ticket, runDir, lane) {
 
 function writeLatestStatus(lane, status, ticket, outputPath, deepseekPath, reason) {
   const now = new Date().toISOString();
+  const modelLane = ticket && ticket.prompt_text ? selectModelLane(ticket) : null;
   const lines = [
     '# KOSAME Runner — Latest Executor Status',
     `updated_at: ${now}`,
@@ -511,6 +679,12 @@ function writeLatestStatus(lane, status, ticket, outputPath, deepseekPath, reaso
     `output_path: ${outputPath || ''}`,
     deepseekPath ? `deepseek_handoff_path: ${deepseekPath}` : null,
     reason ? `reason: ${reason}` : null,
+    modelLane ? `confidentiality: ${modelLane.confidentiality}` : null,
+    modelLane ? `difficulty: ${modelLane.difficulty}` : null,
+    modelLane ? `model_lane: ${modelLane.lane}` : null,
+    modelLane ? `recommended_model: ${modelLane.model || 'none'}` : null,
+    modelLane ? `audit_required: ${modelLane.audit_required}` : null,
+    modelLane ? `human_gate_required: ${modelLane.human_gate_required}` : null,
     '',
   ].filter(Boolean).join('\n');
 
@@ -521,6 +695,7 @@ function writeLatestStatus(lane, status, ticket, outputPath, deepseekPath, reaso
 function writeDeepSeekHandoffFile(ticket, lane, runDir) {
   const promptText = String(ticket.prompt_text || ticket.body || '');
   const targetRepo = ticket.target_repo || ROOT;
+  const modelLane = selectModelLane(ticket);
   const lines = [
     '# DeepSeek Handoff Work Order',
     `generated_at: ${new Date().toISOString()}`,
@@ -528,6 +703,13 @@ function writeDeepSeekHandoffFile(ticket, lane, runDir) {
     `title: ${ticket.title || ticket.id}`,
     `target_repo: ${targetRepo}`,
     `reason: ${lane && lane.reason ? lane.reason : 'local executor cannot handle'}`,
+    `confidentiality: ${modelLane.confidentiality}`,
+    `difficulty: ${modelLane.difficulty}`,
+    `model_lane: ${modelLane.lane}`,
+    `recommended_model: ${modelLane.model || 'none'}`,
+    `audit_required: ${modelLane.audit_required}`,
+    `lane_reason: ${modelLane.reason}`,
+    `human_gate_required: ${modelLane.human_gate_required}`,
     '',
     '## User Prompt',
     '',
@@ -939,6 +1121,12 @@ module.exports = {
   localDeterministicExecutor,
   extractFileAppendInfo,
   detectExecutorLane,
+  detectConfidentiality,
+  detectTaskDifficulty,
+  selectModelLane,
+  MODEL_LANES,
+  CONFIDENTIALITY_LEVELS,
+  DIFFICULTY_LEVELS,
   executorLaneRouter,
   executeLocalAppend,
   executeLocalReplace,

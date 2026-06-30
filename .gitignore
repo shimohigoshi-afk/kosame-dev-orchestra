@@ -31,6 +31,11 @@ data/line-*.json
 .kosame-executor/latest*.md
 .kosame-executor/latest*.json
 .kosame-executor/history/
+.kosame-executor/rc80-summary.md
+
+# Test / runtime artifacts (never commit)
+test-results/
+logs/
 
 # Chat session history (user conversation data, never commit)
 .kosame-sessions/

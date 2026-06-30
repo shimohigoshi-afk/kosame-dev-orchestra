@@ -149,7 +149,8 @@ function extractFileAppendInfo(promptText) {
 }
 
 function localDeterministicExecutor(ticket, runDir) {
-  const promptText = String(ticket.prompt_text || ticket.body || '');
+  // Check multiple fields for the prompt text
+  const promptText = String(ticket.prompt_text || ticket.body || ticket.title || ticket.instruction || ticket.safe_prompt_summary || '');
   const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
     ? ticket.target_repo
     : ROOT;
@@ -159,13 +160,21 @@ function localDeterministicExecutor(ticket, runDir) {
   let ok = false;
   let error = null;
 
-  logLines.push('# Local Deterministic Executor (v113.3.110)');
+  logLines.push('# Local Deterministic Executor (v113.3.111)');
   logLines.push(`ticket_id: ${ticket.id}`);
   logLines.push(`target_repo: ${targetRepo}`);
   logLines.push(`prompt_text: ${promptText.slice(0, 200)}`);
+  logLines.push(`checked_fields: prompt_text/body/title/instruction`);
   logLines.push('');
 
-  if (!info || !info.textToAppend) {
+  // Strict target_repo check — only kosame-dev-orchestra
+  if (targetRepo !== ROOT) {
+    logLines.push('## result: wrong_target_repo');
+    logLines.push(`expected: ${ROOT}`);
+    logLines.push(`got: ${targetRepo}`);
+    error = `target_repo must be ${ROOT}, got ${targetRepo}`;
+    ok = false;
+  } else if (!info || !info.textToAppend) {
     logLines.push('## result: cannot_handle');
     logLines.push('reason: prompt does not contain KOSAME_ marker');
     logLines.push('note: prompt must include a KOSAME_* marker string');
@@ -249,12 +258,20 @@ function localDeterministicExecutor(ticket, runDir) {
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
-  // Chat dispatch tickets: run claude auto-launch pipeline
+  // Check local deterministic executor FIRST (for low-risk file append tasks)
+  const promptText = String(ticket.prompt_text || ticket.body || ticket.title || ticket.instruction || '');
+  const info = extractFileAppendInfo(promptText);
+  if (info && info.textToAppend && !info.error && info.filePath) {
+    // Local executor can handle this — skip Claude entirely
+    process.stdout.write(`[LOCAL] local deterministic executor handles ticket=${ticket.id}\n`);
+    return localDeterministicExecutor(ticket, runDir);
+  }
+
+  // Chat dispatch tickets that local can't handle: run claude auto-launch pipeline
   if (ticket.source === 'kosame-chat-dispatch' && (ticket.prompt_text || ticket.body)) {
     const claudeResult = claudeChatExecutor(ticket, runDir);
     if (claudeResult.ok) return claudeResult;
-    // Claude failed — fall back to local deterministic executor
-    // Record claude's exit_code for diagnostics
+    // Claude failed — try local as fallback
     process.stdout.write(`[FALLBACK] Claude failed (exit=${claudeResult.exitCode}), trying local executor...\n`);
     const localResult = localDeterministicExecutor(ticket, runDir);
     if (localResult.ok) {

@@ -106,12 +106,134 @@ function claudeChatExecutor(ticket, runDir) {
   };
 }
 
+// ── Local deterministic executor (v113.3.109) ──────────────────────────────
+// Handles simple file-append tasks without Claude.
+// Falls back when Claude is unavailable.
+// Returns { ok, exitCode, error, executor } where executor === 'local' on success.
+
+function extractFileAppendInfo(promptText) {
+  // Match patterns like:
+  //   "XXX を public/test.html の本文に追記"
+  //   "public/test.html に追記"
+  //   "public/test.html に書き込む"
+  const fileMatch = promptText.match(/(public\/[^\s,。、]+\.html|[^\s,。、]+\.md|[^\s,。、]+\.txt)\b/i);
+  if (!fileMatch) return null;
+  const filePath = fileMatch[1];
+
+  // Extract the unique string to append
+  // Look for KOSAME_UNIQUE_TEST or similar marker
+  const markerMatch = promptText.match(/(KOSAME_UNIQUE_[A-Z0-9_]+)/i);
+  const textToAppend = markerMatch ? markerMatch[1] : '';
+
+  // Determine the target repo
+  return { filePath, textToAppend };
+}
+
+function localDeterministicExecutor(ticket, runDir) {
+  const promptText = String(ticket.prompt_text || ticket.body || '');
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
+    ? ticket.target_repo
+    : ROOT;
+
+  const info = extractFileAppendInfo(promptText);
+  let logLines = [];
+  let ok = false;
+  let error = null;
+
+  logLines.push('# Local Deterministic Executor (v113.3.109)');
+  logLines.push(`ticket_id: ${ticket.id}`);
+  logLines.push(`target_repo: ${targetRepo}`);
+  logLines.push(`prompt_text: ${promptText.slice(0, 200)}`);
+  logLines.push('');
+
+  if (!info || !info.textToAppend) {
+    logLines.push('## result: cannot_handle');
+    logLines.push('reason: prompt does not contain a recognized file+marker pattern');
+    logLines.push('note: expected format: "<MARKER> を <path> に追記してください"');
+    error = 'local executor cannot handle this prompt — unrecognized pattern';
+    ok = false;
+  } else {
+    const absPath = path.resolve(targetRepo, info.filePath);
+    logLines.push(`target_file: ${info.filePath}`);
+    logLines.push(`absolute_path: ${absPath}`);
+    logLines.push(`text_to_append: ${info.textToAppend}`);
+    logLines.push('');
+
+    try {
+      if (!fs.existsSync(absPath)) {
+        logLines.push('## result: file_not_found');
+        logLines.push(`error: ${absPath} does not exist`);
+        error = `file not found: ${absPath}`;
+        ok = false;
+      } else {
+        const existing = fs.readFileSync(absPath, 'utf8');
+        if (existing.includes(info.textToAppend)) {
+          logLines.push('## result: skipped');
+          logLines.push('reason: marker already present in file');
+          ok = true;
+        } else {
+          const appendLine = `\n<!-- ${info.textToAppend} -->\n`;
+          fs.appendFileSync(absPath, appendLine, 'utf8');
+          const after = fs.readFileSync(absPath, 'utf8');
+          if (after.includes(info.textToAppend)) {
+            logLines.push('## result: success');
+            logLines.push(`action: appended marker to ${info.filePath}`);
+            logLines.push(`grep_check: ${after.includes(info.textToAppend)}`);
+            ok = true;
+          } else {
+            logLines.push('## result: write_failed');
+            logLines.push('error: appendFileSync succeeded but marker not found after write');
+            error = 'write verification failed';
+            ok = false;
+          }
+        }
+      }
+    } catch (e) {
+      logLines.push('## result: error');
+      logLines.push(`error: ${e.message}`);
+      error = e.message;
+      ok = false;
+    }
+  }
+
+  const outputMd = logLines.join('\n');
+  fs.writeFileSync(path.join(runDir, 'output.md'), outputMd);
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [
+    `executor: local`,
+    `ok: ${ok}`,
+    error ? `error: ${error}` : '',
+    `grep_marker: ${info && info.textToAppend ? fs.existsSync(path.resolve(targetRepo, info ? info.filePath : '')) && fs.readFileSync(path.resolve(targetRepo, info.filePath), 'utf8').includes(info.textToAppend) : 'N/A'}`,
+  ].filter(Boolean).join('\n'));
+
+  return {
+    ok,
+    exitCode: ok ? 0 : 1,
+    error,
+    executor: ok ? 'local' : 'local_failed',
+  };
+}
+
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
   // Chat dispatch tickets: run claude auto-launch pipeline
   if (ticket.source === 'kosame-chat-dispatch' && (ticket.prompt_text || ticket.body)) {
-    return claudeChatExecutor(ticket, runDir);
+    const claudeResult = claudeChatExecutor(ticket, runDir);
+    if (claudeResult.ok) return claudeResult;
+    // Claude failed — fall back to local deterministic executor
+    // Record claude's exit_code for diagnostics
+    process.stdout.write(`[FALLBACK] Claude failed (exit=${claudeResult.exitCode}), trying local executor...\n`);
+    const localResult = localDeterministicExecutor(ticket, runDir);
+    if (localResult.ok) {
+      localResult.fallbackFrom = 'claude';
+      localResult.claudeExitCode = claudeResult.exitCode;
+      localResult.claudeError = claudeResult.error;
+      return localResult;
+    }
+    // Both failed — return claude's original error (more informative)
+    claudeResult.fallbackAttempted = true;
+    claudeResult.fallbackResult = localResult;
+    return claudeResult;
   }
 
   const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
@@ -301,6 +423,8 @@ module.exports = {
   formatInput,
   defaultExecutor,
   claudeChatExecutor,
+  localDeterministicExecutor,
+  extractFileAppendInfo,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,

@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * kosame-runner-queue.js — Runner Queue Lite v113.3.11
+ * kosame-runner-queue.js — Runner Queue Lite v113.3.112
  *
  * Handoff Inbox (queue.jsonl) を監視し作業票を自動実行する。
  * - ユーザーへのコピペ・YES入力・結果貼り戻し不要
@@ -13,6 +13,7 @@
 
 const fs   = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 
 const { readHandoffQueue }    = require('./kosame-codex-handoff-bridge-server');
@@ -29,6 +30,20 @@ const MAX_ATTEMPTS = 3;
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 function nowIso()     { return new Date().toISOString(); }
+
+// ── File verification helpers (v113.3.112) ──────────────────────────────────
+
+function fileHash(absPath) {
+  try { return crypto.createHash('sha1').update(fs.readFileSync(absPath)).digest('hex'); }
+  catch { return null; }
+}
+
+function gitDiffForFile(targetRepo, filePath) {
+  try {
+    const res = spawnSync('git', ['diff', '--', filePath], { cwd: targetRepo, encoding: 'utf8', maxBuffer: 1024 * 1024 });
+    return (res.stdout || '').trim();
+  } catch { return ''; }
+}
 
 function readState(stateFile) {
   try { return JSON.parse(fs.readFileSync(stateFile || STATE_FILE, 'utf8')); }
@@ -148,6 +163,75 @@ function extractFileAppendInfo(promptText) {
   return { filePath, textToAppend, error: null };
 }
 
+// ── Executor Lane Detection (v113.3.112) ────────────────────────────────────
+
+const ALLOWED_FILE_EXT_RE = /(public\/[^\s,。、"]+\.html|public\/[^\s,。、"]+\.htm|[^\s,。、"]+\.(?:md|txt))\b/i;
+
+function extractFilePath(text) {
+  const m = text.match(ALLOWED_FILE_EXT_RE);
+  return m ? m[1] : null;
+}
+
+function detectExecutorLane(ticket) {
+  const promptText = String(ticket.prompt_text || ticket.body || ticket.title || '').trim();
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? path.resolve(ticket.target_repo) : ROOT;
+
+  // ── Blocked checks ──
+  if (promptText.includes('..')) {
+    return { lane: 'blocked_with_reason', reason: 'path traversal detected', promptText };
+  }
+  if (ticket.target_repo && targetRepo !== ROOT) {
+    return { lane: 'blocked_with_reason', reason: 'target_repo mismatch', promptText };
+  }
+  if (/(?:sales[-_]?dx|transcriber|transcribe)/i.test(promptText)) {
+    return { lane: 'blocked_with_reason', reason: 'Sales DX / transcriber paths are not allowed', promptText };
+  }
+  if (/secret|\.env|credentials?/i.test(promptText)) {
+    return { lane: 'blocked_with_reason', reason: 'secret / .env / credentials files are not allowed', promptText };
+  }
+  if (/(?:削除|delete|rm\s|remove|del\b)/i.test(promptText)) {
+    return { lane: 'blocked_with_reason', reason: 'delete operations are not allowed', promptText };
+  }
+  if (/(?:deploy|git push|git commit|git tag|npm publish|gcloud)/i.test(promptText)) {
+    return { lane: 'blocked_with_reason', reason: 'deploy/push/commit/tag operations are not allowed', promptText };
+  }
+
+  // ── Local append ──
+  const markerMatch = promptText.match(/(KOSAME_[A-Z0-9_]+)/i);
+  const filePath = extractFilePath(promptText);
+
+  if (markerMatch && /(追記|append|追加)/i.test(promptText) && filePath && isAllowedFilePath(filePath)) {
+    return { lane: 'local_append', filePath, content: markerMatch[1], promptText };
+  }
+
+  // ── Local small HTML/CSS patch (check BEFORE replace) ──
+  if (/(?:見出し|heading|h1|h2|h3|タイトル)/i.test(promptText) && /(?:変更|change|書き換え)/i.test(promptText) && filePath && isAllowedFilePath(filePath)) {
+    const headingVal = markerMatch ? markerMatch[1] : 'KOSAME_HEADING';
+    return { lane: 'local_small_html_css_patch', filePath, newContent: headingVal, patchType: 'heading', promptText };
+  }
+
+  // ── Local replace (require explicit 置換/replace keyword) ──
+  if (/(置換|replace|書き換え)/i.test(promptText)) {
+    const replaceRe = /(public\/[^\s,。、"]+?)\s*の\s*(.+?)\s*を\s*(.+?)\s*(?:に(?:置換|replace|書き換え)|$)/i;
+    const replaceMatch = promptText.match(replaceRe);
+    if (replaceMatch) {
+      const fp = replaceMatch[1].trim();
+      if (isAllowedFilePath(fp)) {
+        return { lane: 'local_replace', filePath: fp, oldText: replaceMatch[2].trim(), newText: replaceMatch[3].trim(), promptText };
+      }
+    }
+  }
+
+  // ── Local create file ──
+  if (/(?:作成|create|新規)/i.test(promptText) && filePath && isAllowedFilePath(filePath)) {
+    const content = markerMatch ? markerMatch[1] : 'KOSAME_CREATED';
+    return { lane: 'local_create_file', filePath, content, promptText };
+  }
+
+  // ── DeepSeek lane ──
+  return { lane: 'deepseek_patch_required', reason: 'local executor cannot handle this prompt', promptText };
+}
+
 function localDeterministicExecutor(ticket, runDir) {
   // Check multiple fields for the prompt text
   const promptText = String(ticket.prompt_text || ticket.body || ticket.title || ticket.instruction || ticket.safe_prompt_summary || '');
@@ -255,68 +339,236 @@ function localDeterministicExecutor(ticket, runDir) {
   };
 }
 
+// ── Lane Executor Functions (v113.3.112) ─────────────────────────────────────
+
+function executeLocalAppend(ticket, runDir, lane) {
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? ticket.target_repo : ROOT;
+  const absPath = path.resolve(targetRepo, lane.filePath);
+  let logLines = [`# Lane Executor: local_append`, `ticket_id: ${ticket.id}`, `target_file: ${lane.filePath}`, `content: ${lane.content}`, ''];
+  let ok = false;
+  let error = null;
+
+  if (!fs.existsSync(absPath)) {
+    logLines.push('## result: file_not_found');
+    error = `file not found: ${absPath}`;
+  } else {
+    const beforeHash = fileHash(absPath);
+    const existing = fs.readFileSync(absPath, 'utf8');
+    if (existing.includes(lane.content)) {
+      logLines.push('## result: skipped (already present)');
+      ok = true;
+    } else {
+      const appendLine = `\n<!-- ${lane.content} -->\n`;
+      fs.appendFileSync(absPath, appendLine, 'utf8');
+      const afterHash = fileHash(absPath);
+      const diff = gitDiffForFile(targetRepo, lane.filePath);
+      logLines.push(`before_hash: ${beforeHash}`, `after_hash: ${afterHash}`);
+      if (diff) logLines.push('', '## git diff', '```diff', diff, '```');
+      if (afterHash !== beforeHash) {
+        logLines.push('## result: success');
+        ok = true;
+      } else {
+        logLines.push('## result: write_failed (hash unchanged)');
+        error = 'file hash unchanged after write';
+      }
+    }
+  }
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), logLines.join('\n'));
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [`executor: local_append`, `ok: ${ok}`, error ? `error: ${error}` : ''].filter(Boolean).join('\n'));
+  return { ok, exitCode: ok ? 0 : 1, error };
+}
+
+function executeLocalReplace(ticket, runDir, lane) {
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? ticket.target_repo : ROOT;
+  const absPath = path.resolve(targetRepo, lane.filePath);
+  let logLines = [`# Lane Executor: local_replace`, `ticket_id: ${ticket.id}`, `target_file: ${lane.filePath}`, `oldText: ${lane.oldText}`, `newText: ${lane.newText}`, ''];
+  let ok = false;
+  let error = null;
+
+  if (!fs.existsSync(absPath)) {
+    logLines.push('## result: file_not_found');
+    error = `file not found: ${absPath}`;
+  } else {
+    const beforeHash = fileHash(absPath);
+    const content = fs.readFileSync(absPath, 'utf8');
+    if (!content.includes(lane.oldText)) {
+      logLines.push('## result: not_found');
+      logLines.push(`note: oldText "${lane.oldText}" not found in file`);
+      error = `text not found: ${lane.oldText}`;
+    } else {
+      const updated = content.split(lane.oldText).join(lane.newText);
+      fs.writeFileSync(absPath, updated, 'utf8');
+      const afterHash = fileHash(absPath);
+      const diff = gitDiffForFile(targetRepo, lane.filePath);
+      logLines.push(`before_hash: ${beforeHash}`, `after_hash: ${afterHash}`);
+      if (diff) logLines.push('', '## git diff', '```diff', diff, '```');
+      if (afterHash !== beforeHash) {
+        logLines.push('## result: success');
+        ok = true;
+      } else {
+        logLines.push('## result: write_failed (hash unchanged)');
+        error = 'file hash unchanged after write';
+      }
+    }
+  }
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), logLines.join('\n'));
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [`executor: local_replace`, `ok: ${ok}`, error ? `error: ${error}` : ''].filter(Boolean).join('\n'));
+  return { ok, exitCode: ok ? 0 : 1, error };
+}
+
+function executeLocalCreateFile(ticket, runDir, lane) {
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? ticket.target_repo : ROOT;
+  const absPath = path.resolve(targetRepo, lane.filePath);
+  let logLines = [`# Lane Executor: local_create_file`, `ticket_id: ${ticket.id}`, `target_file: ${lane.filePath}`, `content: ${lane.content}`, ''];
+  let ok = false;
+  let error = null;
+
+  if (fs.existsSync(absPath)) {
+    logLines.push('## result: file_already_exists');
+    error = `file already exists: ${absPath}`;
+  } else {
+    const bodyContent = lane.content.startsWith('KOSAME_') ? `<p>${lane.content}</p>` : lane.content;
+    const html = `<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="UTF-8">\n<title>Test</title>\n</head>\n<body>\n${bodyContent}\n</body>\n</html>\n`;
+    fs.writeFileSync(absPath, html, 'utf8');
+    const afterHash = fileHash(absPath);
+    const diff = gitDiffForFile(targetRepo, lane.filePath);
+    logLines.push(`before_hash: null (new file)`, `after_hash: ${afterHash}`);
+    if (diff) logLines.push('', '## git diff', '```diff', diff, '```');
+    if (fs.existsSync(absPath) && afterHash) {
+      logLines.push('## result: success');
+      ok = true;
+    } else {
+      logLines.push('## result: write_failed');
+      error = 'file not found or empty after write';
+    }
+  }
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), logLines.join('\n'));
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [`executor: local_create_file`, `ok: ${ok}`, error ? `error: ${error}` : ''].filter(Boolean).join('\n'));
+  return { ok, exitCode: ok ? 0 : 1, error };
+}
+
+function executeLocalSmallPatch(ticket, runDir, lane) {
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? ticket.target_repo : ROOT;
+  const absPath = path.resolve(targetRepo, lane.filePath);
+  let logLines = [`# Lane Executor: local_small_html_css_patch`, `ticket_id: ${ticket.id}`, `target_file: ${lane.filePath}`, `patchType: ${lane.patchType}`, `newContent: ${lane.newContent}`, ''];
+  let ok = false;
+  let error = null;
+
+  if (!fs.existsSync(absPath)) {
+    logLines.push('## result: file_not_found');
+    error = `file not found: ${absPath}`;
+  } else {
+    const beforeHash = fileHash(absPath);
+    let content = fs.readFileSync(absPath, 'utf8');
+    if (lane.patchType === 'heading') {
+      const h1Re = /<h1[^>]*>.*?<\/h1>/i;
+      const h1Match = content.match(h1Re);
+      if (h1Match) {
+        content = content.replace(h1Re, `<h1>${lane.newContent}</h1>`);
+        fs.writeFileSync(absPath, content, 'utf8');
+        const afterHash = fileHash(absPath);
+        const diff = gitDiffForFile(targetRepo, lane.filePath);
+        logLines.push(`before_hash: ${beforeHash}`, `after_hash: ${afterHash}`);
+        if (diff) logLines.push('', '## git diff', '```diff', diff, '```');
+        if (afterHash !== beforeHash) {
+          logLines.push('## result: success');
+          ok = true;
+        } else {
+          logLines.push('## result: write_failed (hash unchanged)');
+          error = 'file hash unchanged after write';
+        }
+      } else {
+        logLines.push('## result: not_found');
+        error = 'no h1 found in file';
+      }
+    } else {
+      logLines.push('## result: unknown_patch_type');
+      error = `unknown patch type: ${lane.patchType}`;
+    }
+  }
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), logLines.join('\n'));
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [`executor: local_small_html_css_patch`, `ok: ${ok}`, error ? `error: ${error}` : ''].filter(Boolean).join('\n'));
+  return { ok, exitCode: ok ? 0 : 1, error };
+}
+
+function executeDeepSeekHandoff(ticket, runDir, lane) {
+  const handoffLines = [
+    '# DeepSeek Patch Required (v113.3.112)',
+    `ticket_id: ${ticket.id}`,
+    `title: ${ticket.title || ticket.id}`,
+    `reason: ${lane.reason || 'local executor cannot handle'}`,
+    '',
+    '## Handoff Instructions for DeepSeek',
+    '',
+    'The following work ticket requires DeepSeek to process:',
+    '',
+    '```text',
+    String(ticket.prompt_text || ticket.body || ''),
+    '```',
+    '',
+    '## Constraints',
+    '',
+    '- target_repo: /home/lavie/kosame-dev-orchestra',
+    '- Do NOT touch Sales DX / transcriber / Secret / .env / credentials / customer data',
+    '- Do NOT delete files',
+    '- Do NOT deploy / push / commit / tag',
+    '- git add -A is prohibited',
+  ].join('\n');
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), handoffLines);
+  fs.writeFileSync(path.join(runDir, 'verify.log'), `status: deepseek_patch_required\nreason: ${lane.reason}`);
+  return { ok: false, exitCode: 0, error: null, executorStatus: 'deepseek_patch_required' };
+}
+
+function executeBlocked(ticket, runDir, lane) {
+  const blockedLines = [
+    '# Blocked by Runner Queue Policy',
+    `ticket_id: ${ticket.id}`,
+    `reason: ${lane.reason}`,
+    '',
+    '## Details',
+    '',
+    `This ticket was blocked because: ${lane.reason}`,
+    '',
+    'No changes were made to any files.',
+  ].join('\n');
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), blockedLines);
+  fs.writeFileSync(path.join(runDir, 'verify.log'), `status: blocked_with_reason\nreason: ${lane.reason}`);
+  return { ok: false, exitCode: 1, error: lane.reason, executorStatus: 'blocked_with_reason' };
+}
+
+// ── Executor Lane Router (v113.3.112) ─────────────────────────────────────────
+
+function executorLaneRouter(ticket, runDir) {
+  const lane = detectExecutorLane(ticket);
+
+  switch (lane.lane) {
+    case 'local_append':
+      return executeLocalAppend(ticket, runDir, lane);
+    case 'local_replace':
+      return executeLocalReplace(ticket, runDir, lane);
+    case 'local_create_file':
+      return executeLocalCreateFile(ticket, runDir, lane);
+    case 'local_small_html_css_patch':
+      return executeLocalSmallPatch(ticket, runDir, lane);
+    case 'deepseek_patch_required':
+      return executeDeepSeekHandoff(ticket, runDir, lane);
+    case 'blocked_with_reason':
+      return executeBlocked(ticket, runDir, lane);
+    default:
+      return { ok: false, exitCode: 1, error: `unknown lane: ${lane.lane}` };
+  }
+}
+
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
-  // Check local deterministic executor FIRST (for low-risk file append tasks)
-  const promptText = String(ticket.prompt_text || ticket.body || ticket.title || ticket.instruction || '');
-  const info = extractFileAppendInfo(promptText);
-  if (info && info.textToAppend && !info.error && info.filePath) {
-    // Local executor can handle this — skip Claude entirely
-    process.stdout.write(`[LOCAL] local deterministic executor handles ticket=${ticket.id}\n`);
-    return localDeterministicExecutor(ticket, runDir);
-  }
-
-  // Chat dispatch tickets that local can't handle: run claude auto-launch pipeline
-  if (ticket.source === 'kosame-chat-dispatch' && (ticket.prompt_text || ticket.body)) {
-    const claudeResult = claudeChatExecutor(ticket, runDir);
-    if (claudeResult.ok) return claudeResult;
-    // Claude failed — try local as fallback
-    process.stdout.write(`[FALLBACK] Claude failed (exit=${claudeResult.exitCode}), trying local executor...\n`);
-    const localResult = localDeterministicExecutor(ticket, runDir);
-    if (localResult.ok) {
-      localResult.fallbackFrom = 'claude';
-      localResult.claudeExitCode = claudeResult.exitCode;
-      localResult.claudeError = claudeResult.error;
-      return localResult;
-    }
-    // Both failed — return claude's original error (more informative)
-    claudeResult.fallbackAttempted = true;
-    claudeResult.fallbackResult = localResult;
-    return claudeResult;
-  }
-
-  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo)
-    ? ticket.target_repo
-    : ROOT;
-  const res = spawnSync('npm', ['run', 'verify'], {
-    cwd: targetRepo,
-    encoding: 'utf8',
-    timeout: 180000,
-    maxBuffer: 10 * 1024 * 1024,
-  });
-  const stdout = res.stdout || '';
-  const stderr = res.stderr || '';
-  const outputMd = [
-    '# Runner Queue Lite — Execution Log',
-    `ticket_id: ${ticket.id}`,
-    `target_repo: ${targetRepo}`,
-    `exit_code: ${res.status}`,
-    '',
-    '## stdout',
-    '',
-    stdout,
-    '## stderr',
-    '',
-    stderr,
-  ].join('\n');
-  fs.writeFileSync(path.join(runDir, 'output.md'), outputMd);
-  fs.writeFileSync(path.join(runDir, 'verify.log'), [stdout, stderr].filter(Boolean).join('\n'));
-  return {
-    ok: res.status === 0,
-    exitCode: res.status,
-    error: res.error ? res.error.message : null,
-  };
+  return executorLaneRouter(ticket, runDir);
 }
 
 // ── Single ticket execution ───────────────────────────────────────────────────
@@ -381,12 +633,13 @@ function runTicket(ticket, attempt, opts) {
     fs.writeFileSync(path.join(runDir, 'verify.log'), err.message);
   }
 
-  const status = execRes.ok ? 'completed' : 'verify_failed';
+  const status = execRes.executorStatus || (execRes.ok ? 'completed' : 'verify_failed');
   const result = {
     runId: ticket.id, ticketId: ticket.id, title: ticket.title || ticket.id,
     status, attempts: attempt,
     startedAt, completedAt: nowIso(),
     error: execRes.error || null,
+    blockedReason: execRes.executorStatus === 'blocked_with_reason' ? execRes.error : undefined,
   };
   fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(result, null, 2) + '\n');
   return result;
@@ -421,6 +674,12 @@ function processTicket(ticket, opts) {
 
     if (lastResult.status === 'safety_stop') {
       state[ticket.id] = { status: 'safety_stop', error: lastResult.error, blockedAt: lastResult.completedAt };
+      flushState(state);
+      return lastResult;
+    }
+
+    if (lastResult.status === 'blocked_with_reason' || lastResult.status === 'deepseek_patch_required') {
+      state[ticket.id] = { status: lastResult.status, error: lastResult.error, blockedAt: lastResult.completedAt };
       flushState(state);
       return lastResult;
     }
@@ -475,6 +734,14 @@ module.exports = {
   claudeChatExecutor,
   localDeterministicExecutor,
   extractFileAppendInfo,
+  detectExecutorLane,
+  executorLaneRouter,
+  executeLocalAppend,
+  executeLocalReplace,
+  executeLocalCreateFile,
+  executeLocalSmallPatch,
+  executeDeepSeekHandoff,
+  executeBlocked,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,
@@ -486,9 +753,10 @@ module.exports = {
 if (require.main === module) {
   const results = processQueue();
   for (const r of results) {
-    const sym = r.status === 'completed'            ? '✅' :
-                r.status === 'blocked_by_test_failure' ? '🔴' :
-                r.status === 'safety_stop'           ? '⛔' : '⚠️';
+    const sym = r.status === 'completed'              ? '✅' :
+                r.status === 'blocked_by_test_failure'  ? '🔴' :
+                r.status === 'blocked_with_reason'      ? '⛔' :
+                r.status === 'safety_stop'              ? '⛔' : '⚠️';
     process.stdout.write(`${sym} [${r.status}] ${r.ticketId} — ${r.title || ''}\n`);
   }
 }

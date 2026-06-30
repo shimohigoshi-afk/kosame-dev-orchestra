@@ -866,7 +866,8 @@ function processTicket(ticket, opts) {
   const flushState = useFile ? (s) => saveState(s, opts.stateFile) : () => {};
 
   const existing = state[ticket.id];
-  if (existing && (existing.status === 'completed' || existing.status === 'blocked_by_test_failure')) {
+  const terminalStatuses = new Set(['completed', 'blocked_by_test_failure', 'blocked_with_reason', 'deepseek_patch_required', 'safety_stop']);
+  if (existing && terminalStatuses.has(existing.status)) {
     return { runId: ticket.id, ticketId: ticket.id, title: ticket.title || ticket.id, ...existing };
   }
 

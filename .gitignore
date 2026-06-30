@@ -27,5 +27,10 @@ data/line-*.json
 # Runner queue runtime state and logs
 .kosame-runner/
 
+# Executor generated artifacts (auto-generated, never commit)
+.kosame-executor/latest*.md
+.kosame-executor/latest*.json
+.kosame-executor/history/
+
 # Chat session history (user conversation data, never commit)
 .kosame-sessions/

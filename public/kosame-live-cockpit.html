@@ -6104,7 +6104,7 @@ async function _zeroConfirmDispatch(text) {
         prompt_text: text,
         message: text,
         route: 'zero-confirm',
-        target_repo: _sp ? (_sp.repoPath || _sp.path || '') : '',
+        target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
       }),
     });
     const data = await res.json();
@@ -6361,7 +6361,7 @@ async function sendChatMessage(userText, confirmationContext) {
             message: userText,
             title: userText.slice(0, 60),
             prompt_text: userText,
-            target_repo: _sp ? (_sp.repoPath || _sp.path || '') : '',
+            target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
           }),
         }).catch(function() {});
       } catch (_) {}

@@ -100,7 +100,7 @@ function evaluateNoYesGate(input = {}) {
     };
   }
 
-  if (blockedPromptType) {
+  if (blockedPromptType && !executionHostInfo.safeSpawnActive) {
     return {
       ok: false,
       blocked: true,

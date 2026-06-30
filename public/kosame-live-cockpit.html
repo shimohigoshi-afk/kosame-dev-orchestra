@@ -2285,6 +2285,43 @@ h1 {
       </article>
     </section>
 
+    <!-- DeepSeek Action & Revision (v113.3.116) -->
+    <section class="agent-stream-log-strip" id="deepseek-action-strip" style="margin-top:8px;display:none">
+      <article class="panel">
+        <details class="support-details" id="deepseek-action-details">
+          <summary>DeepSeek Action <span id="deepseek-action-badge" style="color:var(--warn);font-weight:bold"></span></summary>
+          <div class="support-details-body">
+            <div id="deepseek-action-buttons" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+              <button type="button" class="chat-work-order-copy" id="deepseek-action-accept" style="border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.1)">採用</button>
+              <button type="button" class="chat-work-order-copy" id="deepseek-action-revise" style="border-color:rgba(250,204,21,0.3);background:rgba(250,204,21,0.1)">再修正</button>
+              <button type="button" class="chat-work-order-copy" id="deepseek-action-reject" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.1)">却下</button>
+              <span id="deepseek-action-status" class="small" style="color:var(--muted);line-height:2"></span>
+            </div>
+            <div id="deepseek-action-inputs" style="display:none;margin-bottom:6px">
+              <input id="deepseek-action-ticket-id" type="hidden">
+              <textarea id="deepseek-action-reason" style="width:100%;box-sizing:border-box;min-height:60px;border:1px solid rgba(125,211,252,0.2);background:rgba(0,0,0,0.3);color:#ddd;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;resize:vertical;margin-bottom:4px" placeholder="理由（任意）"></textarea>
+              <textarea id="deepseek-action-next-instruction" style="width:100%;box-sizing:border-box;min-height:60px;border:1px solid rgba(125,211,252,0.2);background:rgba(0,0,0,0.3);color:#ddd;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;resize:vertical;margin-bottom:4px" placeholder="再修正指示（再修正時のみ必須）"></textarea>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="chat-work-order-copy" id="deepseek-action-confirm-btn">確定</button>
+                <button type="button" class="chat-work-order-copy" id="deepseek-action-cancel-btn">キャンセル</button>
+                <span id="deepseek-action-submit-status" class="small" style="color:var(--muted);line-height:2"></span>
+              </div>
+            </div>
+            <div id="deepseek-action-result" style="margin-bottom:6px"></div>
+            <div id="deepseek-revision-display" style="display:none;margin-top:4px">
+              <div class="small" style="color:var(--muted);margin-bottom:2px">Revision Handoff:</div>
+              <div class="agent-stream-log-body" id="deepseek-revision-content" style="height:auto;max-height:200px;white-space:pre-wrap;font-size:12px"></div>
+              <div style="margin-top:4px"><button type="button" class="chat-work-order-copy" id="deepseek-revision-copy-btn">コピー</button></div>
+            </div>
+            <div id="deepseek-history-display" style="margin-top:8px">
+              <div class="small" style="color:var(--muted);margin-bottom:2px">Workflow History (最新20件):</div>
+              <div class="agent-stream-log-body" id="deepseek-history-content" style="height:auto;max-height:200px;white-space:pre-wrap;font-size:11px"></div>
+            </div>
+          </div>
+        </details>
+      </article>
+    </section>
+
     <!-- AGENT STREAM LOG (チャット入力欄の直上) -->
     <section class="agent-stream-log-strip" id="agent-stream-log-strip" style="margin-top:8px">
       <article class="panel">
@@ -5111,6 +5148,159 @@ function displayDeepSeekResult(data, contentNode, statusNode, badgeNode) {
   if (badgeNode) badgeNode.textContent = '(' + (data.status || '') + ')';
 }
 
+function renderDeepSeekResultAction() {
+  const strip = document.getElementById('deepseek-action-strip');
+  const statusNode = document.getElementById('deepseek-action-status');
+  const badgeNode = document.getElementById('deepseek-action-badge');
+  const actionResult = document.getElementById('deepseek-action-result');
+  const actionInputs = document.getElementById('deepseek-action-inputs');
+  const revisionDisplay = document.getElementById('deepseek-revision-display');
+  const revisionContent = document.getElementById('deepseek-revision-content');
+  const revisionCopyBtn = document.getElementById('deepseek-revision-copy-btn');
+  const acceptBtn = document.getElementById('deepseek-action-accept');
+  const reviseBtn = document.getElementById('deepseek-action-revise');
+  const rejectBtn = document.getElementById('deepseek-action-reject');
+  const confirmBtn = document.getElementById('deepseek-action-confirm-btn');
+  const cancelBtn = document.getElementById('deepseek-action-cancel-btn');
+  const reasonInput = document.getElementById('deepseek-action-reason');
+  const nextInstInput = document.getElementById('deepseek-action-next-instruction');
+  const submitStatus = document.getElementById('deepseek-action-submit-status');
+  if (!strip || !statusNode) return;
+
+  // Check if we have a result to act on
+  fetch('/api/executor/deepseek-result').then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.ok || !data.status) {
+      strip.style.display = 'none';
+      return;
+    }
+    strip.style.display = '';
+    if (badgeNode) badgeNode.textContent = '(result ready)';
+    statusNode.textContent = 'Result received. Choose action:';
+  }).catch(function() { strip.style.display = 'none'; });
+
+  var pendingAction = null;
+
+  function showInputs(action) {
+    pendingAction = action;
+    actionInputs.style.display = '';
+    actionResult.innerHTML = '';
+    submitStatus.textContent = '';
+    if (action === 'accept') {
+      reasonInput.placeholder = '理由（任意）';
+      nextInstInput.style.display = 'none';
+    } else if (action === 'revise') {
+      reasonInput.placeholder = '再修正理由';
+      nextInstInput.style.display = '';
+      nextInstInput.placeholder = '再修正指示（必須）';
+    } else if (action === 'reject') {
+      reasonInput.placeholder = '却下理由（必須）';
+      nextInstInput.style.display = 'none';
+    }
+  }
+
+  acceptBtn.onclick = function() { showInputs('accept'); };
+  reviseBtn.onclick = function() { showInputs('revise'); };
+  rejectBtn.onclick = function() { showInputs('reject'); };
+
+  cancelBtn.onclick = function() {
+    actionInputs.style.display = 'none';
+    actionResult.innerHTML = '';
+    submitStatus.textContent = '';
+    pendingAction = null;
+  };
+
+  confirmBtn.onclick = function() {
+    var action = pendingAction;
+    if (!action) { submitStatus.textContent = '先にアクションを選んでください'; return; }
+    var reason = (reasonInput.value || '').trim();
+    var nextInstruction = (nextInstInput.value || '').trim();
+    if (action === 'reject' && !reason) { submitStatus.textContent = '却下理由を入力してください'; return; }
+    if (action === 'revise' && !nextInstruction) { submitStatus.textContent = '再修正指示を入力してください'; return; }
+
+    submitStatus.textContent = '送信中...';
+    confirmBtn.disabled = true;
+
+    fetch('/api/executor/deepseek-result/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: action, reason: reason, next_instruction: nextInstruction }),
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      confirmBtn.disabled = false;
+      if (!data.ok) {
+        submitStatus.textContent = 'エラー: ' + (data.reason || 'unknown');
+        return;
+      }
+      submitStatus.textContent = action + ' 完了';
+      actionInputs.style.display = 'none';
+      reasonInput.value = '';
+      nextInstInput.value = '';
+      pendingAction = null;
+      if (badgeNode) badgeNode.textContent = '(' + action + ')';
+      statusNode.textContent = 'Action: ' + action + ' — ' + (reason || '') + (data.revision_path ? ' (revision generated)' : '');
+      actionResult.innerHTML = '<div class="small" style="color:var(--accent)">' + action + ' saved OK' + (data.revision_path ? ' — revision handoff created' : '') + '</div>';
+
+      // Show revision if available
+      if (data.revision_path) {
+        revisionDisplay.style.display = '';
+        fetch('/api/executor/deepseek-handoff').then(function(r) { return r.json(); }).then(function(h) {
+          if (h.ok && revisionContent) revisionContent.textContent = h.content;
+        }).catch(function() {});
+      }
+      // Refresh history
+      if (typeof renderDeepSeekWorkflowHistory === 'function') renderDeepSeekWorkflowHistory();
+    }).catch(function(err) {
+      confirmBtn.disabled = false;
+      submitStatus.textContent = '通信エラー: ' + (err.message || 'unknown');
+    });
+  };
+
+  // Revision copy button
+  if (revisionCopyBtn) {
+    revisionCopyBtn.onclick = function() {
+      var text = revisionContent ? revisionContent.textContent : '';
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      revisionCopyBtn.textContent = 'コピー済み';
+      setTimeout(function() { revisionCopyBtn.textContent = 'コピー'; }, 1200);
+    };
+  }
+}
+
+function renderDeepSeekWorkflowHistory() {
+  var contentNode = document.getElementById('deepseek-history-content');
+  if (!contentNode) return;
+
+  fetch('/api/executor/history').then(function(r) { return r.json(); }).then(function(data) {
+    if (!data.ok || !data.items || !data.items.length) {
+      contentNode.textContent = '(履歴なし)';
+      return;
+    }
+    var lines = [];
+    data.items.forEach(function(item) {
+      var ts = item.timestamp ? item.timestamp.slice(0, 19).replace('T', ' ') : '—';
+      var typeIcon = item.type === 'result' ? '📥' : item.type === 'action' ? '📋' : item.type === 'revision' ? '🔄' : '?';
+      var actionLabel = item.action || item.data && item.data.action || '—';
+      var summary = item.data && item.data.summary ? item.data.summary.slice(0, 60) : '';
+      var reason = item.data && item.data.reason || item.reason || '';
+      lines.push(typeIcon + ' [' + ts + '] ' + item.type + ' — ' + actionLabel + ' — ' + (item.ticket_id || '—'));
+      if (summary) lines.push('    summary: ' + summary);
+      if (reason) lines.push('    reason: ' + reason.slice(0, 60));
+    });
+    contentNode.textContent = lines.join('\n');
+  }).catch(function() {
+    contentNode.textContent = '(履歴読み込みエラー)';
+  });
+}
+
 function renderWorkOrderResultPanel(snapshot = latestSnapshot || {}) {
   const node = document.getElementById('work-order-result-panel');
   const statusNode = document.getElementById('work-order-result-status');
@@ -6662,6 +6852,8 @@ renderHandoffInboxBridge({});
 renderWorkOrderHandoffQueue({});
 renderDeepSeekHandoff();
 renderDeepSeekResult();
+renderDeepSeekResultAction();
+renderDeepSeekWorkflowHistory();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

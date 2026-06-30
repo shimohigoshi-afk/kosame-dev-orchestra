@@ -30,6 +30,36 @@ const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
 
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 
+const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
+
+function saveHistory(type, data, ticketId, action) {
+  try {
+    const historyDir = path.join(EXECUTOR_DIR, 'history');
+    ensureDir(historyDir);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const entry = { type, timestamp: new Date().toISOString(), ticket_id: ticketId || '—', action: action || null, data, path: null };
+    const fname = `${ts}-${type}.json`;
+    const fp = path.join(historyDir, fname);
+    fs.writeFileSync(fp, JSON.stringify(entry, null, 2) + '\n');
+  } catch (_) { /* silent */ }
+}
+
+function writeLatestBlocked(reason, ticketId) {
+  try {
+    const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+    const lines = [
+      '# KOSAME Runner — Latest Executor Status',
+      `updated_at: ${new Date().toISOString()}`,
+      `status: blocked`,
+      `reason: ${reason}`,
+      ticketId ? `ticket_id: ${ticketId}` : null,
+      '',
+    ].filter(Boolean).join('\n');
+    ensureDir(EXECUTOR_DIR);
+    fs.writeFileSync(latestPath, lines);
+  } catch (_) { /* silent */ }
+}
+
 function readHtml() {
   return fs.readFileSync(HTML_PATH, 'utf8');
 }
@@ -885,6 +915,9 @@ function createLiveCockpitServer(options = {}) {
             // Write JSON
             fs.writeFileSync(resultJsonPath, JSON.stringify(parsedResult, null, 2) + '\n');
 
+            // Save to history
+            saveHistory('result', parsedResult, parsedResult.ticket_id, 'received');
+
             // Update latest.md with result status
             const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
             const latestContent = fs.existsSync(latestPath) ? fs.readFileSync(latestPath, 'utf8') : '';
@@ -915,6 +948,178 @@ function createLiveCockpitServer(options = {}) {
       const resultContent = fs.readFileSync(resultJsonPath, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
       res.end(resultContent);
+      return;
+    }
+
+    // ── DeepSeek result action API (v113.3.116) ──────────────────────────────
+
+    if (url.pathname === '/api/executor/deepseek-result/action') {
+      if (req.method === 'POST') {
+        parseJsonBody(req, (parsed) => {
+          try {
+            const action = String(parsed.action || '').trim().toLowerCase();
+            const ticketId = String(parsed.ticket_id || '').trim();
+            const reason = String(parsed.reason || '').trim();
+            const nextInstruction = String(parsed.next_instruction || '').trim();
+
+            if (!action || !['accept', 'revise', 'reject'].includes(action)) {
+              res.writeHead(200, JSON_HEADERS);
+              res.end(JSON.stringify({ ok: false, reason: 'action must be accept | revise | reject' }));
+              return;
+            }
+
+            // Blocked checks
+            const blockedText = [action, reason, nextInstruction].join(' ');
+            const blockedPatterns = [/\.env\b/i, /credentials/i, /SECRET/i, /private\s*key/i, /\/home\/lavie\/repos\/transcriber/, /\/home\/lavie\/repos\/kosame-sales-dx/, /\btranscriber\b/i, /kosame-sales-dx/i];
+            for (const bp of blockedPatterns) {
+              if (bp.test(blockedText)) {
+                writeLatestBlocked('action contains blocked content', ticketId || '—');
+                res.writeHead(200, JSON_HEADERS);
+                res.end(JSON.stringify({ ok: false, reason: 'action/reason/instruction contains blocked content' }));
+                return;
+              }
+            }
+
+            const actionObj = {
+              action,
+              ticket_id: ticketId,
+              reason: reason || null,
+              next_instruction: nextInstruction || null,
+              created_at: new Date().toISOString(),
+            };
+
+            ensureDir(EXECUTOR_DIR);
+            const actionJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.json');
+            const actionMdPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.md');
+
+            // Write JSON
+            fs.writeFileSync(actionJsonPath, JSON.stringify(actionObj, null, 2) + '\n');
+
+            // Write MD
+            const mdLines = [
+              '# DeepSeek Result Action',
+              `action: ${actionObj.action}`,
+              `ticket_id: ${actionObj.ticket_id || '—'}`,
+              `created_at: ${actionObj.created_at}`,
+              reason ? `reason: ${reason}` : null,
+              nextInstruction ? `next_instruction: ${nextInstruction}` : null,
+              '',
+            ].filter(Boolean).join('\n');
+            fs.writeFileSync(actionMdPath, mdLines);
+
+            // Update latest.md
+            const latestPath = path.join(EXECUTOR_DIR, 'latest.md');
+            const latestContent = fs.existsSync(latestPath) ? fs.readFileSync(latestPath, 'utf8') : '';
+            let latestUpdated;
+            if (latestContent) {
+              latestUpdated = latestContent
+                .replace(/^status: .+$/m, 'status: deepseek_result_actioned')
+                .replace(/^action: .+$/m, `action: ${action}`)
+                .replace(/^reason: .+$/m, reason ? `reason: ${reason}` : '');
+              if (!latestUpdated.includes('\naction: ')) latestUpdated += `\naction: ${action}`;
+              if (reason && !latestContent.includes('\nreason: ')) latestUpdated += `\nreason: ${reason}`;
+            } else {
+              latestUpdated = `# KOSAME Runner — Latest Executor Status\nupdated_at: ${actionObj.created_at}\nstatus: deepseek_result_actioned\naction: ${action}\nticket_id: ${actionObj.ticket_id}\n`;
+              if (reason) latestUpdated += `reason: ${reason}\n`;
+            }
+            fs.writeFileSync(latestPath, latestUpdated);
+
+            // Handle revision
+            let revisionPath = null;
+            if (action === 'revise') {
+              // Read previous result for context
+              let prevSummary = '';
+              let prevChangedFiles = [];
+              let prevVerification = [];
+              try {
+                const resultJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-result.json');
+                if (fs.existsSync(resultJsonPath)) {
+                  const prevResult = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
+                  prevSummary = prevResult.summary || '';
+                  prevChangedFiles = prevResult.changed_files || [];
+                  prevVerification = prevResult.verification || [];
+                }
+              } catch (_) {}
+
+              const { writeRevisionHandoffFile } = require('./kosame-runner-queue');
+              revisionPath = writeRevisionHandoffFile(ticketId, prevSummary, prevChangedFiles, prevVerification, reason, nextInstruction);
+
+              // Save revision to history
+              if (revisionPath) {
+                try {
+                  const historyDir = path.join(EXECUTOR_DIR, 'history');
+                  ensureDir(historyDir);
+                  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                  const revisionContent = fs.readFileSync(revisionPath, 'utf8');
+                  const revEntry = { type: 'revision', timestamp: new Date().toISOString(), ticket_id: ticketId, action: 'revise', path: revisionPath };
+                  const revFname = `${ts}-revision.json`;
+                  fs.writeFileSync(path.join(historyDir, revFname), JSON.stringify(revEntry, null, 2) + '\n');
+                  // Also copy the revision md
+                  const revMdName = `${ts}-revision.md`;
+                  fs.copyFileSync(revisionPath, path.join(historyDir, revMdName));
+                } catch (_) {}
+              }
+            }
+
+            // Save to history
+            saveHistory('action', actionObj, ticketId, action);
+
+            _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[DEEPSEEK ACTION] ${action} ticket=${ticketId}` });
+
+            const response = {
+              ok: true,
+              action,
+              ticket_id: ticketId,
+              reason: reason || null,
+              saved_json_path: actionJsonPath,
+              saved_md_path: actionMdPath,
+              revision_path: revisionPath,
+              latest_path: latestPath,
+            };
+            res.writeHead(200, JSON_HEADERS);
+            res.end(JSON.stringify(response));
+          } catch (err) {
+            res.writeHead(200, JSON_HEADERS);
+            res.end(JSON.stringify({ ok: false, reason: String(err.message || err) }));
+          }
+        });
+        return;
+      }
+
+      // GET: return latest action
+      const actionJsonPath = path.join(EXECUTOR_DIR, 'latest-deepseek-action.json');
+      if (!fs.existsSync(actionJsonPath)) {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: false, reason: 'latest-deepseek-action.json not found' }));
+        return;
+      }
+      const actionContent = fs.readFileSync(actionJsonPath, 'utf8');
+      res.writeHead(200, JSON_HEADERS);
+      res.end(actionContent);
+      return;
+    }
+
+    // ── DeepSeek workflow history API (v113.3.116) ──────────────────────────
+
+    if (url.pathname === '/api/executor/history') {
+      const historyDir = path.join(EXECUTOR_DIR, 'history');
+      if (!fs.existsSync(historyDir)) {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, items: [] }));
+        return;
+      }
+      const files = fs.readdirSync(historyDir).sort().reverse().slice(0, 20);
+      const items = [];
+      for (const f of files) {
+        const fp = path.join(historyDir, f);
+        if (!f.endsWith('.json') || !fs.statSync(fp).isFile()) continue;
+        try {
+          const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+          items.push(data);
+        } catch (_) { /* skip malformed */ }
+      }
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, items }));
       return;
     }
 

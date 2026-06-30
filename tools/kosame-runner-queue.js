@@ -604,6 +604,71 @@ function writeDeepSeekHandoffFile(ticket, lane, runDir) {
   return handoffPath;
 }
 
+function writeRevisionHandoffFile(prevTicketId, prevSummary, prevChangedFiles, prevVerification, reviseReason, nextInstruction) {
+  const lines = [
+    '# DeepSeek Revision Handoff (v113.3.116)',
+    `generated_at: ${new Date().toISOString()}`,
+    `original_ticket_id: ${prevTicketId || '—'}`,
+    `revise_reason: ${reviseReason || '—'}`,
+    `next_instruction: ${nextInstruction || '—'}`,
+    '',
+    '## Previous Result Summary',
+    '',
+    `summary: ${prevSummary || '—'}`,
+    '',
+    '## Previous Changed Files',
+    (prevChangedFiles || []).length ? prevChangedFiles.map(f => `- ${f}`).join('\n') : '- (none)',
+    '',
+    '## Previous Verification',
+    (prevVerification || []).length ? prevVerification.map(v => `- ${v}`).join('\n') : '- (none)',
+    '',
+    '## Revision Instruction',
+    '',
+    '```text',
+    nextInstruction || reviseReason || 'Revise based on previous review.',
+    '```',
+    '',
+    '## Safety Constraints',
+    '',
+    '- target_repo: /home/lavie/kosame-dev-orchestra only',
+    '- Do NOT touch Sales DX / transcriber / Secret / .env / credentials / customer data',
+    '- Do NOT delete files',
+    '- Do NOT deploy / push / commit / tag',
+    '- git add -A is prohibited',
+    '- git add . is prohibited',
+    '- Codex is prohibited',
+    '- Claude is prohibited',
+    '- Automatic push is prohibited',
+    '- Automatic deploy is prohibited',
+    '',
+    '## Result Return Format',
+    '',
+    'Return your result using the following format:',
+    '',
+    '```',
+    'KOSAME_DEEPSEEK_RESULT_BEGIN',
+    'status: completed | blocked | failed',
+    'ticket_id: <ticket id>',
+    'summary: <brief summary>',
+    'changed_files:',
+    '- <file1>',
+    '- <file2>',
+    'verification:',
+    '- <step 1>',
+    '- <step 2>',
+    'commit: none | <commit hash>',
+    'notes: <any notes>',
+    'KOSAME_DEEPSEEK_RESULT_END',
+    '```',
+    '',
+  ].join('\n');
+
+  ensureDir(EXECUTOR_DIR);
+  const revisionPath = path.join(EXECUTOR_DIR, 'latest-deepseek-revision.md');
+  fs.writeFileSync(revisionPath, lines);
+  return revisionPath;
+}
+
 function executeDeepSeekHandoff(ticket, runDir, lane) {
   const promptText = String(ticket.prompt_text || ticket.body || '');
   const handoffLines = [
@@ -882,6 +947,7 @@ module.exports = {
   executeBlocked,
   writeLatestStatus,
   writeDeepSeekHandoffFile,
+  writeRevisionHandoffFile,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,

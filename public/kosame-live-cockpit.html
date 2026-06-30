@@ -2077,7 +2077,7 @@ h1 {
     <!-- DEV ORCHESTRA STATUS (order 8) -->
     <section class="dev-orchestra-focus-section" id="dev-orchestra-focus-section" style="margin-top:8px">
       <article class="panel project-focus-panel" id="project-focus-card">
-        <details class="project-focus-collapse" id="project-focus-collapse">
+        <details class="project-focus-collapse" id="project-focus-collapse" open>
           <summary class="project-focus-collapse-toggle">
             <div class="project-focus-head">
               <h2 class="project-focus-title" id="project-focus-title">SELECTED PROJECT FOCUS PANEL</h2>
@@ -3646,7 +3646,11 @@ function renderProjectRegistry(snapshot) {
 
     button.addEventListener('click', () => {
       selectedProjectId = project.id || selectedProjectId;
+      const _fc = document.getElementById('project-focus-collapse');
+      if (_fc) _fc.open = true;
       renderProjectRegistry(latestSnapshot || snapshot);
+      const _focusSec = document.getElementById('dev-orchestra-focus-section');
+      if (_focusSec) _focusSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
     stripNode.appendChild(button);
   }
@@ -3689,10 +3693,14 @@ function renderProjectRegistry(snapshot) {
   const focusGrid = document.createElement('div');
   focusGrid.className = 'project-focus-shell';
   const pieces = [
+    ['RUNNING TASK', selectedProject.runningCount > 0
+      ? [selectedProject.eventSummary || `実行中: ${selectedProject.runningCount} タスク`]
+      : ['—']],
+    ['WARNINGS', (selectedProject.warnings || []).length ? selectedProject.warnings : ['—']],
     ['git status -sb', selectedProject.statusLines || []],
     ['CHANGED FILES', selectedProject.changedFiles || []],
     ['STAGED FILES', selectedProject.stagedFiles || []],
-    ['RECENT COMMITS', (selectedProject.recentCommits || []).map(item => item.raw)],
+    ['RECENT COMMITS', (selectedProject.recentCommits || []).map(item => item.raw || item)],
     ['GITHUB ACTIONS', selectedProject.githubActions || []],
   ];
   for (const [title, lines] of pieces) {

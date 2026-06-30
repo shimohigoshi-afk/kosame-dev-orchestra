@@ -59,6 +59,12 @@ const DISPATCH_SAFETY_PREAMBLE = [
   '- 外部APIを呼ばない',
   '- 対象repo以外を触らない',
   '',
+  '【作業場所ルール（kosame-dev-orchestra）】',
+  '- HTMLファイルは必ず public/ フォルダに作成する',
+  '  例: 「test.htmlを作って」→ public/test.html',
+  '- JavaScriptツール・サーバーは tools/ に配置する',
+  '- スモークテストは smoke/ に配置する',
+  '',
 ].join('\n');
 
 function ensureDir(p) {

@@ -497,7 +497,7 @@ function saveHandoffInbox(payload = {}, options = {}) {
     ...safe,
     saved_at: now,
     created_at: safe.created_at || now,
-    source: 'kosame_console',
+    source: safe.source || 'kosame_console',
   };
   if (attachmentManifest) {
     record.attachment_manifest_path = attachmentManifest.manifestPath;

@@ -337,6 +337,29 @@ function buildConsoleContextSummary(snapshot) {
   lines.push(`KOSAME Console / version=${currentVersion} / mode=${normalizeText(snapshot.mode || 'Readonly')}`);
   lines.push(`currentVersion=${currentVersion}`);
   lines.push(`versionContext=package=${packageVersion} / tag=${latestTag} / head=${headCommit}`);
+
+  // ── Task Vault context (v113.7.2) ────────────────────────────────────────
+  try {
+    const taskVaultPath = path.join(__dirname, '..', '.kosame-state', 'task-vault.json');
+    if (fs.existsSync(taskVaultPath)) {
+      const tv = JSON.parse(fs.readFileSync(taskVaultPath, 'utf8'));
+      if (tv.current_mission) {
+        lines.push(`taskVaultMission=lane=${tv.current_mission.lane || '—'} status=${tv.current_mission.status || '—'} diff=${tv.current_mission.difficulty || '—'}`);
+        if (tv.current_mission.confid) lines.push(`taskVaultConfidentiality=${tv.current_mission.confid}`);
+      }
+      if (tv.judge_status) lines.push(`taskVaultJudge=${tv.judge_status}`);
+      if (tv.model_lane) lines.push(`taskVaultLane=${tv.model_lane}`);
+      if (tv.version) lines.push(`taskVaultVersion=${tv.version}`);
+    }
+    const nextActionsPath = path.join(__dirname, '..', '.kosame-state', 'next-actions.json');
+    if (fs.existsSync(nextActionsPath)) {
+      const na = JSON.parse(fs.readFileSync(nextActionsPath, 'utf8'));
+      if (Array.isArray(na.actions) && na.actions.length) {
+        lines.push(`taskVaultNextActions=${na.actions.slice(0, 3).join(' | ')}`);
+      }
+    }
+  } catch (_) { /* best-effort */ }
+
   if (snapshot.currentMission) {
     lines.push(`currentMission=${normalizeText(snapshot.currentMission)}`);
   }

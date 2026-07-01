@@ -197,6 +197,13 @@ function detectExecutorLane(ticket) {
     return { lane: 'blocked_with_reason', reason: 'deploy/push/commit/tag operations are not allowed', promptText };
   }
 
+  // ── Sensitive checks (v113.7.2) ──
+  // customer/billing/insurance/production → sensitive, only Tier A (Claude/Gemini/GPT)
+  // DeepSeek/Grok/Llama must not receive these
+  if (/(?:顧客|customer|client|契約|contract|保険|insurance|課金|billing|revenue|payment|production|本番|release|tag|プライバシー|privacy)/i.test(promptText)) {
+    return { lane: 'sensitive_internal_only', reason: 'sensitive content — internal AI only (Claude/Gemini/GPT)', promptText };
+  }
+
   // ── Local append ──
   const markerMatch = promptText.match(/(KOSAME_[A-Z0-9_]+)/i);
   const filePath = extractFilePath(promptText);
@@ -928,6 +935,8 @@ function executorLaneRouter(ticket, runDir) {
       return executeLocalSmallPatch(ticket, runDir, lane);
     case 'deepseek_patch_required':
       return executeDeepSeekHandoff(ticket, runDir, lane);
+    case 'sensitive_internal_only':
+      return executeBlocked(ticket, runDir, { reason: lane.reason, promptText: lane.promptText });
     case 'blocked_with_reason':
       return executeBlocked(ticket, runDir, lane);
     default:

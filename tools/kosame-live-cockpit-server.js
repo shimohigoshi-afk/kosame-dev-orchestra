@@ -758,7 +758,7 @@ function createLiveCockpitServer(options = {}) {
             ts: new Date().toISOString(), agent: 'RUNNER',
             msg: `[DONE] zero-confirm dispatch 完了 status=${result.status} — ${title}`,
           });
-          _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: result.exitCode, ticketId, title });
+          _emitRunnerSSE('done', { ts: new Date().toISOString(), exitCode: result.exitCode !== undefined ? result.exitCode : 0, ticketId, title });
           res.writeHead(200, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store',

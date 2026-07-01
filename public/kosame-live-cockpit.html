@@ -5218,6 +5218,7 @@ function renderRoadmapPanel() {
   }).catch(function() { el.innerHTML = 'Roadmap: unavailable'; });
 }
 
+// Phase2-4: TaskVault/Difficulty/Confidentiality を /api/executor/latest から描画
 function renderOpsPanels() {
   var tvEl = document.getElementById('task-vault-display');
   if (tvEl) {
@@ -5231,6 +5232,7 @@ function renderOpsPanels() {
     fetch('/api/executor/latest').then(function(r) { return r.json(); }).then(function(d) {
       if (d.ok && !d.empty) {
         var diff = d.difficulty || '--', conf = d.confidentiality || '--';
+        // dc は将来的な色付けバッジ用に保持（現在は innerHTML のみ使用）
         var dc = diff === 'high' ? 'var(--danger)' : diff === 'medium' ? 'var(--accent-2)' : 'var(--ok)';
         dbEl.innerHTML = 'Difficulty: ' + diff + ' | Confidentiality: ' + conf;
       } else { dbEl.innerHTML = 'Difficulty: --'; }

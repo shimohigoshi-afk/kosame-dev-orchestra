@@ -1023,6 +1023,7 @@ function runTicket(ticket, attempt, opts) {
     runId: ticket.id, ticketId: ticket.id, title: ticket.title || ticket.id,
     status, attempts: attempt,
     startedAt, completedAt: nowIso(),
+    exitCode: execRes.exitCode !== undefined ? execRes.exitCode : (status === 'completed' ? 0 : 1),
     error: execRes.error || null,
     blockedReason: execRes.executorStatus === 'blocked_with_reason' ? execRes.error : undefined,
   };

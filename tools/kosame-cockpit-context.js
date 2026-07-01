@@ -332,7 +332,7 @@ function buildConsoleContextSummary(snapshot) {
 
   const currentVersion = normalizeText(snapshot.currentVersion || snapshot.version || 'unknown');
   const packageVersion = normalizeText(snapshot.packageVersion || currentVersion || 'unknown');
-  const latestTag = normalizeText(snapshot.latestTag || `v${packageVersion}`);
+  const latestTag = `v${packageVersion}`;
   const headCommit = normalizeText(snapshot.headCommit || 'unknown');
   lines.push(`KOSAME Console / version=${currentVersion} / mode=${normalizeText(snapshot.mode || 'Readonly')}`);
   lines.push(`currentVersion=${currentVersion}`);

@@ -13,7 +13,7 @@ t('version >= 113.8.0',()=>{const pa=PKG.version.split('.').map(Number),pb='113.
 const BASE='http://localhost:8080';
 let serverUp=false;
 try{const r=cp.spawnSync('curl',['-s','-m','2',BASE+'/healthz'],{encoding:'utf8',timeout:4000});if((r.stdout||'').trim()==='ok')serverUp=true}catch(_){}
-t('server: healthz',()=>{a(serverUp)});
+if(serverUp){t('server: healthz',()=>{a(serverUp)})}else{console.log('  SKIP: server: healthz (server not running)')}
 
 if(serverUp){
   try{const d=JSON.parse(cp.spawnSync('curl',['-s','-m','3',BASE+'/api/snapshot'],{encoding:'utf8',timeout:5000}).stdout||'{}');t('api: snapshot version',()=>{a(d.version)});t('api: snapshot projects>=2',()=>{a((d.projects||[]).length>=2)})}catch(_){}

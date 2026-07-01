@@ -1861,6 +1861,20 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Console Operation Report API (v113.3.124) ──────────────────────────
+
+    if (url.pathname === '/api/executor/console-operation-report') {
+      const rp = path.join(EXECUTOR_DIR, 'console-operation-report.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:console to generate' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

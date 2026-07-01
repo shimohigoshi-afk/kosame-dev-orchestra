@@ -46,6 +46,7 @@ data/line-*.json
 .kosame-executor/limit-break-report.json
 .kosame-executor/operational-evidence.md
 .kosame-executor/real-run-readiness.md
+.kosame-executor/console-operation-report.md
 
 # Test / runtime artifacts (never commit)
 test-results/

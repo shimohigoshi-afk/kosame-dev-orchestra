@@ -2333,6 +2333,10 @@ h1 {
               <div class="small" style="color:var(--accent);margin-bottom:2px">🎯 Field Ops Launch:</div>
               <div class="small" style="color:var(--muted)" id="field-ops-status">loading...</div>
               <button type="button" class="chat-work-order-copy" id="field-ops-run-btn" style="margin-top:4px;font-size:10px">Field Opsを実行</button>
+              <div id="limit-break-panel" style="margin-top:6px;">
+                <div class="small" style="color:var(--accent);margin-bottom:2px">🚀 Limit Break Status:</div>
+                <div class="small" style="color:var(--muted)" id="limit-break-status">loading...</div>
+              </div>
             </div>
           </div>
         </details>
@@ -5177,6 +5181,20 @@ function renderFieldOpsPanel() {
   }
 }
 
+function renderLimitBreakPanel() {
+  var el = document.getElementById('limit-break-status');
+  if (!el) return;
+  fetch('/api/executor/limit-break-report').then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok && !data.empty) {
+      var s = data.content.includes('ready') ? 'ready' : data.content.includes('caution') ? 'caution' : 'blocked';
+      var c = s === 'ready' ? 'var(--ok)' : s === 'caution' ? 'var(--accent-2)' : 'var(--danger)';
+      el.innerHTML = 'Limit Break: <span style="color:' + c + '">' + s + '</span>';
+    } else {
+      el.innerHTML = 'Limit Break: not yet run';
+    }
+  }).catch(function() { el.innerHTML = 'Limit Break: unavailable'; });
+}
+
 function renderWorkflowDashboard() {
   var el = document.getElementById('deepseek-dashboard-content');
   if (!el) return;
@@ -7069,6 +7087,7 @@ renderWorkflowDashboard();
 renderReleaseReadiness();
 renderRC100Dashboard();
 renderFieldOpsPanel();
+renderLimitBreakPanel();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

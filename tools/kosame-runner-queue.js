@@ -297,7 +297,7 @@ function detectTaskDifficulty(ticket) {
 
   // ── Blocked checks ──
   if (text.includes('..')) return 'blocked';
-  if (/(?:削除|delete|rm\s|remove|del\b)/i.test(text)) return 'blocked';
+  if (/(?:削除|delete|rm\s|remove|\bdel\b)/i.test(text)) return 'blocked';
 
   let score = 0;
 

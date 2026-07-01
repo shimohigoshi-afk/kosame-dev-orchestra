@@ -1823,6 +1823,44 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Limit Break API (v113.3.124) ───────────────────────────────────────
+
+    if (url.pathname === '/api/executor/limit-break-report') {
+      const rp = path.join(EXECUTOR_DIR, 'limit-break-report.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:limit-break to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/operational-evidence') {
+      const ep = path.join(EXECUTOR_DIR, 'operational-evidence.md');
+      if (fs.existsSync(ep)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(ep, 'utf8'), path: ep }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:limit-break to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/real-run-readiness') {
+      const rrp = path.join(EXECUTOR_DIR, 'real-run-readiness.md');
+      if (fs.existsSync(rrp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rrp, 'utf8'), path: rrp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:limit-break to generate' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

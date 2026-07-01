@@ -1063,20 +1063,23 @@ function updateTaskVault(ticket, result) {
     // Only save implementation tasks (skip status inquiries / questions)
     const title = ticket.title || ticket.id || '';
     const promptText = String(ticket.prompt_text || ticket.body || '').toLowerCase();
-    const isQuestion = /(?:現在地|バージョン|version|状態.*確認|何をし|教えて|状況|ステータス)/i.test(title + promptText);
-    const isImplementation = /(?:追記|append|作成|create|修正|fix|変更|change|replace|置換|実装|implement|追加|add|build)/i.test(title + promptText) || result.status !== 'completed';
+    const isQuestion = /(?:現在地|バージョン|version|状態.*確認|何をし|教えて|状況|ステータス|教え)/i.test(title + promptText);
 
-    if (!isQuestion || isImplementation) {
-      vault.last_completed_task = {
-        title: ticket.title || ticket.id,
-        status: result.status,
-        exit_code: result.exitCode,
-        lane: lane,
-        completed_at: now,
-        error: result.error || null,
-        blocked_reason: result.blockedReason || null,
-      };
+    if (isQuestion) {
+      // Skip entirely — don't update last_completed_task, don't add to history
+      fs.writeFileSync(vaultPath, JSON.stringify(vault, null, 2) + '\n');
+      return;
     }
+
+    vault.last_completed_task = {
+      title: ticket.title || ticket.id,
+      status: result.status,
+      exit_code: result.exitCode,
+      lane: lane,
+      completed_at: now,
+      error: result.error || null,
+      blocked_reason: result.blockedReason || null,
+    };
     vault.current_mission = {
       lane: lane,
       status: result.status,

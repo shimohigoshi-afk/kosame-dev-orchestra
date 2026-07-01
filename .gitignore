@@ -47,6 +47,12 @@ data/line-*.json
 .kosame-executor/operational-evidence.md
 .kosame-executor/real-run-readiness.md
 .kosame-executor/console-operation-report.md
+.kosame-executor/kosame-roadmap-canon.json
+.kosame-executor/kosame-roadmap-canon.md
+.kosame-executor/kosame-roadmap-next-actions.md
+.kosame-executor/roadmap-work-orders.json
+.kosame-executor/roadmap-work-orders.md
+.kosame-executor/roadmap-handoff-for-next-chat.md
 
 # Test / runtime artifacts (never commit)
 test-results/

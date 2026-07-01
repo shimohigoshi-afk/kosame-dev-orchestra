@@ -2337,6 +2337,10 @@ h1 {
                 <div class="small" style="color:var(--accent);margin-bottom:2px">🚀 Limit Break Status:</div>
                 <div class="small" style="color:var(--muted)" id="limit-break-status">loading...</div>
               </div>
+              <div id="roadmap-panel" style="margin-top:6px;">
+                <div class="small" style="color:var(--accent);margin-bottom:2px">📋 完成ロードマップ:</div>
+                <div class="small" style="color:var(--muted)" id="roadmap-status">loading...</div>
+              </div>
             </div>
           </div>
         </details>
@@ -5195,6 +5199,19 @@ function renderLimitBreakPanel() {
   }).catch(function() { el.innerHTML = 'Limit Break: unavailable'; });
 }
 
+function renderRoadmapPanel() {
+  var el = document.getElementById('roadmap-status');
+  if (!el) return;
+  fetch('/api/executor/roadmap').then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok && !data.empty) {
+      var next = (data.next_actions || []).slice(0,3).join(' → ');
+      el.innerHTML = 'Roadmap: ' + (data.total_phases || '?') + ' phases → ' + (next || 'ready');
+    } else {
+      el.innerHTML = 'Roadmap: run roadmap:canon to generate';
+    }
+  }).catch(function() { el.innerHTML = 'Roadmap: unavailable'; });
+}
+
 function renderWorkflowDashboard() {
   var el = document.getElementById('deepseek-dashboard-content');
   if (!el) return;
@@ -7088,6 +7105,7 @@ renderReleaseReadiness();
 renderRC100Dashboard();
 renderFieldOpsPanel();
 renderLimitBreakPanel();
+renderRoadmapPanel();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

@@ -1875,6 +1875,56 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Roadmap API (v113.3.125) ───────────────────────────────────────────
+
+    if (url.pathname === '/api/executor/roadmap') {
+      const rp = path.join(EXECUTOR_DIR, 'kosame-roadmap-canon.json');
+      if (fs.existsSync(rp)) {
+        try {
+          const rd = JSON.parse(fs.readFileSync(rp, 'utf8'));
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, version: rd.version, total_phases: (rd.phases||[]).length, current_phase: rd.phases&&rd.phases[0]?rd.phases[0].phase:null, roadmap: rd.phases||[], next_actions: rd.next_actions||[], warnings: rd.human_gate_rules||[], path: rp }));
+        } catch (_) {
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: false, reason: 'roadmap canon is malformed' }));
+        }
+      } else {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run roadmap:canon to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/roadmap/next') {
+      const rp = path.join(EXECUTOR_DIR, 'kosame-roadmap-next-actions.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run roadmap:canon to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/roadmap/work-orders') {
+      const rp = path.join(EXECUTOR_DIR, 'roadmap-work-orders.json');
+      if (fs.existsSync(rp)) {
+        try {
+          const wo = JSON.parse(fs.readFileSync(rp, 'utf8'));
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: true, ...wo, path: rp }));
+        } catch (_) {
+          res.writeHead(200, JSON_HEADERS);
+          res.end(JSON.stringify({ ok: false, reason: 'work orders malformed' }));
+        }
+      } else {
+        res.writeHead(200, JSON_HEADERS);
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run roadmap:work-orders to generate' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

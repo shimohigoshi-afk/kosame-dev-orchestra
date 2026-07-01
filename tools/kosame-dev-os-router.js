@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * KOSAME Dev OS Router v113.3.94
+ * KOSAME Dev OS Router v113.3.63
  *
  * タスクを受け取り、担当AIを自動決定して指示文を生成する。
  *
@@ -27,7 +27,7 @@ const http     = require('node:http');
 const path     = require('node:path');
 
 const TOOL_META = {
-  version: '113.3.94',
+  version: '113.3.63',
   feature: 'v113-3-63-codex-exec-instruction',
   slug:    'kosame-dev-os-router',
 };

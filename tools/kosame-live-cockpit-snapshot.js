@@ -704,7 +704,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     headCommit: versionContext.headCommit,
     versionSource: versionContext.source,
     currentMission: '☂️ KOSAME Console',
-    mode: 'Active',
+    mode: 'Readonly',
     projectRegistryPath: options.projectRegistryPath ? path.resolve(String(options.projectRegistryPath)) : DEFAULT_PROJECT_REGISTRY_PATH,
     projects,
     projectStrip,
@@ -760,7 +760,7 @@ function collectLiveCockpitSnapshot(options = {}) {
     generatedAt,
     generatedAtLocal: formatLocalTimestamp(generatedAt),
     currentMission: '☂️ KOSAME Console',
-    mode: 'Active',
+    mode: 'Readonly',
     activeRepo: {
       label: projects.find((project) => project.repoPath === activeRepoPath)?.name
         || (activeRepoPath === salesRepoPath ? 'Sales DX' : 'KOSAME Dev Orchestra'),

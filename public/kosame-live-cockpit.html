@@ -2341,6 +2341,12 @@ h1 {
                 <div class="small" style="color:var(--accent);margin-bottom:2px">📋 完成ロードマップ:</div>
                 <div class="small" style="color:var(--muted)" id="roadmap-status">loading...</div>
               </div>
+              <div id="ops-panels" style="margin-top:6px;">
+                <div class="small" style="color:var(--muted)" id="task-vault-display">Task Vault: --</div>
+                <div class="small" style="color:var(--muted)" id="cost-meter-display">Cost: $0.00 (deepseek/flash/pro/audit)</div>
+                <div class="small" style="color:var(--muted)" id="wishlist-display">Wishlist: --</div>
+                <div class="small" style="color:var(--muted)" id="difficulty-badge-display">Difficulty: --</div>
+              </div>
             </div>
           </div>
         </details>
@@ -5212,6 +5218,26 @@ function renderRoadmapPanel() {
   }).catch(function() { el.innerHTML = 'Roadmap: unavailable'; });
 }
 
+function renderOpsPanels() {
+  var tvEl = document.getElementById('task-vault-display');
+  if (tvEl) {
+    fetch('/api/executor/latest').then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok && !d.empty) { tvEl.innerHTML = 'Task Vault: ' + (d.status || '--') + ' lane=' + (d.lane || '--'); }
+      else { tvEl.innerHTML = 'Task Vault: no_handoff'; }
+    }).catch(function() { tvEl.innerHTML = 'Task Vault: --'; });
+  }
+  var dbEl = document.getElementById('difficulty-badge-display');
+  if (dbEl) {
+    fetch('/api/executor/latest').then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok && !d.empty) {
+        var diff = d.difficulty || '--', conf = d.confidentiality || '--';
+        var dc = diff === 'high' ? 'var(--danger)' : diff === 'medium' ? 'var(--accent-2)' : 'var(--ok)';
+        dbEl.innerHTML = 'Difficulty: ' + diff + ' | Confidentiality: ' + conf;
+      } else { dbEl.innerHTML = 'Difficulty: --'; }
+    }).catch(function() { dbEl.innerHTML = 'Difficulty: --'; });
+  }
+}
+
 function renderWorkflowDashboard() {
   var el = document.getElementById('deepseek-dashboard-content');
   if (!el) return;
@@ -7106,6 +7132,7 @@ renderRC100Dashboard();
 renderFieldOpsPanel();
 renderLimitBreakPanel();
 renderRoadmapPanel();
+renderOpsPanels();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

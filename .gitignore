@@ -37,6 +37,8 @@ data/line-*.json
 .kosame-executor/recovery-checklist.md
 .kosame-executor/post-rc-summary.md
 .kosame-executor/operational-checklist.md
+.kosame-executor/ops-validation-summary.md
+.kosame-executor/real-http-e2e-report.md
 
 # Test / runtime artifacts (never commit)
 test-results/

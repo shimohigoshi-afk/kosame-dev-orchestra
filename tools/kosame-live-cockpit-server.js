@@ -1718,6 +1718,73 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Ops Validation Summary (v113.3.122) ─────────────────────────────────
+
+    if (url.pathname === '/api/executor/ops-validation-summary') {
+      const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+      let gate = 'open', judgeStatus = 'pending_judge', httpE2e = 'pending';
+      try {
+        const lp = path.join(EXECUTOR_DIR, 'latest.md');
+        if (fs.existsSync(lp)) { const lc = fs.readFileSync(lp, 'utf8'); if (lc.includes('blocked')) gate = 'blocked'; }
+      } catch (_) {}
+      try {
+        const jp = path.join(EXECUTOR_DIR, 'latest-judge.json');
+        if (fs.existsSync(jp)) { const jd = JSON.parse(fs.readFileSync(jp, 'utf8')); judgeStatus = jd.judge_status || 'pending_judge'; }
+      } catch (_) {}
+      try {
+        const ep = path.join(EXECUTOR_DIR, 'real-http-e2e-report.md');
+        if (fs.existsSync(ep)) { const ec = fs.readFileSync(ep, 'utf8'); httpE2e = ec.includes('PASS') ? 'pass' : ec.includes('FAIL') ? 'fail' : 'pending'; }
+      } catch (_) {}
+
+      const sum = [
+        '# KOSAME Dev Orchestra Ops Validation Summary',
+        `version: ${pkg.version}`,
+        `real_http_e2e_status: ${httpE2e}`,
+        `latest_readiness: ${gate === 'blocked' ? 'blocked' : 'ready'}`,
+        `judge_status: ${judgeStatus}`,
+        `release_gate: ${gate}`,
+        '',
+        '## API Checks',
+        '- GET /api/executor/latest',
+        '- GET /api/executor/deepseek-handoff',
+        '- POST/GET /api/executor/deepseek-result',
+        '- POST/GET /api/executor/deepseek-result/action',
+        '- GET /api/executor/history',
+        '- GET /api/executor/readiness',
+        '- GET /api/executor/release-gate',
+        '- POST/GET /api/executor/judge',
+        '- GET /api/executor/rc100-summary',
+        '- GET /api/executor/post-rc-summary',
+        '- GET /api/executor/operational-checklist',
+        '- GET /api/executor/handoff',
+        '- GET /api/executor/recovery',
+        '',
+        '## Remaining P3',
+        '- UI polish (colors/labels)',
+        '- Difficulty scoring fine-tuning',
+        '- Auto smoke residue cleanup',
+        '',
+        `generated_at: ${new Date().toISOString()}`,
+      ].join('\n');
+      ensureDir(EXECUTOR_DIR);
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'ops-validation-summary.md'), sum);
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, version: pkg.version, http_e2e_status: httpE2e, readiness: gate === 'blocked' ? 'blocked' : 'ready', judge_status: judgeStatus, release_gate: gate, content: sum }));
+      return;
+    }
+
+    if (url.pathname === '/api/executor/real-http-e2e-report') {
+      const rp = path.join(EXECUTOR_DIR, 'real-http-e2e-report.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run smoke:v113-3-122:http to generate the report' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

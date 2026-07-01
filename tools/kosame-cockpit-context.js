@@ -343,20 +343,28 @@ function buildConsoleContextSummary(snapshot) {
     const taskVaultPath = path.join(__dirname, '..', '.kosame-state', 'task-vault.json');
     if (fs.existsSync(taskVaultPath)) {
       const tv = JSON.parse(fs.readFileSync(taskVaultPath, 'utf8'));
-      if (tv.last_completed_task) {
+      if (tv.last_completed_task && tv.last_completed_task.status === 'completed') {
         const lt = tv.last_completed_task;
-        lines.push(`lastCompletedTask=${lt.title} (status=${lt.status} lane=${lt.lane} exit=${lt.exit_code})`);
+        const ts = lt.completed_at ? new Date(lt.completed_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+        lines.push(`前回完了: ${lt.title} (${ts})`);
+      } else if (tv.last_completed_task) {
+        lines.push(`前回結果: ${tv.last_completed_task.title} → ${tv.last_completed_task.status} (理由: ${tv.last_completed_task.blocked_reason || tv.last_completed_task.error || '—'})`);
       }
       if (tv.current_mission) {
-        lines.push(`taskVaultMission=lane=${tv.current_mission.lane || '—'} status=${tv.current_mission.status || '—'}`);
+        lines.push(`現在地: lane=${tv.current_mission.lane} status=${tv.current_mission.status}`);
       }
-      if (tv.model_lane) lines.push(`taskVaultLane=${tv.model_lane}`);
+      if (tv.history && tv.history.length) {
+        const recent = tv.history.filter(function(h) { return h.status === 'completed'; }).slice(-2);
+        if (recent.length) {
+          lines.push(`最近の実装: ${recent.map(function(h) { return h.ticket; }).join(' → ')}`);
+        }
+      }
     }
     const nextActionsPath = path.join(__dirname, '..', '.kosame-state', 'next-actions.json');
     if (fs.existsSync(nextActionsPath)) {
       const na = JSON.parse(fs.readFileSync(nextActionsPath, 'utf8'));
       if (Array.isArray(na.actions) && na.actions.length) {
-        lines.push(`taskVaultNextActions=${na.actions.slice(0, 3).join(' | ')}`);
+        lines.push(`次アクション: ${na.actions.slice(0, 3).join(' | ')}`);
       }
     }
   } catch (_) { /* best-effort */ }

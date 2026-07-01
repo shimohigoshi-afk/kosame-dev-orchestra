@@ -26,6 +26,7 @@ const STATE_FILE = path.join(RUNNER_DIR, 'queue-state.json');
 const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
 
 const MAX_ATTEMPTS = 3;
+const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1040,6 +1041,48 @@ function runTicket(ticket, attempt, opts) {
   return result;
 }
 
+// ── Task Vault auto-update (v113.8.0) ─────────────────────────────────────
+
+function updateTaskVault(ticket, result) {
+  try {
+    const stateDir = path.join(ROOT, '.kosame-state');
+    ensureDir(stateDir);
+    const vaultPath = path.join(stateDir, 'task-vault.json');
+    const now = new Date().toISOString();
+
+    // Load existing vault
+    let vault = { version: PKG_VERSION, history: [] };
+    try { vault = JSON.parse(fs.readFileSync(vaultPath, 'utf8')); } catch (_) {}
+
+    // Determine lane from result
+    const lane = result.status === 'completed' ? (result.modelLane || 'executed') :
+                 result.status === 'blocked_with_reason' ? 'blocked' :
+                 result.status === 'deepseek_patch_required' ? 'deepseek_patch_required' :
+                 result.status === 'safety_stop' ? 'safety_stop' : 'unknown';
+
+    vault.last_completed_task = {
+      title: ticket.title || ticket.id,
+      status: result.status,
+      exit_code: result.exitCode,
+      lane: lane,
+      completed_at: now,
+      error: result.error || null,
+      blocked_reason: result.blockedReason || null,
+    };
+    vault.current_mission = {
+      lane: lane,
+      status: result.status,
+      last_task: ticket.title || ticket.id,
+    };
+    vault.model_lane = lane;
+    vault.updated_at = now;
+    vault.history = (vault.history || []).slice(-19);
+    vault.history.push({ ticket: ticket.title || ticket.id, status: result.status, lane: lane, at: now });
+
+    fs.writeFileSync(vaultPath, JSON.stringify(vault, null, 2) + '\n');
+  } catch (_) { /* best-effort: task vault update failure is non-fatal */ }
+}
+
 // ── Process ticket with retry ─────────────────────────────────────────────────
 
 /**
@@ -1071,18 +1114,21 @@ function processTicket(ticket, opts) {
     if (lastResult.status === 'safety_stop') {
       state[ticket.id] = { status: 'safety_stop', error: lastResult.error, blockedAt: lastResult.completedAt };
       flushState(state);
+      updateTaskVault(ticket, lastResult);
       return lastResult;
     }
 
     if (lastResult.status === 'blocked_with_reason' || lastResult.status === 'deepseek_patch_required') {
       state[ticket.id] = { status: lastResult.status, error: lastResult.error, blockedAt: lastResult.completedAt };
       flushState(state);
+      updateTaskVault(ticket, lastResult);
       return lastResult;
     }
 
     if (lastResult.status === 'completed') {
       state[ticket.id] = { status: 'completed', completedAt: lastResult.completedAt };
       flushState(state);
+      updateTaskVault(ticket, lastResult);
       return lastResult;
     }
     // verify_failed → 次の試行へ

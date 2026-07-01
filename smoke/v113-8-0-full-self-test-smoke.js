@@ -1,12 +1,13 @@
 #!/usr/bin/env node
+// Full self-test: version gate, API endpoints, state files, cost-meter, wishlist, MLR routing, console UI elements.
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),cp=require('node:child_process');
-const ROOT=path.resolve(__dirname,'..'),PKG=JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')),CANONICAL='<!DOCTYPE html>\n<html lang="ja">\n<head>\n  <meta charset="UTF-8">\n  <title>Test</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>\n';
+const ROOT=path.resolve(__dirname,'..'),PKG=JSON.parse(fs.readFileSync(path.join(ROOT,'package.json'),'utf8')),CANONICAL='<!DOCTYPE html>\n<html lang="ja">\n<head>\n  <meta charset="UTF-8">\n  <title>KOSAME WORKS</title>\n</head>\n<body>\n  <h1>KOSAME WORKS</h1>\n</body>\n</html>\n';
 let p=0,f=0;function t(n,fn){try{fn();console.log('  PASS: '+n);p++}catch(e){console.error('  FAIL: '+n+' — '+e.message);f++}}function a(c,m){if(!c)throw new Error(m||'assertion failed')}function rd(r){return fs.readFileSync(path.join(ROOT,r),'utf8')}
 const {detectConfidentiality,detectTaskDifficulty,selectModelLane}=require('../tools/kosame-runner-queue');
 
 console.log('===== v'+PKG.version+' full self-test smoke =====');
-t('version >= 113.7.2',()=>{const pa=PKG.version.split('.').map(Number),pb='113.7.2'.split('.').map(Number);a(pa[0]*10000+pa[1]*100+pa[2]*1>=pb[0]*10000+pb[1]*100+pb[2]*1)});
+t('version >= 113.8.0',()=>{const pa=PKG.version.split('.').map(Number),pb='113.8.0'.split('.').map(Number);a(pa[0]*10000+pa[1]*100+pa[2]*1>=pb[0]*10000+pb[1]*100+pb[2]*1)});
 
 // ── Step 4 API checks ─────────────────────────────────────────────────────
 const BASE='http://localhost:8080';

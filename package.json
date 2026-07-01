@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "113.7.2",
+  "version": "113.8.0",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -1002,6 +1002,7 @@
     "smoke:v113-3-129": "node smoke/v113-3-129-rc-freeze-smoke.js",
     "smoke:v113-3-130": "node smoke/v113-3-130-handoff-pack-smoke.js",
     "smoke:v113-4-0-thru-7-2": "node smoke/v113-4-0-thru-7-2-consolidated-smoke.js",
+    "smoke:v113-8-0": "node smoke/v113-8-0-full-self-test-smoke.js",
     "ops:validate": "node tools/kosame-dev-os-operational-validator.js",
     "ops:field": "node tools/kosame-dev-os-field-ops-runner.js",
     "ops:limit-break": "node tools/kosame-dev-os-limit-break-runner.js",

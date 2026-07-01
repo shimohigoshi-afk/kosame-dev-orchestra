@@ -2329,6 +2329,11 @@ h1 {
               <div class="agent-stream-log-body" id="rc100-gate-content" style="height:auto;max-height:120px;white-space:pre-wrap;font-size:10px;color:var(--muted)"></div>
               <div class="small" style="margin-top:4px" id="rc100-judge-status"></div>
             </div>
+            <div id="field-ops-panel" style="margin-top:8px">
+              <div class="small" style="color:var(--accent);margin-bottom:2px">🎯 Field Ops Launch:</div>
+              <div class="small" style="color:var(--muted)" id="field-ops-status">loading...</div>
+              <button type="button" class="chat-work-order-copy" id="field-ops-run-btn" style="margin-top:4px;font-size:10px">Field Opsを実行</button>
+            </div>
           </div>
         </details>
       </article>
@@ -5143,6 +5148,35 @@ function renderRC100Dashboard() {
   });
 }
 
+function renderFieldOpsPanel() {
+  var el = document.getElementById('field-ops-status');
+  var btn = document.getElementById('field-ops-run-btn');
+  if (!el) return;
+
+  fetch('/api/executor/field-ops-report').then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok && !data.empty) {
+      var status = data.content.includes('ready') ? 'ready' : data.content.includes('caution') ? 'caution' : 'blocked';
+      var color = status === 'ready' ? 'var(--ok)' : status === 'caution' ? 'var(--accent-2)' : 'var(--danger)';
+      el.innerHTML = 'Field Ops: <span style="color:' + color + '">' + status + '</span> (run ops:field to update)';
+    } else {
+      el.innerHTML = 'Field Ops: <span style="color:var(--muted)">not yet run</span>';
+    }
+  }).catch(function() { el.innerHTML = 'Field Ops: unavailable'; });
+
+  if (btn) {
+    btn.onclick = function() {
+      el.innerHTML = 'Field Ops: running...';
+      fetch('/api/executor/field-ops-report').then(function(r) { return r.json(); }).then(function(data) {
+        if (data.ok && !data.empty) {
+          el.innerHTML = 'Field Ops: <span style="color:var(--ok)">report available</span>';
+        } else {
+          el.innerHTML = 'Field Ops: run "npm run ops:field" on server';
+        }
+      }).catch(function() { el.innerHTML = 'Field Ops: error'; });
+    };
+  }
+}
+
 function renderWorkflowDashboard() {
   var el = document.getElementById('deepseek-dashboard-content');
   if (!el) return;
@@ -7034,6 +7068,7 @@ getDeepSeekWorkflowStatus();
 renderWorkflowDashboard();
 renderReleaseReadiness();
 renderRC100Dashboard();
+renderFieldOpsPanel();
 renderWorkOrderResultPanel({});
 renderResultDecisionPanel({});
 renderOperationsBoard({});

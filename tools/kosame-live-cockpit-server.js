@@ -1785,6 +1785,44 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Field Ops API (v113.3.123) ─────────────────────────────────────────
+
+    if (url.pathname === '/api/executor/field-ops-report') {
+      const rp = path.join(EXECUTOR_DIR, 'field-ops-report.md');
+      if (fs.existsSync(rp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(rp, 'utf8'), path: rp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:field to generate the field ops report' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/ops-launch-summary') {
+      const lp = path.join(EXECUTOR_DIR, 'ops-launch-summary.md');
+      if (fs.existsSync(lp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(lp, 'utf8'), path: lp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:field to generate' }));
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/executor/next-real-run-checklist') {
+      const cp = path.join(EXECUTOR_DIR, 'next-real-run-checklist.md');
+      if (fs.existsSync(cp)) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, content: fs.readFileSync(cp, 'utf8'), path: cp }));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end(JSON.stringify({ ok: true, empty: true, reason: 'Run ops:field to generate' }));
+      }
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

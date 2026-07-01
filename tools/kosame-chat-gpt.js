@@ -190,8 +190,11 @@ async function callKosameGPT(messages, opts = {}) {
 
   const persona = loadPersona();
   const contextSummary = opts.contextSummary ? String(opts.contextSummary).slice(0, 400).trim() : '';
+  // Extract version from context to put as first system message line
+  const versionMatch = contextSummary.match(/currentVersion=([^\s\n]+)/);
+  const currentVer = versionMatch ? versionMatch[1] : null;
   const systemContent = contextSummary
-    ? `${persona}\n\n現在の状況:\n${contextSummary}`
+    ? (currentVer ? `【最重要：現在のKOSAME Dev Orchestraのバージョンは ${currentVer} です。他のバージョン番号は古いものです。このバージョンを使うこと。】\n\n${persona}\n\n現在の状況:\n${contextSummary}` : `${persona}\n\n現在の状況:\n${contextSummary}`)
     : persona;
 
   const model = getModel();

@@ -329,14 +329,12 @@ function runGitReadOnly(argv) {
 function resolveVersionContext() {
   const packageVersion = String(PACKAGE.version || 'unknown');
   const headCommit = runGitReadOnly(['rev-parse', '--short', 'HEAD']) || 'unknown';
-  const exactTag = runGitReadOnly(['describe', '--tags', '--exact-match', 'HEAD']);
-  const latestTag = exactTag || runGitReadOnly(['describe', '--tags', '--abbrev=0']) || `v${packageVersion}`;
   return {
     packageVersion,
     currentVersion: packageVersion,
-    latestTag,
+    latestTag: `v${packageVersion}`,
     headCommit,
-    source: exactTag ? 'git-tag' : 'package.json',
+    source: 'package.json',
   };
 }
 

@@ -1854,6 +1854,13 @@ h1 {
   scroll-behavior: smooth;
 }
 .asl-entry { margin: 0; padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
+/* ASL message styles */
+.asl-start   { color: #10a37f; font-weight: bold; }
+.asl-running { color: #4285F4; }
+.asl-done-ok { color: #00bcd4; font-weight: bold; }
+.asl-done-fail { color: #f44336; font-weight: bold; }
+.asl-route   { color: #6e57d2; }
+.asl-dispatch { color: #8899aa; font-size: 0.85em; }
 .asl-ts { color: #4a4a6a; }
 .asl-msg { color: #ddd; }
 .asl-agent-KOSAME       { color: #00bcd4; font-weight: bold; }
@@ -7388,6 +7395,20 @@ if (chatCalloutButton) {
     var cls = ASL_AGENTS[agent] || 'asl-agent-KOSAME';
     var entry = document.createElement('div');
     entry.className = 'asl-entry';
+    // Color-code by message pattern
+    if (message.includes('[START]') || message.includes('起動') || message.includes('開始')) {
+      entry.classList.add('asl-start');
+    } else if (message.includes('[RUNNING]') || message.includes('実装中') || message.includes('実行中')) {
+      entry.classList.add('asl-running');
+    } else if ((message.includes('[DONE]') || message.includes('完了')) && message.includes('PASS')) {
+      entry.classList.add('asl-done-ok');
+    } else if ((message.includes('[DONE]') || message.includes('完了')) && (message.includes('FAIL') || message.includes('失敗') || message.includes('blocked'))) {
+      entry.classList.add('asl-done-fail');
+    } else if (message.includes('[route]')) {
+      entry.classList.add('asl-route');
+    } else if (message.includes('[dispatch]')) {
+      entry.classList.add('asl-dispatch');
+    }
     var ts = document.createElement('span');
     ts.className = 'asl-ts';
     ts.textContent = '[' + aslTs() + '] ';

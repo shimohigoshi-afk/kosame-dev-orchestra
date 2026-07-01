@@ -8,7 +8,6 @@ FROM node:24-slim
 WORKDIR /app
 
 COPY tools/kosame-fk-omiya-preview-server.js ./tools/
-COPY tools/kosame-dev-os-router.js           ./tools/
 COPY tools/kosame-transcribe-api-server.js   ./tools/
 COPY tools/kosame-transcribe-pipeline.js     ./tools/
 COPY tools/kosame-gcs-client.js              ./tools/

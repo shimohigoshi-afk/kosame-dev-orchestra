@@ -265,6 +265,13 @@ canvas{display:block;width:100%;border-radius:4px}
 .edu-bar-fill{height:100%;border-radius:4px;transition:width .4s}
 .edu-bar-val{font-size:11px;color:var(--gold);width:55px;text-align:right;flex:none;font-weight:700}
 .edu-lipss-box{background:rgba(201,168,76,0.08);border:1px solid var(--gold);border-radius:8px;padding:14px;margin-top:10px}
+.edu-breakdown{margin-top:7px;padding:7px 10px;background:var(--bg);border-radius:4px;border:1px solid var(--border)}
+.edu-breakdown-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:var(--text-muted)}
+.edu-breakdown-toggle{font-size:10px;padding:1px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer;color:var(--text-dim);background:none;margin-left:6px;vertical-align:middle}
+.edu-breakdown-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.edu-manual-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--text-muted)}
+.edu-copy-btn{font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-dim);background:none;margin-left:8px;vertical-align:middle}
+.edu-copy-btn:hover{border-color:var(--gold);color:var(--gold)}
 /* Real estate search */
 .re-search-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .re-search-bar input{flex:1;min-width:180px}
@@ -480,7 +487,7 @@ canvas{display:block;width:100%;border-radius:4px}
       <span class="nav-icon">🔍</span>医務査定検索
     </div>
     <div class="nav-item" data-section="education" onclick="navigate('education',this)">
-      <span class="nav-icon">🎓</span>教育費シミュ
+      <span class="nav-icon">🎓</span>教育費シミュレーション
     </div>
     <div class="nav-item" data-section="realestate" onclick="navigate('realestate',this)">
       <span class="nav-icon">🏡</span>不動産価格検索
@@ -1564,149 +1571,14 @@ canvas{display:block;width:100%;border-radius:4px}
         <div>
           <div class="card">
             <div class="card-title">👶 子ども別 教育プラン設定</div>
-            <div class="edu-child-tabs">
-              <div class="edu-child-tab active" id="edu-ctab-0" onclick="switchEduChild(0)">第１子</div>
-              <div class="edu-child-tab" id="edu-ctab-1" onclick="switchEduChild(1)">第２子</div>
-              <div class="edu-child-tab" id="edu-ctab-2" onclick="switchEduChild(2)">第３子</div>
-            </div>
-
-            <!-- 第１子 -->
-            <div class="edu-child-panel active" id="edu-child-0">
-              <div class="input-row" style="margin-bottom:10px">
-                <label class="input-label">現在の年齢（歳）</label>
-                <input type="number" id="edu-age-0" value="5" min="0" max="22" oninput="calcEducation()">
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">幼稚園（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-0-kindergarten-public" onclick="selectEduStage(0,'kindergarten','public')">公立 22.3万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-kindergarten-private" onclick="selectEduStage(0,'kindergarten','private')">私立 52.8万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">小学校（6年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-0-elementary-public" onclick="selectEduStage(0,'elementary','public')">公立 35.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-elementary-private" onclick="selectEduStage(0,'elementary','private')">私立 167.3万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">中学校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-0-junior-public" onclick="selectEduStage(0,'junior','public')">公立 53.8万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-junior-private" onclick="selectEduStage(0,'junior','private')">私立 143.6万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">高校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-0-high-public" onclick="selectEduStage(0,'high','public')">公立 51.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-high-private" onclick="selectEduStage(0,'high','private')">私立 105.4万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">大学（4年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-0-university-national" onclick="selectEduStage(0,'university','national')">国立 107.7万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-university-private_arts" onclick="selectEduStage(0,'university','private_arts')">私文 127.0万/年</div>
-                  <div class="edu-type-btn" id="ebt-0-university-private_sci" onclick="selectEduStage(0,'university','private_sci')">私理 154.0万/年</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 第２子 -->
-            <div class="edu-child-panel" id="edu-child-1">
-              <div class="input-row" style="margin-bottom:10px">
-                <label class="input-label">現在の年齢（歳）</label>
-                <input type="number" id="edu-age-1" value="3" min="0" max="22" oninput="calcEducation()">
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">幼稚園（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-1-kindergarten-public" onclick="selectEduStage(1,'kindergarten','public')">公立 22.3万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-kindergarten-private" onclick="selectEduStage(1,'kindergarten','private')">私立 52.8万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">小学校（6年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-1-elementary-public" onclick="selectEduStage(1,'elementary','public')">公立 35.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-elementary-private" onclick="selectEduStage(1,'elementary','private')">私立 167.3万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">中学校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-1-junior-public" onclick="selectEduStage(1,'junior','public')">公立 53.8万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-junior-private" onclick="selectEduStage(1,'junior','private')">私立 143.6万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">高校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-1-high-public" onclick="selectEduStage(1,'high','public')">公立 51.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-high-private" onclick="selectEduStage(1,'high','private')">私立 105.4万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">大学（4年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-1-university-national" onclick="selectEduStage(1,'university','national')">国立 107.7万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-university-private_arts" onclick="selectEduStage(1,'university','private_arts')">私文 127.0万/年</div>
-                  <div class="edu-type-btn" id="ebt-1-university-private_sci" onclick="selectEduStage(1,'university','private_sci')">私理 154.0万/年</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 第３子 -->
-            <div class="edu-child-panel" id="edu-child-2">
-              <div class="input-row" style="margin-bottom:10px">
-                <label class="input-label">現在の年齢（歳）</label>
-                <input type="number" id="edu-age-2" value="1" min="0" max="22" oninput="calcEducation()">
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">幼稚園（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-2-kindergarten-public" onclick="selectEduStage(2,'kindergarten','public')">公立 22.3万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-kindergarten-private" onclick="selectEduStage(2,'kindergarten','private')">私立 52.8万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">小学校（6年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-2-elementary-public" onclick="selectEduStage(2,'elementary','public')">公立 35.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-elementary-private" onclick="selectEduStage(2,'elementary','private')">私立 167.3万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">中学校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-2-junior-public" onclick="selectEduStage(2,'junior','public')">公立 53.8万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-junior-private" onclick="selectEduStage(2,'junior','private')">私立 143.6万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">高校（3年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-2-high-public" onclick="selectEduStage(2,'high','public')">公立 51.2万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-high-private" onclick="selectEduStage(2,'high','private')">私立 105.4万/年</div>
-                </div>
-              </div>
-              <div class="edu-stage-block">
-                <div class="edu-stage-name">大学（4年）</div>
-                <div class="edu-type-btns">
-                  <div class="edu-type-btn active" id="ebt-2-university-national" onclick="selectEduStage(2,'university','national')">国立 107.7万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-university-private_arts" onclick="selectEduStage(2,'university','private_arts')">私文 127.0万/年</div>
-                  <div class="edu-type-btn" id="ebt-2-university-private_sci" onclick="selectEduStage(2,'university','private_sci')">私理 154.0万/年</div>
-                </div>
-              </div>
-            </div>
+            <div class="edu-child-tabs" id="edu-tabs-container"></div>
+            <div id="edu-panels-container"></div>
           </div>
         </div>
 
         <div>
           <div class="card">
-            <div class="card-title">💰 教育費総計（LiPSS試算）</div>
+            <div class="card-title">💰 教育費総計（試算）</div>
             <div class="edu-total-grid" id="edu-total-grid">
               <div class="edu-total-card">
                 <div class="edu-total-label">3人合計<br>教育費総額</div>
@@ -1714,7 +1586,7 @@ canvas{display:block;width:100%;border-radius:4px}
                 <div class="edu-total-sub">幼稚園〜大学まで</div>
               </div>
               <div class="edu-total-card">
-                <div class="edu-total-label">LiPSS<br>残存教育費</div>
+                <div class="edu-total-label">残存教育費</div>
                 <div class="edu-total-val" id="edu-lipss-total">—</div>
                 <div class="edu-total-sub">今から必要な費用</div>
               </div>
@@ -1733,22 +1605,25 @@ canvas{display:block;width:100%;border-radius:4px}
             <div class="card-title">🛡 必要保障額への連動</div>
             <div id="edu-lipss-detail">
               <div style="font-size:12px;color:var(--text-muted);line-height:1.9">
-                左で子どもの年齢とプランを設定すると、LiPSS方式の教育費必要保障額を算出します。
+                左で子どもの年齢とプランを設定すると、教育費必要保障額を算出します。
               </div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-title" style="font-size:11px">📚 文科省データ（令和3年度 子供の学習費調査）</div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px">
+            <div class="card-title" style="font-size:11px">📚 参考データ（令和3年度 子供の学習費調査 等）</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;margin-bottom:6px">
+              <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">保育園</div><div style="color:var(--gold)">公 33万</div><div style="color:var(--text-dim)">私 70万</div></div>
               <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">幼稚園</div><div style="color:var(--gold)">公 22.3万</div><div style="color:var(--text-dim)">私 52.8万</div></div>
               <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">小学校</div><div style="color:var(--gold)">公 35.2万</div><div style="color:var(--text-dim)">私167.3万</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px">
               <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">中学校</div><div style="color:var(--gold)">公 53.8万</div><div style="color:var(--text-dim)">私143.6万</div></div>
               <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">高校</div><div style="color:var(--gold)">公 51.2万</div><div style="color:var(--text-dim)">私105.4万</div></div>
               <div style="background:var(--bg-deep);padding:8px;border-radius:5px"><div style="color:var(--text-muted);margin-bottom:3px">大学</div><div style="color:var(--gold)">国107.7万</div><div style="color:var(--text-dim)">私文127万</div></div>
             </div>
             <div style="font-size:10px;color:var(--text-dim);margin-top:6px;line-height:1.7">
-              ※ 年額（授業料・給食費・課外活動費等含む学習費総額）。最新データは <code>npm run fetch:education-costs</code> で更新。
+              ※ 年額（学習費総額）。保育園は内閣府調査参考値。
             </div>
           </div>
         </div>
@@ -2408,7 +2283,7 @@ const SECTION_TITLES = {
   medical: '高額療養費・傷病手当金計算',
   disease: '医療費・疾病リスク計算',
   underwriting: '医務査定検索',
-  education: '教育費シミュレーション（LiPSS）',
+  education: '教育費シミュレーション',
   realestate: '不動産・土地価格検索',
   summary: '提案サマリー',
   files: 'ファイル管理',
@@ -2431,7 +2306,7 @@ function navigate(key, el) {
   if (key === 'medical') setTimeout(calcMedical, 100);
   if (key === 'disease') setTimeout(calcDisease, 100);
   if (key === 'underwriting') setTimeout(renderUnderwriting, 100);
-  if (key === 'education') setTimeout(calcEducation, 100);
+  if (key === 'education') setTimeout(() => { renderEduPanels(); calcEducation(); }, 100);
   if (key === 'realestate') setTimeout(renderRealestate, 100);
   trackFeatureUse(key);
   if (key === 'settings') { loadSettings(); refreshFeedbackAdmin(); }
@@ -3898,63 +3773,183 @@ function searchUnderwriting() {
   renderUnderwriting(filtered);
 }
 
-/* ── Education (LiPSS) ── */
+/* ── Education ── */
 const EDU_COST = {
-  kindergarten: { public: 22.3, private: 52.8, years: 3, startAge: 3 },
-  elementary:   { public: 35.2, private: 167.3, years: 6, startAge: 6 },
-  junior:       { public: 53.8, private: 143.6, years: 3, startAge: 12 },
-  high:         { public: 51.2, private: 105.4, years: 3, startAge: 15 },
-  university:   { national: 107.7, private_arts: 127.0, private_sci: 154.0, years: 4, startAge: 18 },
+  nursery:      { public: 33.0,  private: 70.0,  years: 3, startAge: 0 },
+  kindergarten: { public: 22.3,  private: 52.8,  years: 3, startAge: 3 },
+  elementary:   { public: 35.2,  private: 167.3, years: 6, startAge: 6 },
+  junior:       { public: 53.8,  private: 143.6, years: 3, startAge: 12 },
+  high:         { public: 51.2,  private: 105.4, years: 3, startAge: 15 },
+  university:   { national: 107.7, private_arts: 127.0, private_sci: 154.0, junior_college: 62.0, vocational: 50.0, none: 0, years: 4, startAge: 18 },
 };
+
+const UNIV_TYPES = {
+  national:       { label: '国公立 107.7万/年', cost: 107.7, years: 4 },
+  private_arts:   { label: '私文系 127.0万/年', cost: 127.0, years: 4 },
+  private_sci:    { label: '私理系 154.0万/年', cost: 154.0, years: 4 },
+  junior_college: { label: '短期大学 62万/年',  cost: 62.0,  years: 2 },
+  vocational:     { label: '専門学校 50万/年',  cost: 50.0,  years: 2 },
+  none:           { label: '進学しない',         cost: 0,     years: 0 },
+};
+
+const EDU_BREAKDOWN = {
+  nursery:      { public:  { admission: 0, tuition: 26.0, extra: 7.0 },  private: { admission: 0, tuition: 60.0, extra: 10.0 } },
+  kindergarten: { public:  { admission: 0, tuition: 15.0, extra: 7.3 },  private: { admission: 0, tuition: 30.0, extra: 22.8 } },
+  elementary:   { public:  { admission: 0, tuition: 32.4, extra: 2.8 },  private: { admission: 0, tuition: 158.3, extra: 9.0 } },
+  junior:       { public:  { admission: 0, tuition: 48.8, extra: 5.0 },  private: { admission: 0, tuition: 133.6, extra: 10.0 } },
+  high:         { public:  { admission: 0, tuition: 46.2, extra: 5.0 },  private: { admission: 0, tuition: 94.4, extra: 11.0 } },
+  university:   {
+    national:       { admission: 28.2, tuition: 53.6, extra: 26.1 },
+    private_arts:   { admission: 25.0, tuition: 82.4, extra: 19.6 },
+    private_sci:    { admission: 27.0, tuition: 106.0, extra: 21.0 },
+    junior_college: { admission: 20.0, tuition: 32.0, extra: 10.0 },
+    vocational:     { admission: 20.0, tuition: 21.0, extra: 9.0 },
+    none:           { admission: 0,    tuition: 0,    extra: 0 },
+  },
+};
+
+const STAGE_META = {
+  nursery:      { label: '保育園（3年）',   typeKeys: ['public', 'private'] },
+  kindergarten: { label: '幼稚園（3年）',   typeKeys: ['public', 'private'] },
+  elementary:   { label: '小学校（6年）',   typeKeys: ['public', 'private'] },
+  junior:       { label: '中学校（3年）',   typeKeys: ['public', 'private'] },
+  high:         { label: '高校（3年）',     typeKeys: ['public', 'private'] },
+  university:   { label: '大学（進学先）',  typeKeys: Object.keys(UNIV_TYPES) },
+};
+
+const EDU_STAGE_ORDER = ['nursery', 'kindergarten', 'elementary', 'junior', 'high', 'university'];
 
 const EDU_STATE = {
   activeChild: 0,
   children: [
-    { age: 5, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
-    { age: 3, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
-    { age: 1, stages: { kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' } },
+    { age: 5, stages: { nursery: 'public', kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' }, manualOverride: {} },
+    { age: 3, stages: { nursery: 'public', kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' }, manualOverride: {} },
+    { age: 1, stages: { nursery: 'public', kindergarten: 'public', elementary: 'public', junior: 'public', high: 'public', university: 'national' }, manualOverride: {} },
   ],
 };
 
+function getStageTypeLabel(stage, type) {
+  if (stage === 'university') return UNIV_TYPES[type]?.label || type;
+  const cost = EDU_COST[stage]?.[type];
+  return type === 'public' ? `公立 ${cost}万/年` : `私立 ${cost}万/年`;
+}
+
+function renderEduPanels() {
+  const tabsEl = document.getElementById('edu-tabs-container');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = EDU_STATE.children.map((_, i) => {
+    const label = ['第１子', '第２子', '第３子'][i];
+    const active = i === EDU_STATE.activeChild ? ' active' : '';
+    const copyBtn = i > 0
+      ? `<button class="edu-copy-btn" onclick="copyChildSettings(0,${i});event.stopPropagation()">第１子コピー</button>`
+      : '';
+    return `<div class="edu-child-tab${active}" id="edu-ctab-${i}" onclick="switchEduChild(${i})">${label}${copyBtn}</div>`;
+  }).join('');
+
+  const panelsEl = document.getElementById('edu-panels-container');
+  if (!panelsEl) return;
+  panelsEl.innerHTML = EDU_STATE.children.map((child, ci) => {
+    const active = ci === EDU_STATE.activeChild ? ' active' : '';
+    const stagesHtml = EDU_STAGE_ORDER.map(stage => {
+      const meta = STAGE_META[stage];
+      const currentType = child.stages[stage] || (stage === 'university' ? 'national' : 'public');
+      const btns = meta.typeKeys.map(t => {
+        const isActive = t === currentType ? ' active' : '';
+        return `<div class="edu-type-btn${isActive}" id="ebt-${ci}-${stage}-${t}" onclick="selectEduStage(${ci},'${stage}','${t}')">${getStageTypeLabel(stage, t)}</div>`;
+      }).join('');
+      const bd = EDU_BREAKDOWN[stage]?.[currentType];
+      const bdHtml = bd ? `
+        <div class="edu-breakdown" id="edu-bd-${ci}-${stage}" style="display:none">
+          <div class="edu-breakdown-row"><span>入学金（一時）</span><span>${bd.admission}万円</span></div>
+          <div class="edu-breakdown-row"><span>学費（年額）</span><span>${bd.tuition}万円</span></div>
+          <div class="edu-breakdown-row"><span>学外費（年額）</span><span>${bd.extra}万円</span></div>
+        </div>` : '';
+      const manualVal = child.manualOverride[stage] !== undefined ? child.manualOverride[stage] : '';
+      return `
+        <div class="edu-stage-block">
+          <div class="edu-stage-name">${meta.label}${bd ? `<button class="edu-breakdown-toggle" onclick="toggleBreakdown(${ci},'${stage}')">▾ 内訳</button>` : ''}</div>
+          <div class="edu-type-btns">${btns}</div>
+          ${bdHtml}
+          <div class="edu-manual-row">
+            <span>手動上書き:</span>
+            <input type="number" id="edu-manual-${ci}-${stage}" value="${manualVal}" placeholder="万円" style="width:70px;padding:2px 5px;font-size:11px" oninput="setManualOverride(${ci},'${stage}',this.value)">
+            <span style="font-size:10px;color:var(--text-dim)">（空欄=自動）</span>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="edu-child-panel${active}" id="edu-child-${ci}">
+        <div class="input-row" style="margin-bottom:10px">
+          <label class="input-label">現在の年齢（歳）</label>
+          <input type="number" id="edu-age-${ci}" value="${child.age}" min="0" max="22" oninput="calcEducation()">
+        </div>
+        ${stagesHtml}
+      </div>`;
+  }).join('');
+}
+
 function switchEduChild(idx) {
   EDU_STATE.activeChild = idx;
-  document.querySelectorAll('.edu-child-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-  document.querySelectorAll('.edu-child-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  renderEduPanels();
+  calcEducation();
 }
 
 function selectEduStage(childIdx, stage, type) {
   EDU_STATE.children[childIdx].stages[stage] = type;
-  const stageEl = EDU_COST[stage];
-  const typeKeys = stage === 'university'
-    ? ['national', 'private_arts', 'private_sci']
-    : ['public', 'private'];
-  typeKeys.forEach(t => {
-    const el = document.getElementById(`ebt-${childIdx}-${stage}-${t}`);
-    if (el) el.classList.toggle('active', t === type);
-  });
+  renderEduPanels();
   calcEducation();
 }
 
-function eduChildCost(childAge, stages) {
+function toggleBreakdown(childIdx, stage) {
+  const el = document.getElementById(`edu-bd-${childIdx}-${stage}`);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function setManualOverride(childIdx, stage, val) {
+  const v = parseFloat(val);
+  if (val === '' || isNaN(v)) {
+    delete EDU_STATE.children[childIdx].manualOverride[stage];
+  } else {
+    EDU_STATE.children[childIdx].manualOverride[stage] = v;
+  }
+  calcEducation();
+}
+
+function copyChildSettings(fromIdx, toIdx) {
+  const from = EDU_STATE.children[fromIdx];
+  EDU_STATE.children[toIdx].stages = { ...from.stages };
+  EDU_STATE.children[toIdx].manualOverride = { ...from.manualOverride };
+  EDU_STATE.activeChild = toIdx;
+  renderEduPanels();
+  calcEducation();
+}
+
+function eduChildCost(childAge, stages, manualOverride) {
   let total = 0;
   let remaining = 0;
-  const stageOrder = ['kindergarten', 'elementary', 'junior', 'high', 'university'];
-  const stageColors = { kindergarten: '#4caf82', elementary: '#4fc3f7', junior: '#c9a84c', high: '#e08040', university: '#9c88ff' };
+  const stageColors = { nursery: '#ff9f43', kindergarten: '#4caf82', elementary: '#4fc3f7', junior: '#c9a84c', high: '#e08040', university: '#9c88ff' };
   const breakdown = [];
 
-  for (const stage of stageOrder) {
+  for (const stage of EDU_STAGE_ORDER) {
     const cfg = EDU_COST[stage];
     const type = stages[stage] || (stage === 'university' ? 'national' : 'public');
-    const annual = cfg[type] || 0;
-    const stageCost = annual * cfg.years;
-    const stageEnd = cfg.startAge + cfg.years;
+    const years = stage === 'university' ? (UNIV_TYPES[type]?.years ?? 4) : cfg.years;
+    const startAge = cfg.startAge;
+    const annual = stage === 'university' ? (UNIV_TYPES[type]?.cost ?? 0) : (cfg[type] || 0);
+    let stageCost = annual * years;
+    if (manualOverride && manualOverride[stage] !== undefined) stageCost = manualOverride[stage];
 
+    const stageEnd = startAge + (years || 0);
     let remainCost = 0;
-    if (childAge < cfg.startAge) {
-      remainCost = stageCost;
-    } else if (childAge < stageEnd) {
-      const remainYears = stageEnd - childAge;
-      remainCost = annual * remainYears;
+    if (years > 0) {
+      if (childAge < startAge) {
+        remainCost = stageCost;
+      } else if (childAge < stageEnd) {
+        const remainYears = stageEnd - childAge;
+        remainCost = (manualOverride?.[stage] !== undefined)
+          ? stageCost * (remainYears / years)
+          : annual * remainYears;
+      }
     }
     total += stageCost;
     remaining += remainCost;
@@ -3968,14 +3963,13 @@ function calcEducation() {
     const ageEl = document.getElementById(`edu-age-${i}`);
     const age = ageEl ? (parseInt(ageEl.value) || 0) : c.age;
     c.age = age;
-    return { ...c, age, ...eduChildCost(age, c.stages) };
+    return { ...c, age, ...eduChildCost(age, c.stages, c.manualOverride) };
   });
 
   const grandTotal = children.reduce((s, c) => s + c.total, 0);
   const lipssTotal = children.reduce((s, c) => s + c.remaining, 0);
   const youngestAge = Math.min(...children.map(c => c.age));
-  const youngestEndAge = 22;
-  const yearsNeeded = Math.max(0, youngestEndAge - youngestAge);
+  const yearsNeeded = Math.max(0, 22 - youngestAge);
 
   const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   setT('edu-grand-total', Math.round(grandTotal) + '万円');
@@ -4001,11 +3995,10 @@ function calcEducation() {
 
   const lipssBox = document.getElementById('edu-lipss-detail');
   if (lipssBox) {
-    const stages = ['kindergarten', 'elementary', 'junior', 'high', 'university'];
-    const stageLabels = { kindergarten: '幼稚園', elementary: '小学校', junior: '中学校', high: '高校', university: '大学' };
+    const stageLabels = { nursery: '保育園', kindergarten: '幼稚園', elementary: '小学校', junior: '中学校', high: '高校', university: '大学' };
     lipssBox.innerHTML = `
       <div class="edu-lipss-box">
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;letter-spacing:1px">LiPSS — 今必要な教育費保障</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;letter-spacing:1px">今必要な教育費保障</div>
         <div style="font-size:26px;font-weight:700;color:var(--gold);margin:4px 0">${Math.round(lipssTotal).toLocaleString('ja-JP')}万円</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">万一の際に不足する教育費の合計。必要保障額の試算に上乗せしてください。</div>
       </div>
@@ -4568,7 +4561,7 @@ try { calcSocialSecurity(); } catch(e) { console.warn('[init] calcSocialSecurity
 const _inits = [
   calcMortgage, calcGiftTax, calcInheritanceTax, calcInsurance,
   calcBMI, calcAsset,
-  calcEducation,
+  () => { renderEduPanels(); calcEducation(); },
 ];
 _inits.forEach(fn => { try { fn(); } catch(e) { console.warn('[init]', fn.name, e); } });
 searchRealestate().catch(e => console.warn('[init] searchRealestate', e));

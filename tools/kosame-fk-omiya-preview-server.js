@@ -4,12 +4,16 @@
 // FK Omiya Console — Public Preview Server
 // Serves public/ static assets and /api/* transcribe endpoints.
 // No secrets, no .env, no raw internal tools are ever served.
+//
+// Branch preview (fk-omiya-branch-preview-*.html) is protected by
+// HTTP Basic Authentication via FK_PREVIEW_USER / FK_PREVIEW_PASS env vars.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
-const { handleRequest: transcribeHandleRequest } = require('./kosame-transcribe-api-server');
-const { handleDevOsRequest }                     = require('./kosame-dev-os-router');
+let transcribeHandleRequest, handleDevOsRequest;
+try { transcribeHandleRequest = require('./kosame-transcribe-api-server').handleRequest; } catch { transcribeHandleRequest = null; }
+try { handleDevOsRequest = require('./kosame-dev-os-router').handleDevOsRequest; } catch { handleDevOsRequest = null; }
 
 const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.resolve(ROOT, 'public');
@@ -29,6 +33,14 @@ const MIME = {
 // Block list — these filenames are never served even if inside public/
 const BLOCKED_FILENAMES = new Set(['.env', '.env.local', '.env.production', 'secrets.json']);
 
+// Basic Auth credentials for branch preview — read from environment only
+const PREVIEW_USER = process.env.FK_PREVIEW_USER || '';
+const PREVIEW_PASS = process.env.FK_PREVIEW_PASS || '';
+const PREVIEW_AUTH_ENABLED = !!(PREVIEW_USER && PREVIEW_PASS);
+
+// Regex that matches branch-preview filenames: fk-omiya-branch-preview-<date>-<token>.html
+const BRANCH_PREVIEW_RE = /^\/fk-omiya-branch-preview-.+\.html$/;
+
 function isSafePublicPath(resolved) {
   const rel = path.relative(PUBLIC_DIR, resolved);
   // Must stay inside public/ (no traversal)
@@ -40,16 +52,47 @@ function isSafePublicPath(resolved) {
   return true;
 }
 
+function requireBasicAuth(req, res) {
+  if (!PREVIEW_AUTH_ENABLED) return true;
+
+  const header = req.headers['authorization'] || '';
+  if (!header.startsWith('Basic ')) return false;
+
+  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf-8');
+  const colon = decoded.indexOf(':');
+  if (colon === -1) return false;
+
+  const user = decoded.slice(0, colon);
+  const pass = decoded.slice(colon + 1);
+  return user === PREVIEW_USER && pass === PREVIEW_PASS;
+}
+
+function respondUnauthorized(res) {
+  res.writeHead(401, {
+    'WWW-Authenticate': 'Basic realm="FK Omiya Branch Preview"',
+    'Content-Type': 'text/plain; charset=utf-8',
+  });
+  res.end('Authorization required');
+}
+
 function serveFile(res, filePath) {
   try {
     const content = fs.readFileSync(filePath);
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, {
+
+    const headers = {
       'Content-Type': MIME[ext] || 'application/octet-stream',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-    });
+    };
+
+    // Add X-Robots-Tag for all branch preview HTML files
+    if (ext === '.html' && BRANCH_PREVIEW_RE.test('/' + path.basename(filePath))) {
+      headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive';
+    }
+
+    res.writeHead(200, headers);
     res.end(content);
   } catch {
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -63,12 +106,12 @@ function createPreviewServer() {
     const pathname = url.pathname;
 
     // Dev OS Router API routes
-    if (pathname.startsWith('/api/dev-os')) {
+    if (pathname.startsWith('/api/dev-os') && handleDevOsRequest) {
       return handleDevOsRequest(req, res);
     }
 
     // Transcribe API routes
-    if (pathname.startsWith('/api/')) {
+    if (pathname.startsWith('/api/') && transcribeHandleRequest) {
       return transcribeHandleRequest(req, res);
     }
 
@@ -84,6 +127,14 @@ function createPreviewServer() {
       res.writeHead(302, { Location: '/fk-omiya-console.html' });
       res.end();
       return;
+    }
+
+    // Basic Auth for branch preview paths
+    if (BRANCH_PREVIEW_RE.test(pathname)) {
+      if (!requireBasicAuth(req, res)) {
+        respondUnauthorized(res);
+        return;
+      }
     }
 
     // Serve static files from public/ only
@@ -108,6 +159,7 @@ function main() {
     console.log(`[FK-OMIYA-PREVIEW] listening on http://${host}:${port}`);
     console.log(`[FK-OMIYA-PREVIEW] Demo page: http://localhost:${port}/fk-omiya-console.html`);
     console.log(`[FK-OMIYA-PREVIEW] Health: http://localhost:${port}/healthz`);
+    console.log(`[FK-OMIYA-PREVIEW] Branch preview Basic Auth: ${PREVIEW_AUTH_ENABLED ? 'enabled' : 'disabled (set FK_PREVIEW_USER & FK_PREVIEW_PASS)'}`);
   });
 }
 

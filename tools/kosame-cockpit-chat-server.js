@@ -350,6 +350,20 @@ function parseSummarySignals(contextText) {
         if (commitMatch) signals.resultDecisionCommit = normalizeContent(commitMatch[1]);
       }
     }
+    // ── Task Vault signals (v113.8.0) ────────────────────────────────────────
+    if (!signals.lastCompleted) {
+      const lcMatch = line.match(/前回完了:\s*(.+?)\s*\(/);
+      if (lcMatch) signals.lastCompleted = normalizeContent(lcMatch[1]);
+    }
+    if (!signals.currentLane) {
+      const clMatch = line.match(/現在地:\s*lane=(\S+)\s*status=(\S+)/);
+      if (clMatch) signals.currentLane = normalizeContent(clMatch[1]);
+    }
+    if (!signals.currentStatus) {
+      const csMatch = line.match(/現在地:\s*lane=\S+\s*status=(\S+)/);
+      if (csMatch) signals.currentStatus = normalizeContent(csMatch[1]);
+    }
+
   }
 
   return signals;
@@ -364,6 +378,13 @@ function buildStatusReply(input, snapshotSummary) {
     segments.push(`${versionLabel} の Chat API Bridge を確認中です。`);
   } else {
     segments.push('今の状況を確認中です。');
+  }
+
+  if (signals.lastCompleted) {
+    segments.push(`前回は「${signals.lastCompleted}」を完了しましたっ。`);
+  }
+  if (signals.currentLane && signals.currentStatus) {
+    segments.push(`現在地: ${signals.currentLane} (${signals.currentStatus})`);
   }
 
   if (signals.mode && signals.mode.toLowerCase() === 'readonly') {

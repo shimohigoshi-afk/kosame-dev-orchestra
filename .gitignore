@@ -57,6 +57,8 @@ data/line-*.json
 # Test / runtime artifacts (never commit)
 test-results/
 logs/
+.kosame-logs/
+.kosame-state/
 
 # Chat session history (user conversation data, never commit)
 .kosame-sessions/

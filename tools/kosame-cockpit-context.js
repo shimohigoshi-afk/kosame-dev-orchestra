@@ -354,7 +354,11 @@ function buildConsoleContextSummary(snapshot) {
         lines.push(`現在地: lane=${tv.current_mission.lane} status=${tv.current_mission.status}`);
       }
       if (tv.history && tv.history.length) {
-        const recent = tv.history.filter(function(h) { return h.status === 'completed'; }).slice(-2);
+        const recent = tv.history.filter(function(h) {
+          // Filter out question/status-inquiry tasks
+          const t = (h.ticket || '').toLowerCase();
+          return h.status === 'completed' && !/(?:現在地|バージョン|version|状態.*確認|何をし|教えて|状況|ステータス)/i.test(t);
+        }).slice(-2);
         if (recent.length) {
           lines.push(`最近の実装: ${recent.map(function(h) { return h.ticket; }).join(' → ')}`);
         }

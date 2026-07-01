@@ -35,6 +35,8 @@ data/line-*.json
 .kosame-executor/rc100-summary.md
 .kosame-executor/handoff-latest.md
 .kosame-executor/recovery-checklist.md
+.kosame-executor/post-rc-summary.md
+.kosame-executor/operational-checklist.md
 
 # Test / runtime artifacts (never commit)
 test-results/

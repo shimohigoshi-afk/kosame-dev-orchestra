@@ -1623,6 +1623,101 @@ function createLiveCockpitServer(options = {}) {
       return;
     }
 
+    // ── Post-RC Summary (v113.3.121) ────────────────────────────────────────
+
+    if (url.pathname === '/api/executor/post-rc-summary') {
+      const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+      let gate = 'open', readiness = 'ready', judgeStatus = 'pending_judge';
+      try {
+        const rp = path.join(EXECUTOR_DIR, 'latest.md');
+        if (fs.existsSync(rp)) { const rc = fs.readFileSync(rp, 'utf8'); if (rc.includes('blocked')) { gate = 'blocked'; readiness = 'blocked'; } }
+      } catch (_) {}
+      try {
+        const jp = path.join(EXECUTOR_DIR, 'latest-judge.json');
+        if (fs.existsSync(jp)) { const jd = JSON.parse(fs.readFileSync(jp, 'utf8')); judgeStatus = jd.judge_status || 'pending_judge'; }
+      } catch (_) {}
+
+      const sum = [
+        '# KOSAME Dev Orchestra Post-RC Summary',
+        `version: ${pkg.version}`,
+        `post_rc_status: ${gate}`,
+        `latest_readiness: ${readiness}`,
+        `release_gate: ${gate}`,
+        `judge_status: ${judgeStatus}`,
+        '',
+        '## Model Lane Rules',
+        '- L0: simple file append/replace/create',
+        '- L1: DeepSeek V4 Flash (safe/sanitized + low)',
+        '- L2: DeepSeek V4 Pro (safe/sanitized + medium)',
+        '- L3: DeepSeek V4 Pro+Audit (safe/sanitized + high)',
+        '- INTERNAL_ONLY: GPT/こさめ (sensitive)',
+        '- BLOCKED: forbidden',
+        '',
+        '## Remaining Operational Validation',
+        '- P3 UI polish (colors/labels)',
+        '- Difficulty scoring fine-tuning with production data',
+        '- Auto smoke residue cleanup',
+        '',
+        '## Next Recommended Version',
+        '- v113.3.122 (operational feedback cycle)',
+        '',
+        `generated_at: ${new Date().toISOString()}`,
+      ].join('\n');
+      ensureDir(EXECUTOR_DIR);
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'post-rc-summary.md'), sum);
+
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, post_rc_status: gate, version: pkg.version, readiness, judge_status: judgeStatus, content: sum, path: path.join(EXECUTOR_DIR, 'post-rc-summary.md') }));
+      return;
+    }
+
+    if (url.pathname === '/api/executor/operational-checklist') {
+      const list = [
+        '# KOSAME Dev Orchestra 運用チェックリスト',
+        '',
+        '## 毎回起動後に確認',
+        '- npm run verify',
+        '- npm run dev-os:autopilot (利用可能な場合)',
+        '- git status -sb',
+        '- public/test.html がcanonical状態であること',
+        '',
+        '## .kosame-executor 生成物確認',
+        '- latest.md (最新状態)',
+        '- latest-deepseek-result.json (DeepSeek結果)',
+        '- latest-deepseek-action.json (採用/再修正/却下)',
+        '- latest-judge.json (GPT/こさめ最終裁定)',
+        '- history/ (ワークフロー履歴)',
+        '',
+        '## Push前に確認',
+        '- npm run verify PASSしていること',
+        '- Release Gateがblockedでないこと',
+        '- Judge_statusがreview済みであること',
+        '- git add を個別に実行 (git add -A 禁止)',
+        '- diffに .env / credentials / Secret が含まれていないこと',
+        '- diffに sales-dx / transcriber への参照が含まれていないこと',
+        '',
+        '## Human Gateが必要な操作',
+        '- commit / push / tag / deploy → 必ず人間が確認',
+        '- IAM / billing / production 設定変更 → 必ず人間が確認',
+        '- customer data / insurance logic 操作 → 必ず人間が確認',
+        '',
+        '## 絶対に触らないもの',
+        '- /home/lavie/repos/transcriber',
+        '- /home/lavie/repos/kosame-sales-dx',
+        '- .env / credentials / Secretファイル',
+        '- 顧客データ / 保険ロジック',
+        '- 営業DX関連パス',
+        '',
+        `generated_at: ${new Date().toISOString()}`,
+      ].join('\n');
+      ensureDir(EXECUTOR_DIR);
+      fs.writeFileSync(path.join(EXECUTOR_DIR, 'operational-checklist.md'), list);
+
+      res.writeHead(200, JSON_HEADERS);
+      res.end(JSON.stringify({ ok: true, content: list, path: path.join(EXECUTOR_DIR, 'operational-checklist.md'), generated_at: new Date().toISOString() }));
+      return;
+    }
+
     if (url.pathname === '/healthz') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('ok');

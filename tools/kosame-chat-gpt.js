@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
-// KOSAME Chat GPT caller — connects KOSAME CHAT to OpenAI API with こさめ persona.
-// Gate: OPENAI_API_KEY must be present AND KOSAME_AGENT_LIVE_CALLS_ENABLED=true.
+// KOSAME Chat Model Router — Claude primary, Gemini fallback1, Llama/Groq fallback2.
+// Gate: API key must be present for the selected model.
 // Dry-run fallback when gate is not met — never throws.
 // API key value is NEVER logged.
 
@@ -11,23 +11,34 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const PERSONA_PATH = path.join(ROOT, 'config', 'kosame-cockpit-chat-persona.md');
-const PROVIDER_CONFIG_PATH = path.join(ROOT, 'providers', 'provider-config.json');
-const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
 const CHAT_MAX_TOKENS = 500;
 const CHAT_TIMEOUT_MS = 20000;
 
-function loadPersona() {
-  try { return fs.readFileSync(PERSONA_PATH, 'utf8').trim(); }
-  catch { return 'あなたはこさめです。じゅんやさんの相談AIです。危険操作は止めてください。'; }
-}
+// ── Model routing (v113.8.0): Claude → Gemini → Llama/Groq ────────────────
 
-function loadProviderConfig() {
-  try { return JSON.parse(fs.readFileSync(PROVIDER_CONFIG_PATH, 'utf8')); }
-  catch { return {}; }
+const MODEL_ROUTE = {
+  primary:   { provider: 'anthropic', model: 'claude-sonnet-4-6', key: 'ANTHROPIC_API_KEY', url: 'https://api.anthropic.com/v1/messages', header: 'x-api-key' },
+  fallback1: { provider: 'google',    model: 'gemini-2.0-flash',     key: 'GEMINI_API_KEY',      url: null, header: null },
+  fallback2: { provider: 'groq',      model: 'llama-3.3-70b',        key: 'GROQ_API_KEY',        url: 'https://api.groq.com/openai/v1/chat/completions', header: 'Authorization' },
+};
+
+function getActiveModel() {
+  for (const [label, cfg] of Object.entries(MODEL_ROUTE)) {
+    if (typeof process.env[cfg.key] === 'string' && process.env[cfg.key].length > 0) {
+      return { label, ...cfg };
+    }
+  }
+  return { label: 'dry-run', provider: 'none', model: DEFAULT_MODEL, key: null, url: null, header: null };
 }
 
 function isKeyPresent() {
-  return typeof process.env.OPENAI_API_KEY === 'string' && process.env.OPENAI_API_KEY.length > 0;
+  const active = getActiveModel();
+  return active.key !== null;
+}
+
+function isLiveCallsEnabled() {
+  return String(process.env.KOSAME_AGENT_LIVE_CALLS_ENABLED || '0').trim() === '1';
 }
 
 function isLiveEnabled() {
@@ -116,8 +127,8 @@ function buildStableAmbiguousReply() {
 }
 
 function getModel() {
-  const envModel = process.env.KOSAME_AGENT_MODEL_OPENAI;
-  return typeof envModel === 'string' && envModel.length > 0 ? envModel : DEFAULT_MODEL;
+  const active = getActiveModel();
+  return typeof active.model === 'string' && active.model.length > 0 ? active : { label: 'default', model: DEFAULT_MODEL };
 }
 
 /**
@@ -177,14 +188,10 @@ async function callKosameGPT(messages, opts = {}) {
   }
 
   if (!isLiveEnabled()) {
-    const keyPresent = typeof process.env.OPENAI_API_KEY === 'string' && process.env.OPENAI_API_KEY.length > 0;
+    const active = getActiveModel();
     return {
-      ok: false,
-      reply: null,
-      dryRun: true,
-      reason: keyPresent
-        ? 'dry-run: KOSAME_AGENT_LIVE_CALLS_ENABLED not set to true'
-        : 'dry-run: OPENAI_API_KEY not set',
+      ok: false, reply: null, dryRun: true,
+      reason: active.key ? 'dry-run: KOSAME_AGENT_LIVE_CALLS_ENABLED not set' : `dry-run: no API key (${active.provider})`,
     };
   }
 
@@ -211,37 +218,62 @@ async function callKosameGPT(messages, opts = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  const active = getActiveModel();
+  const isAnthropic = active.provider === 'anthropic';
+  const isOpenAICompat = active.provider === 'groq'; // Groq uses OpenAI-compatible API
+
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
+    let apiUrl, headers, body;
+
+    if (isAnthropic) {
+      // Claude Messages API
+      apiUrl = 'https://api.anthropic.com/v1/messages';
+      headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model,
+        'x-api-key': `${process.env.ANTHROPIC_API_KEY}`,
+        'anthropic-version': '2023-06-01',
+      };
+      body = JSON.stringify({
+        model: active.model,
+        max_tokens: maxTokens,
+        system: systemContent,
+        messages: msgArray,
+      });
+    } else {
+      // OpenAI-compatible (GPT/Groq/Gemini via OpenAI endpoint)
+      apiUrl = active.url || 'https://api.openai.com/v1/chat/completions';
+      const authHeader = active.provider === 'groq' ? `Bearer ${process.env.GROQ_API_KEY}` : `Bearer ${process.env.OPENAI_API_KEY}`;
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      };
+      body = JSON.stringify({
+        model: active.model,
         messages: [{ role: 'system', content: systemContent }, ...msgArray],
         max_tokens: maxTokens,
         temperature: 0.7,
-      }),
+      });
+    }
+
+    const res = await fetch(apiUrl, {
+      method: 'POST', signal: controller.signal, headers, body,
     });
 
     clearTimeout(timer);
 
     if (!res.ok) {
       return {
-        ok: false,
-        reply: null,
-        dryRun: false,
-        reason: `OpenAI API error: ${res.status} ${res.statusText}`,
+        ok: false, reply: null, dryRun: false,
+        reason: `${active.provider} API error: ${res.status} ${res.statusText}`,
       };
     }
 
     const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content ?? null;
+    const text = isAnthropic
+      ? (data?.content?.[0]?.text) ?? null
+      : (data?.choices?.[0]?.message?.content) ?? null;
     if (!text) {
-      return { ok: false, reply: null, dryRun: false, reason: 'OpenAI returned empty content' };
+      return { ok: false, reply: null, dryRun: false, reason: `${active.provider} returned empty content` };
     }
 
     return { ok: true, reply: text.trim(), dryRun: false, reason: null };

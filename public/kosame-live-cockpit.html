@@ -1861,6 +1861,7 @@ h1 {
 .asl-done-fail { color: #f44336; font-weight: bold; }
 .asl-route   { color: #6e57d2; }
 .asl-dispatch { color: #8899aa; font-size: 0.85em; }
+.asl-progress { color: #8a8a99; font-size: 0.82em; }
 .asl-ts { color: #4a4a6a; }
 .asl-msg { color: #ddd; }
 /* Message-span color overrides (compound = higher specificity than .asl-msg) */
@@ -1870,6 +1871,8 @@ h1 {
 .asl-msg.asl-done-fail { color: #f44336; font-weight: bold; }
 .asl-msg.asl-route     { color: #6e57d2; }
 .asl-msg.asl-dispatch  { color: #8899aa; }
+.asl-msg.asl-progress  { color: #8a8a99; font-size: 0.82em; }
+.asl-agent-RUNNER       { color: #ffffff; font-weight: bold; }
 .asl-agent-KOSAME       { color: #00bcd4; font-weight: bold; }
 .asl-agent-DIRECTOR     { color: #00bcd4; font-weight: bold; }
 .asl-agent-DIRECTOR-GPT { color: #10a37f; font-weight: bold; }
@@ -7376,7 +7379,7 @@ if (chatCalloutButton) {
     'Grok':          'asl-agent-Grok',
     'DeepSeek':      'asl-agent-DeepSeek',
     'Llama':         'asl-agent-Llama',
-    'RUNNER':        'asl-agent-KOSAME',
+    'RUNNER':        'asl-agent-RUNNER',
   };
   var ASL_DISPLAY_NAMES = {
     'KOSAME':        'KOSAME',
@@ -7407,7 +7410,9 @@ if (chatCalloutButton) {
     // never gets mislabeled. Class is applied to the message span too, otherwise
     // .asl-msg's own color overrides the entry-level class.
     var msgCls = '';
-    if (message.includes('❌') || (message.includes('失敗') && !message.includes('未') ) || message.includes('FAIL') || message.includes('blocked')) {
+    if (message.includes('[PROGRESS]')) {
+      msgCls = 'asl-progress';     // [PROGRESS] → grey, smaller (de-emphasized noise)
+    } else if (message.includes('❌') || (message.includes('失敗') && !message.includes('未') ) || message.includes('FAIL') || message.includes('blocked')) {
       msgCls = 'asl-done-fail';   // ❌失敗 → red
     } else if (message.includes('✅') || ((message.includes('[DONE]') || message.includes('完了')) && !message.includes('未完了'))) {
       msgCls = 'asl-done-ok';      // ✅完了 → water-blue (cyan)

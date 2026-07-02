@@ -25,7 +25,7 @@ try{
   if(fs.existsSync(rState)){
     const s=JSON.parse(fs.readFileSync(rState,'utf8'));
     logEvent('runner_state',{entries:Object.keys(s).length});
-  }
+  }else{logEvent('runner_state',{status:'no queue yet'})}
 }catch(_){logEvent('runner_state',{error:'cannot read'})}
 
 // Log judge state
@@ -53,7 +53,7 @@ try{
   if(fs.existsSync(lb)){
     const lc=fs.readFileSync(lb,'utf8'),status=lc.includes('ready')?'ready':'caution';
     logEvent('limit_break',{status});
-  }
+  }else{logEvent('limit_break',{status:'not run'})}
 }catch(_){logEvent('limit_break',{status:'not run'})}
 
 // Log field ops result
@@ -62,7 +62,7 @@ try{
   if(fs.existsSync(fo)){
     const fc=fs.readFileSync(fo,'utf8'),status=fc.includes('ready')?'ready':'caution';
     logEvent('field_ops',{status});
-  }
+  }else{logEvent('field_ops',{status:'not run'})}
 }catch(_){logEvent('field_ops',{status:'not run'})}
 
 console.log('KOSAME_OPERATIONAL_LOG_BEGIN\nstatus: ready');

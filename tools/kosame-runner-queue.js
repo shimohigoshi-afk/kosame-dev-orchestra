@@ -25,6 +25,14 @@ const RUNS_DIR   = path.join(RUNNER_DIR, 'runs');
 const STATE_FILE = path.join(RUNNER_DIR, 'queue-state.json');
 const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
 
+// ── Progress reporter (v113.9.0) ──────────────────────────────────────────
+let _progressCallback = null;
+function setProgressCallback(fn) { _progressCallback = fn; }
+function emitProgress(msg) {
+  if (_progressCallback) { try { _progressCallback(msg); return; } catch (_) {} }
+  emitProgress(`${msg}\n`);
+}
+
 const MAX_ATTEMPTS = 3;
 const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 
@@ -924,32 +932,32 @@ function executeBlocked(ticket, runDir, lane) {
 
 function executorLaneRouter(ticket, runDir) {
   const lane = detectExecutorLane(ticket);
-  process.stdout.write(`[PROGRESS] lane 判定: ${lane.lane} (${(lane.reason || lane.filePath || '').slice(0, 60)})\n`);
+  emitProgress(`lane 判定: ${lane.lane} (${(lane.reason || lane.filePath || '').slice(0, 60)})\n`);
 
   switch (lane.lane) {
     case 'local_append':
-      process.stdout.write(`[PROGRESS] → local_append 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_append 実行中: ${lane.filePath}\n`);
       return executeLocalAppend(ticket, runDir, lane);
     case 'local_replace':
-      process.stdout.write(`[PROGRESS] → local_replace 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_replace 実行中: ${lane.filePath}\n`);
       return executeLocalReplace(ticket, runDir, lane);
     case 'local_create_file':
-      process.stdout.write(`[PROGRESS] → local_create_file 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_create_file 実行中: ${lane.filePath}\n`);
       return executeLocalCreateFile(ticket, runDir, lane);
     case 'local_small_html_css_patch':
-      process.stdout.write(`[PROGRESS] → local_html_patch 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_html_patch 実行中: ${lane.filePath}\n`);
       return executeLocalSmallPatch(ticket, runDir, lane);
     case 'deepseek_patch_required':
-      process.stdout.write(`[PROGRESS] → deepseek handoff 生成中...\n`);
+      emitProgress(`→ deepseek handoff 生成中...\n`);
       return executeDeepSeekHandoff(ticket, runDir, lane);
     case 'sensitive_internal_only':
-      process.stdout.write(`[PROGRESS] → blocked (sensitive): ${lane.reason.slice(0, 60)}\n`);
+      emitProgress(`→ blocked (sensitive): ${lane.reason.slice(0, 60)}\n`);
       return executeBlocked(ticket, runDir, { reason: lane.reason, promptText: lane.promptText });
     case 'blocked_with_reason':
-      process.stdout.write(`[PROGRESS] → blocked: ${lane.reason.slice(0, 60)}\n`);
+      emitProgress(`→ blocked: ${lane.reason.slice(0, 60)}\n`);
       return executeBlocked(ticket, runDir, lane);
     default:
-      process.stdout.write(`[PROGRESS] → unknown lane: ${lane.lane}\n`);
+      emitProgress(`→ unknown lane: ${lane.lane}\n`);
       return { ok: false, exitCode: 1, error: `unknown lane: ${lane.lane}` };
   }
 }
@@ -957,7 +965,7 @@ function executorLaneRouter(ticket, runDir) {
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
-  process.stdout.write(`[PROGRESS] 作業開始: ${(ticket.title || ticket.id).slice(0, 60)}\n`);
+  emitProgress(`作業開始: ${(ticket.title || ticket.id).slice(0, 60)}\n`);
   // 1. Try lane router for all tickets
   const laneResult = executorLaneRouter(ticket, runDir);
 
@@ -1028,7 +1036,7 @@ function runTicket(ticket, attempt, opts) {
   }
 
     // 4. 実行
-  process.stdout.write(`[PROGRESS] 実装中...\n`);
+  emitProgress(`実装中...\n`);
   let execRes;
   try {
     execRes = executor(ticket, runDir);
@@ -1048,7 +1056,7 @@ function runTicket(ticket, attempt, opts) {
     error: execRes.error || null,
     blockedReason: execRes.executorStatus === 'blocked_with_reason' ? execRes.error : undefined,
   };
-  process.stdout.write(`[PROGRESS] 結果: ${status} exit=${result.exitCode}\n`);
+  emitProgress(`結果: ${status} exit=${result.exitCode}\n`);
   fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(result, null, 2) + '\n');
   return result;
 }
@@ -1216,6 +1224,8 @@ module.exports = {
   writeLatestStatus,
   writeDeepSeekHandoffFile,
   writeRevisionHandoffFile,
+  setProgressCallback,
+  emitProgress,
   MAX_ATTEMPTS,
   RUNS_DIR,
   RUNNER_DIR,

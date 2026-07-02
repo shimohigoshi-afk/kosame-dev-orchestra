@@ -20,7 +20,7 @@ const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } 
 const { appendShellAgentActivityEvent, SHELL_ACTIVITY_LOG_PATH_ENV } = require('./kosame-shell-agent-activity');
 const { buildWorkOrderResultDecision } = require('./kosame-work-order-result-decision');
 const { saveHandoffInbox, readLatestHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
-const { processTicket } = require('./kosame-runner-queue');
+const { processTicket, setProgressCallback } = require('./kosame-runner-queue');
 const { appendPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 const { evaluateNoYesGate } = require('./kosame-no-yes-gate');
 
@@ -736,11 +736,15 @@ function createLiveCockpitServer(options = {}) {
           });
 
           let result;
+          setProgressCallback(function(msg) {
+            _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'RUNNER', msg: `[PROGRESS] ${msg}` });
+          });
           try {
             result = processTicket(payload, { runsDir: path.join(ROOT, '.kosame-runner', 'runs') });
           } catch (procErr) {
             result = { status: 'failed', exitCode: 1, error: String(procErr.message || procErr) };
           }
+          setProgressCallback(null);
 
           const ok = result && (result.status === 'completed' || result.exitCode === 0);
           appendPipelineStageEvent({

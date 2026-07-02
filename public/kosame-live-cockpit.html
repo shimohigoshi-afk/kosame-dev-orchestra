@@ -1861,7 +1861,7 @@ h1 {
 .asl-done-fail { color: #f44336; font-weight: bold; }
 .asl-route   { color: #6e57d2; }
 .asl-dispatch { color: #8899aa; font-size: 0.85em; }
-.asl-progress { color: #8a8a99; font-size: 0.82em; }
+.asl-progress { color: #8899aa; font-size: 0.85em; }
 .asl-ts { color: #4a4a6a; }
 .asl-msg { color: #ddd; }
 /* Message-span color overrides (compound = higher specificity than .asl-msg) */
@@ -1871,12 +1871,16 @@ h1 {
 .asl-msg.asl-done-fail { color: #f44336; font-weight: bold; }
 .asl-msg.asl-route     { color: #6e57d2; }
 .asl-msg.asl-dispatch  { color: #8899aa; }
-.asl-msg.asl-progress  { color: #8a8a99; font-size: 0.82em; }
+.asl-msg.asl-progress  { color: #8899aa; }
+/* [PROGRESS] 行全体をグレーに（RUNNER: プレフィックスも含む） */
+.asl-progress .asl-agent-RUNNER { color: #8899aa; font-weight: normal; }
+.asl-progress .asl-ts { color: #6a6a8a; }
 .asl-agent-RUNNER       { color: #ffffff; font-weight: bold; }
 .asl-agent-KOSAME       { color: #00bcd4; font-weight: bold; }
 .asl-agent-DIRECTOR     { color: #00bcd4; font-weight: bold; }
 .asl-agent-DIRECTOR-GPT { color: #10a37f; font-weight: bold; }
 .asl-agent-GPT          { color: #10a37f; font-weight: bold; }
+.asl-agent-DEV-OS       { color: #6e57d2; font-weight: bold; }
 .asl-agent-Claude   { color: #D97757; font-weight: bold; }
 .asl-agent-Gemini   { color: #EA4335; font-weight: bold; }
 .asl-agent-Grok     { color: #8899aa; font-weight: bold; }
@@ -6730,7 +6734,7 @@ function detectResultPasteStatus(text) {
 // ── Zero-confirm dispatch ─────────────────────────────────────────────────────
 // 「この方針で進める」ボタン・トリガーワード → /api/runner-dispatch に直接POST。
 // AI返答なし・確認なし・即実行。
-const EXEC_TRIGGER_RE = /(?:実行して|進めて|やって|作って|直して|デプロイして|実施して|スタートして|始めて|やりきって|完走して|動かして)[ください。！]*$/i;
+const EXEC_TRIGGER_RE = /(?:実行して|進めて|やって|作って|直して|書き換えて|修正して|追加して|デプロイして|実施して|スタートして|始めて|やりきって|完走して|動かして)[ください。！]*$/i;
 
 function detectExecTrigger(text) {
   return EXEC_TRIGGER_RE.test(String(text || '').trim());
@@ -7029,6 +7033,13 @@ async function sendChatMessage(userText, confirmationContext) {
   }
 }
 
+// 「この方針で進める」「この案で進める」などの実装確定フレーズ → 即Runner dispatch
+const PROCEED_TRIGGER_RE = /^(?:この方針で|この案で|以下の方針で|方針で|その方針で|OK[、。]?进めて|OKです?[。！]?進めて|はいOK|はい[、。]?進めて|進めましょ|今すぐ進めて|このままで(?:OK|ok)?[。！]?$)/i;
+
+function detectProceedTrigger(text) {
+  return PROCEED_TRIGGER_RE.test(String(text || '').trim());
+}
+
 function submitPrioritizedChatInput(text) {
   const rawText = String(text || '').trim();
   // Allow file-only sends (no text but files attached)
@@ -7038,6 +7049,16 @@ function submitPrioritizedChatInput(text) {
     const input = document.getElementById('chat-input');
     if (input) input.value = '';
     _zeroConfirmDispatch(rawText);
+    return;
+  }
+  // 「この方針で進める」系 → 即Runner dispatch（提案文なし）
+  if (rawText && detectProceedTrigger(rawText)) {
+    const input = document.getElementById('chat-input');
+    if (input) input.value = '';
+    // 直前の会話文脈（直近ユーザーメッセージ）をプロンプトとして付加して dispatch
+    const lastUserMsg = chatHistory.filter(function(m) { return m.role === 'user'; }).slice(-1)[0];
+    const ctxText = lastUserMsg && lastUserMsg.content !== rawText ? lastUserMsg.content + '\n\n' + rawText : rawText;
+    _zeroConfirmDispatch(ctxText);
     return;
   }
   if (rawText && detectWorkOrderRequest(rawText)) {
@@ -7380,6 +7401,7 @@ if (chatCalloutButton) {
     'DeepSeek':      'asl-agent-DeepSeek',
     'Llama':         'asl-agent-Llama',
     'RUNNER':        'asl-agent-RUNNER',
+    'DEV-OS':        'asl-agent-DEV-OS',
   };
   var ASL_DISPLAY_NAMES = {
     'KOSAME':        'KOSAME',
@@ -7392,6 +7414,7 @@ if (chatCalloutButton) {
     'DeepSeek':      'DeepSeek',
     'Llama':         'Llama',
     'RUNNER':        'RUNNER',
+    'DEV-OS':        'DEV-OS',
   };
 
   function aslTs() {

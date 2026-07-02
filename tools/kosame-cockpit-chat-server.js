@@ -42,6 +42,16 @@ const SECRET_PATTERNS = [
   /\bBEARER\b/i,
   /\.env\b/i,
 ];
+const REPO_MAIN_FILES_CONTEXT = [
+  '【repoのメインファイル一覧】',
+  '- public/kosame-live-cockpit.html … コンソールUI / AGENT STREAM LOG / チャットUI',
+  '- tools/kosame-live-cockpit-server.js … サーバー / SSE / /api/runner-dispatch / /api/runner-stream',
+  '- tools/kosame-runner-queue.js … Runner / タスクキュー / processTicket',
+  '- tools/kosame-cockpit-chat-server.js … チャットサーバー / /api/chat / buildLocalReply',
+  '以下の指示を受けた場合は上記ファイルのいずれかを対象と判断して即実行すること。',
+  '「どのファイルですか？」と逆質問しないこと。',
+].join('\n');
+
 const WORK_ORDER_TARGETS = [
   {
     label: 'Sales DX',
@@ -704,7 +714,7 @@ function buildWorkOrderTitle(input, target) {
 
 function buildWorkOrderPrompt(input, target, title, snapshotSummary) {
   const projectLabel = target ? target.label : truncate(input.project || '対象未指定', 40);
-  const contextLines = [];
+  const contextLines = [REPO_MAIN_FILES_CONTEXT];
   if (normalizeContent(input.message)) contextLines.push(`ユーザー要望: ${normalizeContent(input.message)}`);
   // Strip commit-message lines that mention .env to prevent false-positive secret detection in handoff logs
   const filteredSnapshot = normalizeContent(snapshotSummary)
@@ -1199,6 +1209,10 @@ async function handleChatRequest(body) {
     const detectedUrls = normalized.detectedUrls || [];
     const sessionId = normalized.sessionId || null;
     let augmentedMessage = message;
+    // Inject repo main files context so GPT never asks "which file?"
+    if (/直して|書き換え|修正して|追加して|変えて|実装して|開いて|確認して|教えて|なに|何|どこ|AGENT STREAM|コンソール/i.test(message)) {
+      augmentedMessage += `\n\n${REPO_MAIN_FILES_CONTEXT}`;
+    }
     const imageParts = [];
 
     const IMAGE_EXTS_SET = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);

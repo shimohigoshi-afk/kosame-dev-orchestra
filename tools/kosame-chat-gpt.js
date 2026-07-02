@@ -140,6 +140,11 @@ function getModel() {
  *   opts.timeoutMs {number}
  * @returns {Promise<{ ok: boolean, reply: string|null, dryRun: boolean, reason: string|null }>}
  */
+function loadPersona() {
+  try { return fs.readFileSync(PERSONA_PATH, 'utf8').trim(); }
+  catch { return 'あなたはこさめです。じゅんやさんの相談AIです。危険操作は止めてください。'; }
+}
+
 async function callKosameGPT(messages, opts = {}) {
   if (isStableSmokeReplyMode()) {
     if (!isLiveEnabled()) {

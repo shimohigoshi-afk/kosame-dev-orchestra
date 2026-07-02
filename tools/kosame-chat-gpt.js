@@ -300,7 +300,6 @@ module.exports = {
   isKeyPresent,
   buildStableSmokeReply,
   loadPersona,
-  loadProviderConfig,
   getModel,
   DEFAULT_MODEL,
   CHAT_MAX_TOKENS,

@@ -7227,15 +7227,25 @@ if (chatSendBtn) {
 
 const chatInputNode = document.getElementById('chat-input');
 if (chatInputNode) {
+  var _chatComposing = false;
+  chatInputNode.addEventListener('compositionstart', function() { _chatComposing = true; });
+  chatInputNode.addEventListener('compositionend', function() { _chatComposing = false; });
   chatInputNode.addEventListener('input', () => {
     updateChatSummarizeButtonLabel();
     updateUrlDetectionBanner(chatInputNode.value);
   });
-  chatInputNode.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  chatInputNode.addEventListener('paste', function() {
+    // Ensure textarea stays enabled and focused after paste
+    setTimeout(function() {
+      chatInputNode.focus();
+      chatInputNode.disabled = false;
+    }, 10);
+  });
+  chatInputNode.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !_chatComposing) {
       e.preventDefault();
-      const t = document.getElementById('chat-input').value.trim();
-      submitPrioritizedChatInput(t);
+      var t = chatInputNode.value.trim();
+      if (t) { chatInputNode.value = ''; submitPrioritizedChatInput(t); }
     }
   });
 }

@@ -185,16 +185,12 @@ function extractFilePath(text) {
 function detectExecutorLane(ticket) {
   const promptText = String(ticket.prompt_text || ticket.body || ticket.title || '').trim();
   const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? path.resolve(ticket.target_repo) : ROOT;
+  const isSalesDx = /(?:sales[-_]?dx|transcriber|transcribe)/i.test(promptText) ||
+                    (ticket.target_repo && /(?:sales[-_]?dx|transcriber)/i.test(ticket.target_repo));
 
-  // ── Blocked checks ──
+  // ── Blocked checks (absolute blockers) ──
   if (promptText.includes('..')) {
     return { lane: 'blocked_with_reason', reason: 'path traversal detected', promptText };
-  }
-  if (ticket.target_repo && targetRepo !== ROOT) {
-    return { lane: 'blocked_with_reason', reason: 'target_repo mismatch', promptText };
-  }
-  if (/(?:sales[-_]?dx|transcriber|transcribe)/i.test(promptText)) {
-    return { lane: 'blocked_with_reason', reason: 'Sales DX / transcriber paths are not allowed', promptText };
   }
   if (/secret|\.env|credentials?/i.test(promptText)) {
     return { lane: 'blocked_with_reason', reason: 'secret / .env / credentials files are not allowed', promptText };
@@ -206,11 +202,20 @@ function detectExecutorLane(ticket) {
     return { lane: 'blocked_with_reason', reason: 'deploy/push/commit/tag operations are not allowed', promptText };
   }
 
-  // ── Sensitive checks (v113.7.2) ──
-  // customer/billing/insurance/production → sensitive, only Tier A (Claude/Gemini/GPT)
-  // DeepSeek/Grok/Llama must not receive these
+  // ── Sales DX / sensitive → Claude only (v113.9.0) ──
+  if (isSalesDx) {
+    const salesDxRepo = process.env.KOSAME_SALES_DX_REPO || '/home/lavie/repos/kosame-sales-dx';
+    return { lane: 'claude_code_sensitive', reason: 'Sales DX task — routing to Claude (sensitive)', promptText, targetRepo: salesDxRepo };
+  }
+
+  // ── Other sensitive → internal only ──
   if (/(?:顧客|customer|client|契約|contract|保険|insurance|課金|billing|revenue|payment|production|本番|release|tag|プライバシー|privacy)/i.test(promptText)) {
     return { lane: 'sensitive_internal_only', reason: 'sensitive content — internal AI only (Claude/Gemini/GPT)', promptText };
+  }
+
+  // ── Target repo safety check (for non-sensitive repos) ──
+  if (ticket.target_repo && targetRepo !== ROOT) {
+    return { lane: 'blocked_with_reason', reason: 'target_repo mismatch', promptText };
   }
 
   // ── Local append ──
@@ -952,6 +957,16 @@ function executeDeepSeekHandoff(ticket, runDir, lane) {
   return { ok: false, exitCode: 0, error: null, executorStatus: 'deepseek_patch_required' };
 }
 
+function executeClaudeSensitive(ticket, runDir, lane) {
+  const targetRepo = lane.targetRepo || ticket.target_repo || '/home/lavie/repos/kosame-sales-dx';
+  emitProgress(`→ claude sensitive: ${targetRepo}`);
+  // Use claudeChatExecutor with the specified target repo
+  const claudeTicket = { ...ticket, target_repo: targetRepo };
+  const result = claudeChatExecutor(claudeTicket, runDir);
+  if (result.ok) return result;
+  return { ...result, executorStatus: 'claude_sensitive_failed' };
+}
+
 function executeBlocked(ticket, runDir, lane) {
   const blockedLines = [
     '# Blocked by Runner Queue Policy',
@@ -1000,6 +1015,9 @@ function executorLaneRouter(ticket, runDir) {
     case 'deepseek_patch_required':
       emitProgress(`→ deepseek handoff 生成中...\n`);
       return executeDeepSeekHandoff(ticket, runDir, lane);
+    case 'claude_code_sensitive':
+      emitProgress(`→ claude sensitive 実行中...\n`);
+      return executeClaudeSensitive(ticket, runDir, lane);
     case 'sensitive_internal_only':
       emitProgress(`→ blocked (sensitive): ${lane.reason.slice(0, 60)}\n`);
       return executeBlocked(ticket, runDir, { reason: lane.reason, promptText: lane.promptText });
@@ -1270,6 +1288,7 @@ module.exports = {
   executeLocalCreateFile,
   executeLocalSmallPatch,
   executeDeepSeekHandoff,
+  executeClaudeSensitive,
   executeBlocked,
   writeLatestStatus,
   writeDeepSeekHandoffFile,

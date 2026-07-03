@@ -868,7 +868,7 @@ h1 {
 .chat-bubble-ai { background: rgba(216, 234, 255, 0.08); border: 1px solid rgba(216, 234, 255, 0.16); border-radius: 16px 16px 16px 6px; max-width: min(84%, 760px); padding: 10px 12px; }
 .chat-bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #dbeafe; }
 .chat-bubble-header .chat-bubble-role { color: var(--accent); }
-.chat-bubble-text { font-size: 17px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+.chat-bubble-text { font-size: 20.4px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--text); }
 .chat-bubble-user .chat-bubble-header { justify-content: flex-end; color: #cffafe; }
 .chat-bubble-user .chat-bubble-role { color: #e0f2fe; }
 .chat-bubble-ai .chat-bubble-role { color: #7dd3fc; }
@@ -7534,33 +7534,6 @@ if (chatCalloutButton) {
     _aslQueue.push({ agent: agent, message: message });
     if (!_aslTimer) _aslFlush();
     return _aslInterval;
-  }
-    agentSpan.textContent = (ASL_DISPLAY_NAMES[agent] || agent) + ': ';
-    var msgSpan = document.createElement('span');
-    msgSpan.className = msgCls ? ('asl-msg ' + msgCls) : 'asl-msg';
-    var cursor = document.createElement('span');
-    cursor.className = 'asl-cursor';
-    cursor.textContent = '|';
-    entry.appendChild(ts);
-    entry.appendChild(agentSpan);
-    entry.appendChild(msgSpan);
-    entry.appendChild(cursor);
-    log.appendChild(entry);
-    log.scrollTop = log.scrollHeight;
-    var chars = Array.from(message);
-    var i = 0;
-    function next() {
-      if (i >= chars.length) {
-        cursor.style.display = 'none';
-        log.scrollTop = log.scrollHeight;
-        return;
-      }
-      msgSpan.textContent += chars[i++];
-      log.scrollTop = log.scrollHeight;
-      setTimeout(next, 40);
-    }
-    setTimeout(next, 40);
-    return chars.length * 40 + 40;
   }
 
   var ASL_DEMO = [

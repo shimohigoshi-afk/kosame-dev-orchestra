@@ -725,6 +725,7 @@ function createLiveCockpitServer(options = {}) {
             risk_level: String(parsed.risk_level || 'low').trim(),
             human_gate_required: false,
             source: 'kosame-chat-dispatch',
+            mode: String(parsed.mode || '').trim(),
             created_at: new Date().toISOString(),
           };
           saveHandoffInbox(payload, { handoffDir: options.handoffDir });

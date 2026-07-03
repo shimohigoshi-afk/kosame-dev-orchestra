@@ -1940,8 +1940,28 @@ h1 {
 .chat-mode-pill:hover { border-color: rgba(255,255,255,0.24); color: var(--text); }
 .chat-mode-pill.is-selected { color: var(--text); }
 .chat-mode-pill.mode-complete.is-selected { background: rgba(34,197,94,0.14); border-color: rgba(34,197,94,0.45); }
-.chat-mode-pill.mode-compliance.is-selected { background: rgba(0,188,212,0.14); border-color: rgba(0,188,212,0.45); }
+.chat-mode-pill.mode-safe.is-selected { background: rgba(59,130,246,0.14); border-color: rgba(59,130,246,0.45); }
 .chat-mode-pill.mode-boost.is-selected { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.45); }
+.chat-mode-pill.mode-verify.is-selected { background: rgba(168,85,247,0.14); border-color: rgba(168,85,247,0.45); }
+.chat-mode-pill.mode-fable.is-selected { background: rgba(100,100,100,0.14); border-color: rgba(100,100,100,0.45); }
+.chat-mode-pill.mode-fable { opacity: 0.7; }
+
+/* Fable mode confirmation dialog */
+.chat-fable-dialog { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+.chat-fable-dialog[hidden] { display: none; }
+.chat-fable-dialog-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+.chat-fable-dialog-inner { position: relative; background: #131c2b; border: 1px solid rgba(100,100,100,0.35); border-radius: 18px; padding: 28px 24px 22px; max-width: 420px; width: calc(100vw - 40px); box-shadow: 0 18px 50px rgba(0,0,0,0.5); text-align: center; }
+.chat-fable-dialog-icon { font-size: 36px; margin-bottom: 10px; }
+.chat-fable-dialog-title { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 6px; }
+.chat-fable-dialog-desc { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.55; }
+.chat-fable-reason-input { width: 100%; box-sizing: border-box; min-height: 72px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: var(--text); border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 13px; resize: vertical; outline: none; }
+.chat-fable-reason-input:focus { border-color: rgba(168,85,247,0.4); }
+.chat-fable-dialog-buttons { display: flex; gap: 8px; margin-top: 14px; justify-content: center; }
+.chat-fable-cancel-btn { border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: var(--muted); border-radius: 999px; padding: 7px 20px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.chat-fable-cancel-btn:hover { background: rgba(255,255,255,0.08); }
+.chat-fable-confirm-btn { border: 1px solid rgba(168,85,247,0.4); background: rgba(168,85,247,0.14); color: #c4b5fd; border-radius: 999px; padding: 7px 20px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
+.chat-fable-confirm-btn:hover:not(:disabled) { background: rgba(168,85,247,0.22); }
+.chat-fable-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .chat-attachments-preview { display: flex; flex-wrap: wrap; gap: 5px; }
 .chat-attach-chip { display: flex; align-items: center; gap: 5px; background: rgba(0,188,212,0.08); border: 1px solid rgba(0,188,212,0.22); border-radius: 8px; padding: 4px 7px 4px 5px; font-size: 12px; max-width: 200px; }
@@ -2038,7 +2058,7 @@ h1 {
   .dev-orchestra-focus-section { order: 9; }
   .ai-roster-shell { order: 10; }
   .shell-activity-strip { order: 11; }
-  .assist-menu-strip { order: 12; }
+.assist-menu-strip { order: 3; }
   .support-details-outer { order: 13; }
   .footer { order: 14; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
@@ -2459,9 +2479,24 @@ h1 {
                 </div>
               </div>
               <div class="chat-mode-row" id="chat-mode-row" role="radiogroup" aria-label="実行モード">
-                <button type="button" class="chat-mode-pill mode-complete is-selected" data-mode="complete" role="radio" aria-checked="true" title="Claude主力・Safety Stop以外止めない">🟢 完走型</button>
-                <button type="button" class="chat-mode-pill mode-compliance" data-mode="compliance" role="radio" aria-checked="false" title="DeepSeek土木限定">🔵 コンプライアンス型</button>
-                <button type="button" class="chat-mode-pill mode-boost" data-mode="boost" role="radio" aria-checked="false" title="全AI全力・DeepSeek含む">🔴 ブースト型</button>
+                <button type="button" class="chat-mode-pill mode-complete is-selected" data-mode="complete" role="radio" aria-checked="true" title="通常運用・DeepSeek / Gemini / Claude通常 / Llama を使い分けて最後まで進める">🟢 完走モード</button>
+                <button type="button" class="chat-mode-pill mode-safe" data-mode="safe" role="radio" aria-checked="false" title="コンプライアンス・機密・危険ゲート優先。顧客情報、契約、secret、deployを強めに止める">🔵 セーフモード</button>
+                <button type="button" class="chat-mode-pill mode-boost" data-mode="boost" role="radio" aria-checked="false" title="DeepSeek / Gemini / Claude を強めに使い速く大量に進める。Fable 5は自動投入しない">🔴 ブーストモード</button>
+                <button type="button" class="chat-mode-pill mode-verify" data-mode="verify" role="radio" aria-checked="false" title="smoke / verify / Playwright / 実ブラウザ確認を重視。UI / JS / DOM / SSE / ASL系向け">🟣 検証モード</button>
+                <button type="button" class="chat-mode-pill mode-fable" data-mode="fable_manual" role="radio" aria-checked="false" title="final_resort_lane / 最終兵器 / 常用禁止">⚫ Fableモード</button>
+              </div>
+              <div class="chat-fable-dialog" id="chat-fable-dialog" hidden>
+                <div class="chat-fable-dialog-backdrop"></div>
+                <div class="chat-fable-dialog-inner">
+                  <div class="chat-fable-dialog-icon">⚫</div>
+                  <div class="chat-fable-dialog-title">Fable 5は高コストの最終兵器です。</div>
+                  <div class="chat-fable-dialog-desc">通常は使用しません。<br>投入理由を入力してください。</div>
+                  <textarea id="chat-fable-reason" class="chat-fable-reason-input" placeholder="投入理由（必須）"></textarea>
+                  <div class="chat-fable-dialog-buttons">
+                    <button type="button" class="chat-fable-cancel-btn" id="chat-fable-cancel">キャンセル</button>
+                    <button type="button" class="chat-fable-confirm-btn" id="chat-fable-confirm" disabled>確認</button>
+                  </div>
+                </div>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4,.mp3,.wav,.m4a,.ogg,.webm" multiple style="display:none" aria-hidden="true">
             </div>
@@ -2474,10 +2509,8 @@ h1 {
         <span aria-hidden="true" style="display:none">この内容で進める</span>
         <span aria-hidden="true" style="display:none">この案で進める</span>
       </article>
-    </section>
-
-    <!-- 補助メニュー (order 11) -->
-    <section class="assist-menu-strip" id="assist-menu-strip" style="margin-top:8px">
+    <!-- 補助メニュー (KOSAME CHAT直下) -->
+    <section class="assist-menu-strip" id="assist-menu-strip" style="margin-top:14px">
       <article class="panel">
         <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル" open>
           <summary class="chat-assist-shell-summary">補助メニュー</summary>
@@ -2486,10 +2519,6 @@ h1 {
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="current" aria-selected="true">現在地</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="next" aria-selected="false">次の一手</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="danger" aria-selected="false">危険ゲート</button>
-              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="alternative" aria-selected="false">代替案</button>
-              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="activity" aria-selected="false">実行状況</button>
-              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="notifications" aria-selected="false">通知設定</button>
-              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="diagnostics" aria-selected="false">診断情報</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="settings" aria-selected="false">設定</button>
             </div>
             <div class="chat-assist-panel">
@@ -2502,6 +2531,7 @@ h1 {
           </div>
         </details>
       </article>
+    </section>
     </section>
 
     <section class="support-details-outer" style="margin-top:14px">
@@ -3496,12 +3526,21 @@ function buildAssistPanelModel(snapshot, tab) {
           'ON/OFF と音色は別々に扱います。',
         ],
       };
-    case 'settings':
+    case 'settings': {
+      const currentMode = getChatMode();
+      const modeName = CHAT_MODES[currentMode] ? CHAT_MODES[currentMode].label : '完走モード';
       return {
         title: '設定',
         subtitle: '各種設定はここにまとまります。',
-        lines: ['設定項目は今後追加予定です。'],
+        lines: [
+          `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
+          `デフォルト実行モード: ${modeName}`,
+          'Fable 5: 最終兵器 / 常用禁止',
+          'Fable 5投入条件: 原因不明・実ブラウザ検証・最終突破のみ',
+          '設定項目は今後追加予定です。',
+        ],
       };
+    }
     case 'diagnostics': {
       const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
       const latestWorkOrderDecision = snapshot.latestWorkOrderDecision || {};
@@ -6711,6 +6750,7 @@ function buildChatPayload(userText, confirmationContext) {
     selectedProjectLabel: selectedProject ? (selectedProject.name || selectedProject.shortName || selectedProject.statusTitle || '') : '',
     context: trimmedContext.slice(0, 800),
     mode: getChatMode(),
+    executionMode: getChatMode(),
   };
   if (confirmationContext) payload.confirmationContext = trimmedContext.slice(0, 800);
   if (latestSnapshot && latestSnapshot.consoleContextSummary) {
@@ -6803,6 +6843,7 @@ async function _zeroConfirmDispatch(text) {
         message: text,
         route: 'zero-confirm',
         mode: getChatMode(),
+        executionMode: getChatMode(),
         target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
       }),
     });
@@ -7060,6 +7101,7 @@ async function sendChatMessage(userText, confirmationContext) {
             title: userText.slice(0, 60),
             prompt_text: userText,
             mode: getChatMode(),
+            executionMode: getChatMode(),
             target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
           }),
         }).catch(function() {});
@@ -7351,13 +7393,15 @@ if (_chatFileInput) {
   });
 }
 
-// ─── 実行モード選択 (完走型 / コンプライアンス型 / ブースト型) ────────────────
+// ─── 実行モード選択 (完走 / セーフ / ブースト / 検証 / Fable) ────────────────
 var CHAT_MODES = {
-  complete:   { label: '完走型', desc: 'Claude主力・Safety Stop以外止めない' },
-  compliance: { label: 'コンプライアンス型', desc: 'DeepSeek土木限定' },
-  boost:      { label: 'ブースト型', desc: '全AI全力・DeepSeek含む' },
+  complete:     { label: '完走モード', desc: '通常運用・DeepSeek / Gemini / Claude通常 / Llama を使い分ける' },
+  safe:         { label: 'セーフモード', desc: 'コンプライアンス・機密・危険ゲート優先。顧客情報、契約、secret、deployを強めに止める' },
+  boost:        { label: 'ブーストモード', desc: 'DeepSeek / Gemini / Claude を強めに使い速く進める。Fable 5は自動投入しない' },
+  verify:       { label: '検証モード', desc: 'smoke / verify / Playwright / 実ブラウザ確認を重視。UI / JS / DOM / SSE / ASL系向け' },
+  fable_manual: { label: 'Fableモード', desc: 'final_resort_lane / 最終兵器 / 常用禁止。理由必須・自動実行しない' },
 };
-var CHAT_MODE_STORAGE_KEY = 'kosame_chat_exec_mode';
+var CHAT_MODE_STORAGE_KEY = 'kosame.executionMode';
 function getChatMode() {
   try {
     var v = localStorage.getItem(CHAT_MODE_STORAGE_KEY);
@@ -7374,9 +7418,69 @@ function setChatMode(mode) {
     pill.setAttribute('aria-checked', String(selected));
   });
 }
+
+// ─── Fableモード確認ダイアログ ─────────────────────────────────────────────
+function _showFableDialog() {
+  var dialog = document.getElementById('chat-fable-dialog');
+  var reason = document.getElementById('chat-fable-reason');
+  var confirmBtn = document.getElementById('chat-fable-confirm');
+  var cancelBtn = document.getElementById('chat-fable-cancel');
+  if (!dialog || !reason || !confirmBtn || !cancelBtn) return;
+  dialog.removeAttribute('hidden');
+  reason.value = '';
+  confirmBtn.disabled = true;
+  reason.focus();
+}
+function _hideFableDialog() {
+  var dialog = document.getElementById('chat-fable-dialog');
+  if (dialog) dialog.setAttribute('hidden', '');
+}
+function _confirmFableMode() {
+  var reason = document.getElementById('chat-fable-reason');
+  if (!reason) return;
+  var reasonText = String(reason.value || '').trim();
+  if (!reasonText) return;
+  _hideFableDialog();
+  setChatMode('fable_manual');
+  try { localStorage.setItem('kosame.fableLastReason', reasonText); } catch (_) {}
+}
+
 document.querySelectorAll('.chat-mode-pill').forEach(function(pill) {
-  pill.addEventListener('click', function() { setChatMode(pill.dataset.mode); });
+  pill.addEventListener('click', function() {
+    var mode = pill.dataset.mode;
+    if (mode === 'fable_manual') {
+      _showFableDialog();
+    } else {
+      _hideFableDialog();
+      setChatMode(mode);
+    }
+  });
 });
+
+var _fableReasonInput = document.getElementById('chat-fable-reason');
+if (_fableReasonInput) {
+  _fableReasonInput.addEventListener('input', function() {
+    var confirmBtn = document.getElementById('chat-fable-confirm');
+    if (confirmBtn) confirmBtn.disabled = !String(_fableReasonInput.value || '').trim();
+  });
+}
+var _fableConfirmBtn = document.getElementById('chat-fable-confirm');
+if (_fableConfirmBtn) _fableConfirmBtn.addEventListener('click', _confirmFableMode);
+var _fableCancelBtn = document.getElementById('chat-fable-cancel');
+if (_fableCancelBtn) {
+  _fableCancelBtn.addEventListener('click', function() {
+    _hideFableDialog();
+    setChatMode(getChatMode()); // restore previous mode
+  });
+}
+var _fableBackdrop = document.querySelector('.chat-fable-dialog-backdrop');
+if (_fableBackdrop) {
+  _fableBackdrop.addEventListener('click', function() {
+    _hideFableDialog();
+    setChatMode(getChatMode());
+  });
+}
+
 setChatMode(getChatMode());
 
 // ─── 音声入力 (マイクボタン, Web Speech API) ────────────────────────────────

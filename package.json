@@ -1005,6 +1005,7 @@
     "smoke:v113-9-2": "node smoke/v113-9-2-asl-visibility-and-deepseek-handoff-ux-smoke.js",
     "smoke:v113-9-3": "node smoke/v113-9-3-deepseek-handoff-chat-finalize-smoke.js",
     "smoke:v113-9-4": "node smoke/v113-9-4-chat-enter-paste-regression-smoke.js",
+    "smoke:v113-execution-mode-ui": "node smoke/v113-execution-mode-ui-smoke.js",
     "smoke:v113-4-0-thru-7-2": "node smoke/v113-4-0-thru-7-2-consolidated-smoke.js",
     "smoke:v113-8-0": "node smoke/v113-8-0-full-self-test-smoke.js",
     "smoke:v113-9-0": "node smoke/v113-9-0-sales-dx-api-smoke.js",

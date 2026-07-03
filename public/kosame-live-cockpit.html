@@ -44,11 +44,6 @@ body {
   margin: 0 auto;
   padding: 8px 0 36px;
 }
-.chat-callout {
-  position: static;
-  z-index: 1;
-  backdrop-filter: blur(16px);
-}
 .hero {
   display: grid;
   gap: 14px;
@@ -194,19 +189,19 @@ body {
   position: relative;
   z-index: 1;
 }
-.chat-outer { order: 4; }
-.agent-stream-log-strip { order: 4; }
-.support-details-outer { order: 12; }
-.footer { order: 13; }
-.project-registry-shell { order: 2; display: grid; gap: 14px; }
-.ai-roster-shell { order: 9; }
-.active-task-board { order: 3; }
+.chat-outer { order: 2; }
+.agent-stream-log-strip { order: 6; }
+.support-details-outer { order: 13; }
+.footer { order: 14; }
+.project-registry-shell { order: 3; display: grid; gap: 14px; }
+.ai-roster-shell { order: 10; }
+.active-task-board { order: 4; }
 .handoff-result-strip { order: 5; }
-.shell-activity-strip { order: 10; }
-.runner-stream-strip { order: 6; }
-.agent-feed-strip { order: 7; }
-.dev-orchestra-focus-section { order: 8; }
-.assist-menu-strip { order: 11; }
+.shell-activity-strip { order: 11; }
+.runner-stream-strip { order: 7; }
+.agent-feed-strip { order: 8; }
+.dev-orchestra-focus-section { order: 9; }
+.assist-menu-strip { order: 12; }
 .chat-panel {
   scroll-margin-top: 20px;
   padding: 22px 24px 20px;
@@ -214,46 +209,6 @@ body {
 }
 .chat-panel h2 {
   font-size: 19px;
-}
-.chat-callout {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  margin: 0;
-  padding: 5px 8px;
-  border-radius: 11px;
-  border: 1px solid rgba(167, 139, 250, 0.18);
-  background: linear-gradient(90deg, rgba(167, 139, 250, 0.1), rgba(125, 211, 252, 0.08));
-  color: #e9ddff;
-  box-shadow: 0 14px 32px rgba(7, 17, 31, 0.22);
-  max-width: 194px;
-  white-space: nowrap;
-}
-.chat-callout[hidden] { display: none; }
-.chat-callout.important {
-  border-color: rgba(125, 211, 252, 0.26);
-  background: linear-gradient(90deg, rgba(125, 211, 252, 0.12), rgba(167, 139, 250, 0.1));
-  box-shadow: 0 16px 34px rgba(7, 17, 31, 0.28), 0 0 22px rgba(125, 211, 252, 0.12);
-}
-.chat-callout strong {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-.chat-callout button {
-  cursor: pointer;
-  border: 1px solid rgba(192, 132, 252, 0.32);
-  background: rgba(192, 132, 252, 0.12);
-  color: #f3e8ff;
-  border-radius: 999px;
-  padding: 4px 8px;
-  font-size: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.chat-callout button:hover {
-  background: rgba(192, 132, 252, 0.18);
 }
 .eyebrow {
   text-transform: uppercase;
@@ -1476,11 +1431,6 @@ h1 {
   grid-template-columns: minmax(0, 1.25fr) minmax(190px, 0.85fr);
   align-items: end;
 }
-.hero-call-slot {
-  min-width: 0;
-  align-self: start;
-  justify-self: end;
-}
 .hero-compact-left {
   min-width: 0;
   max-width: 100%;
@@ -1583,7 +1533,7 @@ h1 {
 .status-chip.danger { color: var(--danger); border-color: rgba(248,113,113,0.22); background: rgba(248,113,113,0.07); }
 
 /* ===== Active Task Board ===== */
-.active-task-board { order: 3; }
+.active-task-board { order: 4; }
 .active-task-board .panel,
 .idea-board-panel {
   position: relative;
@@ -2034,7 +1984,7 @@ h1 {
   .stage-grid, .stage-scanline, .stage-glow, .stage-lines, .stage-blip {
     animation: none !important;
   }
-  .hero-card, .panel, .chat-callout { transition: none !important; }
+  .hero-card, .panel { transition: none !important; }
   .active-task-board .panel { animation: none; }
   .running-task-wrapper::before { animation: none; }
   .running-task-wrapper {
@@ -2078,19 +2028,19 @@ h1 {
 @media (max-width: 600px) {
   .shell { width: calc(100vw - 12px); padding-bottom: env(safe-area-inset-bottom, 60px); }
   .command-stage { order: 1; }
-  .project-registry-shell { order: 2; }
-  .active-task-board { order: 3; }
-  .chat-outer { order: 4; }
-  .agent-stream-log-strip { order: 4; }
+  .chat-outer { order: 2; }
+  .project-registry-shell { order: 3; }
+  .active-task-board { order: 4; }
   .handoff-result-strip { order: 5; }
-  .runner-stream-strip { order: 6; }
-  .agent-feed-strip { order: 7; }
-  .dev-orchestra-focus-section { order: 8; }
-  .ai-roster-shell { order: 9; }
-  .shell-activity-strip { order: 10; }
-  .assist-menu-strip { order: 11; }
-  .support-details-outer { order: 12; }
-  .footer { order: 13; }
+  .agent-stream-log-strip { order: 6; }
+  .runner-stream-strip { order: 7; }
+  .agent-feed-strip { order: 8; }
+  .dev-orchestra-focus-section { order: 9; }
+  .ai-roster-shell { order: 10; }
+  .shell-activity-strip { order: 11; }
+  .assist-menu-strip { order: 12; }
+  .support-details-outer { order: 13; }
+  .footer { order: 14; }
   .hero-compact-inner { flex-direction: column; gap: 10px; }
   .hero-meta { text-align: left; }
   .chat-quick-actions { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
@@ -2128,12 +2078,6 @@ h1 {
               <div class="title-copy">Dev Orchestra Command Center</div>
               <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
             </div>
-            <div class="hero-call-slot">
-              <div class="chat-callout" id="chat-callout" hidden aria-live="polite">
-                <strong>☂️ こさめが呼んでます</strong>
-                <button type="button" id="chat-callout-jump">チャットへ</button>
-              </div>
-            </div>
           </div>
           <div class="hero-bottom-row">
             <div class="status-chip-row">
@@ -2161,8 +2105,12 @@ h1 {
     <!-- Project Strip + DEV ORCHESTRA STATUS (order 2) -->
     <section class="project-registry-shell" id="project-registry-shell" style="margin-top:14px">
       <article class="panel project-strip-panel">
-        <h2>PROJECT STRIP</h2>
-        <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
+        <details class="support-details" id="project-strip-details" style="margin-top:0">
+          <summary>PROJECT STRIP</summary>
+          <div class="support-details-body">
+            <div id="project-strip" class="project-strip" aria-label="Project Strip"></div>
+          </div>
+        </details>
       </article>
     </section>
 
@@ -2542,6 +2490,7 @@ h1 {
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="activity" aria-selected="false">実行状況</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="notifications" aria-selected="false">通知設定</button>
               <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="diagnostics" aria-selected="false">診断情報</button>
+              <button type="button" class="chat-quick-btn chat-assist-tab" data-assist-tab="settings" aria-selected="false">設定</button>
             </div>
             <div class="chat-assist-panel">
               <div class="chat-assist-panel-head">
@@ -2816,8 +2765,8 @@ let chatStatusState = {
   llamaAudit: 'missing',
 };
 let notificationAudioContext = null;
-let notificationMode = 'off';
-let notificationEnabled = false;
+let notificationMode = 'clear';
+let notificationEnabled = true;
 let notificationUnlocked = false;
 let notificationLastAt = 0;
 let notificationLastAssistantCue = '';
@@ -2883,9 +2832,10 @@ function readNotificationEnabled() {
     if (value === 'true' || value === '1') return true;
     if (value === 'false' || value === '0') return false;
     const legacyMode = localStorage.getItem(NOTIFICATION_MODE_KEY);
-    return legacyMode === 'soft' || legacyMode === 'clear';
+    if (legacyMode === 'soft' || legacyMode === 'clear') return true;
+    return true; // v113.9.5: 初回デフォルトはON（明示的にOFFにした場合のみOFF）
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -2894,9 +2844,11 @@ function readNotificationMode() {
     const enabled = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
     if (enabled === 'false' || enabled === '0') return 'off';
     const mode = localStorage.getItem(NOTIFICATION_MODE_KEY);
-    return mode === 'clear' ? 'clear' : mode === 'soft' ? 'soft' : 'off';
+    if (mode === 'clear') return 'clear';
+    if (mode === 'soft') return 'soft';
+    return 'clear'; // v113.9.5: 初回デフォルトはClear
   } catch {
-    return 'off';
+    return 'clear';
   }
 }
 
@@ -3023,26 +2975,6 @@ function updateNotificationUI() {
   }
 }
 
-function showChatCallout(message) {
-  const banner = document.getElementById('chat-callout');
-  if (!banner) return;
-  banner.hidden = false;
-  if (message && typeof message === 'string') {
-    const titleNode = banner.querySelector('strong');
-    if (titleNode) {
-      titleNode.textContent = message;
-    }
-  }
-}
-
-function hideChatCallout() {
-  const banner = document.getElementById('chat-callout');
-  if (banner) {
-    banner.hidden = true;
-    banner.classList.remove('important');
-  }
-}
-
 function scrollToChatPanel() {
   const panel = document.getElementById('chat-panel');
   if (panel && typeof panel.scrollIntoView === 'function') {
@@ -3052,7 +2984,6 @@ function scrollToChatPanel() {
   if (input && typeof input.focus === 'function') {
     input.focus({ preventScroll: true });
   }
-  hideChatCallout();
 }
 
 function ensureNotificationAudioContext() {
@@ -3236,20 +3167,6 @@ function updateAttentionBanners(snapshot, { assistantCue = '' } = {}) {
   const questionSignature = feedQuestionSignature(snapshot.taskFeeder || {});
   const attentionNeeded = bridgeDetected || humanGateCount > 0 || !!questionSignature || !!assistantCue;
   const important = bridgeDetected || humanGateCount > 0;
-
-  if (!attentionNeeded) {
-    hideChatCallout();
-    return { bridgeDetected, humanGateCount, questionSignature, important, attentionNeeded };
-  }
-
-  const banner = document.getElementById('chat-callout');
-  if (important) {
-    showChatCallout('☂️ こさめが呼んでます');
-    if (banner) banner.classList.add('important');
-  } else {
-    showChatCallout('☂️ こさめが呼んでます');
-    if (banner) banner.classList.remove('important');
-  }
 
   return { bridgeDetected, humanGateCount, questionSignature, important, attentionNeeded };
 }
@@ -3576,9 +3493,14 @@ function buildAssistPanelModel(snapshot, tab) {
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'}`,
           `音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
-          `Call pill: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
           'ON/OFF と音色は別々に扱います。',
         ],
+      };
+    case 'settings':
+      return {
+        title: '設定',
+        subtitle: '各種設定はここにまとまります。',
+        lines: ['設定項目は今後追加予定です。'],
       };
     case 'diagnostics': {
       const latestWorkOrderResult = snapshot.latestWorkOrderResult || {};
@@ -3596,7 +3518,6 @@ function buildAssistPanelModel(snapshot, tab) {
           `Decision: ${latestWorkOrderDecision.decision_status || latestWorkOrderDecision.nextRecommendedAction || 'wait_for_result'} / next: ${latestWorkOrderDecision.nextRecommendedAction || 'wait_for_result'} / gate: ${latestWorkOrderDecision.human_gate_required ? 'yes' : 'no'}`,
           `通知音: ${notificationEnabled ? 'ON' : 'OFF'} / 音色: ${notificationMode === 'clear' ? 'Clear' : 'Soft'}`,
           `Sound unlocked: ${notificationUnlocked ? 'yes' : 'no'}`,
-          `Chat callout: ${document.getElementById('chat-callout') && !document.getElementById('chat-callout').hidden ? 'visible' : 'hidden'}`,
         ],
       };
     }
@@ -7068,7 +6989,6 @@ async function sendChatMessage(userText, confirmationContext) {
     chatHistory.push({ role: 'user', content: displayText || msgText });
     input.value = '';
   }
-  hideChatCallout();
   renderChatThread();
   if (sendBtn) sendBtn.textContent = '送信中...';
   statusEl.textContent = 'こさめ考え中…☂️';
@@ -7620,10 +7540,6 @@ if (workOrderResultPanel) {
   });
 }
 
-const chatCalloutButton = document.getElementById('chat-callout-jump');
-if (chatCalloutButton) {
-  chatCalloutButton.addEventListener('click', scrollToChatPanel);
-}
 
 // ===== Active Task Strip Auto-Collapse =====
 (function() {

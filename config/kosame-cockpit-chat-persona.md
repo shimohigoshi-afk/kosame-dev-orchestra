@@ -66,6 +66,17 @@
 - transcriberの変更
 - 外部AIに営業DX/transcriber内容を渡すこと
 
+## Fable 5 使用ポリシー
+- Fable 5 は常用禁止。通常は DeepSeek / Gemini / Llama / Claude で処理する。
+- 以下のいずれかに該当する場合のみ final_resort_lane として提案できる：
+  1. 2回以上修正しても同じバグが残る
+  2. JS / DOM / Playwright / 実ブラウザ確認が必要
+  3. Console UIが原因不明で反応しない
+  4. Enter / paste / click / SSE / ASL / event listener が壊れている
+  5. リリース前の最終根本原因調査
+- Fable 5 投入時は具体的な理由を明記すること。
+- 「最終兵器」扱い。安易な提案は禁止。
+
 ## 確認待ち要約フォーマット
 結果:（安全 / 要確認 / 危険 のいずれか）
 現在地:（何をしようとしているか一行で）

@@ -2438,6 +2438,7 @@ h1 {
               <div class="chat-input-with-btn">
                 <button type="button" id="chat-attach-btn" class="chat-attach-btn" title="ファイルを添付（複数可・クリックまたはドラッグ&amp;ドロップ）" aria-label="ファイルを添付"><svg width="16" height="20" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 8.5V18C20 22.418 16.418 26 12 26C7.582 26 4 22.418 4 18V6C4 3.239 6.239 1 9 1C11.761 1 14 3.239 14 6V17C14 18.657 12.657 20 11 20C9.343 20 8 18.657 8 17V7.5H10V17C10 17.552 10.448 18 11 18C11.552 18 12 17.552 12 17V6C12 4.343 10.657 3 9 3C7.343 3 6 4.343 6 6V18C6 21.314 8.686 24 12 24C15.314 24 18 21.314 18 18V8.5H20Z" fill="currentColor"/></svg><span id="chat-attach-count" class="chat-attach-count" aria-hidden="true"></span></button>
                 <textarea id="chat-input" placeholder="じゅんやさんの方針・依頼・相談を書いてください。Enterで送信、Shift+Enterで改行。URLを貼るとページを解析します。"></textarea>
+                <button type="button" class="chat-btn" id="chat-send" title="送信 (Enter)" aria-label="送信" style="padding:0 14px;font-size:13px;height:36px;align-self:flex-end;flex-shrink:0">送信</button>
                 <button type="button" class="chat-primary-btn" id="chat-proceed" title="この方針で進める" aria-label="この方針で進める"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4" multiple style="display:none" aria-hidden="true">
@@ -7208,20 +7209,33 @@ function _autoGrowChatInput() {
   const el = document.getElementById('chat-input');
   if (!el) return;
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 400) + 'px';
+}
+
+// ── Unified chat submit (v113.9.4) ────────────────────────────────────────
+var _chatSubmitLock = false;
+function submitChatFromInput(source) {
+  if (_chatSubmitLock) return;
+  var input = document.getElementById('chat-input');
+  if (!input) return;
+  var t = input.value.trim();
+  if (!t && !_chatAttachments.length) return;
+  if (typeof KOSAME_CHAT_DEBUG !== 'undefined' && KOSAME_CHAT_DEBUG) console.debug('submitChatFromInput called source=' + source + ' text=' + t.slice(0, 60));
+  _chatSubmitLock = true;
+  input.value = '';
+  _autoGrowChatInput();
+  submitPrioritizedChatInput(t);
+  setTimeout(function() { _chatSubmitLock = false; }, 500);
 }
 
 const chatProceedButton = document.getElementById('chat-proceed');
 if (chatProceedButton) {
-  chatProceedButton.addEventListener('click', () => {
-    const input = document.getElementById('chat-input');
-    if (!input) return;
-    const t = input.value.trim() || 'この方針で進めてください。';
-    input.value = '';
-    _autoGrowChatInput();
-    // Zero-confirm: POST /api/runner-dispatch 直接。確認なし・AI返答なし・即実行。
-    _zeroConfirmDispatch(t);
-  });
+  chatProceedButton.addEventListener('click', function() { submitChatFromInput('chat-proceed'); });
+}
+
+const chatSendBtn = document.getElementById('chat-send');
+if (chatSendBtn) {
+  chatSendBtn.addEventListener('click', function() { submitChatFromInput('chat-send'); });
 }
 
 const chatSendBtn = document.getElementById('chat-send');
@@ -7245,24 +7259,32 @@ if (chatInputNode) {
   var _chatComposing = false;
   chatInputNode.addEventListener('compositionstart', function() { _chatComposing = true; });
   chatInputNode.addEventListener('compositionend', function() { _chatComposing = false; });
-  chatInputNode.addEventListener('input', () => {
+  chatInputNode.addEventListener('input', function() {
     updateChatSummarizeButtonLabel();
     updateUrlDetectionBanner(chatInputNode.value);
     _autoGrowChatInput();
   });
   chatInputNode.addEventListener('paste', function() {
-    // Ensure textarea stays enabled and focused after paste
     setTimeout(function() {
       chatInputNode.focus();
       chatInputNode.disabled = false;
       _autoGrowChatInput();
     }, 10);
   });
+  // Primary: keydown Enter
   chatInputNode.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey && !_chatComposing) {
       e.preventDefault();
-      var t = chatInputNode.value.trim();
-      if (t) { chatInputNode.value = ''; submitPrioritizedChatInput(t); _autoGrowChatInput(); }
+      submitChatFromInput('keydown-Enter');
+    }
+  });
+  // Fallback: keyup Enter (catches edge cases where keydown fails)
+  chatInputNode.addEventListener('keyup', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !_chatComposing && chatInputNode.value.trim()) {
+      // only as fallback — if value wasn't cleared (keydown didn't fire or failed)
+      setTimeout(function() {
+        if (chatInputNode.value.trim()) submitChatFromInput('keyup-Enter');
+      }, 50);
     }
   });
   _autoGrowChatInput();

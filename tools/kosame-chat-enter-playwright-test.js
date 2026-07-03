@@ -5,8 +5,10 @@ const ROOT=path.resolve(__dirname,'..'),HTML=fs.readFileSync(path.join(ROOT,'pub
 let p=0,f=0;function t(n,fn){try{fn();console.log('  PASS: '+n);p++}catch(e){console.error('  FAIL: '+n+' — '+e.message);f++}}function a(c,m){if(!c)throw new Error(m||'assertion failed')}
 console.log('===== KOSAME Chat Enter/Paste Playwright Test =====');
 t('chat-input exists',()=>{a(HTML.includes('id="chat-input"'))});
-t('chat-proceed exists',()=>{a(HTML.includes('id="chat-proceed"'))});
+t('chat-send exists',()=>{a(HTML.match(/id="?chat-send"?/))});
 var m=HTML.match(/<script>([\s\S]*)<\/script>/),s=m?m[1]:'';
+t('submitChatFromInput exists',()=>{a(s.includes('function submitChatFromInput'))});
+t('_chatSubmitLock exists',()=>{a(s.includes('_chatSubmitLock'))});
 t('script tag exists',()=>{a(!!m)});
 t('composition guard',()=>{a(s.includes('_chatComposing'))});
 t('Enter + shiftKey check',()=>{a(s.includes("key === 'Enter'")&&s.includes('!e.shiftKey'))});

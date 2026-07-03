@@ -43,7 +43,12 @@ body {
   width: min(1560px, calc(100vw - 24px));
   margin: 0 auto;
   padding: 8px 0 36px;
+  min-height: 100vh;
 }
+/* KOSAME CHATをClaude.aiのように画面いっぱいに使い、入力欄を下部に固定する。
+   .shell はコンテンツ総和ぶん伸びる箱なので flex-grow の余白が生まれない。
+   ここは vh 基準で明示的な高さを与える。 */
+.chat-outer { display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 480px; flex: 0 0 auto; }
 .hero {
   display: grid;
   gap: 14px;
@@ -206,6 +211,10 @@ body {
   scroll-margin-top: 20px;
   padding: 22px 24px 20px;
   box-shadow: 0 10px 28px rgba(2,6,23,0.22);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .chat-panel h2 {
   font-size: 19px;
@@ -818,7 +827,7 @@ h1 {
 @media (max-width: 1100px) {
   .hero, .grid, .footer { grid-template-columns: 1fr; }
 }
-.chat-thread { min-height: 320px; max-height: 560px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 12px; }
+.chat-thread { flex: 1 1 auto; min-height: 160px; overflow-y: auto; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 12px; }
 .chat-msg-user { display: flex; justify-content: flex-end; }
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(0,188,212,0.16); border: none; border-radius: 18px; max-width: min(78%, 640px); padding: 11px 15px; }
@@ -1355,7 +1364,6 @@ h1 {
   }
   .chat-thread {
     min-height: 160px;
-    max-height: 280px;
   }
   .chat-assist-panel-body {
     max-height: 136px;
@@ -1897,7 +1905,7 @@ h1 {
 }
 
 /* Chat improvements */
-.chat-thread { min-height: 260px; max-height: 480px; overflow-y: auto; padding: 20px 22px; background: #1a1a2e; border-radius: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 20px; }
+.chat-thread { flex: 1 1 auto; min-height: 160px; overflow-y: auto; padding: 20px 22px; background: #1a1a2e; border-radius: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 20px; }
 .chat-empty-state { display: flex; flex-direction: column; gap: 8px; }
 .chat-empty-state .chat-bubble-ai {
   max-width: min(88%, 760px);
@@ -1932,8 +1940,8 @@ h1 {
 .chat-composer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
 .chat-composer-toolbar-left, .chat-composer-toolbar-right { display: flex; align-items: center; gap: 6px; }
 .chat-btn#chat-send { height: 34px; padding: 0 14px; font-size: 13px; }
-.chat-primary-btn { background: #ef4444; box-shadow: 0 6px 16px rgba(239,68,68,0.28); }
-.chat-primary-btn:hover { background: #f87171; }
+.chat-primary-btn { background: #00bcd4; box-shadow: 0 6px 16px rgba(0,188,212,0.28); }
+.chat-primary-btn:hover { background: #26cbe0; }
 
 .chat-tool-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; flex-shrink: 0; position: relative; }
 .chat-tool-btn:hover { background: rgba(0,188,212,0.14); color: var(--kosame-accent); }
@@ -1994,21 +2002,29 @@ h1 {
 .chat-url-banner { background: rgba(0,188,212,0.07); border: 1px solid rgba(0,188,212,0.2); border-radius: 7px; padding: 5px 10px; font-size: 12px; color: rgba(0,188,212,0.9); display: flex; align-items: center; gap: 5px; }
 .chat-url-banner[hidden] { display: none !important; }
 
-/* こさめアイコン — ☂️(通常) / ☔(考え中・雨アニメーション) */
-.kosame-brand-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
-.kosame-brand-emoji { display: inline-block; line-height: 1; transform-origin: 50% 12%; }
-.kosame-brand-icon.is-thinking .kosame-brand-emoji { animation: kosameUmbrellaSway 1.3s ease-in-out infinite; }
+/* こさめアイコン — SVG傘。☂️(通常・静止) / ☔(考え中・揺れ+雨だれ) — Claude.aiヒトデ相当 */
+.kosame-brand-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; color: #00bcd4; font-size: 20px; width: 1em; height: 1em; }
+.kosame-brand-svg { display: block; width: 1em; height: 1em; transform-origin: 50% 10%; overflow: visible; }
+.kosame-brand-icon.is-thinking .kosame-brand-svg { animation: kosameUmbrellaSway 1.3s ease-in-out infinite; }
 @keyframes kosameUmbrellaSway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
-.kosame-rain { position: absolute; top: 88%; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; pointer-events: none; }
-.kosame-rain span { width: 2px; height: 7px; border-radius: 1px; background: var(--kosame-accent); opacity: 0; }
+.kosame-rain { position: absolute; top: 62%; left: 50%; transform: translateX(-50%); display: flex; gap: 0.15em; pointer-events: none; }
+.kosame-rain span { width: 0.05em; height: 0.16em; min-width: 1.5px; border-radius: 1px; background: #00bcd4; opacity: 0; }
 .kosame-brand-icon.is-thinking .kosame-rain span { animation: kosameRainDrop 0.9s ease-in infinite; }
 .kosame-brand-icon.is-thinking .kosame-rain span:nth-child(1) { animation-delay: 0s; }
 .kosame-brand-icon.is-thinking .kosame-rain span:nth-child(2) { animation-delay: 0.18s; }
 .kosame-brand-icon.is-thinking .kosame-rain span:nth-child(3) { animation-delay: 0.36s; }
 @keyframes kosameRainDrop {
-  0% { opacity: 0; transform: translateY(-2px); }
+  0% { opacity: 0; transform: translateY(-0.05em); }
   25% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(11px); }
+  100% { opacity: 0; transform: translateY(0.5em); }
+}
+/* 大サイズ版 — 生成中に返答テキストより先に、チャット履歴中央へ大きく表示 (Claude.aiのヒトデ相当) */
+.kosame-brand-icon--lg { font-size: 64px; }
+.kosame-thinking-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 22px 0 26px; }
+.kosame-thinking-label { font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  .kosame-brand-icon.is-thinking .kosame-brand-svg { animation: none; }
+  .kosame-brand-icon.is-thinking .kosame-rain span { animation: none; opacity: 0; }
 }
 
 /* RUNNER進捗をチャット内にシステムメッセージとして表示 */
@@ -2057,7 +2073,6 @@ h1 {
   }
   .chat-thread {
     min-height: 160px;
-    max-height: 280px;
   }
   .chat-assist-panel-body {
     max-height: 136px;
@@ -2087,7 +2102,7 @@ h1 {
   .chat-sound-type-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .chat-sound-type-row::-webkit-scrollbar { display: none; }
   .chat-input-row { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 20; background: var(--bg); padding: 6px 0; }
-  .chat-thread { min-height: 180px; max-height: 260px; }
+  .chat-thread { min-height: 180px; }
   .chat-sound-details-body { padding-bottom: 8px; }
   .task-board-counts { gap: 8px; }
   .task-count-card { flex-basis: calc(50% - 4px); }
@@ -2455,16 +2470,12 @@ h1 {
         </div>
         <div id="chat-thread" class="chat-thread"></div>
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
-          <div class="chat-msg-ai">
-            <div class="chat-bubble-ai">
-              <div class="chat-bubble-header"><span class="chat-bubble-role">こさめ <span class="kosame-brand-icon" id="chat-typing-kosame-icon"><span class="kosame-brand-emoji">☂️</span><span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span></span></span></div>
-              <div class="typing-dots" aria-label="こさめが入力中...">
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-                <span class="typing-dot"></span>
-                <span class="typing-label">こさめが入力中...</span>
-              </div>
-            </div>
+          <div class="kosame-thinking-stage">
+            <span class="kosame-brand-icon kosame-brand-icon--lg" id="chat-typing-kosame-icon">
+              <svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 32 A26 26 0 0 1 58 32" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M6 32 Q10 38 14 32 Q18 38 22 32 Q26 38 30 32 Q34 38 38 32 Q42 38 46 32 Q50 38 54 32 Q56 34 58 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="54" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M32 54 q0 6 6 6 q4 0 4 -4" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><line x1="32" y1="4" x2="32" y2="12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+              <span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span>
+            </span>
+            <span class="kosame-thinking-label" aria-label="こさめが考え中...">こさめが考え中…</span>
           </div>
         </div>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
@@ -2531,7 +2542,7 @@ h1 {
     <!-- 補助メニュー (KOSAME CHAT直下) -->
     <section class="assist-menu-strip" id="assist-menu-strip" style="margin-top:14px">
       <article class="panel">
-        <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル" open>
+        <details class="chat-action-drawer chat-assist-shell" aria-label="アシストパネル">
           <summary class="chat-assist-shell-summary">補助メニュー</summary>
           <div class="chat-assist-shell-body">
             <div class="chat-quick-actions chat-assist-tabs" role="tablist" aria-label="相談タブ">
@@ -3254,15 +3265,15 @@ function maybeNotifyFromSnapshot(snapshot) {
   }
 }
 
-// こさめアイコン: ☂️(通常) / ☔(考え中・雨アニメーション)
-function _kosameIconHTML() {
-  return '<span class="kosame-brand-icon"><span class="kosame-brand-emoji">☂️</span><span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span></span>';
+// こさめアイコン(SVG傘): 通常時は静止、考え中は揺れ+雨だれ、完了で静止に戻る
+const KOSAME_UMBRELLA_SVG_INNER = '<path d="M6 32 A26 26 0 0 1 58 32" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M6 32 Q10 38 14 32 Q18 38 22 32 Q26 38 30 32 Q34 38 38 32 Q42 38 46 32 Q50 38 54 32 Q56 34 58 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="54" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M32 54 q0 6 6 6 q4 0 4 -4" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><line x1="32" y1="4" x2="32" y2="12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>';
+function _kosameIconHTML(size) {
+  const cls = size === 'lg' ? 'kosame-brand-icon kosame-brand-icon--lg' : 'kosame-brand-icon';
+  return '<span class="' + cls + '"><svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true">' + KOSAME_UMBRELLA_SVG_INNER + '</svg><span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span></span>';
 }
 function _setKosameIconThinking(iconEl, thinking) {
   if (!iconEl) return;
   iconEl.classList.toggle('is-thinking', !!thinking);
-  const emoji = iconEl.querySelector('.kosame-brand-emoji');
-  if (emoji) emoji.textContent = thinking ? '☔' : '☂️';
 }
 
 function showTypingIndicator() {

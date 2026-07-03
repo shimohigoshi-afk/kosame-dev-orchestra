@@ -1804,6 +1804,10 @@ h1 {
 /* ===== Typing indicator ===== */
 .chat-typing-indicator[hidden] { display: none; }
 .chat-typing-indicator { margin-bottom: 0; }
+/* ===== Runner elapsed timer (v113.9.7) ===== */
+.runner-elapsed-timer { font-family: monospace; font-size: 12.5px; color: #8899aa; margin-bottom: 6px; }
+.runner-elapsed-timer[hidden] { display: none; }
+.runner-elapsed-timer.is-done { color: #8899aa; }
 /* ===== Agent Stream Log ===== */
 .agent-stream-log-body {
   height: 200px;
@@ -2451,6 +2455,7 @@ h1 {
         <details class="support-details" id="agent-stream-log-details" style="margin-top:0">
           <summary>AGENT STREAM LOG</summary>
           <div class="support-details-body">
+            <div id="runner-elapsed-timer" class="runner-elapsed-timer" aria-live="polite" hidden></div>
             <div class="arc-rollcall" id="agent-roll-call"></div>
             <div class="agent-stream-log-body" id="agent-stream-log" aria-live="polite"></div>
           </div>
@@ -6613,11 +6618,12 @@ async function approveWorkOrderForCard(workOrder, statusNode, buttonNode) {
       try {
         const _woPayload = buildHandoffInboxPayload(latestSnapshot);
         if (_woPayload) {
+          startRunnerElapsedTimer();
           fetch('/api/runner-dispatch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(_woPayload),
-          }).catch(function() {});
+          }).catch(function() { stopRunnerElapsedTimer(); });
         }
       } catch (_) {}
     }
@@ -6854,12 +6860,48 @@ function detectExecTrigger(text) {
   return EXEC_TRIGGER_RE.test(String(text || '').trim());
 }
 
+// ── Runner elapsed timer (v113.9.7): 実行中... Xm Ys / 完了（Xm Ys） ─────────
+var _runnerTaskStartedAt = 0;
+var _runnerElapsedInterval = null;
+
+function _formatElapsedJa(ms) {
+  var totalSec = Math.max(0, Math.floor(ms / 1000));
+  var m = Math.floor(totalSec / 60);
+  var s = totalSec % 60;
+  return m > 0 ? (m + '分' + s + '秒') : (s + '秒');
+}
+
+function _renderRunnerElapsed(text, done) {
+  var el = document.getElementById('runner-elapsed-timer');
+  if (!el) return;
+  el.hidden = false;
+  el.classList.toggle('is-done', !!done);
+  el.textContent = text;
+}
+
+function startRunnerElapsedTimer() {
+  _runnerTaskStartedAt = Date.now();
+  if (_runnerElapsedInterval) clearInterval(_runnerElapsedInterval);
+  _renderRunnerElapsed('実行中... ' + _formatElapsedJa(0), false);
+  _runnerElapsedInterval = setInterval(function() {
+    _renderRunnerElapsed('実行中... ' + _formatElapsedJa(Date.now() - _runnerTaskStartedAt), false);
+  }, 1000);
+}
+
+function stopRunnerElapsedTimer() {
+  if (!_runnerTaskStartedAt) return;
+  if (_runnerElapsedInterval) { clearInterval(_runnerElapsedInterval); _runnerElapsedInterval = null; }
+  _renderRunnerElapsed('完了（' + _formatElapsedJa(Date.now() - _runnerTaskStartedAt) + '）', true);
+  _runnerTaskStartedAt = 0;
+}
+
 async function _zeroConfirmDispatch(text) {
   if (!text) return;
   const statusEl = document.getElementById('chat-status');
   const sendBtn = document.getElementById('chat-send');
   if (statusEl) statusEl.textContent = '🚀 Runner実行開始...';
   if (sendBtn) sendBtn.textContent = '実行中...';
+  startRunnerElapsedTimer();
   chatHistory.push({ role: 'user', content: text });
   renderChatThread();
   try {
@@ -6888,6 +6930,7 @@ async function _zeroConfirmDispatch(text) {
   } catch (e) {
     chatHistory.push({ role: 'assistant', content: '[ERROR] Runner接続失敗 — サーバーを確認してください' });
     if (statusEl) statusEl.textContent = 'エラー: Runner接続失敗';
+    stopRunnerElapsedTimer();
   } finally {
     hideTypingIndicator();
     renderChatThread();
@@ -7208,6 +7251,7 @@ async function sendChatMessage(userText, confirmationContext) {
     // 雑談・質問・状態確認はRunnerに流さない（実装依頼のみdispatch）
     if (userText && !shouldSkipRunnerDispatch(userText)) {
       try {
+        startRunnerElapsedTimer();
         const _sp = getSelectedProject(latestSnapshot || {});
         fetch('/api/runner-dispatch', {
           method: 'POST',
@@ -7220,7 +7264,7 @@ async function sendChatMessage(userText, confirmationContext) {
             executionMode: getChatMode(),
             target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
           }),
-        }).catch(function() {});
+        }).catch(function() { stopRunnerElapsedTimer(); });
       } catch (_) {}
     }
     chatStatusState.ai = 'connected';
@@ -8118,6 +8162,7 @@ function addChatSystemLog(agent, message) {
         window.addAgentStreamLog('RUNNER', doneText);
       }
       addChatSystemLog('RUNNER', doneText);
+      if (typeof stopRunnerElapsedTimer === 'function') stopRunnerElapsedTimer();
     } catch (_) {}
   });
   es.onerror = function() { /* reconnect automatically */ };

@@ -7236,20 +7236,10 @@ if (chatProceedButton) {
 const chatSendBtn = document.getElementById('chat-send');
 if (chatSendBtn) {
   chatSendBtn.addEventListener('click', function() { submitChatFromInput('chat-send'); });
-}
-
-const chatSendBtn = document.getElementById('chat-send');
-if (chatSendBtn) {
-  chatSendBtn.addEventListener('click', () => {
-    const t = document.getElementById('chat-input').value.trim();
-    submitPrioritizedChatInput(t);
-  });
-
-  chatSendBtn.addEventListener('keydown', (e) => {
+  chatSendBtn.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      const t = document.getElementById('chat-input').value.trim();
-      submitPrioritizedChatInput(t);
+      submitChatFromInput('chat-send-keydown');
     }
   });
 }

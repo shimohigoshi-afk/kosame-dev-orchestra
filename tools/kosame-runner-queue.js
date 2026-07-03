@@ -29,8 +29,8 @@ const EXECUTOR_DIR = path.join(ROOT, '.kosame-executor');
 let _progressCallback = null;
 function setProgressCallback(fn) { _progressCallback = fn; }
 function emitProgress(msg) {
-  if (_progressCallback) { try { _progressCallback(msg); return; } catch (_) {} }
-  emitProgress(`${msg}\n`);
+  if (_progressCallback) { try { _progressCallback(msg); return; } catch (_) { _progressCallback = null; } }
+  process.stdout.write(`[PROGRESS] ${msg}\n`);
 }
 
 const MAX_ATTEMPTS = 3;
@@ -994,38 +994,38 @@ function executeBlocked(ticket, runDir, lane) {
 
 function executorLaneRouter(ticket, runDir) {
   const lane = detectExecutorLane(ticket);
-  emitProgress(`lane 判定: ${lane.lane} (${(lane.reason || lane.filePath || '').slice(0, 60)})\n`);
+  emitProgress(`lane 判定: ${lane.lane} (${(lane.reason || lane.filePath || '').slice(0, 60)})`);
 
   switch (lane.lane) {
     case 'local_append':
-      emitProgress(`→ local_append 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_append 実行中: ${lane.filePath}`);
       return executeLocalAppend(ticket, runDir, lane);
     case 'local_replace':
-      emitProgress(`→ local_replace 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_replace 実行中: ${lane.filePath}`);
       return executeLocalReplace(ticket, runDir, lane);
     case 'local_create_file':
-      emitProgress(`→ local_create_file 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_create_file 実行中: ${lane.filePath}`);
       return executeLocalCreateFile(ticket, runDir, lane);
     case 'local_small_html_css_patch':
-      emitProgress(`→ local_html_patch 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_html_patch 実行中: ${lane.filePath}`);
       return executeLocalSmallPatch(ticket, runDir, lane);
     case 'local_overwrite':
-      emitProgress(`→ local_overwrite 実行中: ${lane.filePath}\n`);
+      emitProgress(`→ local_overwrite 実行中: ${lane.filePath}`);
       return executeLocalOverwrite(ticket, runDir, lane);
     case 'deepseek_patch_required':
-      emitProgress(`→ deepseek handoff 生成中...\n`);
+      emitProgress(`→ deepseek handoff 生成中...`);
       return executeDeepSeekHandoff(ticket, runDir, lane);
     case 'claude_code_sensitive':
-      emitProgress(`→ claude sensitive 実行中...\n`);
+      emitProgress(`→ claude sensitive 実行中...`);
       return executeClaudeSensitive(ticket, runDir, lane);
     case 'sensitive_internal_only':
-      emitProgress(`→ blocked (sensitive): ${lane.reason.slice(0, 60)}\n`);
+      emitProgress(`→ blocked (sensitive): ${lane.reason.slice(0, 60)}`);
       return executeBlocked(ticket, runDir, { reason: lane.reason, promptText: lane.promptText });
     case 'blocked_with_reason':
-      emitProgress(`→ blocked: ${lane.reason.slice(0, 60)}\n`);
+      emitProgress(`→ blocked: ${lane.reason.slice(0, 60)}`);
       return executeBlocked(ticket, runDir, lane);
     default:
-      emitProgress(`→ unknown lane: ${lane.lane}\n`);
+      emitProgress(`→ unknown lane: ${lane.lane}`);
       return { ok: false, exitCode: 1, error: `unknown lane: ${lane.lane}` };
   }
 }
@@ -1033,7 +1033,7 @@ function executorLaneRouter(ticket, runDir) {
 // ── Default executor ──────────────────────────────────────────────────────────
 
 function defaultExecutor(ticket, runDir) {
-  emitProgress(`作業開始: ${(ticket.title || ticket.id).slice(0, 60)}\n`);
+  emitProgress(`作業開始: ${(ticket.title || ticket.id).slice(0, 60)}`);
   // 1. Try lane router for all tickets
   const laneResult = executorLaneRouter(ticket, runDir);
 
@@ -1104,7 +1104,7 @@ function runTicket(ticket, attempt, opts) {
   }
 
     // 4. 実行
-  emitProgress(`実装中...\n`);
+  emitProgress(`実装中...`);
   let execRes;
   try {
     execRes = executor(ticket, runDir);
@@ -1124,7 +1124,7 @@ function runTicket(ticket, attempt, opts) {
     error: execRes.error || null,
     blockedReason: execRes.executorStatus === 'blocked_with_reason' ? execRes.error : undefined,
   };
-  emitProgress(`結果: ${status} exit=${result.exitCode}\n`);
+  emitProgress(`結果: ${status} exit=${result.exitCode}`);
   fs.writeFileSync(path.join(runDir, 'result.json'), JSON.stringify(result, null, 2) + '\n');
   return result;
 }

@@ -49,7 +49,8 @@ const REPO_MAIN_FILES_CONTEXT = [
   '- tools/kosame-runner-queue.js … Runner / タスクキュー / processTicket',
   '- tools/kosame-cockpit-chat-server.js … チャットサーバー / /api/chat / buildLocalReply',
   '以下の指示を受けた場合は上記ファイルのいずれかを対象と判断して即実行すること。',
-  '「どのファイルですか？」と逆質問しないこと。',
+  '「どのファイルですか？」「どのスクリプトですか？」と逆質問しないこと。',
+  'UI改善指示（AGENT STREAM LOG、RUNNERログ、ASL、PROGRESS、通知音、クリップボタン等）は public/kosame-live-cockpit.html を対象とすること。',
 ].join('\n');
 
 const WORK_ORDER_TARGETS = [
@@ -661,9 +662,7 @@ function resolveTargetFromSelection(input) {
 
 function resolveWorkOrderTarget(input, snapshotSummary) {
   const selectedTarget = resolveTargetFromSelection(input);
-  if (selectedTarget) {
-    return selectedTarget;
-  }
+  if (selectedTarget) return selectedTarget;
 
   const haystack = [
     normalizeContent(input.project),
@@ -672,9 +671,12 @@ function resolveWorkOrderTarget(input, snapshotSummary) {
   ].filter(Boolean).join(' ');
 
   for (const target of WORK_ORDER_TARGETS) {
-    if (target.hints.test(haystack)) {
-      return target;
-    }
+    if (target.hints.test(haystack)) return target;
+  }
+
+  // Auto-detect Console UI keywords → KOSAME Console target
+  if (/AGENT STREAM|ASL|RUNNERログ|PROGRESS|通知音|クリップ|Project Strip|Roadmap|Field Ops|Limit Break|Recovery|History|Next Action|chat-proceed|chat-sound|cockpit|コンソール|KOSAME Console|Dev Orchestra/i.test(haystack)) {
+    return WORK_ORDER_TARGETS[1]; // KOSAME Console
   }
 
   return null;
@@ -1210,7 +1212,7 @@ async function handleChatRequest(body) {
     const sessionId = normalized.sessionId || null;
     let augmentedMessage = message;
     // Inject repo main files context so GPT never asks "which file?"
-    if (/直して|書き換え|修正して|追加して|変えて|実装して|開いて|確認して|教えて|なに|何|どこ|AGENT STREAM|コンソール/i.test(message)) {
+    if (/直して|書き換え|修正して|追加して|変えて|実装して|開いて|確認して|教えて|なに|何|どこ|AGENT STREAM|コンソール|ASL|RUNNER|PROGRESS|通知音|クリップ|Project Strip|Roadmap|Field Ops|Limit Break|Recovery|History|Next Action|チャット|chat-proceed|chat-sound|cockpit/i.test(message)) {
       augmentedMessage += `\n\n${REPO_MAIN_FILES_CONTEXT}`;
     }
     const imageParts = [];

@@ -1865,6 +1865,16 @@ h1 {
 .asl-route   { color: #6e57d2; }
 .asl-dispatch { color: #8899aa; font-size: 0.85em; }
 .asl-progress { color: #8899aa; font-size: 0.9em; }
+/* ASL active animations (v113.9.3) */
+.asl-progress-active { opacity: 0.85; }
+.asl-progress-active .asl-msg::after { content: ''; display: inline-block; animation: aslDots 1.2s steps(4, end) infinite; vertical-align: middle; margin-left: 2px; }
+@keyframes aslDots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+.asl-running-active { border-left: 2px solid rgba(66,133,244,0.3); padding-left: 4px; animation: aslPulse 2s ease-in-out infinite; }
+@keyframes aslPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+/* ASL history vs live distinction */
+.asl-history { opacity: 0.6; font-style: italic; }
+.asl-live { border-left: 2px solid rgba(125,211,252,0.3); }
+@media (prefers-reduced-motion: reduce) { .asl-progress-active .asl-msg::after { animation: none; content: '...'; } .asl-running-active { animation: none; } }
 .asl-ts { color: #4a4a6a; font-size: 0.85em; }
 .asl-msg { color: #ddd; }
 /* Message-span color overrides (compound = higher specificity than .asl-msg) */
@@ -7425,38 +7435,96 @@ if (chatCalloutButton) {
     return d.toTimeString().slice(0, 8);
   }
 
-  function addAgentStreamLog(agent, message) {
+  // ── ASL sequential display queue (v113.9.3) ────────────────────────────
+  var _aslQueue = [];
+  var _aslTimer = null;
+  var _aslInterval = 100; // ms between entries
+  var _aslActiveRunning = null;
+  var _aslActiveProgress = null;
+
+  function _aslFlush() {
+    if (!_aslQueue.length) { _aslTimer = null; return; }
+    var item = _aslQueue.shift();
+    _aslRenderEntry(item.agent, item.message);
+    _aslTimer = setTimeout(_aslFlush, _aslQueue.length > 5 ? 50 : _aslInterval);
+  }
+
+  function _aslRenderEntry(agent, message) {
     var log = document.getElementById('agent-stream-log');
-    if (!log) return 0;
+    if (!log) return;
     var cls = ASL_AGENTS[agent] || 'asl-agent-KOSAME';
     var entry = document.createElement('div');
     entry.className = 'asl-entry';
-    // Color-code RUNNER logs by message pattern.
-    // Order matters: check ❌失敗 before generic ✅/[RUNNING] so a failure line
-    // never gets mislabeled. Class is applied to the message span too, otherwise
-    // .asl-msg's own color overrides the entry-level class.
+
     var msgCls = '';
-    if (message.includes('[PROGRESS]')) {
-      msgCls = 'asl-progress';     // [PROGRESS] → grey, smaller (de-emphasized noise)
-    } else if (message.includes('❌') || (message.includes('失敗') && !message.includes('未') ) || message.includes('FAIL') || message.includes('blocked')) {
-      msgCls = 'asl-done-fail';   // ❌失敗 → red
-    } else if (message.includes('✅') || ((message.includes('[DONE]') || message.includes('完了')) && !message.includes('未完了'))) {
-      msgCls = 'asl-done-ok';      // ✅完了 → water-blue (cyan)
-    } else if (message.includes('[START]') || message.includes('起動') || message.includes('開始')) {
-      msgCls = 'asl-start';        // [START] → green
-    } else if (message.includes('[RUNNING]') || message.includes('実装中') || message.includes('実行中')) {
-      msgCls = 'asl-running';      // [RUNNING] → blue
-    } else if (message.includes('[route]')) {
-      msgCls = 'asl-route';
-    } else if (message.includes('[dispatch]')) {
-      msgCls = 'asl-dispatch';
-    }
+    var isProgress = false, isRunning = false;
+    if (message.includes('[PROGRESS]')) { msgCls = 'asl-progress'; isProgress = true; }
+    else if (message.includes('❌') || (message.includes('失敗') && !message.includes('未')) || message.includes('FAIL') || message.includes('blocked')) { msgCls = 'asl-done-fail'; }
+    else if (message.includes('✅') || ((message.includes('[DONE]') || message.includes('完了')) && !message.includes('未完了'))) { msgCls = 'asl-done-ok'; }
+    else if (message.includes('[START]') || message.includes('起動') || message.includes('開始')) { msgCls = 'asl-start'; }
+    else if (message.includes('[RUNNING]') || message.includes('実装中') || message.includes('実行中')) { msgCls = 'asl-running'; isRunning = true; }
+    else if (message.includes('[route]')) { msgCls = 'asl-route'; }
+    else if (message.includes('[dispatch]')) { msgCls = 'asl-dispatch'; }
+
     if (msgCls) entry.classList.add(msgCls);
+
+    // Active states
+    if (isProgress) {
+      entry.classList.add('asl-progress-active');
+      if (_aslActiveProgress) _aslActiveProgress.classList.remove('asl-progress-active');
+      _aslActiveProgress = entry;
+    } else if (_aslActiveProgress && (msgCls === 'asl-done-ok' || msgCls === 'asl-done-fail' || msgCls === 'asl-start')) {
+      _aslActiveProgress.classList.remove('asl-progress-active');
+      _aslActiveProgress = null;
+    }
+    if (isRunning) {
+      entry.classList.add('asl-running-active');
+      if (_aslActiveRunning) _aslActiveRunning.classList.remove('asl-running-active');
+      _aslActiveRunning = entry;
+    } else if (_aslActiveRunning && (msgCls === 'asl-done-ok' || msgCls === 'asl-done-fail')) {
+      _aslActiveRunning.classList.remove('asl-running-active');
+      _aslActiveRunning = null;
+    }
+
     var ts = document.createElement('span');
     ts.className = 'asl-ts';
     ts.textContent = '[' + aslTs() + '] ';
     var agentSpan = document.createElement('span');
     agentSpan.className = cls;
+    agentSpan.textContent = (ASL_DISPLAY_NAMES[agent] || agent) + ': ';
+    var msgSpan = document.createElement('span');
+    msgSpan.className = msgCls ? ('asl-msg ' + msgCls) : 'asl-msg';
+    var cursor = document.createElement('span');
+    cursor.className = 'asl-cursor';
+    cursor.textContent = '|';
+    entry.appendChild(ts);
+    entry.appendChild(agentSpan);
+    entry.appendChild(msgSpan);
+    entry.appendChild(cursor);
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+
+    // Type animation
+    var chars = Array.from(message);
+    var i = 0;
+    function next() {
+      if (i >= chars.length) {
+        cursor.style.display = 'none';
+        return;
+      }
+      msgSpan.textContent += chars[i];
+      i++;
+      setTimeout(next, 15);
+    }
+    next();
+    return chars.length * 15;
+  }
+
+  function addAgentStreamLog(agent, message) {
+    _aslQueue.push({ agent: agent, message: message });
+    if (!_aslTimer) _aslFlush();
+    return _aslInterval;
+  }
     agentSpan.textContent = (ASL_DISPLAY_NAMES[agent] || agent) + ': ';
     var msgSpan = document.createElement('span');
     msgSpan.className = msgCls ? ('asl-msg ' + msgCls) : 'asl-msg';
@@ -7555,7 +7623,12 @@ if ('serviceWorker' in navigator) {
   es.addEventListener('done', function(e) {
     try {
       var d = JSON.parse(e.data);
-      var sym = d.exitCode === 0 ? '✅ 完了' : '❌ 失敗';
+      var sym;
+      if (d.status === 'deepseek_patch_required') sym = '🧩 DeepSeek作業票生成';
+      else if (d.status === 'blocked_with_reason') sym = '⛔ ブロック';
+      else if (d.status === 'completed') sym = '✅ 完了';
+      else if (d.exitCode === 0) sym = '✅ 完了';
+      else sym = '❌ 失敗';
       if (typeof window.addAgentStreamLog === 'function') {
         window.addAgentStreamLog('RUNNER', sym + ' — ' + (d.title || d.ticketId || ''));
       }

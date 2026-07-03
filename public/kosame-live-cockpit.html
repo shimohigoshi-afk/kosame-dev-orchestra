@@ -1853,6 +1853,24 @@ h1 {
 .asl-agent-Llama    { color: #6e57d2; font-weight: bold; }
 @keyframes asl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
 .asl-cursor { animation: asl-blink 1s step-end infinite; color: #666; }
+/* ── Agent Roll Call (v113.9.5): 上から順番に発言するアニメーション ── */
+.arc-rollcall { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; font-family:monospace; font-size:13px; line-height:1.6; }
+.arc-row { display:flex; align-items:baseline; gap:6px; opacity:0.3; transform:translateY(-2px); transition:opacity .35s ease, transform .35s ease; }
+.arc-row.arc-active, .arc-row.arc-done { opacity:1; transform:translateY(0); }
+.arc-row.arc-active { animation: arcPulse 1.1s ease-in-out infinite; }
+@keyframes arcPulse { 0%,100% { opacity:1; } 50% { opacity:0.72; } }
+.arc-name { font-weight:bold; white-space:nowrap; }
+.arc-status { display:inline-block; min-width:1.4em; }
+.arc-row.arc-active .arc-status::after { content:''; display:inline-block; animation: arcDots 1.2s steps(4,end) infinite; }
+@keyframes arcDots { 0% { content:''; } 25% { content:'.'; } 50% { content:'..'; } 75% { content:'...'; } }
+.arc-row.arc-done .arc-status { display:inline-block; animation: arcPop .3s ease; }
+@keyframes arcPop { 0% { transform:scale(0.4); opacity:0; } 60% { transform:scale(1.25); } 100% { transform:scale(1); opacity:1; } }
+.arc-msg { color:#ccc; }
+@media (prefers-reduced-motion: reduce) {
+  .arc-row.arc-active { animation:none; }
+  .arc-row.arc-active .arc-status::after { animation:none; content:'...'; }
+  .arc-row.arc-done .arc-status { animation:none; }
+}
 .typing-dots {
   display: flex;
   align-items: center;
@@ -2418,6 +2436,7 @@ h1 {
         <details class="support-details" id="agent-stream-log-details" style="margin-top:0">
           <summary>AGENT STREAM LOG</summary>
           <div class="support-details-body">
+            <div class="arc-rollcall" id="agent-roll-call"></div>
             <div class="agent-stream-log-body" id="agent-stream-log" aria-live="polite"></div>
           </div>
         </details>
@@ -7848,6 +7867,90 @@ if (workOrderResultPanel) {
 
   window.addAgentStreamLog = addAgentStreamLog;
   window.stopAslDemo = function() { window._aslDemoStop = true; };
+})();
+
+// ── Agent Roll Call (v113.9.5): 各AIが上から順番に発言するアニメーション ──
+(function() {
+  var ARC_AGENTS = [
+    { key: 'KOSAME',   emoji: '☂️💙', name: 'KOSAME',        color: '#00bcd4', msg: 'じゅんやさん、全体の流れを見ています。安心して進めてください。' },
+    { key: 'DIRECTOR', emoji: '☂️',   name: 'DIRECTOR',      color: '#00bcd4', msg: '作業票を分解します。担当・優先度・停止条件を確定しました。' },
+    { key: 'GPT',      emoji: '',    name: 'GPT',           color: '#10a37f', msg: '仕様確認。問題なし。実行します。' },
+    { key: 'Claude',   emoji: '🔍',   name: 'Claude(品質)',  color: '#D97757', msg: '実装とテストを丁寧に照合しています。見落としがないか確認中です。' },
+    { key: 'Gemini',   emoji: '❤️',   name: 'Gemini',        color: '#EA4335', msg: 'あれー!ここに仕様差分がありますね!API・ログ一気に確認しました!' },
+    { key: 'Grok',     emoji: '',    name: 'Grok',          color: '#8899aa', msg: 'この仕様、少し曖昧な部分がありますね。突破口を探しています…' },
+    { key: 'DeepSeek', emoji: '',    name: 'DeepSeek',      color: '#4D6BFE', msg: '土木作業を完了しました。判断は不要です。' },
+    { key: 'Llama',    emoji: '',    name: 'Llama',         color: '#6e57d2', msg: '監査完了。過剰実装1件、危険操作0件。軽微なリスクあり。以上。' },
+  ];
+
+  var _arcRows = [];
+  var _arcTimer = null;
+  var _arcStop = false;
+
+  function _arcBuild() {
+    var host = document.getElementById('agent-roll-call');
+    if (!host) return;
+    host.innerHTML = '';
+    _arcRows = ARC_AGENTS.map(function(a) {
+      var row = document.createElement('div');
+      row.className = 'arc-row';
+      var name = document.createElement('span');
+      name.className = 'arc-name';
+      name.style.color = a.color;
+      name.textContent = (a.emoji ? a.emoji + ' ' : '') + a.name;
+      var status = document.createElement('span');
+      status.className = 'arc-status';
+      var msg = document.createElement('span');
+      msg.className = 'arc-msg';
+      row.appendChild(name);
+      row.appendChild(status);
+      row.appendChild(msg);
+      host.appendChild(row);
+      return { row: row, status: status, msg: msg, data: a };
+    });
+  }
+
+  function _arcStep(i) {
+    if (_arcStop) return;
+    if (i >= _arcRows.length) {
+      _arcTimer = setTimeout(function() { if (!_arcStop) { _arcBuild(); _arcStep(0); } }, 6000);
+      return;
+    }
+    var r = _arcRows[i];
+    r.row.classList.add('arc-active');
+    setTimeout(function() {
+      if (_arcStop) return;
+      r.row.classList.remove('arc-active');
+      r.row.classList.add('arc-done');
+      r.status.textContent = '✅';
+      r.msg.textContent = r.data.msg;
+    }, 1400);
+    _arcTimer = setTimeout(function() { _arcStep(i + 1); }, 2000);
+  }
+
+  function startAgentRollCall() {
+    _arcStop = false;
+    _arcBuild();
+    _arcStep(0);
+  }
+
+  function stopAgentRollCall() {
+    _arcStop = true;
+    if (_arcTimer) { clearTimeout(_arcTimer); _arcTimer = null; }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(startAgentRollCall, 1500); });
+  } else {
+    setTimeout(startAgentRollCall, 1500);
+  }
+
+  window.startAgentRollCall = startAgentRollCall;
+  window.stopAgentRollCall = stopAgentRollCall;
+  var _origStopAslDemo = window.stopAslDemo;
+  window.stopAslDemo = function() {
+    if (typeof _origStopAslDemo === 'function') _origStopAslDemo();
+    stopAgentRollCall();
+  };
 })();
 
 if ('serviceWorker' in navigator) {

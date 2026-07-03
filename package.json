@@ -1017,6 +1017,8 @@
     "ops:aftercare": "npm run smoke:cleanup && npm run ops:validate",
     "roadmap:canon": "node tools/kosame-roadmap-manager.js",
     "roadmap:work-orders": "node tools/kosame-roadmap-work-order-planner.js",
+    "ops:chat-enter-playwright-test": "node tools/kosame-chat-enter-playwright-test.js",
+    "smoke:chat-enter-fallback": "node smoke/v113-chat-enter-playwright-fallback-smoke.js",
     "ops:log": "node tools/kosame-operational-logger.js",
     "ops:recovery": "node tools/kosame-recovery-keeper.js",
     "ops:bootstrap": "node tools/kosame-phase2-bootstrap.js",

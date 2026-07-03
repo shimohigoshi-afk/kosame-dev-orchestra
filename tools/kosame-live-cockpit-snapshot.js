@@ -11,7 +11,16 @@ const DEV_ORCHESTRA_REPO = ROOT;
 const SALES_DX_REPO = '/home/lavie/repos/kosame-sales-dx';
 const DEFAULT_PROJECT_REGISTRY_PATH = path.join(ROOT, 'config', 'kosame-projects.json');
 const DEFAULT_ACTIVITY_LOG_PATH = path.join(os.homedir(), '.kosame', 'activity-events.jsonl');
-const PACKAGE = require('../package.json');
+const PACKAGE_JSON_PATH = path.join(ROOT, 'package.json');
+// require() caches package.json for the lifetime of the process, so a version bump
+// on disk would never show up until restart. Read it fresh from disk every time instead.
+function readPackageFresh() {
+  try {
+    return JSON.parse(fs.readFileSync(PACKAGE_JSON_PATH, 'utf8'));
+  } catch {
+    return {};
+  }
+}
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
 const { buildApiCostSnapshot } = require('./kosame-cost-meter');
 const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
@@ -327,7 +336,7 @@ function runGitReadOnly(argv) {
 }
 
 function resolveVersionContext() {
-  const packageVersion = String(PACKAGE.version || 'unknown');
+  const packageVersion = String(readPackageFresh().version || 'unknown');
   const headCommit = runGitReadOnly(['rev-parse', '--short', 'HEAD']) || 'unknown';
   return {
     packageVersion,
@@ -524,6 +533,14 @@ function buildRepoState({ name, label, cwd }) {
   };
 }
 
+function readRepoPackageVersion(repoPath) {
+  try {
+    return String(JSON.parse(fs.readFileSync(path.join(repoPath, 'package.json'), 'utf8')).version || '');
+  } catch {
+    return '';
+  }
+}
+
 function buildProjectState(project, options = {}) {
   const repoPath = project.repoPath || '';
   const repoState = buildRepoState({
@@ -542,6 +559,7 @@ function buildProjectState(project, options = {}) {
     repoPath: repoPath || project.repoPath || '',
     statusTitle: project.statusTitle || `${project.shortName || project.name || project.id} STATUS`,
     availability: missingRepo ? 'not_found' : 'available',
+    productVersion: missingRepo ? '' : readRepoPackageVersion(repoPath),
     warnings,
     warningCount: warnings.length,
     dirty: repoState.dirty,
@@ -754,7 +772,7 @@ function collectLiveCockpitSnapshot(options = {}) {
       : '引き続き passive monitoring を続けてください。この Console からの書き込みはできません。';
 
   return {
-    version: PACKAGE.version,
+    version: readPackageFresh().version,
     generatedAt,
     generatedAtLocal: formatLocalTimestamp(generatedAt),
     currentMission: '☂️ KOSAME Console',

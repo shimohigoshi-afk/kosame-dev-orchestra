@@ -1932,8 +1932,8 @@ h1 {
 .chat-composer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
 .chat-composer-toolbar-left, .chat-composer-toolbar-right { display: flex; align-items: center; gap: 6px; }
 .chat-btn#chat-send { height: 34px; padding: 0 14px; font-size: 13px; }
-.chat-primary-btn { background: var(--kosame-accent); box-shadow: 0 6px 16px rgba(0,188,212,0.28); }
-.chat-primary-btn:hover { background: #26d4ea; }
+.chat-primary-btn { background: #ef4444; box-shadow: 0 6px 16px rgba(239,68,68,0.28); }
+.chat-primary-btn:hover { background: #f87171; }
 
 .chat-tool-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; flex-shrink: 0; position: relative; }
 .chat-tool-btn:hover { background: rgba(0,188,212,0.14); color: var(--kosame-accent); }
@@ -6884,6 +6884,75 @@ async function _zeroConfirmDispatch(text) {
   }
 }
 
+// ── 雑談・質問・状態確認 ローカル即答 (v113.9.6) ─────────────────────────────
+// 判定ルール:
+//   実装依頼（〜してください・〜を作って・〜を書いて・〜を修正して）→ Runner起動（従来通り）
+//   雑談・質問・状態確認（〜は？・教えて・何日？・現在地・営業DX状況・おはよう等）→ こさめが直接回答、Runnerは起動しない
+var MODE_EMOJI = { complete: '🟢', safe: '🔵', boost: '🔴', verify: '🟣', fable_manual: '⚫' };
+function formatModeLabel(mode) {
+  var m = CHAT_MODES[mode] ? mode : 'complete';
+  return (MODE_EMOJI[m] || '') + (CHAT_MODES[m] ? CHAT_MODES[m].label : '完走モード');
+}
+
+var IMPLEMENTATION_REQUEST_RE = /(?:して(?:ください|下さい|欲しい|ほしい)|を作って|を書いて|を修正して|を直して|を実装して|を追加して|を変更して|を削除して|を消して|実装して|作成して)[。！\s]*$/;
+// Note: no trailing \b — JS regex treats Japanese characters as non-word chars, so \b never
+// matches right after them (e.g. /おはよう\b/ silently fails to match "おはよう").
+var CASUAL_GREETING_RE = /^(?:おはよう|こんにちは|こんばんは|やあ|お疲れ様|お疲れ|ただいま|hello\b|hi\b)/i;
+var CASUAL_DATE_RE = /今日.*(?:何日|何曜日)|日付は|today.*date/i;
+var CASUAL_STATUS_RE = /現在地|現在の実行モード|実行モードは|営業dx|sales.?dx|状況は|状況を|進捗は|バージョンは/i;
+var CASUAL_QUESTION_RE = /(?:は[?？]|教えて|何日|何曜日|調子)/;
+
+function shouldSkipRunnerDispatch(text) {
+  var t = String(text || '').trim();
+  if (!t) return false;
+  if (IMPLEMENTATION_REQUEST_RE.test(t)) return false;
+  if (CASUAL_GREETING_RE.test(t) || CASUAL_DATE_RE.test(t) || CASUAL_STATUS_RE.test(t) || CASUAL_QUESTION_RE.test(t)) return true;
+  if (/[?？]\s*$/.test(t)) return true;
+  return false;
+}
+
+function formatTodayJa() {
+  var d = new Date();
+  var parts = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short',
+  }).formatToParts(d).reduce(function(acc, p) { acc[p.type] = p.value; return acc; }, {});
+  return (parts.year || d.getFullYear()) + '年' + (parts.month || (d.getMonth() + 1)) + '月' + (parts.day || d.getDate()) + '日(' + (parts.weekday || '') + ')';
+}
+
+// 特定の雑談・状態確認パターンはネットワーク往復なし（GPTのハルシネーション回避）で即答する。
+// それ以外の雑談・質問は通常どおり /api/chat を呼ぶが、Runnerへの自動dispatchだけ止める。
+async function buildCasualFastReply(text) {
+  var t = String(text || '').trim();
+  if (IMPLEMENTATION_REQUEST_RE.test(t)) return null;
+
+  if (CASUAL_STATUS_RE.test(t)) {
+    try { await loadSnapshot(); } catch (_) {}
+    var snap = latestSnapshot || {};
+    var modeLabel = formatModeLabel(getChatMode());
+    var ver = snap.currentVersion ? ('v' + snap.currentVersion) : 'v?';
+    var commit = snap.headCommit ? ('commit ' + snap.headCommit) : '';
+    var salesDxVer = (snap.salesDx && snap.salesDx.productVersion) ? ('v' + snap.salesDx.productVersion) : '';
+    var lines = [];
+    lines.push('現在の実行モードは' + modeLabel + 'ですっ☂️');
+    lines.push('現在地はKOSAME Console / ' + ver + (commit ? ' / ' + commit : '') + ' ですっ。');
+    if (salesDxVer) lines.push('営業DXは' + salesDxVer + 'まで完成していますっ。');
+    return { reply: lines.join('\n') };
+  }
+
+  if (CASUAL_DATE_RE.test(t)) {
+    return { reply: '今日は' + formatTodayJa() + 'ですっ☂️' };
+  }
+
+  if (CASUAL_GREETING_RE.test(t)) {
+    var greet = /こんばんは/.test(t) ? 'こんばんはっ☂️ 今日もお疲れさまですっ。'
+      : /こんにちは/.test(t) ? 'こんにちはっ☂️ 順調に進んでいますっ。'
+      : 'おはようございますっ☂️ 今日もよろしくお願いしますっ。';
+    return { reply: greet };
+  }
+
+  return null;
+}
+
 function detectWorkOrderRequest(text) {
   const rawText = String(text || '').trim();
   if (!rawText) return false;
@@ -7031,6 +7100,22 @@ async function sendChatMessage(userText, confirmationContext) {
   const input = document.getElementById('chat-input');
   const statusEl = document.getElementById('chat-status');
 
+  // 雑談・質問・状態確認はローカルで即答してRunnerには流さない
+  if (userText && !confirmationContext && !_chatAttachments.length) {
+    const _fast = await buildCasualFastReply(userText);
+    if (_fast) {
+      chatHistory.push({ role: 'user', content: userText });
+      if (input) input.value = '';
+      renderChatThread();
+      chatHistory.push({ role: 'assistant', content: _fast.reply });
+      renderChatThread();
+      if (statusEl) statusEl.textContent = 'こさめ応答を表示しました（ローカル回答）';
+      const thread = document.getElementById('chat-thread');
+      if (thread) thread.scrollTop = thread.scrollHeight;
+      return;
+    }
+  }
+
   // Synthesize message text when files attached without explicit text
   const msgText = (userText || '').trim() || (_chatAttachments.length ? '添付ファイルを解析してください。' : '');
 
@@ -7109,7 +7194,8 @@ async function sendChatMessage(userText, confirmationContext) {
     maybeNotifyFromAssistant(reply);
     statusEl.textContent = data.suggested_action ? `次の一手: ${data.suggested_action}` : 'こさめ応答を表示しました';
     // Auto-dispatch chat message to Runner Queue Lite (fire-and-forget)
-    if (userText) {
+    // 雑談・質問・状態確認はRunnerに流さない（実装依頼のみdispatch）
+    if (userText && !shouldSkipRunnerDispatch(userText)) {
       try {
         const _sp = getSelectedProject(latestSnapshot || {});
         fetch('/api/runner-dispatch', {
@@ -7960,7 +8046,10 @@ if ('serviceWorker' in navigator) {
 // ── RUNNER進捗をKOSAME CHATスレッド内にシステムメッセージとして表示 ─────────
 // (Claude.aiのthinkingトレース風。AGENT STREAM LOGパネルはそのまま維持しつつミラー表示)
 function _condenseRunnerLogText(message) {
-  var m = String(message || '');
+  var m = String(message || '').trim();
+  // Some callers (e.g. the SSE 'done' handler) already pre-format with a leading
+  // status emoji. Strip it before re-classifying so we never prefix twice (✅ ✅ …).
+  m = m.replace(/^(?:✅|❌|🔄|🚀|🧭|📨|💬|🧩|⛔)\s*/, '');
   var body = m.replace(/^\[(START|RUNNING|PROGRESS|DONE|ERROR)\]\s*/, '');
   if (m.indexOf('[PROGRESS]') !== -1) return '🔄 ' + body;
   if (m.indexOf('❌') !== -1 || /失敗|FAIL|blocked/i.test(m)) return '❌ ' + body;

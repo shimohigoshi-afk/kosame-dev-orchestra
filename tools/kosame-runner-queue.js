@@ -227,7 +227,7 @@ function detectExecutorLane(ticket) {
     return { lane: 'local_small_html_css_patch', filePath, newContent: headingVal, patchType: 'heading', promptText };
   }
 
-  // ── Local replace (require explicit 置換/replace keyword) ──
+  // ── Local replace (require explicit 置換/replace keyword with の separator) ──
   if (/(置換|replace|書き換え)/i.test(promptText)) {
     const replaceRe = /(public\/[^\s,。、"]+?)\s*の\s*(.+?)\s*を\s*(.+?)\s*(?:に(?:置換|replace|書き換え)|$)/i;
     const replaceMatch = promptText.match(replaceRe);
@@ -235,6 +235,20 @@ function detectExecutorLane(ticket) {
       const fp = replaceMatch[1].trim();
       if (isAllowedFilePath(fp)) {
         return { lane: 'local_replace', filePath: fp, oldText: replaceMatch[2].trim(), newText: replaceMatch[3].trim(), promptText };
+      }
+    }
+  }
+
+  // ── Local overwrite (full file content overwrite) ──
+  // Pattern: <file>を<newcontent>に書き換えて / 置き換えて
+  if (/(書き換えて?|置き換えて?|上書き)/i.test(promptText) && filePath && isAllowedFilePath(filePath)) {
+    const overwriteRe = /(public\/[^\s,。、"]+?)\s*を\s*(.+?)\s*に(?:書き換えて?|置き換えて?|変えて?)/i;
+    const overwriteMatch = promptText.match(overwriteRe);
+    if (overwriteMatch) {
+      const fp = overwriteMatch[1].trim();
+      const newContent = overwriteMatch[2].trim();
+      if (isAllowedFilePath(fp) && newContent) {
+        return { lane: 'local_overwrite', filePath: fp, newContent, promptText };
       }
     }
   }
@@ -679,6 +693,39 @@ function executeLocalSmallPatch(ticket, runDir, lane) {
   return { ok, exitCode: ok ? 0 : 1, error };
 }
 
+function executeLocalOverwrite(ticket, runDir, lane) {
+  const targetRepo = ticket.target_repo && fs.existsSync(ticket.target_repo) ? ticket.target_repo : ROOT;
+  const absPath = path.resolve(targetRepo, lane.filePath);
+  const logLines = [`# Lane Executor: local_overwrite`, `ticket_id: ${ticket.id}`, `target_file: ${lane.filePath}`, `new_content: ${lane.newContent}`, ''];
+  let ok = false;
+  let error = null;
+
+  try {
+    fs.mkdirSync(path.dirname(absPath), { recursive: true });
+    const beforeHash = fs.existsSync(absPath) ? fileHash(absPath) : null;
+    fs.writeFileSync(absPath, lane.newContent, 'utf8');
+    const afterHash = fileHash(absPath);
+    const diff = gitDiffForFile(targetRepo, lane.filePath);
+    logLines.push(`before_hash: ${beforeHash || 'none (new)'}`, `after_hash: ${afterHash}`);
+    if (diff) logLines.push('', '## git diff', '```diff', diff, '```');
+    if (afterHash) {
+      logLines.push('## result: success');
+      ok = true;
+    } else {
+      logLines.push('## result: write_failed');
+      error = 'file not found after write';
+    }
+  } catch (e) {
+    error = e.message;
+    logLines.push(`## result: error`, `error: ${error}`);
+  }
+
+  fs.writeFileSync(path.join(runDir, 'output.md'), logLines.join('\n'));
+  fs.writeFileSync(path.join(runDir, 'verify.log'), [`executor: local_overwrite`, `ok: ${ok}`, error ? `error: ${error}` : ''].filter(Boolean).join('\n'));
+  writeLatestStatus('local_overwrite', ok ? 'success' : 'failed', ticket, path.join(runDir, 'output.md'), null, error || null);
+  return { ok, exitCode: ok ? 0 : 1, error };
+}
+
 // ── Executor dir helpers (v113.3.114) ────────────────────────────────────────
 
 function writeLatestStatus(lane, status, ticket, outputPath, deepseekPath, reason) {
@@ -947,6 +994,9 @@ function executorLaneRouter(ticket, runDir) {
     case 'local_small_html_css_patch':
       emitProgress(`→ local_html_patch 実行中: ${lane.filePath}\n`);
       return executeLocalSmallPatch(ticket, runDir, lane);
+    case 'local_overwrite':
+      emitProgress(`→ local_overwrite 実行中: ${lane.filePath}\n`);
+      return executeLocalOverwrite(ticket, runDir, lane);
     case 'deepseek_patch_required':
       emitProgress(`→ deepseek handoff 生成中...\n`);
       return executeDeepSeekHandoff(ticket, runDir, lane);

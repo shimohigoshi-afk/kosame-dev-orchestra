@@ -1,6 +1,6 @@
 {
   "name": "kosame-dev-orchestra",
-  "version": "113.9.1",
+  "version": "113.9.2",
   "private": true,
   "scripts": {
     "activity:run": "node tools/kosame-shell-agent-activity-runner.js",
@@ -1002,6 +1002,7 @@
     "smoke:v113-3-129": "node smoke/v113-3-129-rc-freeze-smoke.js",
     "smoke:v113-3-130": "node smoke/v113-3-130-handoff-pack-smoke.js",
     "smoke:v113-9-1": "node smoke/v113-9-1-console-ui-target-inference-smoke.js",
+    "smoke:v113-9-2": "node smoke/v113-9-2-asl-visibility-and-deepseek-handoff-ux-smoke.js",
     "smoke:v113-4-0-thru-7-2": "node smoke/v113-4-0-thru-7-2-consolidated-smoke.js",
     "smoke:v113-8-0": "node smoke/v113-8-0-full-self-test-smoke.js",
     "smoke:v113-9-0": "node smoke/v113-9-0-sales-dx-api-smoke.js",
@@ -1019,7 +1020,7 @@
     "ops:bootstrap": "node tools/kosame-phase2-bootstrap.js",
     "smoke:cleanup": "node tools/kosame-smoke-cleanup.js",
     "verify:legacy-before-v113-3-94-preserve": "npm run smoke:v113-3-94 && npm run smoke:complete-run-os && npm run smoke:v113-3-51 && npm run smoke:v113-3-50 && npm run smoke:v113-3-49 && npm run smoke:cloud-run-launch-pack-max && npm run smoke:v113-3-48 && npm run smoke:v113-3-47 && npm run smoke:v113-3-45 && npm run smoke:v113-3-40 && npm run smoke:v113-3-39 && npm run smoke:v113-3-38 && npm run smoke:v113-3-37 && npm run smoke:v113-3-36 && npm run smoke:v113-3-35 && npm run smoke:v113-3-34 && npm run smoke:v113-3-33 && npm run smoke:v113-3-11 && npm run smoke:v113-3-10 && npm run smoke:v113-3-9 && npm run smoke:v113-3-8 && npm run smoke:v113-3-7 && npm run smoke:v113-3-6 && npm run smoke:v113-3-5 && npm run smoke:v113-3-4 && npm run smoke:v113-3-3 && npm run smoke:v113-3-1 && npm run smoke:v113-3-1:handoff-result-collapse && npm run smoke:v113-3-0 && npm run smoke:v113-2-0 && npm run smoke:v113-1-2 && npm run smoke:v113-1-1 && npm run smoke:v113-1-0 && npm run smoke:v113-0-10 && npm run smoke:v113-0-9 && npm run smoke:v113-0-8 && npm run smoke:v113-0-7 && npm run smoke:v113-0-6 && npm run smoke:v113-0-4 && npm run smoke:v113-0-0 && npm run smoke:v110-84-33 && npm run smoke:v110-84-32 && npm run smoke:v110-84-31 && npm run smoke:v110-84-30 && npm run smoke:v110-84-29 && npm run smoke:v110-84-28 && npm run smoke:v110-84-27 && npm run smoke:v110-84-26 && npm run smoke:v110-84-25 && npm run smoke:v110-84-24 && npm run smoke:v110-84-23 && npm run smoke:v110-84-22 && npm run smoke:v110-84-21 && npm run smoke:v110-84-20 && npm run smoke:v110-84-19 && npm run smoke:v110-84-18 && npm run smoke:v110-84-17 && npm run smoke:v110-84-16 && npm run smoke:v110-84-8 && npm run smoke:v110-84-7 && npm run smoke:kill-switch && npm run smoke:no-user-work && npm run smoke:bug-verification && npm run smoke:chat-queue-connection && npm run smoke:chat-gpt-connection && npm run smoke:chat-gpt-debug && npm run smoke:chat-gpt-call-debug && npm run smoke:file-url-attach && npm run smoke:file-attach-gpt-fix && npm run smoke:youtube-gemini-chat-history && npm run smoke:gemini-model-update && npm run smoke:gemini-model-update-23 && npm run smoke:gemini-timeout-key-check && npm run smoke:youtube-text-request && npm run smoke:api-key-wizard && npm run smoke:spec-to-tasks && npm run smoke:v113-3-28 && npm run smoke:v113-3-29 && npm run smoke:spec-handoff-base64 && npm run smoke:multi-file-attach",
-    "verify:dev-os": "npm run smoke:v113-9-1 && npm run smoke:cleanup && npm run roadmap:canon && python3 -m json.tool package.json >/tmp/kosame-package-json-v113-9-1.json && npm run smoke:v113-3-126 && npm run smoke:v113-3-127 && npm run smoke:v113-3-128 && npm run smoke:v113-3-129 && npm run smoke:v113-3-130"
+    "verify:dev-os": "npm run smoke:v113-9-1 && npm run smoke:v113-9-2 && npm run smoke:cleanup && npm run roadmap:canon && python3 -m json.tool package.json >/tmp/kosame-package-json-v113-9-2.json && npm run smoke:v113-3-126 && npm run smoke:v113-3-127 && npm run smoke:v113-3-128 && npm run smoke:v113-3-129 && npm run smoke:v113-3-130"
   },
   "dependencies": {
     "googleapis": "^173.0.0"

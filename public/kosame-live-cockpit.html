@@ -210,6 +210,9 @@ body {
 .chat-panel {
   scroll-margin-top: 20px;
 }
+.chat-panel h2 {
+  font-size: 19px;
+}
 .chat-callout {
   display: inline-flex;
   align-items: center;
@@ -863,9 +866,9 @@ h1 {
 .chat-msg-ai { display: flex; justify-content: flex-start; }
 .chat-bubble-user { background: rgba(125,211,252,0.16); border: 1px solid rgba(125,211,252,0.28); border-radius: 16px 16px 6px 16px; max-width: min(82%, 720px); padding: 10px 12px; }
 .chat-bubble-ai { background: rgba(216, 234, 255, 0.08); border: 1px solid rgba(216, 234, 255, 0.16); border-radius: 16px 16px 16px 6px; max-width: min(84%, 760px); padding: 10px 12px; }
-.chat-bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #dbeafe; }
+.chat-bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #dbeafe; }
 .chat-bubble-header .chat-bubble-role { color: var(--accent); }
-.chat-bubble-text { font-size: 15px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--text); }
+.chat-bubble-text { font-size: 17px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: var(--text); }
 .chat-bubble-user .chat-bubble-header { justify-content: flex-end; color: #cffafe; }
 .chat-bubble-user .chat-bubble-role { color: #e0f2fe; }
 .chat-bubble-ai .chat-bubble-role { color: #7dd3fc; }
@@ -1233,8 +1236,8 @@ h1 {
   border-radius: 11px;
   color: var(--text);
   padding: 8px 10px;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 16px;
+  line-height: 1.5;
   font-family: inherit;
   resize: vertical;
   min-height: 200px;
@@ -1847,13 +1850,13 @@ h1 {
   overflow-y: auto;
   background: rgba(0,0,0,0.22);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   font-family: monospace;
-  font-size: 12px;
-  line-height: 1.65;
+  font-size: 14px;
+  line-height: 1.6;
   scroll-behavior: smooth;
 }
-.asl-entry { margin: 0; padding: 1px 0; white-space: pre-wrap; word-break: break-all; }
+.asl-entry { margin: 0; padding: 2px 0; white-space: pre-wrap; word-break: break-all; }
 /* ASL message styles */
 .asl-start   { color: #10a37f; font-weight: bold; }
 .asl-running { color: #4285F4; }
@@ -1861,8 +1864,8 @@ h1 {
 .asl-done-fail { color: #f44336; font-weight: bold; }
 .asl-route   { color: #6e57d2; }
 .asl-dispatch { color: #8899aa; font-size: 0.85em; }
-.asl-progress { color: #8899aa; font-size: 0.85em; }
-.asl-ts { color: #4a4a6a; }
+.asl-progress { color: #8899aa; font-size: 0.9em; }
+.asl-ts { color: #4a4a6a; font-size: 0.85em; }
 .asl-msg { color: #ddd; }
 /* Message-span color overrides (compound = higher specificity than .asl-msg) */
 .asl-msg.asl-start     { color: #10a37f; font-weight: bold; }
@@ -1925,7 +1928,7 @@ h1 {
 .chat-empty-state .chat-bubble-ai:first-child { background: rgba(125,211,252,0.11); }
 .chat-empty-state .chat-bubble-ai:nth-child(2) { background: rgba(216, 234, 255, 0.08); }
 .chat-empty-state .chat-bubble-ai:nth-child(3) { background: rgba(125,211,252,0.09); }
-.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 200px; max-height: 400px; outline: none; }
+.chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 16px; font-family: inherit; resize: vertical; min-height: 200px; max-height: 400px; outline: none; }
 .chat-btn#chat-send { background: rgba(125,211,252,0.12); border-color: rgba(125,211,252,0.3); font-weight: 700; }
 .chat-btn#chat-send:hover { background: rgba(125,211,252,0.2); }
 

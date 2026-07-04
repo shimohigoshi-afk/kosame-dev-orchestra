@@ -59,6 +59,9 @@ test-results/
 logs/
 .kosame-logs/
 .kosame-state/
+# Explicitly called out: personal persona files must never be committed,
+# even if .kosame-state/ ignore rule above ever changes.
+.kosame-state/kosame-persona*.md
 
 # Chat session history (user conversation data, never commit)
 .kosame-sessions/

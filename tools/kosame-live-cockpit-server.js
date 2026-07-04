@@ -14,6 +14,7 @@ const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot')
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
 const { handleChatRequest } = require('./kosame-cockpit-chat-server');
+const { classifyIntent } = require('./kosame-chat-intent-classifier');
 const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order-approval-store');
 const { readLatestWorkOrderHandoff, recordWorkOrderHandoff, HANDOFF_LOG_PATH_ENV } = require('./kosame-work-order-handoff-store');
 const { readLatestWorkOrderResult, recordWorkOrderResult, RESULT_LOG_PATH_ENV } = require('./kosame-work-order-result-store');
@@ -681,6 +682,17 @@ function createLiveCockpitServer(options = {}) {
           const title = String(parsed.title || promptText || 'KOSAME Chat Dispatch').slice(0, 80);
           const targetRepo = String(parsed.target_repo || '').trim() || ROOT;
           const requestedRoute = String(parsed.route || '').trim();
+
+          // 雑談・相槌がRunner Queueに乗らないよう、dispatch直前にサーバー側でも
+          // 意図分類する(クライアント側のshouldSkipRunnerDispatchが唯一のゲート
+          // にならないようにする多重防御)。task以外はdispatchしない。
+          const intent = classifyIntent(promptText);
+          if (intent !== 'task') {
+            process.stderr.write(`[runner-dispatch] skipped (intent=${intent}): ${title}\n`);
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ ok: false, skipped: true, reason: intent, error: `intent=${intent} のためdispatchしませんでした。` }));
+            return;
+          }
 
           _emitRunnerSSE('log', {
             ts: new Date().toISOString(), agent: 'RUNNER',

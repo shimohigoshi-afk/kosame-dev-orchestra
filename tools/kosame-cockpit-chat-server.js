@@ -13,6 +13,9 @@ const { classifyPrompt } = require('./kosame-prompt-classifier');
 const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 const { saveHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
 const { callKosameGPT } = require('./kosame-chat-gpt');
+const { classifyIntent } = require('./kosame-chat-intent-classifier');
+const { callChatLLMChain } = require('./kosame-chat-llm-router');
+const { appendChatHistory } = require('./kosame-chat-history');
 const { appendPipelineStageEvent, formatPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 // Trigger Gemini key check at server startup (non-blocking)
 require('./kosame-gemini');
@@ -1110,6 +1113,63 @@ async function handleChatRequest(body) {
     return {
       ok: false,
       error: 'message が長すぎます。',
+      created_at: requestAt,
+    };
+  }
+
+  // ── 雑談/タスク/曖昧の意図分類 (v113.10.0) ────────────────────────────────
+  // 「眠いよ！」「む」等の雑談・相槌がzero-confirm dispatch → Runner Queue →
+  // DeepSeekハンドオフに乗らないよう、メッセージ受信直後に分類する。
+  // task のみ以降の完全なパイプライン(buildLocalReply→GPT→work_order等)に
+  // 進む。casual は既存route:task light難易度チェーンでLLM応答のみ返し、
+  // ambiguous はdispatchせず確認だけ返す(どちらもRunnerには一切触れない)。
+  const chatIntent = classifyIntent(message);
+
+  if (chatIntent === 'ambiguous') {
+    const confirmReply = 'これはタスクとして実行しますか？実装をご希望の場合は、対象ファイルや「〜してください」等、具体的な指示で送り直してくださいっ☂️';
+    try {
+      appendChatHistory({ role: 'user', content: message });
+      appendChatHistory({ role: 'assistant', content: confirmReply });
+    } catch (_) { /* history is best-effort */ }
+    return {
+      ok: true,
+      reply: confirmReply,
+      intent: 'ambiguous',
+      created_at: requestAt,
+    };
+  }
+
+  if (chatIntent === 'casual') {
+    let llmResult = null;
+    try {
+      llmResult = await callChatLLMChain(message, {});
+    } catch (err) {
+      process.stderr.write(`[chat-llm-router] ERROR: ${err && err.message ? err.message : String(err)}\n`);
+    }
+    let casualReply;
+    let modelUsed = null;
+    if (llmResult && llmResult.ok && llmResult.reply) {
+      casualReply = llmResult.reply;
+      modelUsed = llmResult.modelUsed;
+    } else {
+      const localCasual = buildLocalReply({
+        message,
+        project,
+        context: context.slice(0, MAX_CONTEXT_LENGTH),
+        contextSummary: contextSummary.slice(0, MAX_CONTEXT_LENGTH),
+      }, contextSummary);
+      const baseReply = (localCasual && localCasual.reply) ? localCasual.reply : 'ご依頼を受け取りましたっ☂️';
+      casualReply = `${baseReply}\n\n（ローカル回答（全API接続失敗））`;
+    }
+    try {
+      appendChatHistory({ role: 'user', content: message });
+      appendChatHistory({ role: 'assistant', content: casualReply });
+    } catch (_) { /* history is best-effort */ }
+    return {
+      ok: true,
+      reply: casualReply,
+      intent: 'casual',
+      modelUsed,
       created_at: requestAt,
     };
   }

@@ -2034,19 +2034,9 @@ h1 {
 }
 /* 大サイズ版 — 生成中に返答テキストより先に、チャット履歴中央へ大きく表示 (Claude.aiのヒトデ相当) */
 .kosame-brand-icon--lg { font-size: 88px; }
-/* 待機中も常時表示する小さい傘（Claude.aiのヒトデ相当・入力欄左下） */
-.kosame-idle-icon-slot { width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
-.kosame-idle-icon { font-size: 22px; flex: 0 0 auto; }
-/* 考え中0〜3秒・10秒以降: 左下の傘に控えめな雨粒だけ(揺れなし) */
-.kosame-idle-icon.is-raining .kosame-rain-drop { animation: kosameRainDropSubtle 1.3s ease-in infinite; }
-.kosame-idle-icon.is-raining .kosame-rain-drop:nth-child(1) { animation-delay: 0s; }
-.kosame-idle-icon.is-raining .kosame-rain-drop:nth-child(2) { animation-delay: 0.26s; }
-.kosame-idle-icon.is-raining .kosame-rain-drop:nth-child(3) { animation-delay: 0.52s; }
-@keyframes kosameRainDropSubtle {
-  0% { opacity: 0; transform: translateY(-0.35em); }
-  45% { opacity: 0.55; }
-  100% { opacity: 0; transform: translateY(0.7em); }
-}
+/* 入力欄コンテナの外・左下に独立して配置する傘（Claude.aiのヒトデと同じ位置） */
+.chat-composer-outer-row { display: flex; align-items: flex-end; gap: 10px; }
+.kosame-idle-icon { font-size: 24px; flex: 0 0 auto; margin-bottom: 9px; }
 /* 考え中3〜10秒: 中央の大きい傘をフェードイン/アウト */
 .chat-typing-indicator { transition: opacity 0.6s ease; opacity: 0; }
 .chat-typing-indicator.is-visible { opacity: 1; }
@@ -2061,7 +2051,6 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .kosame-brand-icon.is-thinking .kosame-brand-svg { animation: none; }
   .kosame-brand-icon.is-thinking .kosame-rain-drop { animation: none; opacity: 0; }
-  .kosame-idle-icon.is-raining .kosame-rain-drop { animation: none; opacity: 0; }
   .chat-typing-indicator { transition: none; }
 }
 
@@ -2518,6 +2507,8 @@ h1 {
         </div>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
           <div class="chat-primary-row">
+            <div class="chat-composer-outer-row">
+              <span class="kosame-brand-icon kosame-idle-icon" id="chat-idle-kosame-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"><span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span></span>
             <div class="chat-input-wrapper" id="chat-input-wrapper">
               <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
               <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
@@ -2525,7 +2516,6 @@ h1 {
                 <textarea id="chat-input" placeholder="メッセージを入力…"></textarea>
                 <div class="chat-composer-toolbar">
                   <div class="chat-composer-toolbar-left">
-                    <span class="kosame-idle-icon-slot" aria-hidden="true"><span class="kosame-brand-icon kosame-idle-icon" id="chat-idle-kosame-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"><span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span></span></span>
                     <div class="chat-plus-menu-wrap">
                       <button type="button" id="chat-attach-btn" class="chat-tool-btn" title="添付（ファイル・画像・音声）" aria-label="添付" aria-haspopup="true" aria-expanded="false">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -2568,6 +2558,7 @@ h1 {
                 </div>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4,.mp3,.wav,.m4a,.ogg,.webm" multiple style="display:none" aria-hidden="true">
+            </div>
             </div>
           </div>
         </div>
@@ -3316,10 +3307,8 @@ function _setKosameIconThinking(iconEl, thinking) {
 }
 
 // 傘アニメーションの役割分担:
-//   0〜3秒   : 左下の傘に控えめな雨粒アニメーション
-//   3〜10秒  : 中央に大きい傘＋雨アニメーションをフェードイン
-//   10秒以降 : 中央をフェードアウト（左下の傘の雨だけ継続）
-//   完了後   : 中央は消えたまま・左下の傘は静止に戻る
+//   左下の傘（入力欄の外・常時表示）: 待機中は静止、考え中はsway+雨粒、完了後は静止に戻る
+//   中央の大きい傘: 3秒後にフェードイン、10秒後にフェードアウト（sway+雨粒つき）
 var _typingTimers = [];
 function _clearTypingTimers() {
   _typingTimers.forEach(function(id) { clearTimeout(id); });
@@ -3333,12 +3322,12 @@ function showTypingIndicator() {
   const idleIcon = document.getElementById('chat-idle-kosame-icon');
   const centerIcon = document.getElementById('chat-typing-kosame-icon');
 
-  // 0秒: 左下の傘に控えめな雨粒アニメーションを開始
-  if (idleIcon) idleIcon.classList.add('is-raining');
+  // 考え中: 左下の傘は即座にsway+雨粒アニメーション開始
+  _setKosameIconThinking(idleIcon, true);
   el.hidden = true;
   el.classList.remove('is-visible');
 
-  // 3秒: 中央に大きい傘＋雨アニメーションをフェードイン
+  // 3秒後: 中央に大きい傘＋雨アニメーションをフェードイン
   _typingTimers.push(setTimeout(function() {
     el.hidden = false;
     void el.offsetWidth; // reflow to ensure the opacity transition runs
@@ -3346,7 +3335,7 @@ function showTypingIndicator() {
     _setKosameIconThinking(centerIcon, true);
   }, 3000));
 
-  // 10秒: 中央をフェードアウト（左下の傘の雨は継続）
+  // 10秒後: 中央をフェードアウト（左下の傘のsway+雨は継続）
   _typingTimers.push(setTimeout(function() {
     el.classList.remove('is-visible');
     _setKosameIconThinking(centerIcon, false);
@@ -3363,8 +3352,7 @@ function hideTypingIndicator() {
   const el = document.getElementById('chat-typing-indicator');
   if (el) { el.hidden = true; el.classList.remove('is-visible'); }
   _setKosameIconThinking(document.getElementById('chat-typing-kosame-icon'), false);
-  const idleIcon = document.getElementById('chat-idle-kosame-icon');
-  if (idleIcon) idleIcon.classList.remove('is-raining');
+  _setKosameIconThinking(document.getElementById('chat-idle-kosame-icon'), false);
   setChatBusyState('thinking', false);
 }
 

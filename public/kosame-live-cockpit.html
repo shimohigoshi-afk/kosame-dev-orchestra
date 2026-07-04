@@ -2127,7 +2127,7 @@ h1 {
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
-      <linearGradient id="kosameGoldGradient" gradientUnits="userSpaceOnUse" x1="8" y1="4" x2="56" y2="64">
+      <linearGradient id="kosameGoldGradient" gradientUnits="userSpaceOnUse" x1="8" y1="2" x2="92" y2="100">
         <stop offset="0%" stop-color="#C9A84C"/>
         <stop offset="100%" stop-color="#E8C97A"/>
       </linearGradient>
@@ -2495,7 +2495,7 @@ h1 {
         <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" aria-label="こさめが考え中です" hidden>
           <div class="kosame-thinking-stage">
             <span class="kosame-brand-icon kosame-brand-icon--lg" id="chat-typing-kosame-icon">
-              <svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true"><line x1="32" y1="3" x2="32" y2="11" stroke="url(#kosameGoldGradient)" stroke-width="2" stroke-linecap="round"/><path d="M6 32 A26 26 0 0 1 58 32" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M6 32 Q11.5 40 17 32 Q24.5 41 32 32 Q39.5 41 47 32 Q52.5 40 58 32" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="48" stroke="url(#kosameGoldGradient)" stroke-width="2" stroke-linecap="round"/><path d="M32 48 A8 8 0 1 0 32 64" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <svg class="kosame-brand-svg" viewBox="0 0 100 100" aria-hidden="true"><line x1="50" y1="2" x2="50" y2="13" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M8 50 A42 42 0 0 1 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M8 50 Q18.5 64 29 50 Q39.5 65 50 50 Q60.5 65 71 50 Q81.5 64 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="50" y1="50" x2="50" y2="75" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M50 75 A12.5 12.5 0 1 0 50 100" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
               <span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span>
             </span>
           </div>
@@ -3288,11 +3288,11 @@ function maybeNotifyFromSnapshot(snapshot) {
 }
 
 // こさめアイコン(KOSAMEロゴ準拠SVG傘): 通常時は金の傘のみ静止、考え中は雨だれ+微揺れ、完了で静止に戻る
-const KOSAME_UMBRELLA_SVG_INNER = '<line x1="32" y1="3" x2="32" y2="11" stroke="url(#kosameGoldGradient)" stroke-width="2" stroke-linecap="round"/><path d="M6 32 A26 26 0 0 1 58 32" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M6 32 Q11.5 40 17 32 Q24.5 41 32 32 Q39.5 41 47 32 Q52.5 40 58 32" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="48" stroke="url(#kosameGoldGradient)" stroke-width="2" stroke-linecap="round"/><path d="M32 48 A8 8 0 1 0 32 64" stroke="url(#kosameGoldGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>';
+const KOSAME_UMBRELLA_SVG_INNER = '<line x1="50" y1="2" x2="50" y2="13" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M8 50 A42 42 0 0 1 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M8 50 Q18.5 64 29 50 Q39.5 65 50 50 Q60.5 65 71 50 Q81.5 64 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="50" y1="50" x2="50" y2="75" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M50 75 A12.5 12.5 0 1 0 50 100" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/>';
 const KOSAME_RAINDROP_SVG = '<svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg>';
 function _kosameIconHTML(size) {
   const cls = size === 'lg' ? 'kosame-brand-icon kosame-brand-icon--lg' : 'kosame-brand-icon';
-  return '<span class="' + cls + '"><svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true">' + KOSAME_UMBRELLA_SVG_INNER + '</svg><span class="kosame-rain" aria-hidden="true">' + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + '</span></span>';
+  return '<span class="' + cls + '"><svg class="kosame-brand-svg" viewBox="0 0 100 100" aria-hidden="true">' + KOSAME_UMBRELLA_SVG_INNER + '</svg><span class="kosame-rain" aria-hidden="true">' + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + '</span></span>';
 }
 function _setKosameIconThinking(iconEl, thinking) {
   if (!iconEl) return;

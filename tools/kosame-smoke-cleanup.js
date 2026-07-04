@@ -14,12 +14,25 @@ const BAD_MARKERS = [
   'HELLO WORLD KOSAME WORKS', 'KOSAME RC', 'v113 smoke marker', 'append marker', 'browser marker',
 ];
 
+// Real product/preview pages that live under public/ but are NOT smoke-test litter.
+// This script must never touch, reset, or delete them — only public/test.html is
+// the canonical smoke-test scratch file. Add new pages here as they're created.
+const PROTECTED_FILES = [
+  'kosame-welcome.html',
+  'kosame-logo-test.html',
+];
+
 const testHtmlPath = path.join(ROOT, 'public', 'test.html');
-// kosame-welcome.html is a real product page, not smoke-test litter — this script
-// must never touch it. Assert it survives untouched (excluded by design).
-const welcomeHtmlPath = path.join(ROOT, 'public', 'kosame-welcome.html');
-const welcomeExistedBefore = fs.existsSync(welcomeHtmlPath);
-const welcomeContentBefore = welcomeExistedBefore ? fs.readFileSync(welcomeHtmlPath, 'utf8') : null;
+const protectedSnapshots = PROTECTED_FILES.map((name) => {
+  const filePath = path.join(ROOT, 'public', name);
+  const existedBefore = fs.existsSync(filePath);
+  return {
+    name,
+    filePath,
+    existedBefore,
+    contentBefore: existedBefore ? fs.readFileSync(filePath, 'utf8') : null,
+  };
+});
 
 let ok = true;
 
@@ -56,20 +69,22 @@ try {
   console.error('⚠️ git diff check failed: ' + e.message);
 }
 
-// kosame-welcome.html exclusion check
-if (welcomeExistedBefore) {
-  const welcomeContentAfter = fs.existsSync(welcomeHtmlPath) ? fs.readFileSync(welcomeHtmlPath, 'utf8') : null;
-  if (welcomeContentAfter === null) {
-    console.error('❌ FAIL: public/kosame-welcome.html was removed — smoke:cleanup must not touch it');
+// Protected product/preview pages exclusion check
+for (const snap of protectedSnapshots) {
+  if (!snap.existedBefore) {
+    console.log('ℹ️ public/' + snap.name + ' not present — nothing to preserve');
+    continue;
+  }
+  const contentAfter = fs.existsSync(snap.filePath) ? fs.readFileSync(snap.filePath, 'utf8') : null;
+  if (contentAfter === null) {
+    console.error('❌ FAIL: public/' + snap.name + ' was removed — smoke:cleanup must not touch it');
     ok = false;
-  } else if (welcomeContentAfter !== welcomeContentBefore) {
-    console.error('❌ FAIL: public/kosame-welcome.html was modified — smoke:cleanup must not touch it');
+  } else if (contentAfter !== snap.contentBefore) {
+    console.error('❌ FAIL: public/' + snap.name + ' was modified — smoke:cleanup must not touch it');
     ok = false;
   } else {
-    console.log('✅ public/kosame-welcome.html preserved (excluded from smoke cleanup)');
+    console.log('✅ public/' + snap.name + ' preserved (excluded from smoke cleanup)');
   }
-} else {
-  console.log('ℹ️ public/kosame-welcome.html not present — nothing to preserve');
 }
 
 console.log(ok ? '✅ smoke cleanup PASSED' : '❌ smoke cleanup FAILED');

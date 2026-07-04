@@ -2034,6 +2034,8 @@ h1 {
 }
 /* 大サイズ版 — 生成中に返答テキストより先に、チャット履歴中央へ大きく表示 (Claude.aiのヒトデ相当) */
 .kosame-brand-icon--lg { font-size: 88px; }
+/* 待機中も常時表示する小さい傘（Claude.aiのヒトデ相当・入力欄左下） */
+.kosame-idle-icon { font-size: 24px; flex: 0 0 auto; }
 .kosame-thinking-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 22px 0 26px; }
 .kosame-thinking-label { font-size: 13px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
@@ -2043,7 +2045,7 @@ h1 {
 
 /* RUNNER進捗をチャット内にシステムメッセージとして表示 */
 .chat-msg-system { display: flex; justify-content: flex-start; padding-left: 2px; }
-.chat-system-line { font-size: 11.5px; color: var(--muted); background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; display: inline-flex; align-items: center; gap: 6px; max-width: 92%; }
+.chat-system-line { font-size: 10px; color: rgba(139, 163, 199, 0.55); background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; display: inline-flex; align-items: center; gap: 6px; max-width: 92%; line-height: 1.5; white-space: normal; word-break: break-all; overflow-wrap: anywhere; min-width: 0; }
 
 /* API Cost section */
 .api-cost-outer { order: 7; }
@@ -2509,6 +2511,7 @@ h1 {
                 <textarea id="chat-input" placeholder="メッセージを入力…"></textarea>
                 <div class="chat-composer-toolbar">
                   <div class="chat-composer-toolbar-left">
+                    <span class="kosame-brand-icon kosame-idle-icon" id="chat-idle-kosame-icon" aria-hidden="true"><svg class="kosame-brand-svg" viewBox="0 0 100 100" aria-hidden="true"><line x1="50" y1="2" x2="50" y2="13" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M8 50 A42 42 0 0 1 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M8 50 Q18.5 50 18.5 63 Q18.5 50 29 50 Q39.5 50 39.5 63 Q39.5 50 50 50 Q60.5 50 60.5 63 Q60.5 50 71 50 Q81.5 50 81.5 63 Q81.5 50 92 50" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="50" y1="50" x2="50" y2="84" stroke="url(#kosameGoldGradient)" stroke-width="3" stroke-linecap="round"/><path d="M50 84 A9 9 0 0 1 32 84" stroke="url(#kosameGoldGradient)" stroke-width="3" fill="none" stroke-linecap="round"/></svg></span>
                     <div class="chat-plus-menu-wrap">
                       <button type="button" id="chat-attach-btn" class="chat-tool-btn" title="添付（ファイル・画像・音声）" aria-label="添付" aria-haspopup="true" aria-expanded="false">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -2555,7 +2558,7 @@ h1 {
           </div>
         </div>
         <div class="chat-command-secondary">
-          <div class="chat-btn chat-command-ghost" id="chat-summarize">dispatch待ちを要約</div>
+          <div class="chat-btn chat-command-ghost" id="chat-summarize">⏹ キャンセル</div>
           <div class="small" style="color:var(--muted)">Enterで送信 / Shift+Enterで改行</div>
         </div>
         <span aria-hidden="true" style="display:none">この内容で進める</span>
@@ -7181,7 +7184,7 @@ function updateChatSummarizeButtonLabel() {
   if (!sumBtn) return;
   const text = getChatInputText();
   if (detectWorkOrderRequest(text)) {
-    sumBtn.textContent = 'dispatch待ちを要約';
+    sumBtn.textContent = '⏹ キャンセル';
     sumBtn.title = '作業票要求は通常の送信で処理します';
     return;
   }
@@ -7190,7 +7193,7 @@ function updateChatSummarizeButtonLabel() {
     sumBtn.textContent = '結果を判定へ渡す';
     sumBtn.title = '貼り戻し結果を Result Decision Panel に保存します';
   } else {
-    sumBtn.textContent = 'dispatch待ちを要約';
+    sumBtn.textContent = '⏹ キャンセル';
     sumBtn.title = 'dispatch待ちの状態を要約します';
   }
 }

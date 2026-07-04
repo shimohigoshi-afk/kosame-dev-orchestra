@@ -20,6 +20,7 @@ const BAD_MARKERS = [
 const PROTECTED_FILES = [
   'kosame-welcome.html',
   'kosame-logo-test.html',
+  'kosame-test-2026.html',
 ];
 
 const testHtmlPath = path.join(ROOT, 'public', 'test.html');

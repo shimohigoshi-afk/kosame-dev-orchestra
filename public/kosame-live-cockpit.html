@@ -1913,13 +1913,10 @@ h1 {
 .chat-empty-state { display: flex; flex-direction: column; gap: 8px; }
 .chat-empty-state .chat-bubble-ai {
   max-width: min(88%, 760px);
-  background: rgba(15, 23, 42, 0.72);
-  border-color: rgba(125,211,252,0.24);
-  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
-.chat-empty-state .chat-bubble-ai:first-child { background: rgba(125,211,252,0.11); }
-.chat-empty-state .chat-bubble-ai:nth-child(2) { background: rgba(216, 234, 255, 0.08); }
-.chat-empty-state .chat-bubble-ai:nth-child(3) { background: rgba(125,211,252,0.09); }
 .chat-input-row textarea { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); padding: 12px; font-size: 16px; font-family: inherit; resize: vertical; min-height: 200px; max-height: 400px; outline: none; }
 .chat-panel { --kosame-accent: #00bcd4; }
 .chat-btn#chat-send { background: rgba(0,188,212,0.14); border-color: rgba(0,188,212,0.35); color: var(--kosame-accent); font-weight: 700; }
@@ -2021,17 +2018,18 @@ h1 {
 .chat-url-banner { background: rgba(0,188,212,0.07); border: 1px solid rgba(0,188,212,0.2); border-radius: 7px; padding: 5px 10px; font-size: 12px; color: rgba(0,188,212,0.9); display: flex; align-items: center; gap: 5px; }
 .chat-url-banner[hidden] { display: none !important; }
 
-/* こさめアイコン — SVG傘。☂️(通常・静止) / ☔(考え中・揺れ+雨だれ) — Claude.aiヒトデ相当 */
-.kosame-brand-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; color: #00bcd4; font-size: 20px; width: 1em; height: 1em; }
+/* こさめアイコン — KOSAMEロゴ準拠のSVG傘。金(#C9A84C)のアウトライン + 水色(#00bcd4)の雨粒 */
+.kosame-brand-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; color: #C9A84C; font-size: 20px; width: 1em; height: 1em; }
 .kosame-brand-svg { display: block; width: 1em; height: 1em; transform-origin: 50% 10%; overflow: visible; }
 .kosame-brand-icon.is-thinking .kosame-brand-svg { animation: kosameUmbrellaSway 1.3s ease-in-out infinite; }
 @keyframes kosameUmbrellaSway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
-.kosame-rain { position: absolute; top: 62%; left: 50%; transform: translateX(-50%); display: flex; gap: 0.15em; pointer-events: none; }
-.kosame-rain span { width: 0.05em; height: 0.16em; min-width: 1.5px; border-radius: 1px; background: #00bcd4; opacity: 0; }
-.kosame-brand-icon.is-thinking .kosame-rain span { animation: kosameRainDrop 0.9s ease-in infinite; }
-.kosame-brand-icon.is-thinking .kosame-rain span:nth-child(1) { animation-delay: 0s; }
-.kosame-brand-icon.is-thinking .kosame-rain span:nth-child(2) { animation-delay: 0.18s; }
-.kosame-brand-icon.is-thinking .kosame-rain span:nth-child(3) { animation-delay: 0.36s; }
+.kosame-rain { position: absolute; top: 60%; left: 54%; display: flex; align-items: flex-end; gap: 0.1em; pointer-events: none; }
+.kosame-rain-drop { width: 0.12em; height: 0.16em; opacity: 0; display: block; }
+.kosame-rain-drop:nth-child(1) { width: 0.09em; height: 0.12em; transform: translateY(-0.1em); }
+.kosame-brand-icon.is-thinking .kosame-rain-drop { animation: kosameRainDrop 0.9s ease-in infinite; }
+.kosame-brand-icon.is-thinking .kosame-rain-drop:nth-child(1) { animation-delay: 0s; }
+.kosame-brand-icon.is-thinking .kosame-rain-drop:nth-child(2) { animation-delay: 0.18s; }
+.kosame-brand-icon.is-thinking .kosame-rain-drop:nth-child(3) { animation-delay: 0.36s; }
 @keyframes kosameRainDrop {
   0% { opacity: 0; transform: translateY(-0.05em); }
   25% { opacity: 1; }
@@ -2043,7 +2041,7 @@ h1 {
 .kosame-thinking-label { font-size: 13px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .kosame-brand-icon.is-thinking .kosame-brand-svg { animation: none; }
-  .kosame-brand-icon.is-thinking .kosame-rain span { animation: none; opacity: 0; }
+  .kosame-brand-icon.is-thinking .kosame-rain-drop { animation: none; opacity: 0; }
 }
 
 /* RUNNER進捗をチャット内にシステムメッセージとして表示 */
@@ -2489,13 +2487,12 @@ h1 {
           <span id="chat-sound-badge" class="chat-status-badge warn">Sound: OFF</span>
         </div>
         <div id="chat-thread" class="chat-thread"></div>
-        <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" hidden>
+        <div id="chat-typing-indicator" class="chat-typing-indicator" aria-live="polite" aria-label="こさめが考え中です" hidden>
           <div class="kosame-thinking-stage">
             <span class="kosame-brand-icon kosame-brand-icon--lg" id="chat-typing-kosame-icon">
-              <svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 32 A26 26 0 0 1 58 32" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M6 32 Q10 38 14 32 Q18 38 22 32 Q26 38 30 32 Q34 38 38 32 Q42 38 46 32 Q50 38 54 32 Q56 34 58 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="54" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M32 54 q0 6 6 6 q4 0 4 -4" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><line x1="32" y1="4" x2="32" y2="12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
-              <span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span>
+              <svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true"><line x1="32" y1="4" x2="32" y2="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M8 32 A24 24 0 0 1 56 32" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M8 32 Q14 40 20 32 Q26 40 32 32 Q38 40 44 32 Q50 40 56 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="50" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M32 50 Q32 58 40 58 Q46 58 46 52" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+              <span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span>
             </span>
-            <span class="kosame-thinking-label" aria-label="こさめが考え中...">こさめが考え中…</span>
           </div>
         </div>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
@@ -3285,11 +3282,12 @@ function maybeNotifyFromSnapshot(snapshot) {
   }
 }
 
-// こさめアイコン(SVG傘): 通常時は静止、考え中は揺れ+雨だれ、完了で静止に戻る
-const KOSAME_UMBRELLA_SVG_INNER = '<path d="M6 32 A26 26 0 0 1 58 32" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M6 32 Q10 38 14 32 Q18 38 22 32 Q26 38 30 32 Q34 38 38 32 Q42 38 46 32 Q50 38 54 32 Q56 34 58 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="54" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M32 54 q0 6 6 6 q4 0 4 -4" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/><line x1="32" y1="4" x2="32" y2="12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>';
+// こさめアイコン(KOSAMEロゴ準拠SVG傘): 通常時は金の傘のみ静止、考え中は雨だれ+微揺れ、完了で静止に戻る
+const KOSAME_UMBRELLA_SVG_INNER = '<line x1="32" y1="4" x2="32" y2="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M8 32 A24 24 0 0 1 56 32" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M8 32 Q14 40 20 32 Q26 40 32 32 Q38 40 44 32 Q50 40 56 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="32" y1="32" x2="32" y2="50" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M32 50 Q32 58 40 58 Q46 58 46 52" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round"/>';
+const KOSAME_RAINDROP_SVG = '<svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg>';
 function _kosameIconHTML(size) {
   const cls = size === 'lg' ? 'kosame-brand-icon kosame-brand-icon--lg' : 'kosame-brand-icon';
-  return '<span class="' + cls + '"><svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true">' + KOSAME_UMBRELLA_SVG_INNER + '</svg><span class="kosame-rain" aria-hidden="true"><span></span><span></span><span></span></span></span>';
+  return '<span class="' + cls + '"><svg class="kosame-brand-svg" viewBox="0 0 64 64" aria-hidden="true">' + KOSAME_UMBRELLA_SVG_INNER + '</svg><span class="kosame-rain" aria-hidden="true">' + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + KOSAME_RAINDROP_SVG + '</span></span>';
 }
 function _setKosameIconThinking(iconEl, thinking) {
   if (!iconEl) return;

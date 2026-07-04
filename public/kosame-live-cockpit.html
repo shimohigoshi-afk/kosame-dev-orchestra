@@ -1931,6 +1931,8 @@ h1 {
   border-radius: 26px;
   padding: 12px 14px 10px;
   transition: border-color 0.15s;
+  flex: 1;
+  min-width: 0;
 }
 .chat-composer:focus-within { border-color: rgba(0,188,212,0.45); }
 .chat-drop-highlight .chat-composer { border-color: rgba(0,188,212,0.55) !important; background: rgba(0,188,212,0.06) !important; }
@@ -2034,9 +2036,10 @@ h1 {
 }
 /* 大サイズ版 — 生成中に返答テキストより先に、チャット履歴中央へ大きく表示 (Claude.aiのヒトデ相当) */
 .kosame-brand-icon--lg { font-size: 88px; }
-/* 入力欄コンテナの外・左下に独立して配置する傘（Claude.aiのヒトデと同じ位置） */
-.chat-composer-outer-row { display: flex; align-items: flex-end; gap: 10px; }
-.kosame-idle-icon { font-size: 24px; flex: 0 0 auto; margin-bottom: 9px; }
+/* テキストエリアの左・縦中央に独立して配置する傘（Claude.aiのヒトデと同じ位置） */
+.chat-composer-outer-row { display: flex; align-items: flex-start; gap: 10px; }
+.chat-composer-outer-row .kosame-idle-icon { margin-top: 33px; }
+.kosame-idle-icon { font-size: 24px; flex: 0 0 auto; }
 /* 考え中3〜10秒: 中央の大きい傘をフェードイン/アウト */
 .chat-typing-indicator { transition: opacity 0.6s ease; opacity: 0; }
 .chat-typing-indicator.is-visible { opacity: 1; }
@@ -2507,11 +2510,11 @@ h1 {
         </div>
         <div class="chat-primary-actions chat-command-bar" aria-label="チャットコマンドバー">
           <div class="chat-primary-row">
-            <div class="chat-composer-outer-row">
-              <span class="kosame-brand-icon kosame-idle-icon" id="chat-idle-kosame-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"><span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span></span>
             <div class="chat-input-wrapper" id="chat-input-wrapper">
               <div id="chat-attachments-preview" class="chat-attachments-preview" hidden></div>
               <div id="chat-url-detected" class="chat-url-banner" hidden>🔗 <span id="chat-url-text"></span></div>
+              <div class="chat-composer-outer-row">
+                <span class="kosame-brand-icon kosame-idle-icon" id="chat-idle-kosame-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"><span class="kosame-rain" aria-hidden="true"><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg><svg class="kosame-rain-drop" viewBox="0 0 12 16" aria-hidden="true"><path d="M6 1C6 1 1 8.4 1 11.2A5 5 0 0 0 11 11.2C11 8.4 6 1 6 1Z" fill="#00bcd4"/></svg></span></span>
               <div class="chat-composer">
                 <textarea id="chat-input" placeholder="メッセージを入力…"></textarea>
                 <div class="chat-composer-toolbar">
@@ -2537,6 +2540,7 @@ h1 {
                   </div>
                 </div>
               </div>
+              </div>
               <div class="chat-mode-row" id="chat-mode-row" role="radiogroup" aria-label="実行モード">
                 <button type="button" class="chat-mode-pill mode-complete is-selected" data-mode="complete" role="radio" aria-checked="true" title="通常運用・DeepSeek / Gemini / Claude通常 / Llama を使い分けて最後まで進める">🟢 完走モード</button>
                 <button type="button" class="chat-mode-pill mode-safe" data-mode="safe" role="radio" aria-checked="false" title="コンプライアンス・機密・危険ゲート優先。顧客情報、契約、secret、deployを強めに止める">🔵 セーフモード</button>
@@ -2558,7 +2562,6 @@ h1 {
                 </div>
               </div>
               <input type="file" id="chat-file-input" accept=".md,.txt,.docx,.pptx,.xlsx,.pdf,.png,.jpg,.jpeg,.webp,.mp4,.mp3,.wav,.m4a,.ogg,.webm" multiple style="display:none" aria-hidden="true">
-            </div>
             </div>
           </div>
         </div>

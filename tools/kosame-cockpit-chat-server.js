@@ -1200,6 +1200,7 @@ async function handleChatRequest(body) {
   }
 
   // Try live GPT call with こさめ persona — falls back to local reply if unavailable
+  let gptResult = null;
   try {
     const { isLiveEnabled, isKeyPresent } = require('./kosame-chat-gpt');
     const keyPresent = isKeyPresent();
@@ -1371,7 +1372,7 @@ async function handleChatRequest(body) {
     }
 
     console.log('[GPT] calling... isLive=' + isLiveEnabled());
-    const gptResult = await callKosameGPT(gptMessages, {
+    gptResult = await callKosameGPT(gptMessages, {
       contextSummary: contextSummary.slice(0, 400),
       project,
       selectedProjectId: normalized.selectedProjectId || '',

@@ -15,6 +15,11 @@ const BAD_MARKERS = [
 ];
 
 const testHtmlPath = path.join(ROOT, 'public', 'test.html');
+// kosame-welcome.html is a real product page, not smoke-test litter — this script
+// must never touch it. Assert it survives untouched (excluded by design).
+const welcomeHtmlPath = path.join(ROOT, 'public', 'kosame-welcome.html');
+const welcomeExistedBefore = fs.existsSync(welcomeHtmlPath);
+const welcomeContentBefore = welcomeExistedBefore ? fs.readFileSync(welcomeHtmlPath, 'utf8') : null;
 
 let ok = true;
 
@@ -49,6 +54,22 @@ try {
   }
 } catch (e) {
   console.error('⚠️ git diff check failed: ' + e.message);
+}
+
+// kosame-welcome.html exclusion check
+if (welcomeExistedBefore) {
+  const welcomeContentAfter = fs.existsSync(welcomeHtmlPath) ? fs.readFileSync(welcomeHtmlPath, 'utf8') : null;
+  if (welcomeContentAfter === null) {
+    console.error('❌ FAIL: public/kosame-welcome.html was removed — smoke:cleanup must not touch it');
+    ok = false;
+  } else if (welcomeContentAfter !== welcomeContentBefore) {
+    console.error('❌ FAIL: public/kosame-welcome.html was modified — smoke:cleanup must not touch it');
+    ok = false;
+  } else {
+    console.log('✅ public/kosame-welcome.html preserved (excluded from smoke cleanup)');
+  }
+} else {
+  console.log('ℹ️ public/kosame-welcome.html not present — nothing to preserve');
 }
 
 console.log(ok ? '✅ smoke cleanup PASSED' : '❌ smoke cleanup FAILED');

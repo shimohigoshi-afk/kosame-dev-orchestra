@@ -1396,6 +1396,13 @@ async function handleChatRequest(body) {
         } catch (sessErr) {
           process.stderr.write(`[sessions] save error: ${sessErr.message}\n`);
         }
+        try {
+          const { appendChatHistory } = require('./kosame-chat-history');
+          appendChatHistory({ role: 'user', content: message });
+          appendChatHistory({ role: 'assistant', content: result.reply });
+        } catch (histErr) {
+          process.stderr.write(`[chat-history] save error: ${histErr.message}\n`);
+        }
       }
     } else {
       process.stderr.write('[chat-gpt] fallback to local reply\n');
@@ -1403,6 +1410,17 @@ async function handleChatRequest(body) {
   } catch (err) {
     process.stderr.write(`[chat-gpt] ERROR: ${err && err.message ? err.message : String(err)}\n`);
     // fall through to local reply
+  }
+
+  // Save local reply to chat history when GPT didn't already save
+  if (!gptResult || !gptResult.ok || !gptResult.reply) {
+    try {
+      const { appendChatHistory } = require('./kosame-chat-history');
+      appendChatHistory({ role: 'user', content: message });
+      appendChatHistory({ role: 'assistant', content: result.reply });
+    } catch (histErr) {
+      process.stderr.write(`[chat-history] save error: ${histErr.message}\n`);
+    }
   }
 
   appendChatEvent({

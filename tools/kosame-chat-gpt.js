@@ -205,9 +205,25 @@ async function callKosameGPT(messages, opts = {}) {
   // Extract version from context to put as first system message line
   const versionMatch = contextSummary.match(/currentVersion=([^\s\n]+)/);
   const currentVer = versionMatch ? versionMatch[1] : null;
+
+  // ── Load persistent memory & chat history ──────────────────────────────
+  let memoryBlock = '';
+  let historyBlock = '';
+  try {
+    const { loadMemory, formatMemoryForContext } = require('./kosame-memory');
+    const mem = loadMemory();
+    memoryBlock = formatMemoryForContext(mem);
+  } catch (_) {}
+  try {
+    const { loadChatHistory, formatHistoryForContext } = require('./kosame-chat-history');
+    const history = loadChatHistory();
+    historyBlock = formatHistoryForContext(history);
+  } catch (_) {}
+
+  const extraBlocks = [memoryBlock, historyBlock].filter(Boolean).join('\n\n');
   const systemContent = contextSummary
-    ? (currentVer ? `【最重要：現在のKOSAME Dev Orchestraのバージョンは ${currentVer} です。他のバージョン番号は古いものです。このバージョンを使うこと。】\n\n${persona}\n\n現在の状況:\n${contextSummary}` : `${persona}\n\n現在の状況:\n${contextSummary}`)
-    : persona;
+    ? (currentVer ? `【最重要：現在のKOSAME Dev Orchestraのバージョンは ${currentVer} です。他のバージョン番号は古いものです。このバージョンを使うこと。】\n\n${extraBlocks ? extraBlocks + '\n\n' : ''}${persona}\n\n現在の状況:\n${contextSummary}` : `${extraBlocks ? extraBlocks + '\n\n' : ''}${persona}\n\n現在の状況:\n${contextSummary}`)
+    : (extraBlocks ? `${extraBlocks}\n\n${persona}` : persona);
 
   const model = getModel();
   const maxTokens = Math.min(Number.isFinite(Number(opts.maxTokens)) ? Number(opts.maxTokens) : CHAT_MAX_TOKENS, 1000);

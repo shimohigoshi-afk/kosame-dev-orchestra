@@ -30,4 +30,4 @@
 - Customer data / Insurance logic
 - FK大宮LP / KOSAME LP assets
 
-generated_at: 2026-07-02T17:11:59.435Z
+generated_at: 2026-07-04T16:03:00.516Z

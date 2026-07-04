@@ -2041,8 +2041,10 @@ h1 {
 /* 返答テキストの直前・独立した行に表示する傘（Claude.aiのヒトデ相当） */
 .kosame-brand-icon--reply { font-size: 32px; }
 .chat-bubble-header.chat-bubble-header--reply-icon { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-/* トップヘッダーの傘ロゴ＋金文字 */
-.kosame-header-icon { font-size: 0.85em; vertical-align: -0.1em; margin-right: 0.05em; }
+/* トップヘッダーの傘ロゴ＋金文字（KOSAME Console + Dev Orchestra Command Centerの2行分の高さ） */
+.kosame-header-row { display: flex; align-items: center; gap: 14px; }
+.kosame-header-icon { font-size: clamp(56px, 6vw, 72px); flex: 0 0 auto; }
+.kosame-header-text-block { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .kosame-header-text { color: #C9A84C; }
 @media (prefers-reduced-motion: reduce) {
   .kosame-brand-icon.is-thinking .kosame-brand-svg { animation: none; }
@@ -2149,8 +2151,13 @@ h1 {
           <div class="hero-top-row">
             <div class="hero-compact-left">
               <div class="eyebrow">CURRENT MISSION</div>
-              <h1><span class="kosame-brand-icon kosame-header-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"></span> <span class="kosame-header-text">KOSAME Console</span></h1>
-              <div class="title-copy">Dev Orchestra Command Center</div>
+              <div class="kosame-header-row">
+                <span class="kosame-brand-icon kosame-header-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"></span>
+                <div class="kosame-header-text-block">
+                  <h1><span class="kosame-header-text">KOSAME Console</span></h1>
+                  <div class="title-copy">Dev Orchestra Command Center</div>
+                </div>
+              </div>
               <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
             </div>
           </div>

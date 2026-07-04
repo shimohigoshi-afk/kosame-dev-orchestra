@@ -1946,6 +1946,21 @@ h1 {
 .chat-btn#chat-send { height: 34px; padding: 0 14px; font-size: 13px; }
 .chat-primary-btn { background: #00bcd4; box-shadow: 0 6px 16px rgba(0,188,212,0.28); }
 .chat-primary-btn:hover { background: #26cbe0; }
+/* Claude.aiと同じく送信は1ボタンのみ表示。#chat-send はテキスト状態管理のため
+   DOMには残すが非表示にする。 */
+.chat-btn#chat-send { display: none; }
+/* 考え中・実行中: ↑(円・水色) → ■(角丸四角・グレーの停止ボタン)に変化。クリックで中断。 */
+.chat-primary-btn.is-busy {
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.28);
+  color: var(--muted);
+  box-shadow: none;
+  border-radius: 10px;
+}
+.chat-primary-btn.is-busy:hover { background: rgba(255,255,255,0.14); }
+.chat-primary-btn .chat-primary-btn-icon-stop { display: none; width: 12px; height: 12px; border-radius: 2.5px; background: currentColor; }
+.chat-primary-btn.is-busy .chat-primary-btn-icon-arrow { display: none; }
+.chat-primary-btn.is-busy .chat-primary-btn-icon-stop { display: block; }
 
 .chat-tool-btn { width: 34px; min-width: 34px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 17px; padding: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; flex-shrink: 0; position: relative; }
 .chat-tool-btn:hover { background: rgba(0,188,212,0.14); color: var(--kosame-accent); }
@@ -2509,7 +2524,7 @@ h1 {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 15C13.657 15 15 13.657 15 12V6C15 4.343 13.657 3 12 3C10.343 3 9 4.343 9 6V12C9 13.657 10.343 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 11V12C5 15.866 8.134 19 12 19C15.866 19 19 15.866 19 12V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 19V22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     </button>
                     <button type="button" class="chat-btn" id="chat-send" title="送信 (Enter)" aria-label="送信">送信</button>
-                    <button type="button" class="chat-primary-btn" id="chat-proceed" title="この方針で進める" aria-label="この方針で進める"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <button type="button" class="chat-primary-btn" id="chat-proceed" title="送信" aria-label="送信"><svg class="chat-primary-btn-icon-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="chat-primary-btn-icon-stop" aria-hidden="true"></span></button>
                   </div>
                 </div>
               </div>
@@ -3288,12 +3303,45 @@ function showTypingIndicator() {
   _setKosameIconThinking(document.getElementById('chat-typing-kosame-icon'), true);
   const thread = document.getElementById('chat-thread');
   if (thread) thread.scrollTop = thread.scrollHeight;
+  setChatBusyState('thinking', true);
 }
 
 function hideTypingIndicator() {
   const el = document.getElementById('chat-typing-indicator');
   if (el) el.hidden = true;
   _setKosameIconThinking(document.getElementById('chat-typing-kosame-icon'), false);
+  setChatBusyState('thinking', false);
+}
+
+// ── 送信ボタンの状態(Claude.ai風): 通常=↑(水色) / 考え中・実行中=■(停止・グレー) ──
+var _chatBusyReasons = { thinking: false, runner: false };
+var _chatActiveAbortControllers = [];
+
+function setChatBusyState(reason, isBusy) {
+  _chatBusyReasons[reason] = !!isBusy;
+  const busy = _chatBusyReasons.thinking || _chatBusyReasons.runner;
+  const btn = document.getElementById('chat-proceed');
+  if (!btn) return;
+  btn.classList.toggle('is-busy', busy);
+  btn.title = busy ? '停止' : '送信';
+  btn.setAttribute('aria-label', busy ? '停止' : '送信');
+}
+
+function registerChatAbortController(controller) {
+  _chatActiveAbortControllers.push(controller);
+}
+
+function cancelActiveChatRequest() {
+  _chatActiveAbortControllers.forEach(function(c) { try { c.abort(); } catch (_) {} });
+  _chatActiveAbortControllers = [];
+  stopRunnerElapsedTimer();
+  hideTypingIndicator();
+  setChatBusyState('thinking', false);
+  setChatBusyState('runner', false);
+  const statusEl = document.getElementById('chat-status');
+  if (statusEl) statusEl.textContent = '停止しました（サーバー側の処理は途中まで進んでいる場合があります）';
+  chatHistory.push({ role: 'system', content: '⏹ 停止しました' });
+  renderChatThread();
 }
 
 function normalizeTaskStatusValue(task) {
@@ -6886,9 +6934,11 @@ function startRunnerElapsedTimer() {
   _runnerElapsedInterval = setInterval(function() {
     _renderRunnerElapsed('実行中... ' + _formatElapsedJa(Date.now() - _runnerTaskStartedAt), false);
   }, 1000);
+  if (typeof setChatBusyState === 'function') setChatBusyState('runner', true);
 }
 
 function stopRunnerElapsedTimer() {
+  if (typeof setChatBusyState === 'function') setChatBusyState('runner', false);
   if (!_runnerTaskStartedAt) return;
   if (_runnerElapsedInterval) { clearInterval(_runnerElapsedInterval); _runnerElapsedInterval = null; }
   _renderRunnerElapsed('完了（' + _formatElapsedJa(Date.now() - _runnerTaskStartedAt) + '）', true);
@@ -6906,6 +6956,8 @@ async function _zeroConfirmDispatch(text) {
   renderChatThread();
   try {
     const _sp = getSelectedProject(latestSnapshot || {});
+    const _dispatchAbortController = new AbortController();
+    registerChatAbortController(_dispatchAbortController);
     const res = await fetch('/api/runner-dispatch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -6918,6 +6970,7 @@ async function _zeroConfirmDispatch(text) {
         executionMode: getChatMode(),
         target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
       }),
+      signal: _dispatchAbortController.signal,
     });
     const data = await res.json();
     if (data.ok) {
@@ -6928,6 +6981,7 @@ async function _zeroConfirmDispatch(text) {
       if (statusEl) statusEl.textContent = `エラー: ${data.error || 'dispatch failed'}`;
     }
   } catch (e) {
+    if (e && e.name === 'AbortError') return;
     chatHistory.push({ role: 'assistant', content: '[ERROR] Runner接続失敗 — サーバーを確認してください' });
     if (statusEl) statusEl.textContent = 'エラー: Runner接続失敗';
     stopRunnerElapsedTimer();
@@ -7218,10 +7272,13 @@ async function sendChatMessage(userText, confirmationContext) {
       });
     }
 
+    const _chatAbortController = new AbortController();
+    registerChatAbortController(_chatAbortController);
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: _chatAbortController.signal,
     });
     const data = await res.json();
 
@@ -7253,6 +7310,8 @@ async function sendChatMessage(userText, confirmationContext) {
       try {
         startRunnerElapsedTimer();
         const _sp = getSelectedProject(latestSnapshot || {});
+        const _autoDispatchAbortController = new AbortController();
+        registerChatAbortController(_autoDispatchAbortController);
         fetch('/api/runner-dispatch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -7264,13 +7323,15 @@ async function sendChatMessage(userText, confirmationContext) {
             executionMode: getChatMode(),
             target_repo: (selectedProjectId && _sp) ? (_sp.repoPath || _sp.path || '') : '',
           }),
+          signal: _autoDispatchAbortController.signal,
         }).catch(function() { stopRunnerElapsedTimer(); });
       } catch (_) {}
     }
     chatStatusState.ai = 'connected';
     chatStatusState.context = 'loaded';
     renderChatStatusBadges(latestSnapshot || {});
-  } catch {
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
     hideTypingIndicator();
     chatHistory.push({ role: 'assistant', content: 'エラー: サーバーに接続できません。' });
     renderChatThread();
@@ -7456,7 +7517,13 @@ function submitChatFromInput(source) {
 
 const chatProceedButton = document.getElementById('chat-proceed');
 if (chatProceedButton) {
-  chatProceedButton.addEventListener('click', function() { submitChatFromInput('chat-proceed'); });
+  chatProceedButton.addEventListener('click', function() {
+    if (chatProceedButton.classList.contains('is-busy')) {
+      cancelActiveChatRequest();
+      return;
+    }
+    submitChatFromInput('chat-proceed');
+  });
 }
 
 const chatSendBtn = document.getElementById('chat-send');

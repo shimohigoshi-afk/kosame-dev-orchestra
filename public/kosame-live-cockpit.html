@@ -2036,9 +2036,9 @@ h1 {
 }
 /* 大サイズ版 — 生成中に返答テキストより先に、チャット履歴中央へ大きく表示 (Claude.aiのヒトデ相当) */
 .kosame-brand-icon--lg { font-size: 88px; }
-/* テキストエリアの左・縦中央に独立して配置する傘（Claude.aiのヒトデと同じ位置） */
+/* テキストエリアの左・縦中央に独立して配置する傘（Claude.aiのヒトデと同じ位置）
+   テキストエリアは自動拡張するため、中央揃えはJS(ResizeObserver)で動的計算する */
 .chat-composer-outer-row { display: flex; align-items: flex-start; gap: 10px; }
-.chat-composer-outer-row .kosame-idle-icon { margin-top: 33px; }
 .kosame-idle-icon { font-size: 24px; flex: 0 0 auto; }
 /* 考え中3〜10秒: 中央の大きい傘をフェードイン/アウト */
 .chat-typing-indicator { transition: opacity 0.6s ease; opacity: 0; }
@@ -7567,6 +7567,31 @@ function _autoGrowChatInput() {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 400) + 'px';
 }
+
+// テキストエリアは入力量に応じて高さが変わるため、左の傘アイコンの
+// margin-topをResizeObserverで動的計算し、常にテキストエリアと
+// 縦中央が一致するようにする。
+function _alignIdleIconWithTextarea() {
+  const icon = document.getElementById('chat-idle-kosame-icon');
+  const textarea = document.getElementById('chat-input');
+  const row = document.querySelector('.chat-composer-outer-row');
+  if (!icon || !textarea || !row) return;
+  const rowTop = row.getBoundingClientRect().top;
+  const taRect = textarea.getBoundingClientRect();
+  const iconHeight = icon.getBoundingClientRect().height || icon.offsetHeight;
+  const desiredTop = (taRect.top - rowTop) + (taRect.height - iconHeight) / 2;
+  icon.style.marginTop = Math.max(0, desiredTop) + 'px';
+}
+(function() {
+  const textarea = document.getElementById('chat-input');
+  if (!textarea) return;
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(_alignIdleIconWithTextarea).observe(textarea);
+  } else {
+    textarea.addEventListener('input', _alignIdleIconWithTextarea);
+  }
+  _alignIdleIconWithTextarea();
+})();
 
 // ── Unified chat submit (v113.9.4) ────────────────────────────────────────
 var _chatSubmitLock = false;

@@ -158,103 +158,86 @@ body{
 .section{display:none;max-width:1100px;margin:0 auto}
 .section.active{display:block}
 
-/* ═══ DASHBOARD CARDS ═══ */
-.dash-header{text-align:center;margin-bottom:36px;padding-top:12px}
-.dash-headline{
-  font-size:26px;font-weight:700;color:var(--text);
-  letter-spacing:0.04em;margin-bottom:8px;
-  font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;
+/* ═══ DASHBOARD — LOGO HERO ═══ */
+.dash-hero{
+  text-align:center;margin-bottom:44px;padding-top:20px;
 }
-.dash-headline .hl{color:var(--gold-light)}
-.dash-subhead{
-  font-size:14px;color:var(--text-muted);
-  line-height:1.8;max-width:520px;margin:0 auto;
+.dash-logo{
+  font-size:22px;font-weight:700;color:var(--text);
+  letter-spacing:3px;line-height:1.4;
 }
+.dash-logo .accent{color:var(--gold);font-weight:900}
+.dash-logo .line2{font-size:14px;letter-spacing:5px;color:var(--text-muted)}
 .dash-divider{
-  width:36px;height:2px;background:var(--gold);
-  margin:20px auto;border-radius:1px;opacity:0.6;
+  width:28px;height:1px;background:rgba(200,169,106,0.30);
+  margin:16px auto 0;border-radius:1px;
 }
 
-.card-group{margin-bottom:40px}
+/* ═══ CARD GRID ═══ */
+.card-group{margin-bottom:44px}
 .card-group-label{
   display:flex;align-items:center;gap:10px;
-  font-size:13px;font-weight:600;color:var(--text);
-  letter-spacing:0.06em;margin-bottom:20px;
+  font-size:12px;font-weight:600;color:var(--text-muted);
+  letter-spacing:0.08em;margin-bottom:18px;
 }
 .card-group-label::before{
   content:'';display:inline-block;
-  width:4px;height:16px;background:var(--gold);
-  border-radius:2px;
-}
-.card-group-label .status-chip{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:600;padding:3px 10px;
-  border-radius:50px;
-  background:rgba(76,175,130,0.12);
-  border:1px solid rgba(76,175,130,0.35);
-  color:var(--success);
-  letter-spacing:0.04em;
+  width:3px;height:12px;background:var(--gold);
+  border-radius:1px;opacity:0.7;
 }
 
 .nav-cards{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:18px;
+  gap:16px;
 }
 .nav-card{
   position:relative;
-  background:var(--card-bg);
-  border:1px solid rgba(200,169,106,0.25);
+  background:linear-gradient(180deg,rgba(15,42,66,0.8) 0%,rgba(7,26,47,0.9) 100%);
+  border:1px solid rgba(200,169,106,0.16);
   border-radius:var(--radius);
-  padding:28px 22px 24px;
+  padding:26px 22px 22px;
   cursor:pointer;
-  transition:all 0.35s var(--ease);
-  color:var(--card-text);
+  transition:all 0.4s var(--ease);
+  color:var(--text);
   overflow:hidden;
 }
-.nav-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--gold),transparent);
-  opacity:0;transition:opacity 0.35s var(--ease);
+.nav-card::after{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.06) 0%,transparent 70%);
+  opacity:0;transition:opacity 0.4s var(--ease);pointer-events:none;
 }
 .nav-card:hover{
-  transform:translateY(-4px);
-  border-color:var(--gold-border);
-  box-shadow:0 16px 40px rgba(0,0,0,0.25),0 0 30px rgba(200,169,106,0.08);
+  transform:translateY(-3px);
+  border-color:rgba(200,169,106,0.42);
+  box-shadow:0 0 40px rgba(200,169,106,0.06),0 8px 28px rgba(0,0,0,0.3);
+  background:linear-gradient(180deg,rgba(19,46,74,0.9) 0%,rgba(11,31,58,0.95) 100%);
 }
-.nav-card:hover::before{opacity:1}
+.nav-card:hover::after{opacity:1}
 .nav-card-icon{
-  font-size:32px;margin-bottom:14px;display:block;
-  transition:transform 0.35s var(--ease);
+  font-size:28px;margin-bottom:12px;display:block;
+  transition:transform 0.4s var(--ease);opacity:0.85;
 }
-.nav-card:hover .nav-card-icon{transform:scale(1.08)}
+.nav-card:hover .nav-card-icon{transform:scale(1.06);opacity:1}
 .nav-card-title{
-  font-size:15px;font-weight:700;color:var(--card-text);
-  margin-bottom:6px;letter-spacing:0.03em;
+  font-size:14px;font-weight:700;color:var(--text);
+  margin-bottom:5px;letter-spacing:0.03em;
 }
 .nav-card-desc{
-  font-size:12px;color:var(--card-text-muted);
-  line-height:1.6;
+  font-size:11px;color:var(--text-muted);
+  line-height:1.55;
 }
-.nav-card-badge{
-  display:inline-block;margin-top:12px;
-  padding:3px 10px;border-radius:50px;
-  font-size:10px;font-weight:600;
-  background:rgba(76,175,130,0.1);
-  color:var(--success);
-  border:1px solid rgba(76,175,130,0.25);
-}
+.nav-card-badge{display:none}
 
 /* Collapsible section */
 .collapse-trigger{
   display:flex;align-items:center;gap:10px;
   cursor:pointer;user-select:none;
   transition:all 0.25s var(--ease);
-  margin-top:12px;
 }
 .collapse-arrow{
   display:inline-block;transition:transform 0.3s var(--ease);
-  font-size:14px;color:var(--text-muted);
+  font-size:13px;color:var(--text-dim);
 }
 .collapse-arrow.open{transform:rotate(90deg)}
 .collapse-content{
@@ -262,42 +245,20 @@ body{
   transition:max-height 0.5s var(--ease),opacity 0.4s var(--ease),margin 0.4s var(--ease);
 }
 .collapse-content.expanded{max-height:600px;opacity:1}
-.card-group-rep .card-group-label .status-chip{
-  background:rgba(200,169,106,0.10);
-  border:1px solid rgba(200,169,106,0.3);
-  color:var(--gold);
-}
-
-/* Rep cards - slightly different styling */
-.nav-card.nav-card-rep{
-  background:linear-gradient(180deg,var(--navy-card) 0%,var(--navy) 100%);
-  border:1px solid var(--border);
-  color:var(--text);
-}
-.nav-card.nav-card-rep .nav-card-title{color:var(--text)}
-.nav-card.nav-card-rep .nav-card-desc{color:var(--text-muted)}
-.nav-card.nav-card-rep:hover{
-  border-color:var(--gold-border);
-  background:linear-gradient(180deg,var(--navy-card-hover) 0%,var(--navy-light) 100%);
-}
 
 /* ═══ PRIVACY NOTICE ═══ */
 .privacy-notice{
-  margin-top:48px;padding:20px 24px;
-  background:rgba(200,169,106,0.04);
-  border:1px solid rgba(200,169,106,0.12);
+  margin-top:52px;padding:18px 24px;
+  background:rgba(200,169,106,0.03);
+  border:1px solid rgba(200,169,106,0.08);
   border-radius:var(--radius-sm);
   text-align:center;
 }
-.privacy-notice-icon{font-size:18px;margin-bottom:8px;display:block;opacity:0.5}
-.privacy-notice-title{
-  font-size:13px;font-weight:600;color:var(--gold);
-  margin-bottom:6px;letter-spacing:0.04em;
-}
 .privacy-notice-text{
-  font-size:12px;color:var(--text-dim);
-  line-height:1.8;max-width:600px;margin:0 auto;
+  font-size:11px;color:var(--text-dim);
+  line-height:1.8;max-width:560px;margin:0 auto;
 }
+.privacy-notice-icon,.privacy-notice-title{display:none}
 
 /* ═══ TOOL PAGE ═══ */
 .tool-header{
@@ -476,18 +437,18 @@ canvas{display:block;width:100%;border-radius:8px}
 @media(max-width:768px){
   .topbar{padding:0 16px}
   .content{padding:20px 16px}
-  .dash-headline{font-size:22px}
   .nav-cards{grid-template-columns:1fr;gap:14px}
   .nav-card{padding:24px 18px 20px}
   .form-grid{grid-template-columns:1fr}
   .form-grid-3{grid-template-columns:1fr 1fr}
   .tool-grid{grid-template-columns:1fr}
   .auth-box{padding:36px 28px}
+  .dash-logo{font-size:19px}
+  .dash-divider{margin:12px auto 0}
 }
 @media(max-width:480px){
   .form-grid-3{grid-template-columns:1fr}
-  .dash-headline{font-size:19px}
-  .dash-subhead{font-size:13px}
+  .dash-logo{font-size:17px}
   .topbar-logo{font-size:17px;letter-spacing:3px}
   .topbar-title{font-size:12px}
   .tool-title{font-size:19px}
@@ -549,115 +510,114 @@ canvas{display:block;width:100%;border-radius:8px}
 
     <!-- ═══ DASHBOARD ═══ -->
     <section id="section-dashboard" class="section active">
-      <div class="dash-header">
-        <div class="dash-headline">面談前後の準備を、<span class="hl">すばやく整える。</span></div>
-        <div class="dash-subhead">匿名ライフプラン、エリア情報、提案準備を1つの画面で。</div>
+      <div class="dash-hero">
+        <div class="dash-logo">
+          <div><span class="accent">KOSAME</span> Sales Console</div>
+        </div>
         <div class="dash-divider"></div>
       </div>
 
-      <!-- Customer-facing cards -->
+      <!-- Row 1 -->
       <div class="card-group">
-        <div class="card-group-label">
-          お客様に見せてもOK
-          <span class="status-chip">&#9679; 面談中表示可</span>
-        </div>
         <div class="nav-cards">
           <div class="nav-card" onclick="navigateTo('lifetime')">
             <span class="nav-card-icon">📊</span>
             <div class="nav-card-title">匿名ライフプラン</div>
-            <div class="nav-card-desc">生涯収入・支出・資産配分を匿名で試算。お客様と一緒に将来設計を確認できます。</div>
-            <span class="nav-card-badge">匿名OK</span>
-          </div>
-          <div class="nav-card" onclick="navigateTo('realestate')">
-            <span class="nav-card-icon">🏡</span>
-            <div class="nav-card-title">土地・エリア情報</div>
-            <div class="nav-card-desc">エリアの不動産価格や土地情報を参照。お客様の住まい探しをサポートします。</div>
-            <span class="nav-card-badge">匿名OK</span>
+            <div class="nav-card-desc">生涯収入・支出を匿名で試算。将来設計を一緒に確認。</div>
           </div>
           <div class="nav-card" onclick="navigateTo('mortgage')">
             <span class="nav-card-icon">🏠</span>
             <div class="nav-card-title">住宅ローン試算</div>
-            <div class="nav-card-desc">借入額・金利・返済期間から毎月の返済額を計算。繰上げ返済や変動金利リスクも確認。</div>
-            <span class="nav-card-badge">匿名OK</span>
+            <div class="nav-card-desc">借入額・金利・期間から毎月返済額を計算。</div>
           </div>
           <div class="nav-card" onclick="navigateTo('insurance')">
             <span class="nav-card-icon">🛡</span>
             <div class="nav-card-title">必要保障額</div>
-            <div class="nav-card-desc">遺族の生活費・教育費から必要な保障額を試算。公的保障を差し引いた純粋な不足額がわかります。</div>
-            <span class="nav-card-badge">匿名OK</span>
+            <div class="nav-card-desc">遺族の生活費・教育費から必要な保障を試算。</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('underwriting')">
+            <span class="nav-card-icon">🔍</span>
+            <div class="nav-card-title">医務査定確認</div>
+            <div class="nav-card-desc">病名・告知内容から、確認ポイントを整理します。<br>最終判断は各保険会社への確認・事前照会に基づきます。</div>
           </div>
         </div>
       </div>
 
-      <!-- Sales rep cards (collapsible) -->
-      <div class="card-group card-group-rep">
-        <div class="card-group-label collapse-trigger" onclick="toggleRepTools()">
-          営業担当者専用
-          <span class="status-chip">&#9679; 折り畳み</span>
-          <span class="collapse-arrow" id="rep-arrow">▶</span>
+      <!-- Row 2 -->
+      <div class="card-group">
+        <div class="nav-cards">
+          <div class="nav-card" onclick="navigateTo('realestate')">
+            <span class="nav-card-icon">🏡</span>
+            <div class="nav-card-title">土地・エリア情報</div>
+            <div class="nav-card-desc">エリアの不動産価格や土地情報を参照。</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('security')">
+            <span class="nav-card-icon">🏛</span>
+            <div class="nav-card-title">社会保障ナビ</div>
+            <div class="nav-card-desc">公的保障・年金制度の確認。</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('education')">
+            <span class="nav-card-icon">🎓</span>
+            <div class="nav-card-title">教育費シミュ</div>
+            <div class="nav-card-desc">教育費の総額・資金計画を試算。</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('tax')">
+            <span class="nav-card-icon">💴</span>
+            <div class="nav-card-title">税務計算</div>
+            <div class="nav-card-desc">贈与税・相続税の概算計算。</div>
+          </div>
         </div>
-        <div class="collapse-content" id="rep-collapse">
+      </div>
+
+      <!-- Row 3 -->
+      <div class="card-group">
+        <div class="nav-cards">
+          <div class="nav-card" onclick="navigateTo('asset')">
+            <span class="nav-card-icon">📈</span>
+            <div class="nav-card-title">資産運用試算</div>
+            <div class="nav-card-desc">複利シミュレーション・将来資産の目安。</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('bmi')">
+            <span class="nav-card-icon">⚖</span>
+            <div class="nav-card-title">健康・体格バランス</div>
+            <div class="nav-card-desc">BMI計算・体格の目安を確認。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 営業サポート (collapsible) -->
+      <div class="card-group">
+        <div class="card-group-label collapse-trigger" onclick="toggleSupport()">
+          営業サポート
+          <span class="collapse-arrow" id="support-arrow">▶</span>
+        </div>
+        <div class="collapse-content" id="support-collapse">
           <div class="nav-cards">
-            <div class="nav-card nav-card-rep" onclick="navigateTo('mail')">
+            <div class="nav-card" onclick="navigateTo('mail')">
               <span class="nav-card-icon">✉</span>
               <div class="nav-card-title">メール文章作成</div>
-              <div class="nav-card-desc">面談後のフォローメール、提案メールのテンプレート作成と送信準備。</div>
+              <div class="nav-card-desc">フォローメール・提案メールのテンプレート。</div>
             </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('proposal')">
+            <div class="nav-card" onclick="navigateTo('proposal')">
               <span class="nav-card-icon">📄</span>
               <div class="nav-card-title">提案資料作成</div>
-              <div class="nav-card-desc">計算結果をもとにした提案資料の下書きを整理。お客様に合わせたカスタマイズが可能です。</div>
+              <div class="nav-card-desc">計算結果をもとにした提案資料の下書き。</div>
             </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('report')">
+            <div class="nav-card" onclick="navigateTo('report')">
               <span class="nav-card-icon">📋</span>
               <div class="nav-card-title">会社報告テンプレート</div>
-              <div class="nav-card-desc">日報・週報・活動報告のテンプレート。面談記録を簡単にまとめられます。</div>
+              <div class="nav-card-desc">日報・週報・活動報告のテンプレート。</div>
             </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('minutes')">
+            <div class="nav-card" onclick="navigateTo('minutes')">
               <span class="nav-card-icon">📝</span>
               <div class="nav-card-title">議事録作成</div>
-              <div class="nav-card-desc">面談の要点を記録し、次回提案につなげる議事録の作成をサポートします。</div>
+              <div class="nav-card-desc">面談の要点を記録し、次回提案に活かす。</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Additional tools -->
-      <div class="card-group" style="margin-top:12px">
-        <div class="card-group-label collapse-trigger" onclick="toggleMoreTools()">
-          その他のツール
-          <span class="collapse-arrow" id="more-arrow">▶</span>
-        </div>
-        <div class="collapse-content" id="more-collapse">
-          <div class="nav-cards" style="margin-top:12px">
-            <div class="nav-card nav-card-rep" onclick="navigateTo('tax')">
-              <span class="nav-card-icon">💴</span>
-              <div class="nav-card-title">税務計算</div>
-              <div class="nav-card-desc">贈与税・相続税の概算計算。</div>
-            </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('bmi')">
-              <span class="nav-card-icon">💊</span>
-              <div class="nav-card-title">健康・BMI</div>
-              <div class="nav-card-desc">BMI計算・肥満度判定。</div>
-            </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('asset')">
-              <span class="nav-card-icon">📈</span>
-              <div class="nav-card-title">資産運用試算</div>
-              <div class="nav-card-desc">複利シミュレーション・将来資産の目安。</div>
-            </div>
-            <div class="nav-card nav-card-rep" onclick="navigateTo('security')">
-              <span class="nav-card-icon">🏛</span>
-              <div class="nav-card-title">社会保障ナビ</div>
-              <div class="nav-card-desc">公的保障・社会保障制度の確認。</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Privacy notice -->
       <div class="privacy-notice">
-        <span class="privacy-notice-icon">🔒</span>
-        <div class="privacy-notice-title">個人情報の取り扱いについて</div>
         <div class="privacy-notice-text">
           個人情報を保持しない設計を基本としています。<br>
           氏名・住所・電話番号・証券番号・健康情報は入力しないでください。
@@ -1164,6 +1124,38 @@ canvas{display:block;width:100%;border-radius:8px}
       </div>
     </section>
 
+    <!-- ═══ EDUCATION TOOL ═══ -->
+    <section id="section-education" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">🎓 教育費シミュ</div>
+        <div class="tool-subtitle">教育費の総額・資金計画を試算します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <span class="ph-icon">🎓</span>
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">教育費シミュレーション機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ UNDERWRITING TOOL ═══ -->
+    <section id="section-underwriting" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">🔍 医務査定確認</div>
+        <div class="tool-subtitle">病名・告知内容から、確認ポイントを整理します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <span class="ph-icon">🔍</span>
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">最終判断は各保険会社への確認・事前照会に基づきます。<br>医務査定確認機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1214,8 +1206,9 @@ function navigateTo(key) {
     backBtn.classList.add('visible');
     const titles = {
       mortgage:'住宅ローン試算',insurance:'必要保障額',tax:'税務計算',
-      bmi:'健康・BMI',asset:'資産運用試算',lifetime:'匿名ライフプラン',
-      security:'社会保障ナビ',realestate:'土地・エリア情報',
+      bmi:'健康・体格バランス',asset:'資産運用試算',lifetime:'匿名ライフプラン',
+      security:'社会保障ナビ',realestate:'土地・エリア情報',education:'教育費シミュ',
+      underwriting:'医務査定確認',
       mail:'メール文章作成',proposal:'提案資料作成',report:'会社報告テンプレート',minutes:'議事録作成'
     };
     document.getElementById('topbar-title').textContent = titles[key] || key;
@@ -1236,15 +1229,9 @@ function navigateTo(key) {
 function goDashboard() { navigateTo('dashboard'); }
 
 /* ── Collapsible sections ── */
-function toggleRepTools() {
-  const el = document.getElementById('rep-collapse');
-  const arrow = document.getElementById('rep-arrow');
-  const isOpen = el.classList.toggle('expanded');
-  arrow.classList.toggle('open', isOpen);
-}
-function toggleMoreTools() {
-  const el = document.getElementById('more-collapse');
-  const arrow = document.getElementById('more-arrow');
+function toggleSupport() {
+  const el = document.getElementById('support-collapse');
+  const arrow = document.getElementById('support-arrow');
   const isOpen = el.classList.toggle('expanded');
   arrow.classList.toggle('open', isOpen);
 }

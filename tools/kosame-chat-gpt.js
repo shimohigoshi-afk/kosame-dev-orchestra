@@ -122,7 +122,7 @@ function buildStableSmokeReply() {
 function buildStableAmbiguousReply() {
   return [
     '対象プロジェクトを確認してください。',
-    'KOSAME Console / Sales DX / FK Omiya Console / 不動産価格検索 / 開発OS のどれの作業票か指定してください。',
+    'KOSAME Console / Sales DX / Sales Console / 不動産価格検索 / 開発OS のどれの作業票か指定してください。',
   ].join(' ');
 }
 

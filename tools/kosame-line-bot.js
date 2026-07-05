@@ -157,7 +157,7 @@ async function handleFollow(event) {
     if (event.replyToken) {
       await sendReplyMessage(event.replyToken, [{
         type: 'text',
-        text: 'ご登録ありがとうございます！\n大宮支店のコンサルタントです。\n保険・資産形成のご相談はお気軽にどうぞ。',
+        text: 'ご登録ありがとうございます！\nKOSAME Sales Console です。\n保険・資産形成のご相談はお気軽にどうぞ。',
       }]).catch(e => console.warn('[WARN] Reply failed:', e.message));
     }
   } else {

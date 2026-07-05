@@ -14,7 +14,7 @@ const DEFAULT_MEMORY = {
   entries: [
     { key: 'sales_dx_status', value: '営業DXはv0.8.0まで完成。それ以降の開発は行わない。' },
     { key: 'model_priority', value: 'モデル優先順位は Claude → Gemini → Llama / Groq。' },
-    { key: 'fk_omiya_repo', value: 'FK大宮は別リポジトリ。このリポジトリでは扱わない。' },
+    { key: 'fk_omiya_repo', value: 'FK大宮は別リポジトリ。KOSAME Sales Consoleとして本リポジトリとは別管理。' },
   ],
   updated: new Date().toISOString(),
 };

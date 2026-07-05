@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOSAME Sales Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --navy: #040d1c;
@@ -13,6 +16,8 @@
   --navy-card-hover: #0f2648;
   --gold: #C8A96A;
   --gold-light: #D4BC8A;
+  --gold-refined: #d4bc7d;
+  --gold-rgb: 212,188,125;
   --gold-pale: rgba(200,169,106,0.14);
   --gold-glow: rgba(200,169,106,0.30);
   --gold-border: rgba(200,169,106,0.48);
@@ -130,7 +135,7 @@ body{
 .topbar-brand .tbg{color:var(--gold);font-weight:800;letter-spacing:1.5px}
 .topbar-divider{width:1px;height:20px;background:var(--border)}
 .topbar-title{
-  font-size:14px;color:var(--text-muted);
+  font-size:14px;color:var(--gold-refined);
   letter-spacing:1px;
 }
 .topbar-right{display:flex;align-items:center;gap:16px}
@@ -163,127 +168,210 @@ body{
 .section{display:none;max-width:1100px;margin:0 auto}
 .section.active{display:block}
 
-/* ═══ CARD GRID ═══ */
-.card-group{margin-bottom:44px}
-.card-group-label{
-  display:flex;align-items:center;gap:10px;
-  font-size:13px;font-weight:700;color:var(--text);
-  letter-spacing:0.06em;margin-bottom:16px;
+/* ═══ HERO PANEL — Hotel Front Desk Style ═══ */
+.dash-hero{
+  display:flex;align-items:center;gap:28px;
+  margin-bottom:48px;padding:28px 32px;
+  background:linear-gradient(135deg,#06111f 0%,#081a30 40%,#0b2038 100%);
+  border:1px solid rgba(205,171,92,0.45);
+  border-radius:var(--radius);
+  position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,0.3),0 0 30px rgba(200,169,106,0.06);
 }
-.card-group-label::before{
-  content:'';display:inline-block;
-  width:3px;height:14px;background:var(--gold);
-  border-radius:1px;opacity:0.85;
+.dash-hero::before{
+  content:'';position:absolute;inset:4px;border-radius:12px;
+  border:1px solid rgba(205,171,92,0.18);pointer-events:none;
+}
+.dash-hero::after{
+  content:'';position:absolute;top:8px;left:8px;
+  width:16px;height:16px;
+  border-top:1px solid rgba(205,171,92,0.45);
+  border-left:1px solid rgba(205,171,92,0.45);
+}
+.dash-hero-l-wrap{
+  flex-shrink:0;
+}
+.dash-hero-logo{
+  height:130px;width:auto;display:block;
+  filter:none;object-fit:contain;margin:0 auto;
+}
+.dash-hero-divider{
+  flex-shrink:0;width:0.5px;height:120px;
+  background:rgba(var(--gold-rgb),0.3);
+}
+.dash-hero-info{flex:1;min-width:0}
+.dash-hero-title{
+  font-family:"Shippori Mincho",serif;
+  font-size:38px;font-weight:600;color:var(--gold-refined);
+  letter-spacing:0.18em;line-height:1.3;margin-bottom:6px;
+}
+.dash-hero-title .accent{color:var(--gold);font-weight:900}
+.dash-hero-title-sub{
+  display:block;font-size:14px;color:#eef4f8;
+  letter-spacing:0.42em;font-family:'Noto Sans JP',sans-serif;
+}
+.dash-hero-sub{
+  font-size:12px;color:var(--gold-refined);
+  letter-spacing:0.10em;margin-bottom:10px;
+}
+.dash-hero-copy{
+  font-size:12px;color:#c3d2de;line-height:1.9;margin-bottom:14px;
+}
+.dash-hero-tags{
+  display:flex;gap:8px;flex-wrap:wrap;align-content:center;
+}
+.dash-hero-tag{
+  display:inline-flex;align-items:center;
+  font-size:12px;color:var(--text-dim);letter-spacing:0.08em;
+  padding:4px 12px;border-radius:4px;
+  background:rgba(200,169,106,0.06);
+  border:1px solid rgba(200,169,106,0.15);
+}
+.dash-hero-tag .tag-icon{width:12px;height:12px;margin-right:6px;flex:none;stroke:var(--gold-refined);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+/* Bottom-right L corner */
+.dash-hero-corner{
+  position:absolute;bottom:8px;right:8px;
+  width:16px;height:16px;
+  border-bottom:1px solid rgba(205,171,92,0.45);
+  border-right:1px solid rgba(205,171,92,0.45);
+  pointer-events:none;
 }
 
-.nav-cards{
+/* ═══ CARD GRID ═══ */
+/* ═══ SECTION BOX(fieldset風の額縁)═══ */
+.card-group{margin-top:26px;margin-bottom:26px}
+.section-box{
+  border:0.5px solid rgba(var(--gold-rgb),0.28);
+  border-radius:12px;
+  padding:22px 18px 16px;
+  position:relative;
+}
+.section-label{
+  position:absolute;top:-9px;left:16px;
+  background:var(--navy);
+  padding:0 12px;
+  display:flex;gap:10px;align-items:baseline;
+}
+.section-label.collapse-trigger{cursor:pointer;user-select:none;margin-bottom:0}
+.section-label .collapse-arrow{margin-left:2px;position:static}
+.label-en,.section-label-en{
+  font-size:10.5px;font-weight:600;color:var(--gold-refined);
+  letter-spacing:0.3em;text-transform:uppercase;
+}
+.label-ja,.section-label-ja{
+  font-size:13.5px;color:#eef4f8;
+  font-family:"Shippori Mincho",serif;letter-spacing:0.1em;
+}
+
+/* ═══ TOOL CARD(横型)═══ */
+.nav-cards,.tool-cards-row{
   display:grid;
-  grid-template-columns:repeat(5,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:14px;
 }
-.nav-card{
+.nav-cards-3col,.tool-cards-row.cols-3{grid-template-columns:repeat(3,1fr)}
+.tool-cards-row.cols-5{grid-template-columns:repeat(5,1fr)}
+.tool-cards-row.cols-2{grid-template-columns:repeat(2,1fr)}
+.tool-cards-row.cols-1{grid-template-columns:1fr}
+
+.nav-card,.nav-card-core,.tool-card{
+  display:flex;align-items:center;gap:14px;
   position:relative;
-  background:linear-gradient(180deg,rgba(15,42,66,0.85) 0%,rgba(7,26,47,0.92) 100%);
-  border:1px solid rgba(200,169,106,0.22);
-  border-radius:var(--radius);
-  padding:22px 16px 20px;
+  background:#0e1c31;
+  border:0.5px solid rgba(var(--gold-rgb),0.2);
+  border-radius:10px;
+  padding:16px 18px;
   cursor:pointer;
   transition:all 0.4s var(--ease);
   color:var(--text);
   overflow:hidden;
-  min-height:0;
+  text-align:left;
 }
-.nav-card::after{
-  content:'';position:absolute;inset:0;border-radius:var(--radius);
-  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.08) 0%,transparent 70%);
-  opacity:0;transition:opacity 0.4s var(--ease);pointer-events:none;
+.nav-card:hover,.nav-card-core:hover,.tool-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(var(--gold-rgb),0.5);
+  box-shadow:0 10px 30px rgba(0,0,0,0.32);
 }
-.nav-card:hover{
-  transform:translateY(-3px);
-  border-color:rgba(200,169,106,0.52);
-  box-shadow:0 0 48px rgba(200,169,106,0.08),0 8px 28px rgba(0,0,0,0.3);
-  background:linear-gradient(180deg,rgba(19,46,74,0.9) 0%,rgba(11,31,58,0.95) 100%);
+.nav-card-icon-wrap,.icon-ring{
+  width:56px;height:56px;flex:none;position:relative;
+  border:1px solid rgba(var(--gold-rgb),0.45);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle,rgba(var(--gold-rgb),0.08) 0%,transparent 70%);
+  transition:all 0.4s var(--ease);
 }
-.nav-card:hover::after{opacity:1}
-.nav-card-icon{
-  font-size:22px;margin-bottom:9px;display:block;
-  transition:transform 0.4s var(--ease);opacity:0.70;
+.nav-card:hover .nav-card-icon-wrap,.tool-card:hover .icon-ring{
+  border-color:rgba(var(--gold-rgb),0.7);
+  background:radial-gradient(circle,rgba(var(--gold-rgb),0.16) 0%,transparent 70%);
 }
-.nav-card:hover .nav-card-icon{transform:scale(1.06);opacity:0.85}
-.nav-card-title{
-  font-size:13px;font-weight:700;color:var(--text);
-  margin-bottom:4px;letter-spacing:0.03em;
+.nav-card-icon,.card-icon{
+  width:26px;height:26px;display:block;
+  opacity:0.9;transition:all 0.4s var(--ease);
+  stroke:var(--gold-refined);fill:none;stroke-width:1.3;
+  stroke-linecap:round;stroke-linejoin:round;
 }
-.nav-card-desc{
-  font-size:10.5px;color:var(--text-muted);
-  line-height:1.50;
+.nav-card:hover .nav-card-icon,.tool-card:hover .card-icon{opacity:1;stroke:var(--gold-light)}
+.icon-droplet{position:absolute;right:-2px;bottom:-1px;width:10px;height:10px;fill:#4fc3f7;stroke:none}
+.nav-card-title,.tool-card-title{
+  font-size:16px;font-family:"Shippori Mincho",serif;
+  color:#eef4f8;margin-bottom:4px;letter-spacing:0.1em;
 }
+.nav-card-desc,.tool-card-desc{
+  font-size:11.5px;color:#8fa5b8;
+  line-height:1.5;letter-spacing:0.02em;
+}
+.nav-card-footnote,.tool-card-footnote{font-size:10px;color:var(--text-dim);margin-top:6px}
 .nav-card-badge{display:none}
+.tool-card-body{flex:1;min-width:0;position:relative;z-index:1}
+.nav-card-wm,.nav-card-core-wm,.card-watermark{
+  position:absolute;right:34px;top:50%;transform:translateY(-50%);
+  width:92px;height:92px;
+  opacity:0.07;pointer-events:none;
+  stroke:rgba(var(--gold-rgb),0.9);fill:none;stroke-width:1;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.card-arrow{
+  width:26px;height:26px;flex:none;
+  border:0.5px solid rgba(var(--gold-rgb),0.5);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin-left:auto;position:relative;z-index:1;
+  transition:all 0.3s var(--ease);
+}
+.tool-card:hover .card-arrow,.nav-card:hover .card-arrow,.nav-card-core:hover .card-arrow{
+  border-color:rgba(var(--gold-rgb),0.85);
+  background:rgba(var(--gold-rgb),0.12);
+}
+.card-arrow svg{width:13px;height:13px;stroke:var(--gold-refined);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
-/* Core area cards — 3 large columns */
-.nav-cards-core{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
-}
-.nav-card-core{
-  position:relative;
-  background:linear-gradient(180deg,rgba(15,42,66,0.85) 0%,rgba(7,26,47,0.92) 100%);
-  border:1px solid rgba(200,169,106,0.24);
-  border-radius:var(--radius);
-  padding:28px 22px 24px;
-  cursor:pointer;
-  transition:all 0.4s var(--ease);
-  color:var(--text);
-  overflow:hidden;
-}
-.nav-card-core::after{
-  content:'';position:absolute;inset:0;border-radius:var(--radius);
-  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.08) 0%,transparent 70%);
-  opacity:0;transition:opacity 0.4s var(--ease);pointer-events:none;
-}
-.nav-card-core:hover{
-  transform:translateY(-3px);
-  border-color:rgba(200,169,106,0.55);
-  box-shadow:0 0 48px rgba(200,169,106,0.08),0 8px 28px rgba(0,0,0,0.3);
-  background:linear-gradient(180deg,rgba(19,46,74,0.9) 0%,rgba(11,31,58,0.95) 100%);
-}
-.nav-card-core:hover::after{opacity:1}
-.nav-card-core .nav-card-icon{font-size:30px;margin-bottom:12px;display:block;transition:transform 0.4s var(--ease);opacity:0.75}
-.nav-card-core:hover .nav-card-icon{transform:scale(1.06);opacity:0.90}
-.nav-card-core .nav-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:0.03em}
-.nav-card-core .nav-card-desc{font-size:12px;color:var(--text-muted);line-height:1.55}
+/* primary(手書きボード等の強調カード): アイコン・文字だけ少し大きく */
+.nav-card-core.primary .nav-card-icon-wrap,.tool-card.primary .icon-ring{width:64px;height:64px}
+.nav-card-core.primary .nav-card-icon,.tool-card.primary .card-icon{width:30px;height:30px}
+.nav-card-core.primary .nav-card-title,.tool-card.primary .tool-card-title{font-size:17px}
 
-/* Primary card */
-.nav-card-core.primary{
-  border-color:rgba(200,169,106,0.55);
-  background:linear-gradient(180deg,rgba(20,45,70,0.92) 0%,rgba(10,30,50,0.95) 100%);
-  box-shadow:0 0 36px rgba(200,169,106,0.12);
+/* 生活資金・税務 / 法人提案: セクションボックスごと左右2列に並べる */
+.section-pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.section-pair .section-box{margin-top:0}
+@media (max-width:900px){.section-pair{grid-template-columns:1fr}}
+
+/* ハブ(1枚のダッシュボードカードから複数の既存ツールへ振り分ける簡易一覧) */
+.hub-list{display:flex;flex-direction:column;gap:10px}
+.hub-list-item{
+  background:#0e1c31;border:0.5px solid rgba(var(--gold-rgb),0.2);
+  border-radius:10px;padding:14px 16px;cursor:pointer;
+  transition:all 0.3s var(--ease);
 }
-.nav-card-core.primary::after{
-  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.14) 0%,transparent 70%);
-  opacity:0.6;
-}
-.nav-card-core.primary:hover{
-  border-color:rgba(200,169,106,0.70);
-  box-shadow:0 0 56px rgba(200,169,106,0.18),0 12px 32px rgba(0,0,0,0.35);
-}
-.nav-card-core.primary .nav-card-title{font-size:16px}
-.nav-card-card-footnote{
-  display:flex;align-items:center;gap:5px;margin-top:10px;
-  font-size:10px;color:var(--text-dim);
-}
-.nav-card-card-footnote .dot{width:5px;height:5px;border-radius:50%}
-.nav-card-card-footnote .dot.gold{background:var(--gold);opacity:0.6}
-.nav-card-card-footnote .dot.dim{background:var(--text-dim);opacity:0.4}
-.nav-card-card-footnote .warn-text{color:var(--warn);font-size:10px}
+.hub-list-item:hover{border-color:rgba(var(--gold-rgb),0.5);transform:translateX(2px)}
+.hub-list-title{font-size:14px;font-family:"Shippori Mincho",serif;color:#eef4f8;letter-spacing:0.06em;margin-bottom:3px}
+.hub-list-desc{font-size:11.5px;color:#8fa5b8}
 
 /* Collapsible section */
 .collapse-trigger{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:8px;
   cursor:pointer;user-select:none;
   transition:all 0.25s var(--ease);
 }
+.collapse-trigger .collapse-arrow{margin-left:auto}
 .collapse-arrow{
   display:inline-block;transition:transform 0.3s var(--ease);
   font-size:13px;color:var(--text-dim);
@@ -322,15 +410,18 @@ body{
 .calc-float-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(200,169,106,0.40)}
 .calc-panel{
   display:none;position:fixed;bottom:84px;right:24px;z-index:501;
-  width:260px;background:rgba(15,37,64,0.97);
+  width:320px;height:auto;min-height:0;max-height:calc(100vh - 32px);overflow-y:auto;
+  background:rgba(15,37,64,0.97);
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
   border:1px solid rgba(200,169,106,0.38);
   border-radius:var(--radius);
   padding:16px;
   box-shadow:0 8px 40px rgba(0,0,0,0.4);
+  left:auto;top:auto;transform:none;flex:0 0 auto;
 }
 .calc-panel.open{display:block}
+.calc-panel *{min-height:0}
 .calc-display{
   width:100%;height:44px;background:rgba(0,0,0,0.25);
   border:1px solid rgba(200,169,106,0.22);
@@ -379,6 +470,207 @@ body{
   color:var(--text-muted);
 }
 .calc-btn.close:hover{background:rgba(255,255,255,0.10)}
+
+/* ═══ FLOATING WHITEBOARD ═══ */
+.board-panel{
+  display:none;position:fixed;top:50px;left:50%;margin-left:-370px;
+  z-index:600;width:740px;max-width:calc(100vw - 32px);
+  background:rgba(8,20,36,0.98);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(200,169,106,0.42);
+  border-radius:var(--radius);
+  box-shadow:0 0 80px rgba(0,0,0,0.5),0 0 40px rgba(200,169,106,0.10);
+  overflow:hidden;
+  right:auto;bottom:auto;transform:none;
+}
+.board-panel.open{display:block}
+.board-header{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;
+  background:rgba(12,28,48,0.95);
+  border-bottom:1px solid rgba(200,169,106,0.15);
+  cursor:grab;user-select:none;
+}
+.board-header:active{cursor:grabbing}
+.board-header-title{
+  font-size:13px;font-weight:600;color:var(--text);
+  letter-spacing:0.06em;flex:1;
+}
+.board-header-title .ghost{color:var(--text-dim);font-weight:400;font-size:11px;margin-left:6px;letter-spacing:0.04em}
+.board-body{padding:14px 16px 16px}
+.board-canvas-wrap{
+  background:#faf8f2;border:1px solid rgba(0,0,0,0.08);
+  border-radius:var(--radius-sm);overflow:hidden;
+}
+.board-canvas{
+  display:block;width:100%;height:400px;cursor:crosshair;
+}
+.board-toolbar{
+  display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;
+}
+.board-btn{
+  padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;border:none;
+}
+.board-btn.clear{background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.08)}
+.board-btn.clear:hover{background:rgba(255,255,255,0.12);color:var(--text)}
+.board-btn.print{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy)}
+.board-btn.print:hover{opacity:0.9}
+.board-btn.close-btn{
+  background:transparent;border:none;color:var(--text-dim);font-size:16px;
+  padding:2px 6px;cursor:pointer;margin-left:auto;
+}
+.board-btn.close-btn:hover{color:var(--text)}
+.board-notice{
+  margin-top:12px;font-size:10px;color:var(--text-dim);line-height:1.6;
+}
+@media(max-width:768px){
+  .board-canvas{height:280px}
+  .board-panel{left:16px;right:16px;width:auto;top:30px;margin-left:0}
+}
+
+/* ═══ FLOATING MEETING NOTES ═══ */
+.memo-panel{
+  display:none;position:fixed;top:50px;left:50%;margin-left:-210px;
+  z-index:600;width:420px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);
+  background:rgba(8,20,36,0.98);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(200,169,106,0.42);
+  border-radius:var(--radius);
+  box-shadow:0 0 80px rgba(0,0,0,0.5),0 0 30px rgba(200,169,106,0.08);
+  overflow-y:auto;
+}
+.memo-panel.open{display:block}
+.memo-textarea{width:100%;height:100px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px;font-size:13px;color:var(--card-text);resize:vertical;font-family:inherit;line-height:1.7;outline:none}
+@media(max-width:768px){.memo-panel{margin-left:0;left:16px;right:16px;width:auto;top:20px}}
+
+/* ═══ PRINT STYLES ═══ */
+.wb-print-area{display:none}
+@media print{
+  body>*:not(#whiteboard-print-area),#app,.board-panel,.calc-panel,.memo-panel,.cmemo-panel,.workspace-panel,.calc-float-btn,#auth-overlay{display:none!important}
+  #whiteboard-print-area{display:block!important;position:static;width:100%;padding:0;margin:0}
+  .wb-print-page{page-break-after:always;text-align:center;padding:10px 0}
+  .wb-print-page:last-child{page-break-after:auto}
+  .wb-print-page img{max-width:100%;height:auto;border:1px solid #ccc}
+  .wb-print-page .wb-page-label{font-size:12px;color:#666;margin-bottom:4px}
+}
+
+/* ═══ FLOATING CALC MEMO ═══ */
+.cmemo-panel{
+  display:none;position:fixed;top:50px;left:50%;margin-left:-160px;
+  z-index:600;width:320px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);
+  background:rgba(8,20,36,0.98);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(200,169,106,0.42);
+  border-radius:var(--radius);
+  box-shadow:0 0 80px rgba(0,0,0,0.5),0 0 30px rgba(200,169,106,0.08);
+  overflow-y:auto;
+}
+.cmemo-panel.open{display:block}
+
+.calc-log-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;
+  border-radius:9px;font-size:10px;font-weight:700;
+  background:var(--gold);color:var(--navy);
+  vertical-align:middle;margin-left:4px;
+}
+#calc-memo-card.has-items .nav-card-icon-wrap{
+  border-color:rgba(205,171,92,0.55);
+  background:radial-gradient(circle,rgba(200,169,106,0.20) 0%,transparent 70%);
+}
+#calc-memo-card.has-items{
+  border-color:rgba(200,169,106,0.35);
+  box-shadow:0 0 30px rgba(200,169,106,0.10);
+}
+
+/* Log entry styling */
+.calc-log-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.calc-log-item{
+  background:rgba(200,169,106,0.06);border:1px solid rgba(200,169,106,0.12);
+  border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.6;
+}
+.calc-log-item .cli-type{color:var(--gold);font-weight:600;font-size:10px;letter-spacing:0.06em}
+.calc-log-item .cli-time{color:var(--text-dim);font-size:10px;margin-left:6px}
+.calc-log-item .cli-body{margin-top:4px;color:var(--text)}
+.calc-log-item .cli-note{color:var(--text-dim);font-size:10px;margin-top:2px;font-style:italic}
+
+/* Toast */
+.calc-toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;
+  background:rgba(8,20,36,0.95);border:1px solid var(--gold);
+  border-radius:8px;padding:8px 20px;font-size:12px;color:var(--gold);
+  box-shadow:0 4px 20px rgba(200,169,106,0.20);
+  pointer-events:none;opacity:0;transition:opacity 0.3s;
+}
+.calc-toast.show{opacity:1}
+
+/* ═══ KOSAME UMBRELLA STATUS ═══ */
+.kosame-status{
+  position:fixed;bottom:20px;left:20px;z-index:400;display:none;
+  width:44px;height:60px;pointer-events:none;
+}
+.kosame-status.visible{display:block}
+.kosame-umbrella{
+  width:40px;height:auto;display:block;margin:0 auto;
+  filter:none;object-fit:contain;position:relative;z-index:1;
+}
+.kosame-raindrop{
+  position:absolute;top:0;left:50%;width:2px;height:8px;
+  background:rgba(79,195,247,0.55);border-radius:0 0 2px 2px;
+  transform:translateX(-50%);animation:none;opacity:0;
+}
+.kosame-status.active .kosame-raindrop{opacity:1}
+.kosame-status.active .kosame-raindrop:nth-child(2){animation:kd-rain 1.8s 0s infinite}
+.kosame-status.active .kosame-raindrop:nth-child(3){animation:kd-rain 1.8s .45s infinite}
+.kosame-status.active .kosame-raindrop:nth-child(4){animation:kd-rain 1.8s .9s infinite}
+.kosame-status.fadeout .kosame-raindrop{animation:kd-rain-out .6s forwards}
+@keyframes kd-rain{
+  0%{top:0;opacity:0;transform:translateX(-50%) scaleY(1)}
+  15%{opacity:1}
+  85%{opacity:0.3}
+  100%{top:36px;opacity:0;transform:translateX(-50%) scaleY(0.5)}
+}
+@keyframes kd-rain-out{
+  0%{opacity:1}100%{opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .kosame-raindrop{animation:none!important;opacity:0!important}
+}
+
+/* ═══ WORKSPACE PANEL ═══ */
+.workspace-panel{
+  display:none;position:fixed;inset:0;z-index:700;
+  background:rgba(0,0,0,0.55);align-items:center;justify-content:center;
+}
+.workspace-panel.open{display:flex}
+.workspace-box{
+  width:min(1080px,calc(100vw - 64px));height:calc(100vh - 96px);
+  background:rgba(8,20,36,0.99);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(200,169,106,0.42);
+  border-radius:var(--radius);
+  box-shadow:0 0 100px rgba(0,0,0,0.5),0 0 40px rgba(200,169,106,0.08);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.ws-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;flex-shrink:0;
+  background:rgba(12,28,48,0.95);
+  border-bottom:1px solid rgba(200,169,106,0.15);
+}
+.ws-header-icon{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ws-header-info{flex:1;min-width:0}
+.ws-header-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:0.04em}
+.ws-header-sub{font-size:11px;color:var(--text-muted);margin-top:1px}
+.ws-close{background:transparent;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px 8px}
+.ws-close:hover{color:var(--text)}
+.ws-body{flex:1;overflow-y:auto;padding:24px 28px}
+@media(max-width:768px){
+  .workspace-box{width:100vw;height:100vh;border-radius:0}
+  .ws-body{padding:16px}
+}
 
 /* ═══ TOOL PAGE ═══ */
 .tool-header{
@@ -551,13 +843,23 @@ canvas{display:block;width:100%;border-radius:8px}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:1200px){
-  .nav-cards{grid-template-columns:repeat(4,1fr)}
+  .nav-cards{grid-template-columns:repeat(3,1fr)}
+  .nav-cards-3col{grid-template-columns:repeat(3,1fr)}
   .nav-cards-core{grid-template-columns:repeat(3,1fr)}
+  .tool-cards-row.cols-5{grid-template-columns:repeat(3,1fr)}
+  .dash-hero-logo{height:40px}
 }
 @media(max-width:1024px){
-  .nav-cards{grid-template-columns:repeat(3,1fr)}
+  .nav-cards{grid-template-columns:repeat(2,1fr)}
+  .nav-cards-3col{grid-template-columns:repeat(2,1fr)}
   .nav-cards-core{grid-template-columns:repeat(2,1fr)}
+  .tool-cards-row,.tool-cards-row.cols-3,.tool-cards-row.cols-5{grid-template-columns:repeat(2,1fr)}
   .tool-grid{grid-template-columns:1fr}
+  .dash-hero{flex-direction:column;align-items:flex-start;gap:16px;padding:20px 20px 18px}
+  .dash-hero-logo{height:56px}
+  .dash-hero-divider{display:none}
+  .dash-hero-title{font-size:24px}
+  .dash-hero-tags{flex-direction:row}
 }
 @media(max-width:768px){
   .topbar{padding:0 16px}
@@ -565,23 +867,37 @@ canvas{display:block;width:100%;border-radius:8px}
   .topbar-brand{font-size:13px}
   .topbar-divider{display:none}
   .topbar-title{display:none}
-  .content{padding:24px 16px}
-  .nav-cards{grid-template-columns:repeat(2,1fr);gap:12px}
-  .nav-card{padding:20px 14px 18px}
+  .content{padding:20px 16px}
+  .nav-cards{grid-template-columns:repeat(2,1fr);gap:10px}
+  .nav-cards-3col{grid-template-columns:repeat(2,1fr)}
   .nav-cards-core{grid-template-columns:1fr}
-  .nav-card-core{padding:24px 18px 20px}
+  .tool-cards-row,.tool-cards-row.cols-2,.tool-cards-row.cols-3,.tool-cards-row.cols-5{grid-template-columns:1fr}
+  .tool-card,.nav-card,.nav-card-core{padding:14px 14px}
+  .nav-card-icon-wrap,.icon-ring{width:48px;height:48px}
+  .nav-card-icon,.card-icon{width:22px;height:22px}
+  .nav-card-core.primary .nav-card-icon-wrap,.tool-card.primary .icon-ring{width:56px;height:56px}
+  .nav-card-core.primary .nav-card-icon,.tool-card.primary .card-icon{width:26px;height:26px}
+  .card-watermark{display:none}
   .form-grid{grid-template-columns:1fr}
   .form-grid-3{grid-template-columns:1fr 1fr}
   .tool-grid{grid-template-columns:1fr}
   .auth-box{padding:36px 28px}
-  .calc-float-btn{bottom:16px;right:16px;width:44px;height:44px;font-size:18px}
+  .calc-float-btn{bottom:16px;right:16px;width:64px;height:64px;font-size:18px}
   .calc-panel{bottom:72px;right:16px;width:230px}
+  .dash-hero-logo{height:56px}
+  .dash-hero-title{font-size:20px}
 }
 @media(max-width:480px){
   .nav-cards{grid-template-columns:1fr}
+  .nav-cards-3col{grid-template-columns:1fr}
   .nav-cards-core{grid-template-columns:1fr}
   .topbar-logo-img{height:26px}
   .topbar-brand{font-size:11px}
+  .dash-hero{flex-direction:column;align-items:center;text-align:center;padding:16px}
+  .dash-hero-logo{height:48px}
+  .dash-hero-title{font-size:16px}
+  .dash-hero-tags{justify-content:center}
+  .dash-hero-corner{display:none}
   .topbar-title{font-size:12px}
   .form-grid-3{grid-template-columns:1fr}
   .tool-title{font-size:19px}
@@ -645,132 +961,252 @@ canvas{display:block;width:100%;border-radius:8px}
     <!-- ═══ DASHBOARD ═══ -->
     <section id="section-dashboard" class="section active">
 
-      <!-- 面談コア -->
+      <div class="dash-hero">
+        <div class="dash-hero-l-wrap">
+          <img class="dash-hero-logo" src="assets/kosame-logo-umbrella-144.png" alt="KOSAME">
+        </div>
+        <div class="dash-hero-divider"></div>
+        <div class="dash-hero-info">
+          <div class="dash-hero-title">KOSAME<span class="dash-hero-title-sub">SALES CONSOLE</span></div>
+          <div class="dash-hero-sub">Meeting Desk / Proposal Support</div>
+          <div class="dash-hero-copy">
+            お客様の人生に寄り添い、最適な安心を届けるために。<br>
+            一つひとつのご相談を、誠実に、丁寧にサポートします。
+          </div>
+          <div class="dash-hero-tags">
+            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 2C8.5 2 5.5 5.5 5.5 9.5c0 5.5 6.5 12 6.5 12s6.5-6.5 6.5-12C18.5 5.5 15.5 2 12 2z"/><circle cx="12" cy="9.5" r="2.3"/></svg>Local only</span>
+            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>No server save</span>
+            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print ready</span>
+            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</span>
+          </div>
+        </div>
+        <div class="dash-hero-corner"></div>
+      </div>
+
+      <!-- MEETING DESK -->
       <div class="card-group">
-        <div class="card-group-label">面談コア</div>
-        <div class="nav-cards-core">
-          <div class="nav-card-core primary" onclick="navigateTo('insurance')">
-            <span class="nav-card-icon">🛡</span>
-            <div class="nav-card-title">必要保障額</div>
-            <div class="nav-card-desc">万一のときに必要な保障額を確認</div>
+        <div class="section-box">
+          <div class="section-label">
+            <span class="section-label-en">MEETING DESK</span>
+            <span class="section-label-ja">面談デスク</span>
           </div>
-          <div class="nav-card-core" onclick="navigateTo('memo')">
-            <span class="nav-card-icon">📝</span>
-            <div class="nav-card-title">面談メモ</div>
-            <div class="nav-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
-            <div class="nav-card-card-footnote">
-              <span class="dot gold"></span>PDF出力 / 印刷対応予定
-              <span class="dot dim" style="margin-left:8px"></span><span class="warn-text">入力内容はサーバーに保存されません</span>
+          <div class="tool-cards-row cols-3">
+            <div class="tool-card primary" onclick="openBoard()">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">手書きボード</div>
+                <div class="tool-card-desc">画面に書きながら説明する</div>
+                <div class="tool-card-footnote">PDF出力 / 印刷対応 — 入力内容はサーバーに保存されません</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
-          </div>
-          <div class="nav-card-core" onclick="navigateTo('whiteboard')">
-            <span class="nav-card-icon">✏</span>
-            <div class="nav-card-title">手書きボード</div>
-            <div class="nav-card-desc">画面に書きながら説明する</div>
-            <div class="nav-card-card-footnote">
-              <span class="dot gold"></span>PDF出力 / 印刷対応予定
-              <span class="dot dim" style="margin-left:8px"></span><span class="warn-text">入力内容はサーバーに保存されません</span>
+            <div class="tool-card" onclick="openMemo()">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">面談メモ</div>
+                <div class="tool-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" id="calc-memo-card" onclick="openCmemo()">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/><circle cx="12" cy="11" r="0.8"/><circle cx="16" cy="11" r="0.8"/><circle cx="8" cy="15" r="0.8"/><circle cx="12" cy="15" r="0.8"/><circle cx="16" cy="15" r="0.8"/><circle cx="12" cy="19" r="0.8"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">計算メモ <span class="calc-log-badge" id="calc-log-badge" style="display:none">0</span></div>
+                <div class="tool-card-desc">面談中の計算結果を一時集約</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="11" r="0.8"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 住宅・資金確認 -->
+      <!-- INSURANCE PLANNING -->
       <div class="card-group">
-        <div class="card-group-label">住宅・資金確認</div>
-        <div class="nav-cards">
-          <div class="nav-card" onclick="navigateTo('lifetime')">
-            <span class="nav-card-icon">📊</span>
-            <div class="nav-card-title">匿名ライフプラン</div>
-            <div class="nav-card-desc">収支・教育費・保障額を匿名で確認</div>
+        <div class="section-box">
+          <div class="section-label">
+            <span class="section-label-en">INSURANCE PLANNING</span>
+            <span class="section-label-ja">保険提案</span>
           </div>
-          <div class="nav-card" onclick="navigateTo('mortgage')">
-            <span class="nav-card-icon">🏠</span>
-            <div class="nav-card-title">住宅ローン試算</div>
-            <div class="nav-card-desc">月々返済と将来残債を確認</div>
+          <div class="tool-cards-row cols-3" style="margin-bottom:14px">
+            <div class="tool-card" onclick="openWorkspace('insurance')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">必要保障額</div>
+                <div class="tool-card-desc">万一のときに必要な保障額を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" onclick="openWorkspace('medical-check')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">医療保障チェック</div>
+                <div class="tool-card-desc">公的保障・自己負担・収入減から医療保障の目安を整理</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" onclick="openWorkspace('underwriting')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">医務査定確認</div>
+                <div class="tool-card-desc">告知内容の確認ポイントを整理</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
           </div>
-          <div class="nav-card" onclick="navigateTo('realestate')">
-            <span class="nav-card-icon">🏡</span>
-            <div class="nav-card-title">土地・エリア情報</div>
-            <div class="nav-card-desc">周辺相場と土地情報を確認</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('building')">
-            <span class="nav-card-icon">🏗</span>
-            <div class="nav-card-title">建物価格シミュレーション</div>
-            <div class="nav-card-desc">建物・外構・諸費用込みの総額を確認</div>
+          <div class="tool-cards-row cols-2">
+            <div class="tool-card" onclick="openWorkspace('asset')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">ファンド確認</div>
+                <div class="tool-card-desc">積立・一時払いの将来額を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" onclick="openWorkspace('bmi')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><line x1="2" y1="20" x2="7" y2="14"/><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/><line x1="12" y1="16" x2="22" y2="16"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">健康・体格バランス</div>
+                <div class="tool-card-desc">BMI計算・体格の目安を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 補助ツール -->
+      <!-- HOUSING CHECK -->
       <div class="card-group">
-        <div class="card-group-label">補助ツール</div>
-        <div class="nav-cards">
-          <div class="nav-card" onclick="navigateTo('security')">
-            <span class="nav-card-icon">🏛</span>
-            <div class="nav-card-title">社会保障ナビ</div>
-            <div class="nav-card-desc">公的保障の目安を確認</div>
+        <div class="section-box">
+          <div class="section-label">
+            <span class="section-label-en">HOUSING CHECK</span>
+            <span class="section-label-ja">住宅チェック</span>
           </div>
-          <div class="nav-card" onclick="navigateTo('education')">
-            <span class="nav-card-icon">🎓</span>
-            <div class="nav-card-title">教育費試算</div>
-            <div class="nav-card-desc">教育費の目安を確認</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('tax')">
-            <span class="nav-card-icon">💴</span>
-            <div class="nav-card-title">税務計算</div>
-            <div class="nav-card-desc">贈与税・相続税の概算を確認</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('underwriting')">
-            <span class="nav-card-icon">🔍</span>
-            <div class="nav-card-title">医務査定確認</div>
-            <div class="nav-card-desc">告知内容の確認ポイントを整理</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('asset')">
-            <span class="nav-card-icon">📈</span>
-            <div class="nav-card-title">資産運用試算</div>
-            <div class="nav-card-desc">積立・一時払いの将来額を確認</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('bmi')">
-            <span class="nav-card-icon">⚖</span>
-            <div class="nav-card-title">健康・体格バランス</div>
-            <div class="nav-card-desc">BMI計算・体格の目安を確認</div>
-          </div>
-          <div class="nav-card" onclick="navigateTo('calc-memo')">
-            <span class="nav-card-icon">🧮</span>
-            <div class="nav-card-title">計算メモ</div>
-            <div class="nav-card-desc">面談中の簡易計算を残す</div>
+          <div class="tool-cards-row cols-3">
+            <div class="tool-card" onclick="openWorkspace('mortgage')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><rect x="11" y="15" width="2" height="4" rx="0.5"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">住宅ローン試算</div>
+                <div class="tool-card-desc">月々返済と将来残債を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" onclick="openWorkspace('realestate')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M18 18c0-3.3-2.7-6-6-6s-6 2.7-6 6"/><line x1="4" y1="20" x2="20" y2="20"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">土地・エリア情報</div>
+                <div class="tool-card-desc">周辺相場と土地情報を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M18 18c0-3.3-2.7-6-6-6s-6 2.7-6 6"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card" onclick="openWorkspace('building')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="4" width="4" height="3"/><rect x="6" y="9" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/><rect x="6" y="14" width="4" height="3"/><rect x="14" y="14" width="4" height="3"/><rect x="9" y="18" width="6" height="4"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">建物価格シミュレーション</div>
+                <div class="tool-card-desc">建物・外構・諸費用込みの総額を確認</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 営業サポート (collapsible) -->
+      <!-- LIFE & TAX PLANNING / CORPORATE PLANNING -->
       <div class="card-group">
-        <div class="card-group-label collapse-trigger" onclick="toggleSupport()">
-          営業サポート
-          <span class="collapse-arrow" id="support-arrow">▶</span>
+        <div class="section-pair">
+          <div class="section-box">
+            <div class="section-label">
+              <span class="section-label-en">LIFE &amp; TAX PLANNING</span>
+              <span class="section-label-ja">生活資金・税務</span>
+            </div>
+            <div class="tool-cards-row cols-1">
+              <div class="tool-card primary" onclick="openHub('life-tax-hub')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 5c-2-1.5-5-2-8-1v13c3-1 6-.5 8 1c2-1.5 5-2 8-1V4c-3-1-6-.5-8 1z"/><line x1="12" y1="5" x2="12" y2="18"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">ライフプラン・相続・税務</div>
+                  <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 24 24"><path d="M12 5c-2-1.5-5-2-8-1v13c3-1 6-.5 8 1c2-1.5 5-2 8-1V4c-3-1-6-.5-8 1z"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
+            </div>
+          </div>
+          <div class="section-box">
+            <div class="section-label">
+              <span class="section-label-en">CORPORATE PLANNING</span>
+              <span class="section-label-ja">法人提案</span>
+            </div>
+            <div class="tool-cards-row cols-1">
+              <div class="tool-card primary" onclick="openHub('corp-hub')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">事業保障・退職金・法人保険</div>
+                  <div class="tool-card-desc">事業保障・退職金・法人保険をトータル提案</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="2" y1="12" x2="30" y2="12"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="collapse-content" id="support-collapse">
-          <div class="nav-cards">
-            <div class="nav-card" onclick="navigateTo('mail')">
-              <span class="nav-card-icon">✉</span>
-              <div class="nav-card-title">メール文章作成</div>
-              <div class="nav-card-desc">フォローメール・提案メールのテンプレート。</div>
-            </div>
-            <div class="nav-card" onclick="navigateTo('proposal')">
-              <span class="nav-card-icon">📄</span>
-              <div class="nav-card-title">提案資料作成</div>
-              <div class="nav-card-desc">計算結果をもとにした提案資料の下書き。</div>
-            </div>
-            <div class="nav-card" onclick="navigateTo('report')">
-              <span class="nav-card-icon">📋</span>
-              <div class="nav-card-title">会社報告テンプレート</div>
-              <div class="nav-card-desc">日報・週報・活動報告のテンプレート。</div>
-            </div>
-            <div class="nav-card" onclick="navigateTo('minutes')">
-              <span class="nav-card-icon">📝</span>
-              <div class="nav-card-title">議事録作成</div>
-              <div class="nav-card-desc">面談の要点を記録し、次回提案に活かす。</div>
+      </div>
+
+      <!-- SALES SUPPORT -->
+      <div class="card-group">
+        <div class="section-box">
+          <div class="section-label collapse-trigger" onclick="toggleSupport()">
+            <span class="section-label-en">SALES SUPPORT</span>
+            <span class="section-label-ja">営業支援</span>
+            <span class="collapse-arrow" id="support-arrow">▶</span>
+          </div>
+          <div class="collapse-content" id="support-collapse">
+            <div class="tool-cards-row cols-3">
+              <div class="tool-card" onclick="navigateTo('mail')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">メール文章作成</div>
+                  <div class="tool-card-desc">フォローメール・提案メールのテンプレート</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2"/><polyline points="3,7 16,17 29,7"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
+              <div class="tool-card" onclick="navigateTo('proposal')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">提案資料作成</div>
+                  <div class="tool-card-desc">計算結果をもとにした提案資料の下書き</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="8" y1="10" x2="24" y2="10"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
+              <div class="tool-card" onclick="navigateTo('report')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">会社報告テンプレート</div>
+                  <div class="tool-card-desc">日報・週報・活動報告のテンプレート</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2"/><line x1="10" y1="11" x2="22" y2="11"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
+              <div class="tool-card" onclick="navigateTo('minutes')">
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="tool-card-body">
+                  <div class="tool-card-title">議事録作成</div>
+                  <div class="tool-card-desc">面談の要点を記録し、次回提案に活かす</div>
+                </div>
+                <svg class="card-watermark" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10"/><polyline points="16,8 16,14 20,17"/></svg>
+                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+              </div>
             </div>
           </div>
         </div>
@@ -788,7 +1224,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-mortgage" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🏠 住宅ローン試算</div>
+        <div class="tool-title">住宅ローン試算</div>
         <div class="tool-subtitle">借入額・金利・期間から毎月の返済額と総利息を計算します</div>
       </div>
       <div class="sim-tabs">
@@ -947,7 +1383,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-insurance" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🛡 必要保障額</div>
+        <div class="tool-title">必要保障額</div>
         <div class="tool-subtitle">遺族の生活費・教育費から必要な保障額を試算します</div>
       </div>
       <div class="tool-grid">
@@ -1006,7 +1442,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-tax" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">💴 税務計算</div>
+        <div class="tool-title">税金・贈与チェック</div>
         <div class="tool-subtitle">贈与税・相続税の概算計算</div>
       </div>
       <div class="tool-grid">
@@ -1057,7 +1493,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-bmi" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">💊 健康・BMI</div>
+        <div class="tool-title">健康・体格バランス</div>
         <div class="tool-subtitle">BMI計算・肥満度判定</div>
       </div>
       <div class="tool-grid">
@@ -1099,7 +1535,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-asset" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📈 資産運用試算</div>
+        <div class="tool-title">ファンド確認</div>
         <div class="tool-subtitle">複利シミュレーション・積立額から将来資産を試算</div>
       </div>
       <div class="tool-grid">
@@ -1134,7 +1570,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-lifetime" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📊 匿名ライフプラン</div>
+        <div class="tool-title">匿名ライフプラン</div>
         <div class="tool-subtitle">生涯収入・支出・資産配分を匿名で試算</div>
       </div>
       <div class="tool-grid">
@@ -1171,7 +1607,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-security" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🏛 社会保障ナビ</div>
+        <div class="tool-title">公的保障チェック</div>
         <div class="tool-subtitle">公的保障・社会保障制度の確認</div>
       </div>
       <div class="tool-grid-1">
@@ -1213,7 +1649,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-realestate" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🏡 土地・エリア情報</div>
+        <div class="tool-title">土地・エリア情報</div>
         <div class="tool-subtitle">エリアの不動産価格や土地情報を参照</div>
       </div>
       <div class="tool-grid-1">
@@ -1229,7 +1665,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-mail" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">✉ メール文章作成</div>
+        <div class="tool-title">メール文章作成</div>
         <div class="tool-subtitle">面談後のフォローメール、提案メールのテンプレート作成</div>
       </div>
       <div class="tool-grid-1">
@@ -1243,7 +1679,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-proposal" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📄 提案資料作成</div>
+        <div class="tool-title">提案資料作成</div>
         <div class="tool-subtitle">計算結果をもとにした提案資料の下書き</div>
       </div>
       <div class="tool-grid-1">
@@ -1257,7 +1693,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-report" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📋 会社報告テンプレート</div>
+        <div class="tool-title">会社報告テンプレート</div>
         <div class="tool-subtitle">日報・週報・活動報告のテンプレート</div>
       </div>
       <div class="tool-grid-1">
@@ -1271,7 +1707,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-minutes" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📝 議事録作成</div>
+        <div class="tool-title">議事録作成</div>
         <div class="tool-subtitle">面談の要点を記録し、次回提案につなげる</div>
       </div>
       <div class="tool-grid-1">
@@ -1287,7 +1723,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-education" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🎓 教育費試算</div>
+        <div class="tool-title">教育資金チェック</div>
         <div class="tool-subtitle">教育費の総額・資金計画を試算します</div>
       </div>
       <div class="tool-grid-1">
@@ -1303,7 +1739,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-underwriting" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🔍 医務査定確認</div>
+        <div class="tool-title">医務査定確認</div>
         <div class="tool-subtitle">病名・告知内容から、確認ポイントを整理します</div>
       </div>
       <div class="tool-grid-1">
@@ -1319,7 +1755,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-memo" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">📝 面談メモ</div>
+        <div class="tool-title">面談メモ</div>
         <div class="tool-subtitle">面談中のメモ・確認事項・次回アクションを残す</div>
       </div>
       <div class="tool-grid-1">
@@ -1352,7 +1788,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-building" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🏗 建物価格シミュレーション</div>
+        <div class="tool-title">建物価格シミュレーション</div>
         <div class="tool-subtitle">建築費・リフォーム費用の目安を試算します</div>
       </div>
       <div class="tool-grid-1">
@@ -1366,42 +1802,77 @@ canvas{display:block;width:100%;border-radius:8px}
 
     <!-- ═══ WHITEBOARD TOOL ═══ -->
     <section id="section-whiteboard" class="section">
-      <div class="tool-header">
-        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">✏ 手書きボード</div>
-        <div class="tool-subtitle">画面に書きながら説明する</div>
-      </div>
-      <div class="tool-grid-1">
-        <div class="card">
-          <div class="card-title">手書きエリア</div>
-          <canvas id="whiteboard-canvas" style="width:100%;height:400px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.08);border-radius:var(--radius-sm);display:block;cursor:crosshair" onmousedown="startDraw(event)" onmousemove="draw(event)" onmouseup="stopDraw()" onmouseleave="stopDraw()" ontouchstart="touchDraw(event)" ontouchmove="touchDraw(event)" ontouchend="stopDraw()"></canvas>
-          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-outline btn-sm" onclick="clearBoard()">クリア</button>
-            <span style="font-size:11px;color:var(--card-text-muted)">タッチペン / マウス対応・自由に描けます</span>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
-          <button class="btn btn-gold" onclick="window.print()" style="padding:10px 28px">🖨 PDF出力 / 印刷</button>
-        </div>
-        <div style="margin-top:16px;padding:14px 16px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.10);border-radius:8px;font-size:11px;color:var(--text-dim);line-height:1.8">
-          入力内容はサーバーに保存されません。<br>
-          PDF出力・印刷はご利用端末上で行われます。
-        </div>
-      </div>
     </section>
 
     <!-- ═══ CALC MEMO TOOL ═══ -->
     <section id="section-calc-memo" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🧮 計算メモ</div>
+        <div class="tool-title">計算メモ</div>
         <div class="tool-subtitle">電卓代わりの簡易計算メモです</div>
       </div>
       <div class="tool-grid-1">
         <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
-          <span class="ph-icon">🧮</span>
           <div class="ph-title">準備中</div>
           <div class="ph-desc">計算メモ機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ MEDICAL CHECK ═══ -->
+    <section id="section-medical-check" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">医療保障チェック</div>
+        <div class="tool-subtitle">公的保障・自己負担・収入減から医療保障の目安を整理します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">医療保障チェック機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CORPORATE PLANNING PLACEHOLDERS ═══ -->
+    <section id="section-corp-analysis" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">決算書分析</div>
+        <div class="tool-subtitle">決算書から経営指標を読み解きます</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">決算書分析機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-corp-insurance" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">法人必要保障額</div>
+        <div class="tool-subtitle">経営者・役員の必要保障を試算します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">法人必要保障額機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-corp-retire" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">役員退職金・事業保障メモ</div>
+        <div class="tool-subtitle">退職金・事業承継の準備を整理します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">役員退職金・事業保障メモ機能は現在準備中です。</div>
         </div>
       </div>
     </section>
@@ -1409,9 +1880,115 @@ canvas{display:block;width:100%;border-radius:8px}
   </main>
 </div>
 
+<!-- ═══ FLOATING WHITEBOARD ═══ -->
+<div class="board-panel" id="board-panel">
+  <div class="board-header" id="board-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>
+    <span class="board-header-title">Handwriting Board<span class="ghost"> / 手書きボード</span></span>
+    <span style="font-size:11px;color:var(--text-dim);margin-right:8px" id="board-page-ind">1/1</span>
+    <button class="board-btn clear" id="board-max-btn" onclick="toggleMaximize()" style="font-size:14px;padding:2px 8px" title="最大化">□</button>
+    <button class="board-btn close-btn" onclick="closeBoard()">✕</button>
+  </div>
+  <div class="board-body">
+    <div class="board-canvas-wrap">
+      <canvas class="board-canvas" id="board-canvas" onmousedown="startDraw(event)" onmousemove="draw(event)" onmouseup="stopDraw()" onmouseleave="stopDraw()" ontouchstart="touchDraw(event)" ontouchmove="touchDraw(event)" ontouchend="stopDraw()"></canvas>
+    </div>
+    <div class="board-toolbar">
+      <button class="board-btn clear" onclick="wbPrevPage()">◀ 前</button>
+      <button class="board-btn clear" onclick="wbNextPage()">次 ▶</button>
+      <button class="board-btn clear" onclick="wbAddPage()">＋追加</button>
+      <button class="board-btn clear" onclick="wbDelPage()">削除</button>
+      <button class="board-btn clear" onclick="clearBoard()">クリア</button>
+      <span style="flex:1"></span>
+      <button class="board-btn clear" onclick="wbOpenWindow()" title="別ウィンドウで開く">別ウィンドウ</button>
+      <button class="board-btn clear" onclick="wbOpenPip()" title="最前面モード">最前面</button>
+      <button class="board-btn print" onclick="wbPrintCurrent()">現在ページ印刷</button>
+      <button class="board-btn print" onclick="wbPrintAll()">全ページ印刷</button>
+      <button class="board-btn clear" onclick="wbSavePng()">PNG保存</button>
+      <button class="board-btn clear" onclick="wbSaveAllPng()">全PNG保存</button>
+    </div>
+    <div class="board-notice">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。</div>
+  </div>
+</div>
+
+<!-- ═══ PRINT AREA (hidden) ═══ -->
+<div id="whiteboard-print-area" class="wb-print-area"></div>
+
+<!-- ═══ FLOATING MEETING NOTES ═══ -->
+<div class="memo-panel" id="memo-panel">
+  <div class="board-header" id="memo-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+    <span class="board-header-title">面談メモ<span class="ghost"> / Meeting Notes</span></span>
+    <button class="board-btn close-btn" onclick="closeMemo()">✕</button>
+  </div>
+  <div class="board-body">
+    <div style="margin-bottom:10px"><span style="font-size:11px;color:var(--text-dim)">面談メモ</span></div>
+    <textarea class="memo-textarea" id="memo-notes-fl" placeholder="面談の要点を記録してください"></textarea>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><span style="font-size:11px;color:var(--text-dim)">確認事項</span><textarea class="memo-textarea" id="memo-checks-fl" style="height:80px" placeholder="確認が必要な事項"></textarea></div>
+      <div><span style="font-size:11px;color:var(--text-dim)">次回アクション</span><textarea class="memo-textarea" id="memo-actions-fl" style="height:80px" placeholder="次回面談までに準備すること"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="board-btn clear" onclick="window.print()">印刷</button>
+    </div>
+    <div class="board-notice">入力内容はサーバーに保存されません。PDF出力・印刷はご利用端末上で行われます。</div>
+  </div>
+</div>
+
+<!-- ═══ FLOATING CALC MEMO ═══ -->
+<div class="cmemo-panel" id="cmemo-panel">
+  <div class="board-header" id="cmemo-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/></svg>
+    <span class="board-header-title">Calculation Log<span class="ghost"> / 計算メモ</span></span>
+    <span style="font-size:11px;color:var(--text-dim);margin-right:8px" id="clog-count">0件</span>
+    <button class="board-btn close-btn" onclick="closeCmemo()">✕</button>
+  </div>
+  <div class="board-body">
+    <div class="board-notice" style="margin-top:0;margin-bottom:10px">この内容は保存されません。面談終了前に印刷・コピーしてください。</div>
+    <div class="calc-log-list" id="calc-log-list">
+      <div style="text-align:center;color:var(--text-dim);padding:20px;font-size:12px">まだ計算結果が追加されていません</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button class="board-btn clear" onclick="calcLogCopy()">📋 コピー</button>
+      <button class="board-btn print" onclick="calcLogPrint()">印刷</button>
+      <button class="board-btn clear" style="margin-left:auto" onclick="calcLogClear()">全クリア</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WORKSPACE PANEL ═══ -->
+<div class="workspace-panel" id="workspace-panel">
+  <div class="workspace-box">
+    <div class="ws-header">
+      <svg class="ws-header-icon" id="ws-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      <div class="ws-header-info">
+        <div class="ws-header-title" id="ws-title">—</div>
+        <div class="ws-header-sub" id="ws-sub">—</div>
+      </div>
+      <button class="ws-close" onclick="closeWorkspace()">✕</button>
+    </div>
+    <div class="ws-body" id="ws-body"></div>
+  </div>
+</div>
+
+<!-- ═══ KOSAME UMBRELLA STATUS ═══ -->
+<div class="kosame-status" id="kosame-status">
+  <img class="kosame-umbrella" src="assets/kosame-logo-umbrella-144.png" alt="">
+  <div class="kosame-raindrop"></div>
+  <div class="kosame-raindrop"></div>
+  <div class="kosame-raindrop"></div>
+  <div class="kosame-raindrop"></div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="calc-toast" id="calc-toast"></div>
+
 <!-- ═══ FLOATING CALCULATOR ═══ -->
 <button class="calc-float-btn" id="calc-float-btn" onclick="toggleCalc()" title="電卓">🧮</button>
 <div class="calc-panel" id="calc-panel">
+  <div class="board-header" id="calc-header" style="margin:-16px -16px 8px;border-radius:var(--radius) var(--radius) 0 0;background:none;flex-shrink:0">
+    <span class="board-header-title" style="font-size:12px">Calculator<span class="ghost" style="font-size:10px"> / 電卓</span></span>
+  </div>
   <div class="calc-display" id="calc-display">0</div>
   <div class="calc-grid">
     <button class="calc-btn clr" onclick="calcInput('C')">C</button>
@@ -1466,6 +2043,7 @@ function showAppUI(session) {
   if (session.role === 'admin') {
     document.getElementById('topbar-admin-badge').style.display = 'inline';
   }
+  kosameStatus('idle');
   goDashboard();
 }
 
@@ -1479,15 +2057,16 @@ function navigateTo(key) {
   const backBtn = document.getElementById('topbar-back-btn');
   if (key === 'dashboard') {
     backBtn.classList.remove('visible');
-    document.getElementById('topbar-title').textContent = 'KOSAME Sales Console';
+    document.getElementById('topbar-title').textContent = 'Dashboard';
   } else {
     backBtn.classList.add('visible');
     const titles = {
-      mortgage:'住宅ローン試算',insurance:'必要保障額',tax:'税務計算',
-      bmi:'健康・体格バランス',asset:'資産運用試算',lifetime:'匿名ライフプラン',
-      security:'社会保障ナビ',realestate:'土地・エリア情報',education:'教育費試算',
-      underwriting:'医務査定確認',
+      mortgage:'住宅ローン試算',insurance:'必要保障額',tax:'税金・贈与チェック',
+      bmi:'健康・体格バランス',asset:'ファンド確認',lifetime:'匿名ライフプラン',
+      security:'公的保障チェック',realestate:'土地・エリア情報',education:'教育資金チェック',
+      underwriting:'医務査定確認','medical-check':'医療保障チェック',
       memo:'面談メモ',building:'建物価格シミュレーション',whiteboard:'手書きボード','calc-memo':'計算メモ',
+      'corp-analysis':'決算書分析','corp-insurance':'法人必要保障額','corp-retire':'役員退職金・事業保障メモ',
       mail:'メール文章作成',proposal:'提案資料作成',report:'会社報告テンプレート',minutes:'議事録作成'
     };
     document.getElementById('topbar-title').textContent = titles[key] || key;
@@ -2275,20 +2854,70 @@ function logoutUser() {
 }
 
 /* ═══ Whiteboard ═══ */
-let _wbDrawing = false, _wbCtx = null;
+let _wbDrawing = false, _wbCtx = null, _wbPages = [null], _wbCurrent = 0;
+
+function wbSaveCurrentPage() {
+  const canvas = document.getElementById('board-canvas');
+  if (!canvas) return;
+  _wbPages[_wbCurrent] = canvas.toDataURL('image/png');
+}
+function wbLoadPage(idx) {
+  const canvas = document.getElementById('board-canvas');
+  if (!canvas || !_wbCtx) return;
+  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
+  if (_wbPages[idx]) {
+    const img = new Image();
+    img.onload = function() { _wbCtx.drawImage(img, 0, 0); };
+    img.src = _wbPages[idx];
+  }
+}
+function wbUpdateIndicator() {
+  const el = document.getElementById('board-page-ind');
+  if (el) el.textContent = (_wbCurrent + 1) + '/' + _wbPages.length;
+}
+function wbPrevPage() {
+  if (_wbCurrent <= 0) return;
+  wbSaveCurrentPage(); _wbCurrent--; wbLoadPage(_wbCurrent); wbUpdateIndicator();
+}
+function wbNextPage() {
+  if (_wbCurrent >= _wbPages.length - 1) return;
+  wbSaveCurrentPage(); _wbCurrent++; wbLoadPage(_wbCurrent); wbUpdateIndicator();
+}
+function wbAddPage() {
+  wbSaveCurrentPage();
+  _wbPages.splice(_wbCurrent + 1, 0, null);
+  _wbCurrent++;
+  const canvas = document.getElementById('board-canvas');
+  if (canvas && _wbCtx) _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
+  wbUpdateIndicator();
+}
+function wbDelPage() {
+  if (_wbPages.length <= 1) return;
+  wbSaveCurrentPage();
+  _wbPages.splice(_wbCurrent, 1);
+  if (_wbCurrent >= _wbPages.length) _wbCurrent = _wbPages.length - 1;
+  wbLoadPage(_wbCurrent); wbUpdateIndicator();
+}
+
 function initWhiteboard() {
-  const canvas = document.getElementById('whiteboard-canvas');
+  const canvas = document.getElementById('board-canvas');
   if (!canvas) return;
   canvas.width = canvas.offsetWidth;
-  canvas.height = 400;
+  canvas.height = canvas.offsetHeight || 400;
   _wbCtx = canvas.getContext('2d');
   _wbCtx.strokeStyle = '#333';
-  _wbCtx.lineWidth = 2;
+  _wbCtx.lineWidth = 2.5;
   _wbCtx.lineCap = 'round';
   _wbCtx.lineJoin = 'round';
+  if (_wbPages[_wbCurrent]) {
+    const img = new Image();
+    img.onload = function() { _wbCtx.drawImage(img, 0, 0); };
+    img.src = _wbPages[_wbCurrent];
+  }
+  wbUpdateIndicator();
 }
 function getWbPos(e) {
-  const canvas = document.getElementById('whiteboard-canvas');
+  const canvas = document.getElementById('board-canvas');
   if (!canvas) return {x:0,y:0};
   const rect = canvas.getBoundingClientRect();
   return {x: e.clientX - rect.left, y: e.clientY - rect.top};
@@ -2297,14 +2926,456 @@ function startDraw(e) { _wbDrawing = true; const p = getWbPos(e); _wbCtx.beginPa
 function draw(e) { if (!_wbDrawing) return; const p = getWbPos(e); _wbCtx.lineTo(p.x, p.y); _wbCtx.stroke(); }
 function stopDraw() { _wbDrawing = false; _wbCtx.beginPath(); }
 function touchDraw(e) { e.preventDefault(); const t = e.touches[0]; const p = {clientX: t.clientX, clientY: t.clientY}; const wp = getWbPos(p); if (e.type === 'touchstart') { _wbDrawing = true; _wbCtx.beginPath(); _wbCtx.moveTo(wp.x, wp.y); } else if (_wbDrawing) { _wbCtx.lineTo(wp.x, wp.y); _wbCtx.stroke(); } }
-function clearBoard() { if (!_wbCtx) return; const canvas = document.getElementById('whiteboard-canvas'); if (!canvas) return; _wbCtx.clearRect(0, 0, canvas.width, canvas.height); }
+function clearBoard() {
+  if (!_wbCtx) return;
+  const canvas = document.getElementById('board-canvas');
+  if (!canvas) return;
+  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
+  _wbPages[_wbCurrent] = null;
+}
+
+/* Print & PNG */
+function wbPrintCurrent() {
+  wbSaveCurrentPage();
+  window.print();
+}
+function wbPrintAll() {
+  wbSaveCurrentPage();
+  const area = document.getElementById('whiteboard-print-area');
+  if (!area) return;
+  area.innerHTML = '';
+  _wbPages.forEach(function(src, i) {
+    const div = document.createElement('div');
+    div.className = 'wb-print-page';
+    div.innerHTML = '<div class="wb-page-label">Page ' + (i + 1) + ' / ' + _wbPages.length + '</div>'
+      + (src ? '<img src="' + src + '" alt="Page ' + (i + 1) + '"/>' : '<div style="height:200px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999">（白紙）</div>');
+    area.appendChild(div);
+  });
+  window.print();
+  setTimeout(function() { area.innerHTML = ''; }, 500);
+}
+function wbSavePng() {
+  wbSaveCurrentPage();
+  const src = _wbPages[_wbCurrent];
+  if (!src) return;
+  const a = document.createElement('a');
+  a.href = src; a.download = 'whiteboard-page-' + (_wbCurrent + 1) + '.png';
+  a.click();
+}
+function wbSaveAllPng() {
+  wbSaveCurrentPage();
+  _wbPages.forEach(function(src, i) {
+    if (!src) return;
+    setTimeout(function() {
+      const a = document.createElement('a');
+      a.href = src; a.download = 'whiteboard-page-' + (i + 1) + '.png';
+      a.click();
+    }, i * 200);
+  });
+}
+
+function openBoard() {
+  const panel = document.getElementById('board-panel');
+  if (!panel) return;
+  panel.classList.add('open');
+  panel.style.position = 'fixed';
+  panel.style.left = Math.max(16, (window.innerWidth - panel.offsetWidth) / 2) + 'px';
+  panel.style.top = '50px';
+  panel.style.right = 'auto';
+  panel.style.bottom = 'auto';
+  panel.style.transform = 'none';
+  panel.style.margin = '0';
+  panel.style.marginLeft = '0';
+  setTimeout(initWhiteboard, 100);
+}
+function closeBoard() {
+  const panel = document.getElementById('board-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+}
+
+/* ═══ Board Maximize ═══ */
+let _wbMaximized = false, _wbPreState = null;
+function toggleMaximize() {
+  const panel = document.getElementById('board-panel');
+  const btn = document.getElementById('board-max-btn');
+  if (!panel || !btn) return;
+  if (_wbMaximized) {
+    // Restore
+    if (_wbPreState) {
+      panel.style.left = _wbPreState.left;
+      panel.style.top = _wbPreState.top;
+      panel.style.width = _wbPreState.width;
+      panel.style.height = _wbPreState.height;
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      panel.style.marginLeft = _wbPreState.marginLeft || '';
+      panel.style.margin = '0';
+      panel.style.transform = 'none';
+    } else {
+      panel.style.left = ''; panel.style.top = ''; panel.style.width = '';
+      panel.style.height = ''; panel.style.right = ''; panel.style.bottom = '';
+      panel.style.marginLeft = '';
+    }
+    btn.textContent = '□'; btn.title = '最大化';
+    _wbMaximized = false;
+  } else {
+    // Save current state
+    const rect = panel.getBoundingClientRect();
+    _wbPreState = {
+      left: panel.style.left || rect.left + 'px',
+      top: panel.style.top || rect.top + 'px',
+      width: panel.style.width || rect.width + 'px',
+      height: panel.style.height || rect.height + 'px',
+      marginLeft: panel.style.marginLeft || ''
+    };
+    // Maximize
+    panel.style.left = '24px'; panel.style.top = '24px';
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.width = 'calc(100vw - 48px)';
+    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.marginLeft = '0';
+    btn.textContent = '↙'; btn.title = '元に戻す';
+    _wbMaximized = true;
+  }
+  // Resize canvas
+  wbSaveCurrentPage();
+  setTimeout(function() {
+    const canvas = document.getElementById('board-canvas');
+    if (!canvas) return;
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth;
+    canvas.height = wrap.offsetHeight;
+    wbLoadPage(_wbCurrent);
+  }, 150);
+}
+
+/* ═══ Standalone Whiteboard HTML ═══ */
+function wbStandaloneHTML() {
+  wbSaveCurrentPage();
+  var pagesJson = JSON.stringify(_wbPages.map(function(p) { return p || ''; }));
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KOSAME Handwriting Board</title><style>'
+    + '*{box-sizing:border-box;margin:0;padding:0}body{background:#040d1c;color:rgba(255,255,255,0.9);font-family:sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}'
+    + '.hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0a1d36;border-bottom:1px solid rgba(200,169,106,0.2);flex-shrink:0}'
+    + '.hdr svg{stroke:#C8A96A;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}'
+    + '.hdr-title{font-size:13px;font-weight:600;letter-spacing:0.04em}.hdr-title .dim{color:rgba(255,255,255,0.4);font-weight:400;font-size:11px;margin-left:4px}'
+    + '.hdr-spacer{flex:1}.hdr-ind{font-size:11px;color:rgba(255,255,255,0.35)}'
+    + '.tb{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap;flex-shrink:0;background:#071628;border-bottom:1px solid rgba(200,169,106,0.1)}'
+    + '.tb button{font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7)}'
+    + '.tb button:hover{background:rgba(200,169,106,0.15);color:#C8A96A;border-color:rgba(200,169,106,0.3)}'
+    + '.tb button.pri{background:linear-gradient(135deg,#C8A96A,#D4BC8A);color:#040d1c;border:none}'
+    + '.tb button.pri:hover{opacity:0.9}'
+    + '.cwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;background:#faf8f2;margin:12px;border-radius:12px;border:1px solid rgba(0,0,0,0.08);overflow:hidden}'
+    + 'canvas{display:block;max-width:100%;max-height:100%;cursor:crosshair}'
+    + '.note{padding:6px 16px;font-size:10px;color:rgba(255,255,255,0.3);text-align:center;flex-shrink:0}'
+    + '@media print{body>*:not(.cwrap){display:none!important}.cwrap{margin:0;border:none;border-radius:0;padding:0}}'
+    + '</style></head><body>'
+    + '<div class="hdr"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>'
+    + '<span class="hdr-title">Handwriting Board<span class="dim"> / 手書きボード</span></span><span class="hdr-spacer"></span>'
+    + '<span class="hdr-ind" id="pi">1/1</span></div>'
+    + '<div class="tb">'
+    + '<button onclick="pi.prev()">◀ 前</button><button onclick="pi.next()">次 ▶</button>'
+    + '<button onclick="pi.add()">＋追加</button><button onclick="pi.del()">削除</button>'
+    + '<button onclick="pi.clear()">クリア</button><span style="flex:1"></span>'
+    + '<button class="pri" onclick="pi.printCur()">現在ページ印刷</button>'
+    + '<button class="pri" onclick="pi.printAll()">全ページ印刷</button>'
+    + '<button onclick="pi.savePng()">PNG保存</button>'
+    + '<button onclick="pi.saveAllPng()">全PNG保存</button>'
+    + '</div><div class="cwrap"><canvas id="mc"></canvas></div>'
+    + '<div class="note">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。</div>'
+    + '<script>var _p=' + pagesJson + ',_i=0;var pi={prev:function(){pi.save();if(_i>0)_i--;pi.load();pi.upd();},next:function(){pi.save();if(_i<_p.length-1)_i++;pi.load();pi.upd();},add:function(){pi.save();_p.splice(_i+1,0,"");_i++;pi.clear();pi.upd();},del:function(){if(_p.length<=1)return;pi.save();_p.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";},save:function(){var c=document.getElementById("mc");if(!c)return;_p[_i]=c.toDataURL("image/png");},load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);if(_p[_i]){var img=new Image();img.onload=function(){x.drawImage(img,0,0);};img.src=_p[_i];}},upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+"/"+_p.length;},savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},saveAllPng:function(){pi.save();_p.forEach(function(s,i){if(!s)return;setTimeout(function(){var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},printCur:function(){pi.save();window.print();},printAll:function(){pi.save();var w=window.open("","_blank");w.document.write("<!DOCTYPE html><html><head><meta charset=UTF-8><title>Print</title><style>.pg{page-break-after:always;text-align:center}.pg:last-child{page-break-after:auto}.pg img{max-width:100%}.pg .lbl{font-size:12px;color:#666}</style></head><body>");_p.forEach(function(s,i){w.document.write("<div class=pg><div class=lbl>Page "+(i+1)+" / "+_p.length+"</div>"+(s?"<img src="+s+">":"<div style=height:200px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999>（白紙）</div>")+"</div>");});w.document.write("</body></html>");w.document.close();setTimeout(function(){w.print();},300);}};'
+    + 'var _d=false;var c=document.getElementById("mc");c.width=c.parentElement.offsetWidth;c.height=c.parentElement.offsetHeight;'
+    + 'var x=c.getContext("2d");x.strokeStyle="#333";x.lineWidth=2.5;x.lineCap="round";x.lineJoin="round";'
+    + 'c.onmousedown=function(e){_d=true;x.beginPath();var r=c.getBoundingClientRect();x.moveTo(e.clientX-r.left,e.clientY-r.top);};'
+    + 'c.onmousemove=function(e){if(!_d)return;var r=c.getBoundingClientRect();x.lineTo(e.clientX-r.left,e.clientY-r.top);x.stroke();};'
+    + 'c.onmouseup=c.onmouseleave=function(){_d=false;x.beginPath();};'
+    + 'c.ontouchstart=function(e){e.preventDefault();_d=true;var t=e.touches[0],r=c.getBoundingClientRect();x.beginPath();x.moveTo(t.clientX-r.left,t.clientY-r.top);};'
+    + 'c.ontouchmove=function(e){e.preventDefault();if(!_d)return;var t=e.touches[0],r=c.getBoundingClientRect();x.lineTo(t.clientX-r.left,t.clientY-r.top);x.stroke();};'
+    + 'c.ontouchend=function(){_d=false;x.beginPath();};'
+    + 'if(_p[0]){var img=new Image();img.onload=function(){x.drawImage(img,0,0);};img.src=_p[0];}'
+    + 'pi.upd();'
+    + '<\/script></body></html>';
+}
+
+function wbOpenWindow() {
+  wbSaveCurrentPage();
+  var w = window.open('', '_blank', 'width=900,height=650');
+  w.document.write(wbStandaloneHTML());
+  w.document.close();
+}
+
+function wbOpenPip() {
+  if ('documentPictureInPicture' in window) {
+    wbSaveCurrentPage();
+    window.documentPictureInPicture.requestWindow({ width: 900, height: 650 }).then(function(pipWin) {
+      pipWin.document.write(wbStandaloneHTML());
+      pipWin.document.close();
+    }).catch(function() {
+      wbOpenWindow();
+    });
+  } else {
+    alert('このブラウザでは最前面モードに対応していません。\n別ウィンドウで開き、WindowsのAlways On Top等をご利用ください。');
+    wbOpenWindow();
+  }
+}
+
+function openMemo() {
+  const panel = document.getElementById('memo-panel');
+  if (!panel) return;
+  panel.classList.add('open');
+  panel.style.position = 'fixed';
+  panel.style.left = Math.max(16, (window.innerWidth - 420) / 2) + 'px';
+  panel.style.top = '50px';
+  panel.style.right = 'auto'; panel.style.bottom = 'auto';
+  panel.style.transform = 'none'; panel.style.margin = '0'; panel.style.marginLeft = '0';
+}
+function closeMemo() {
+  const panel = document.getElementById('memo-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+}
+
+function openCmemo() {
+  const panel = document.getElementById('cmemo-panel');
+  if (!panel) return;
+  panel.classList.add('open');
+  panel.style.position = 'fixed';
+  panel.style.left = Math.max(16, (window.innerWidth - 420) / 2) + 'px';
+  panel.style.top = '50px';
+  panel.style.right = 'auto'; panel.style.bottom = 'auto';
+  panel.style.transform = 'none'; panel.style.margin = '0'; panel.style.marginLeft = '0';
+  renderCalcLog();
+}
+function closeCmemo() {
+  const panel = document.getElementById('cmemo-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+}
+
+/* ═══ Calculation Log ═══ */
+const calculationLog = [];
+
+function addToCalcLog(type, conditions, results, note) {
+  calculationLog.push({
+    type: type,
+    time: new Date().toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'}),
+    conditions: conditions || '',
+    results: results || '',
+    note: note || ''
+  });
+  updateCalcBadge();
+  renderCalcLog();
+  showToast('計算メモに追加しました');
+}
+function updateCalcBadge() {
+  const card = document.getElementById('calc-memo-card');
+  const badge = document.getElementById('calc-log-badge');
+  const n = calculationLog.length;
+  if (badge) { badge.textContent = n; badge.style.display = n > 0 ? 'inline-flex' : 'none'; }
+  if (card) {
+    if (n > 0) card.classList.add('has-items');
+    else card.classList.remove('has-items');
+  }
+  const cnt = document.getElementById('clog-count');
+  if (cnt) cnt.textContent = n + '件';
+}
+function renderCalcLog() {
+  const list = document.getElementById('calc-log-list');
+  if (!list) return;
+  if (calculationLog.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:12px">まだ計算結果が追加されていません</div>';
+    return;
+  }
+  list.innerHTML = calculationLog.map(function(l, i) {
+    return '<div class="calc-log-item">'
+      + '<span class="cli-type">' + l.type + '</span><span class="cli-time">' + l.time + '</span>'
+      + (l.conditions ? '<div class="cli-body">条件: ' + l.conditions + '</div>' : '')
+      + (l.results ? '<div class="cli-body">結果: <strong>' + l.results + '</strong></div>' : '')
+      + (l.note ? '<div class="cli-note">' + l.note + '</div>' : '')
+      + '</div>';
+  }).join('');
+  updateCalcBadge();
+}
+function calcLogClear() {
+  calculationLog.length = 0;
+  updateCalcBadge();
+  renderCalcLog();
+}
+function calcLogCopy() {
+  if (calculationLog.length === 0) return;
+  const text = calculationLog.map(function(l, i) {
+    return '[' + l.type + '] ' + l.time + '\n条件: ' + l.conditions + '\n結果: ' + l.results + (l.note ? '\nメモ: ' + l.note : '');
+  }).join('\n\n');
+  navigator.clipboard.writeText(text).catch(() => {});
+  showToast('クリップボードにコピーしました');
+}
+function calcLogPrint() {
+  if (calculationLog.length === 0) return;
+  const w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Calculation Log</title><style>body{font-family:sans-serif;padding:20px;line-height:1.8}h2{color:#C8A96A}.item{border:1px solid #ccc;border-radius:8px;padding:12px;margin:8px 0}.type{color:#C8A96A;font-weight:700;font-size:12px}.time{color:#999;font-size:11px;margin-left:8px}.body{margin-top:4px}.result{font-weight:700}@media print{.item{page-break-inside:avoid}}</style></head><body><h2>Calculation Log / 計算メモ</h2>');
+  calculationLog.forEach(function(l) {
+    w.document.write('<div class="item"><span class="type">' + l.type + '</span><span class="time">' + l.time + '</span>'
+      + (l.conditions ? '<div class="body">条件: ' + l.conditions + '</div>' : '')
+      + (l.results ? '<div class="body result">結果: ' + l.results + '</div>' : '')
+      + (l.note ? '<div class="body" style="color:#666">' + l.note + '</div>' : '')
+      + '</div>');
+  });
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 300);
+}
+function showToast(msg) {
+  const el = document.getElementById('calc-toast');
+  if (!el) return;
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2000);
+}
+
+/* ═══ KOSAME Umbrella Status ═══ */
+function kosameStatus(action) {
+  const el = document.getElementById('kosame-status');
+  if (!el) return;
+  if (action === 'idle') {
+    el.classList.add('visible'); el.classList.remove('active', 'fadeout');
+  } else if (action === 'think') {
+    el.classList.add('visible', 'active'); el.classList.remove('fadeout');
+  } else if (action === 'done') {
+    el.classList.add('fadeout'); el.classList.remove('active');
+    setTimeout(function() { el.classList.remove('fadeout'); }, 700);
+  } else if (action === 'hide') {
+    el.classList.remove('visible', 'active', 'fadeout');
+  }
+}
+
+// ダッシュボード上は1枚のカードに集約しつつ、中の個別ツールは維持するための
+// 簡易ハブ。カードクリック→ハブ(サブツール選択)→openWorkspace(既存)という
+// 経路にすることで機能は一つも削らない。
+const HUB_GROUPS = {
+  'life-tax-hub': {
+    title: 'ライフプラン・相続・税務',
+    sub: 'ライフプラン・相続・税務の最適化をサポート',
+    items: ['lifetime', 'education', 'security', 'tax'],
+  },
+  'corp-hub': {
+    title: '事業保障・退職金・法人保険',
+    sub: '事業保障・退職金・法人保険をトータル提案',
+    items: ['corp-analysis', 'corp-insurance', 'corp-retire'],
+  },
+};
+function openHub(hubKey) {
+  const panel = document.getElementById('workspace-panel');
+  const hub = HUB_GROUPS[hubKey];
+  if (!panel || !hub) return;
+  document.getElementById('ws-title').textContent = hub.title;
+  document.getElementById('ws-sub').textContent = hub.sub;
+  const body = document.getElementById('ws-body');
+  const subs = {
+    insurance:'万一のときに必要な保障額を確認','medical-check':'公的保障・自己負担・収入減から医療保障の目安を整理',
+    mortgage:'借入額・金利・期間から毎月の返済額と総利息を計算',asset:'積立・一時払いの将来額を確認',
+    'corp-analysis':'決算書から経営指標を読み解く','corp-insurance':'経営者・役員の必要保障を試算',
+    realestate:'エリアの不動産価格や土地情報を参照',building:'建物・外構・諸費用込みの総額を確認',
+    education:'教育費の目安を確認',security:'公的保障の目安を確認',tax:'贈与税・相続税の概算を確認',
+    lifetime:'収支・教育費・保障額を匿名で確認',underwriting:'告知内容の確認ポイントを整理',
+    bmi:'BMI計算・体格の目安を確認','corp-retire':'退職金・事業承継の準備を整理'
+  };
+  const titles2 = {
+    lifetime:'匿名ライフプラン',education:'教育資金チェック',security:'公的保障チェック',tax:'税金・贈与チェック',
+    'corp-analysis':'決算書分析','corp-insurance':'法人必要保障額','corp-retire':'役員退職金・事業保障メモ',
+  };
+  body.innerHTML = '<div class="hub-list">' + hub.items.map((k) => (
+    '<div class="hub-list-item" onclick="openWorkspace(\'' + k + '\')">' +
+      '<div class="hub-list-title">' + (titles2[k] || k) + '</div>' +
+      '<div class="hub-list-desc">' + (subs[k] || '') + '</div>' +
+    '</div>'
+  )).join('') + '</div>';
+  panel.classList.add('open');
+  kosameStatus('think');
+}
+
+function openWorkspace(key) {
+  const panel = document.getElementById('workspace-panel');
+  if (!panel) return;
+  const titles = {
+    insurance:'必要保障額','medical-check':'医療保障チェック',mortgage:'住宅ローン試算',
+    asset:'ファンド確認','corp-analysis':'決算書分析','corp-insurance':'法人必要保障額',
+    realestate:'土地・エリア情報',building:'建物価格シミュレーション',
+    education:'教育資金チェック',security:'公的保障チェック',tax:'税金・贈与チェック',
+    lifetime:'匿名ライフプラン',underwriting:'医務査定確認',bmi:'健康・体格バランス',
+    'corp-retire':'役員退職金・事業保障メモ'
+  };
+  const subs = {
+    insurance:'万一のときに必要な保障額を確認','medical-check':'公的保障・自己負担・収入減から医療保障の目安を整理',
+    mortgage:'借入額・金利・期間から毎月の返済額と総利息を計算',asset:'積立・一時払いの将来額を確認',
+    'corp-analysis':'決算書から経営指標を読み解く','corp-insurance':'経営者・役員の必要保障を試算',
+    realestate:'エリアの不動産価格や土地情報を参照',building:'建物・外構・諸費用込みの総額を確認',
+    education:'教育費の目安を確認',security:'公的保障の目安を確認',tax:'贈与税・相続税の概算を確認',
+    lifetime:'収支・教育費・保障額を匿名で確認',underwriting:'告知内容の確認ポイントを整理',
+    bmi:'BMI計算・体格の目安を確認','corp-retire':'退職金・事業承継の準備を整理'
+  };
+  document.getElementById('ws-title').textContent = titles[key] || key;
+  document.getElementById('ws-sub').textContent = subs[key] || '';
+  const sec = document.getElementById('section-' + key);
+  const body = document.getElementById('ws-body');
+  if (sec && body) {
+    body.innerHTML = sec.innerHTML;
+  }
+  panel.classList.add('open');
+  kosameStatus('think');
+  // Inject "計算メモに追加" button for calc-log-enabled tools
+  const logKeys = ['mortgage','tax','security','insurance','medical-check','asset'];
+  if (logKeys.indexOf(key) >= 0 && body) {
+    setTimeout(function() {
+      const existing = body.querySelector('.ws-add-log-btn');
+      if (existing) return;
+      const btn = document.createElement('button');
+      btn.className = 'board-btn print ws-add-log-btn';
+      btn.textContent = '📋 計算メモに追加';
+      btn.style.cssText = 'margin-top:16px;width:100%;padding:10px';
+      btn.onclick = function() {
+        const summaries = {
+          mortgage: ['住宅ローン試算', formatMortgageCond(), formatMortgageResult(), ''],
+          tax: ['税金・贈与', formatTaxCond(), formatTaxResult(), ''],
+          security: ['公的保障', '', '', '公的保障の概要を確認'],
+          insurance: ['必要保障額', formatInsCond(), formatInsResult(), ''],
+          'medical-check': ['医療保障', '', '', '医療保障の目安を確認'],
+          asset: ['ファンド確認', formatAssetCond(), formatAssetResult(), ''],
+        };
+        const s = summaries[key] || [key, '', '', ''];
+        addToCalcLog(s[0], s[1], s[2], s[3]);
+      };
+      body.appendChild(btn);
+    }, 200);
+  }
+  setTimeout(() => {
+    if (key==='mortgage'){calcMortgage();drawMortgageChart();}
+    if (key==='insurance') calcInsurance();
+    if (key==='tax') calcGiftTax();
+    if (key==='bmi') calcBMI();
+    if (key==='asset'){calcAsset();drawAssetChart();}
+    if (key==='lifetime') calcLifetime();
+    if (key==='security') calcSocialSecurity();
+    kosameStatus('done');
+  }, 100);
+}
+function closeWorkspace() {
+  const panel = document.getElementById('workspace-panel');
+  if (!panel) return;
+  panel.classList.remove('open');
+}
 
 /* ═══ Calculator ═══ */
 let _calcExpr = '', _calcClearNext = false;
 function toggleCalc() {
   const panel = document.getElementById('calc-panel');
   if (!panel) return;
+  const opening = !panel.classList.contains('open');
   panel.classList.toggle('open');
+  if (opening) {
+    panel.style.left = ''; panel.style.top = '';
+    panel.style.right = ''; panel.style.bottom = '';
+    panel.style.transform = ''; panel.style.margin = '';
+    panel.style.marginLeft = '';
+  }
 }
 function calcInput(v) {
   const display = document.getElementById('calc-display');
@@ -2332,6 +3403,93 @@ function calcCopy() {
   navigator.clipboard.writeText(text).catch(() => {});
 }
 
+/* ═══ Calc Log Format Helpers ═══ */
+function formatMortgageCond() {
+  const P = document.getElementById('m-principal'); const r = document.getElementById('m-rate'); const y = document.getElementById('m-years');
+  if (!P || !r || !y) return '';
+  return '借入額' + (P.value||'?') + '万円 / 金利' + (r.value||'?') + '% / ' + (y.value||'?') + '年';
+}
+function formatMortgageResult() {
+  return '月返済 ' + (document.getElementById('m-monthly')?.textContent||'—') + ' / 総利息 ' + (document.getElementById('m-interest')?.textContent||'—');
+}
+function formatTaxCond() {
+  return '贈与' + (document.getElementById('gift-amount')?.value||'?') + '万円 / 相続' + (document.getElementById('inh-estate')?.value||'?') + '万円';
+}
+function formatTaxResult() {
+  return '贈与税 ' + (document.getElementById('gt-amount')?.textContent||'—') + ' / 相続税 ' + (document.getElementById('ih-tax')?.textContent||'—');
+}
+function formatInsCond() { return '年収' + (document.getElementById('ins-income')?.value||'?') + '万円'; }
+function formatInsResult() { return '必要保障額 ' + (document.getElementById('ins-r-needed')?.textContent||'—'); }
+function formatAssetCond() {
+  const m = document.getElementById('ast-monthly'); const y = document.getElementById('ast-years'); const r = document.getElementById('ast-rate');
+  if (!m || !y || !r) return '';
+  return '月' + (m.value||'?') + '万円 / ' + (y.value||'?') + '年 / 利率' + (r.value||'?') + '%';
+}
+function formatAssetResult() { return '将来資産 ' + (document.getElementById('ast-total')?.textContent||'—'); }
+
+/* ═══ Drag & Drop ═══ */
+function makeDraggable(panelId, handleId) {
+  const panel = document.getElementById(panelId);
+  const handle = document.getElementById(handleId);
+  if (!panel || !handle) return;
+
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  handle.addEventListener('pointerdown', function(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (_wbMaximized && panelId === 'board-panel') return;
+    if (e.target.closest('button,input,select,textarea,canvas,.resize-handle,.no-drag')) return;
+
+    const rect = panel.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    panel.style.position = 'fixed';
+    panel.style.left = rect.left + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.transform = 'none';
+    panel.style.margin = '0';
+    panel.style.marginLeft = '0';
+
+    dragging = true;
+    if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    const width = panel.offsetWidth;
+    const height = panel.offsetHeight;
+    let nl = e.clientX - offsetX;
+    let nt = e.clientY - offsetY;
+    nl = Math.max(8, Math.min(nl, window.innerWidth - width - 8));
+    nt = Math.max(8, Math.min(nt, window.innerHeight - height - 8));
+    panel.style.left = nl + 'px';
+    panel.style.top = nt + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.transform = 'none';
+  });
+
+  const stopDrag = function(e) {
+    if (!dragging) return;
+    dragging = false;
+    if (handle.releasePointerCapture) handle.releasePointerCapture(e.pointerId);
+  };
+  handle.addEventListener('pointerup', stopDrag);
+  handle.addEventListener('pointercancel', stopDrag);
+}
+setTimeout(function() {
+  makeDraggable('board-panel', 'board-header');
+  makeDraggable('calc-panel', 'calc-header');
+  makeDraggable('memo-panel', 'memo-header');
+  makeDraggable('cmemo-panel', 'cmemo-header');
+}, 300);
+
 /* ═══ Init ═══ */
 initAuth();
 // Init calculators on load
@@ -2341,7 +3499,6 @@ try { calcBMI(); } catch(e) {}
 try { calcAsset(); } catch(e) {}
 try { calcLifetime(); } catch(e) {}
 try { calcSocialSecurity(); } catch(e) {}
-try { initWhiteboard(); } catch(e) {}
 </script>
 
 </body>

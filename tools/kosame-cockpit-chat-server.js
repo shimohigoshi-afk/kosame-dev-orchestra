@@ -14,7 +14,7 @@ const { assertPromptFirewall } = require('./kosame-forbidden-prompt-firewall');
 const { saveHandoffInbox } = require('./kosame-codex-handoff-bridge-server');
 const { callKosameGPT } = require('./kosame-chat-gpt');
 const { classifyIntent } = require('./kosame-chat-intent-classifier');
-const { callChatLLMChain } = require('./kosame-chat-llm-router');
+const { callChatLLMChain, streamChatLLMChain } = require('./kosame-chat-llm-router');
 const { appendChatHistory } = require('./kosame-chat-history');
 const { appendPipelineStageEvent, formatPipelineStageEvent } = require('./kosame-pipeline-telemetry');
 // Trigger Gemini key check at server startup (non-blocking)
@@ -1497,8 +1497,109 @@ async function handleChatRequest(body) {
   return result;
 }
 
+// ── ストリーミング版 (v113.11.0) ──────────────────────────────────────────
+// casual判定されたメッセージのみ実際にトークン単位でonChunkへ中継する。
+// ambiguous/taskは従来のhandleChatRequest()を丸ごと呼び、結果を単一チャンク
+// として渡す(既存のtask/work_orderパイプラインは変更しない)。
+//
+// @param {object} body
+// @param {(deltaText: string) => void} onChunk
+// @param {{ abortSignal?: AbortSignal }} opts
+async function handleChatRequestStreaming(body, onChunk, opts = {}) {
+  const requestAt = new Date().toISOString();
+  const source = body && typeof body === 'object' ? body : {};
+  const normalized = normalizeChatRequest(source);
+  const rawMessage = normalizeContent(normalized.message);
+  const hasAttachments = (normalized.attachments || []).length > 0;
+  const message = rawMessage || (hasAttachments ? '添付ファイルを解析してください。' : '');
+  const project = normalizeContent(normalized.project);
+  const context = normalizeContent(normalized.context);
+  const contextSummary = normalizeContent(source.contextSummary || source.context || normalized.contextSummary);
+  const directText = [message, project].filter(Boolean).join(' ');
+
+  if (!message) {
+    return { ok: false, error: 'message を入力してください。', created_at: requestAt };
+  }
+  if (hasSecretLikeText(directText)) {
+    return { ok: false, error: 'secret っぽい文字列は受け取れません。', created_at: requestAt };
+  }
+  if (isTooLong(message)) {
+    return { ok: false, error: 'message が長すぎます。', created_at: requestAt };
+  }
+
+  const chatIntent = classifyIntent(message);
+
+  if (chatIntent === 'ambiguous') {
+    const confirmReply = 'これはタスクとして実行しますか？実装をご希望の場合は、対象ファイルや「〜してください」等、具体的な指示で送り直してくださいっ☂️';
+    onChunk(confirmReply);
+    try {
+      appendChatHistory({ role: 'user', content: message });
+      appendChatHistory({ role: 'assistant', content: confirmReply });
+    } catch (_) { /* history is best-effort */ }
+    return { ok: true, reply: confirmReply, intent: 'ambiguous', created_at: requestAt };
+  }
+
+  if (chatIntent === 'casual') {
+    // onChunkを自前でも積算し、キャンセルされた場合でもここまで届いた
+    // テキストをchat-historyに保存できるようにする(呼び出し元のSSE
+    // ハンドラは接続が切れていて応答を送れなくても、履歴には残す)。
+    let accumulated = '';
+    const wrappedOnChunk = (delta) => {
+      accumulated += delta;
+      onChunk(delta);
+    };
+    let llmResult = null;
+    try {
+      llmResult = await streamChatLLMChain(message, { abortSignal: opts.abortSignal }, wrappedOnChunk);
+    } catch (err) {
+      process.stderr.write(`[chat-llm-router] ERROR: ${err && err.message ? err.message : String(err)}\n`);
+    }
+
+    if (llmResult && llmResult.aborted) {
+      // ユーザーによるキャンセル: ここまでストリーミングで届いたテキストを
+      // そのまま「確定」してchat-historyに保存する。
+      const partialReply = accumulated.trim();
+      try {
+        appendChatHistory({ role: 'user', content: message });
+        if (partialReply) appendChatHistory({ role: 'assistant', content: partialReply });
+      } catch (_) { /* history is best-effort */ }
+      return { ok: true, aborted: true, reply: partialReply || null, intent: 'casual', created_at: requestAt };
+    }
+
+    let casualReply;
+    let modelUsed = null;
+    let truncated = false;
+    if (llmResult && llmResult.ok && llmResult.reply) {
+      casualReply = llmResult.reply;
+      modelUsed = llmResult.modelUsed;
+      truncated = !!llmResult.truncated;
+    } else {
+      const localCasual = buildLocalReply({
+        message,
+        project,
+        context: context.slice(0, MAX_CONTEXT_LENGTH),
+        contextSummary: contextSummary.slice(0, MAX_CONTEXT_LENGTH),
+      }, contextSummary);
+      const baseReply = (localCasual && localCasual.reply) ? localCasual.reply : 'ご依頼を受け取りましたっ☂️';
+      casualReply = `${baseReply}\n\n（ローカル回答（全API接続失敗））`;
+      onChunk(casualReply);
+    }
+    try {
+      appendChatHistory({ role: 'user', content: message });
+      appendChatHistory({ role: 'assistant', content: casualReply });
+    } catch (_) { /* history is best-effort */ }
+    return { ok: true, reply: casualReply, intent: 'casual', modelUsed, truncated, created_at: requestAt };
+  }
+
+  // task: 既存の完全なパイプラインに委譲し、結果を単一チャンクとして渡す。
+  const fullResult = await handleChatRequest(body);
+  if (fullResult && fullResult.reply) onChunk(fullResult.reply);
+  return fullResult;
+}
+
 module.exports = {
   handleChatRequest,
+  handleChatRequestStreaming,
   loadPersona,
   normalizeChatRequest,
   normalizeContent,

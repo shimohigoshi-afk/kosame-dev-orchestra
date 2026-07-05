@@ -3322,10 +3322,16 @@ function showTypingIndicator() {
 }
 
 function hideTypingIndicator() {
+  _removeTypingRow();
+  setChatBusyState('thinking', false);
+}
+
+// ストリーミング開始(最初のチャンク受信)時は「考え中」プレースホルダー行を
+// 消すだけにとどめ、busy状態(=キャンセルボタン有効)は生成完了まで維持する。
+function _removeTypingRow() {
   _typingIndicatorActive = false;
   const el = document.getElementById('chat-typing-indicator');
   if (el && el.parentNode) el.parentNode.removeChild(el);
-  setChatBusyState('thinking', false);
 }
 
 // ── 送信ボタンの状態(Claude.ai風): 通常=↑(水色) / 考え中・実行中=■(停止・グレー) ──
@@ -7300,6 +7306,9 @@ async function sendChatMessage(userText, confirmationContext) {
   updateUrlDetectionBanner('');
 
   let _chatTimedOut = false;
+  let _firstChunkReceived = false;
+  let _streamedEntry = null;
+  let _streamedBodyEl = null;
   try {
     const payload = {
       ...buildChatPayload(msgText, confirmationContext),
@@ -7321,43 +7330,100 @@ async function sendChatMessage(userText, confirmationContext) {
 
     const _chatAbortController = new AbortController();
     registerChatAbortController(_chatAbortController);
-    // APIタイムアウト対策: 30秒応答がない場合はabortしてローカル返答にフォールバックする
+    // APIタイムアウト対策: 30秒何も届かない場合はabortしてローカル返答にフォールバックする。
+    // 最初のチャンクが届いた時点でこのタイマーは意味を失う(生成中は
+    // サーバー側のアイドルタイムアウトが個別に管理する)のでクリアする。
     const _chatTimeoutId = setTimeout(function() {
       _chatTimedOut = true;
       _chatAbortController.abort();
     }, 30000);
-    const res = await fetch('/api/chat', {
+
+    const res = await fetch('/api/chat-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: _chatAbortController.signal,
     });
-    clearTimeout(_chatTimeoutId);
-    const data = await res.json();
+    if (!res.ok || !res.body) {
+      throw new Error('stream request failed: ' + res.status);
+    }
 
-    if (!data.ok) {
-      const errorText = data.error || '入力が不足しています。';
-      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}`, error_details: data.error_details || null, pipeline_trace: data.pipeline_trace || [] });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let doneData = null;
+
+    function handleStreamEvent(dataStr) {
+      let evt;
+      try { evt = JSON.parse(dataStr); } catch (_) { return; }
+      clearTimeout(_chatTimeoutId);
+      if (evt.type === 'chunk') {
+        if (!_firstChunkReceived) {
+          _firstChunkReceived = true;
+          _removeTypingRow();
+          _streamedEntry = { role: 'assistant', content: '' };
+          chatHistory.push(_streamedEntry);
+          renderChatThread();
+          const aiRows = document.querySelectorAll('.chat-msg-ai');
+          const lastRow = aiRows[aiRows.length - 1];
+          _streamedBodyEl = lastRow ? lastRow.querySelector('.chat-bubble-text') : null;
+        }
+        _streamedEntry.content += evt.text;
+        if (_streamedBodyEl) {
+          _streamedBodyEl.textContent = _streamedEntry.content;
+          const thread = document.getElementById('chat-thread');
+          if (thread) thread.scrollTop = thread.scrollHeight;
+        }
+      } else if (evt.type === 'done' || evt.type === 'error') {
+        doneData = evt;
+      }
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf('\n\n')) >= 0) {
+        const block = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const dataLine = block.split('\n').find(function(l) { return l.indexOf('data:') === 0; });
+        if (dataLine) handleStreamEvent(dataLine.slice(5).trim());
+      }
+    }
+    clearTimeout(_chatTimeoutId);
+    // ストリーミング終了(成功・エラー問わず) はここが真の終端。
+    // is-busy(=キャンセルボタン表示)はここで初めて解除する。
+    hideTypingIndicator();
+
+    if (!doneData) {
+      doneData = { ok: !!_streamedEntry, reply: _streamedEntry ? _streamedEntry.content : null };
+    }
+
+    if (doneData.type === 'error' || (!doneData.ok && !_streamedEntry)) {
+      const errorText = doneData.message || doneData.error || '入力が不足しています。';
+      chatHistory.push({ role: 'assistant', content: `エラー: ${errorText}` });
       hideTypingIndicator();
       renderChatThread();
       statusEl.textContent = `エラー: ${errorText}`;
       return;
     }
 
-    const reply = data.reply || '応答なし';
-    chatHistory.push({
-      role: 'assistant',
-      content: reply,
-      work_order: data.work_order || null,
-      human_gate_required: !!data.human_gate_required,
-      error_details: data.error_details || null,
-      pipeline_trace: data.pipeline_trace || [],
-    });
-    hideTypingIndicator();
+    // ストリーミングでチャンクが1件も来ずdoneだけ届いたケース(通常は
+    // ambiguous/task等、非ストリーミング系の単発チャンクなので稀)への保険。
+    if (!_streamedEntry && doneData.reply) {
+      hideTypingIndicator();
+      _streamedEntry = { role: 'assistant', content: doneData.reply };
+      chatHistory.push(_streamedEntry);
+    } else if (_streamedEntry && doneData.reply) {
+      // 最終replyで内容を同期(末尾の「…（続きあり）」等サーバー側の
+      // 確定テキストを正としてそろえる)。
+      _streamedEntry.content = doneData.reply;
+    }
     renderChatThread();
-    maybeNotifyFromAssistant(reply);
-    statusEl.textContent = data.modelUsed ? `こさめ応答（${data.modelUsed}）`
-      : data.suggested_action ? `次の一手: ${data.suggested_action}` : 'こさめ応答を表示しました';
+    if (doneData.reply) maybeNotifyFromAssistant(doneData.reply);
+    statusEl.textContent = doneData.modelUsed ? `こさめ応答（${doneData.modelUsed}）`
+      : doneData.suggested_action ? `次の一手: ${doneData.suggested_action}` : 'こさめ応答を表示しました';
     // Auto-dispatch chat message to Runner Queue Lite (fire-and-forget)
     // 雑談・質問・状態確認はRunnerに流さない（実装依頼のみdispatch）
     if (userText && !shouldSkipRunnerDispatch(userText)) {
@@ -7386,19 +7452,31 @@ async function sendChatMessage(userText, confirmationContext) {
     renderChatStatusBadges(latestSnapshot || {});
   } catch (err) {
     if (err && err.name === 'AbortError') {
-      if (!_chatTimedOut) return;
+      if (_chatTimedOut && !_firstChunkReceived) {
+        hideTypingIndicator();
+        const _fallback = (await buildCasualFastReply(msgText)) || {
+          reply: 'すみません、AIの応答に時間がかかっているためローカル応答に切り替えましたっ☂️ もう一度具体的な内容で送信いただくか、少し時間を置いてお試しください。',
+        };
+        chatHistory.push({ role: 'assistant', content: _fallback.reply });
+        renderChatThread();
+        statusEl.textContent = 'タイムアウトのためローカル応答に切り替えました（30秒応答なし）';
+        return;
+      }
+      // ユーザーによるキャンセル(またはストリーミング中のabort): ここまで
+      // 受信済みのテキストで確定する。チャンクがまだ1件も来ていなければ
+      // 何も表示するものがないので黙って終了する。
       hideTypingIndicator();
-      const _fallback = (await buildCasualFastReply(msgText)) || {
-        reply: 'すみません、AIの応答に時間がかかっているためローカル応答に切り替えましたっ☂️ もう一度具体的な内容で送信いただくか、少し時間を置いてお試しください。',
-      };
-      chatHistory.push({ role: 'assistant', content: _fallback.reply });
-      renderChatThread();
-      statusEl.textContent = 'タイムアウトのためローカル応答に切り替えました（30秒応答なし）';
+      if (_streamedEntry) {
+        renderChatThread();
+        statusEl.textContent = '停止しました（そこまでの応答で確定しました）';
+      }
       return;
     }
     hideTypingIndicator();
-    chatHistory.push({ role: 'assistant', content: 'エラー: サーバーに接続できません。' });
-    renderChatThread();
+    if (!_streamedEntry) {
+      chatHistory.push({ role: 'assistant', content: 'エラー: サーバーに接続できません。' });
+      renderChatThread();
+    }
     statusEl.textContent = 'エラー: サーバーに接続できません。';
   } finally {
     if (sendBtn) sendBtn.textContent = '送信';
@@ -7865,27 +7943,10 @@ if (_chatSoundBadge) {
   });
 }
 
+// このボタンは busy 中(setChatBusyStateがhiddenを解除した時)にしか表示されない
+// ため、押されたら常に進行中のリクエストを中断する「⏹ キャンセル」として動作する。
 document.getElementById('chat-summarize').addEventListener('click', () => {
-  const inputText = getChatInputText();
-  if (detectWorkOrderRequest(inputText)) {
-    submitPrioritizedChatInput(inputText);
-    return;
-  }
-  const resultPaste = detectWorkOrderResultPaste(inputText, latestSnapshot || {});
-  if (resultPaste) {
-    submitWorkOrderResultPaste(inputText).catch((error) => {
-      const statusEl = document.getElementById('chat-status');
-      if (statusEl) statusEl.textContent = `エラー: ${error && error.message ? error.message : '結果を保存できませんでした。'}`;
-    });
-    return;
-  }
-  if (!latestBridge || !latestBridge.detected) {
-    chatHistory.push({ role: 'assistant', content: '現在、dispatch対象は検知されていません。' });
-    renderChatThread();
-    return;
-  }
-  const ctx = buildConfirmationContext(latestBridge);
-  sendChatMessage(null, ctx);
+  cancelActiveChatRequest();
 });
 
 document.querySelectorAll('[data-assist-tab]').forEach((button) => {

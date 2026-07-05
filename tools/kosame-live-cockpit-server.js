@@ -13,7 +13,7 @@ const http = require('node:http');
 const { collectLiveCockpitSnapshot } = require('./kosame-live-cockpit-snapshot');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
 const { detectConfirmation } = require('./kosame-confirmation-detector');
-const { handleChatRequest } = require('./kosame-cockpit-chat-server');
+const { handleChatRequest, handleChatRequestStreaming } = require('./kosame-cockpit-chat-server');
 const { classifyIntent } = require('./kosame-chat-intent-classifier');
 const { approveWorkOrder, APPROVAL_LOG_PATH_ENV } = require('./kosame-work-order-approval-store');
 const { readLatestWorkOrderHandoff, recordWorkOrderHandoff, HANDOFF_LOG_PATH_ENV } = require('./kosame-work-order-handoff-store');
@@ -424,6 +424,107 @@ function createLiveCockpitServer(options = {}) {
         }).catch(() => {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ ok: false, error: '内部エラーが発生しました。' }));
+        });
+      });
+      return;
+    }
+
+    if (url.pathname === '/api/chat-stream') {
+      if (req.method !== 'POST') {
+        res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, error: 'Method Not Allowed' }));
+        return;
+      }
+      parseJsonBody(req, (parsed) => {
+        console.log('[CHAT-STREAM] received:', String(parsed && parsed.message || '').slice(0, 80));
+        let contextSummary = '';
+        let contextStatus = 'unavailable';
+        let snapshot = null;
+        try {
+          const confirmationBridge = detectConfirmation();
+          snapshot = collectLiveCockpitSnapshot({
+            activeRepoPath: options.activeRepoPath,
+            devRepoPath: options.devRepoPath,
+            salesRepoPath: options.salesRepoPath,
+            projectRegistryPath: options.projectRegistryPath,
+            workOrderApprovalLogPath: options.workOrderApprovalLogPath || process.env[APPROVAL_LOG_PATH_ENV],
+            workOrderHandoffLogPath: options.workOrderHandoffLogPath || process.env[HANDOFF_LOG_PATH_ENV],
+            workOrderResultLogPath: options.workOrderResultLogPath || process.env[RESULT_LOG_PATH_ENV],
+            shellAgentActivityLogPath: options.shellAgentActivityLogPath || process.env[SHELL_ACTIVITY_LOG_PATH_ENV],
+            confirmationBridge,
+          });
+          const consoleContext = buildConsoleContextSummary(snapshot);
+          contextSummary = consoleContext.summary;
+          contextStatus = consoleContext.status;
+        } catch {
+          contextSummary = '';
+          contextStatus = 'unavailable';
+          snapshot = null;
+        }
+
+        const decisionContext = `${parsed.contextSummary || parsed.context || ''}`;
+        const shouldAttachDecisionFields = /workOrderDecision=|workOrderResult=/.test(decisionContext);
+        const requestBody = {
+          ...parsed,
+          contextSummary: parsed.contextSummary || contextSummary,
+          contextStatus: parsed.contextStatus || contextStatus,
+          consoleContextSummary: contextSummary,
+          consoleContextStatus: contextStatus,
+          latestWorkOrderResult: shouldAttachDecisionFields && snapshot && snapshot.latestWorkOrderResult ? snapshot.latestWorkOrderResult : null,
+          workOrderResultQueue: shouldAttachDecisionFields && snapshot && Array.isArray(snapshot.workOrderResultQueue) ? snapshot.workOrderResultQueue : [],
+          latestWorkOrderDecision: shouldAttachDecisionFields && snapshot && snapshot.latestWorkOrderDecision ? snapshot.latestWorkOrderDecision : null,
+          workOrderDecisionQueue: shouldAttachDecisionFields && snapshot && Array.isArray(snapshot.workOrderDecisionQueue) ? snapshot.workOrderDecisionQueue : [],
+          latestApprovedWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestApprovedWorkOrder ? snapshot.latestApprovedWorkOrder : null,
+          latestHandoffWorkOrder: shouldAttachDecisionFields && snapshot && snapshot.latestHandoffWorkOrder ? snapshot.latestHandoffWorkOrder : null,
+        };
+
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-store',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+
+        // 注意: req.on('close')はPOSTボディを読み切った直後にも発火するため
+        // 使えない(即座にabortしてしまう)。res(レスポンス側)の'close'は
+        // クライアントが実際に接続を切った時のみ発火するのでこちらを使う。
+        const abortController = new AbortController();
+        let responseFinished = false;
+        res.on('close', () => {
+          if (!responseFinished) {
+            console.log('[CHAT-STREAM] client disconnected mid-stream, aborting upstream call');
+            abortController.abort();
+          }
+        });
+
+        function writeEvent(type, data) {
+          try { res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`); } catch (_) { /* client gone */ }
+        }
+
+        handleChatRequestStreaming(requestBody, (chunkText) => {
+          writeEvent('chunk', { text: chunkText });
+        }, { abortSignal: abortController.signal }).then((result) => {
+          if (result && result.ok && result.reply) {
+            try { _emitRunnerSSE('log', { ts: new Date().toISOString(), agent: 'KOSAME', msg: result.reply }); } catch (_) {}
+          }
+          writeEvent('done', {
+            ok: !!(result && result.ok),
+            reply: (result && result.reply) || null,
+            intent: result && result.intent,
+            modelUsed: result && result.modelUsed,
+            truncated: !!(result && result.truncated),
+            aborted: !!(result && result.aborted),
+            error: result && result.error,
+            work_order: (result && result.work_order) || null,
+            human_gate_required: !!(result && result.human_gate_required),
+            suggested_action: result && result.suggested_action,
+          });
+          responseFinished = true;
+          res.end();
+        }).catch((err) => {
+          writeEvent('error', { message: String(err && err.message ? err.message : err) });
+          responseFinished = true;
+          res.end();
         });
       });
       return;

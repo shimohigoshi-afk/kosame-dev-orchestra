@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="KOSAME Console">
+<meta name="apple-mobile-web-app-title" content="KOSAME Command Center">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/kosame-icon.svg">
-<title>☂️ KOSAME Console</title>
+<title>KOSAME Command Center</title>
 <style>
 :root {
   --bg: #0a0e1a;
@@ -2069,9 +2069,10 @@ h1 {
 /* 返答テキストの直前・独立した行に表示する傘（Claude.aiのヒトデ相当） */
 .kosame-brand-icon--reply { font-size: 32px; }
 .chat-bubble-header.chat-bubble-header--reply-icon { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-/* トップヘッダーの傘ロゴ＋金文字（KOSAME Console + Dev Orchestra Command Centerの2行分の高さ） */
+/* トップヘッダーのロゴ画像＋金文字（KOSAME Command Center + Dev Orchestra / Operator Coreの2行分の高さ） */
 .kosame-header-row { display: flex; align-items: center; gap: 14px; }
-.kosame-header-icon { font-size: clamp(56px, 6vw, 72px); flex: 0 0 auto; }
+.kosame-header-icon { display: flex; align-items: center; flex: 0 0 auto; }
+.kosame-header-logo-img { display: block; height: 72px; width: auto; }
 .kosame-header-text-block { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .kosame-header-text { color: #C9A84C; }
 @media (prefers-reduced-motion: reduce) {
@@ -2190,10 +2191,10 @@ h1 {
             <div class="hero-compact-left">
               <div class="eyebrow">CURRENT MISSION</div>
               <div class="kosame-header-row">
-                <span class="kosame-brand-icon kosame-header-icon" aria-hidden="true"><img class="kosame-brand-svg" src="/images/kosame-umbrella.svg" alt="" aria-hidden="true"></span>
+                <span class="kosame-header-icon" aria-hidden="true"><img class="kosame-header-logo-img" src="/assets/kosame-logo-umbrella-144.png" alt="" aria-hidden="true"></span>
                 <div class="kosame-header-text-block">
-                  <h1><span class="kosame-header-text">KOSAME Console</span></h1>
-                  <div class="title-copy">Dev Orchestra Command Center</div>
+                  <h1><span class="kosame-header-text">KOSAME Command Center</span></h1>
+                  <div class="title-copy">Dev Orchestra / Operator Core</div>
                 </div>
               </div>
               <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
@@ -6022,7 +6023,7 @@ function getCurrentWorkOrderDecision(snapshot = latestSnapshot || {}) {
     reason = resultStatus === 'blocked_interactive_host'
       ? 'interactive host が正規実行ルートから隔離されました。'
       : 'interactive prompt が検出され、ユーザー入力待ちにせず遮断しました。';
-    requiredNextWork = 'KOSAME Console から official route で再投入する';
+    requiredNextWork = 'KOSAME Command Center から official route で再投入する';
     humanGateRequired = true;
     activityStatus = 'blocked';
   } else if (resultStatus === 'needs_fix') {
@@ -7132,7 +7133,7 @@ async function buildCasualFastReply(text) {
     var salesDxVer = (snap.salesDx && snap.salesDx.productVersion) ? ('v' + snap.salesDx.productVersion) : '';
     var lines = [];
     lines.push('現在の実行モードは' + modeLabel + 'ですっ☂️');
-    lines.push('現在地はKOSAME Console / ' + ver + (commit ? ' / ' + commit : '') + ' ですっ。');
+    lines.push('現在地はKOSAME Command Center / ' + ver + (commit ? ' / ' + commit : '') + ' ですっ。');
     if (salesDxVer) lines.push('営業DXは' + salesDxVer + 'まで完成していますっ。');
     return { reply: lines.join('\n') };
   }

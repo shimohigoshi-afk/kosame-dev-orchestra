@@ -1,0 +1,4 @@
+{
+  "chain": ["claude-haiku-4-5", "gemini-2.5-flash", "gpt-4o-mini"],
+  "escalation": "claude-sonnet-4-6"
+}

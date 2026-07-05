@@ -7038,21 +7038,22 @@ var CASUAL_QUESTION_RE = /(?:は[?？]|教えて|何日|何曜日|調子)/;
 // 相槌がタスクとしてRunner Queueに流れてしまっていた。実装動詞や
 // ファイルパス等の積極的なタスクシグナルがない限りdispatchしない
 // ホワイトリスト方式に変更する。
-var TASK_VERB_RE = /(?:作成して|作って|書いて|修正して|直して|実装して|追加して|変更して|削除して|消して|直し|実装(?:して)?|生成して|生成)/;
+var TASK_VERB_RE = /(?:作成して|作って|書いて|修正して|直して|直せる|直せます|実装して|追加して|変更して|削除して|消して|直し|実装(?:して)?|生成して|生成)/;
 var TASK_FILE_PATH_RE = /(?:public|tools|src|smoke|config|docs|scripts)\/[\w\-./]+|\.(?:html?|jsx?|tsx?|css|json|md|py|sh|ya?ml)\b/i;
 var TASK_DEV_KEYWORD_RE = /\b(?:repo|repository|commit|push|deploy|pull request|PR|branch|merge|verify|smoke|rollback|revert)\b/i;
-var SHORT_CASUAL_MAX_LEN = 8;
 
+// タスク証拠(実装動詞・ファイルパス・開発キーワード)が一切ない入力は、
+// 疑問文・呼びかけ（「こさめちゃん！いる？」等）・感嘆・？！の連打を
+// 含めて常に雑談として扱う。動詞はあるが対象不明、等の部分的な証拠のみ
+// の場合にambiguousとして確認を挟む。
 function classifyChatIntent(text) {
   var t = String(text || '').trim();
   if (!t) return 'casual';
   var hasTaskVerb = TASK_VERB_RE.test(t);
   var hasFilePath = TASK_FILE_PATH_RE.test(t);
   var hasDevKeyword = TASK_DEV_KEYWORD_RE.test(t);
+  if (!hasTaskVerb && !hasFilePath && !hasDevKeyword) return 'casual';
   if (hasTaskVerb && (hasFilePath || hasDevKeyword || t.length >= 8)) return 'task';
-  if (CASUAL_GREETING_RE.test(t)) return 'casual';
-  if (/[?？]\s*$/.test(t)) return 'casual';
-  if (t.length <= SHORT_CASUAL_MAX_LEN) return 'casual';
   return 'ambiguous';
 }
 

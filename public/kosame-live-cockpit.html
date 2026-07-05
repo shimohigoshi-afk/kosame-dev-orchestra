@@ -24,6 +24,26 @@
   --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
 }
 * { box-sizing: border-box; }
+/* Claude.ai風の目立たないスクロールバー。スクロールする要素すべてに適用
+   (幅/トラック/色を変えるだけなのでレイアウト幅への影響はない)。 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
 body {
   margin: 0;
   font-family: Inter, "Noto Sans JP", system-ui, sans-serif;

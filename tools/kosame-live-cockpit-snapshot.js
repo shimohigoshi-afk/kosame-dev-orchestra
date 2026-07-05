@@ -22,7 +22,11 @@ function readPackageFresh() {
   }
 }
 const { buildAutoSaveSnapshot } = require('./kosame-autosave-state');
-const { buildApiCostSnapshot } = require('./kosame-cost-meter');
+// kosame-cost-meter.jsの集計元(~/.kosame/task-vault/cost-ledger.jsonl)は
+// smoke test以外から書き込まれた実績がなく、常に$0.00になっていたため、
+// 実際にLLM呼び出しごとに記録されるapi-usage.jsonl(kosame-memory-vault.js)
+// を集計元にする(チャットの「今月のAPI代」と共通ロジック)。
+const { getCostMeterSnapshot } = require('./kosame-memory-vault');
 const { buildTaskFeederSnapshot } = require('./kosame-task-feeder');
 const { readShellAgentActivity } = require('./kosame-shell-agent-activity');
 const { buildConsoleContextSummary } = require('./kosame-cockpit-context');
@@ -635,7 +639,7 @@ function collectLiveCockpitSnapshot(options = {}) {
   const taskVault = taskVaultSnapshot.taskVault;
   const autoSave = taskVaultSnapshot.autoSave;
   const memoryVault = taskVault.memoryVault || taskVaultSnapshot.memoryVault || null;
-  const apiCost = buildApiCostSnapshot(taskVaultDir);
+  const apiCost = getCostMeterSnapshot();
   const taskFeeder = buildTaskFeederSnapshot({
     taskVaultDir,
     currentVersion: versionContext.currentVersion,

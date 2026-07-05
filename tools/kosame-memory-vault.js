@@ -459,6 +459,98 @@ function formatUsageSummaryForChat(summary) {
   return `【今月（${summary.yearMonth}）のAPI代（概算）】\n合計: 約${Math.round(summary.totalJpy)}円\n${lines.join('\n')}`;
 }
 
+// ── コンソールのAPI COST METERパネル向けスナップショット ────────────────────
+// 旧実装(kosame-cost-meter.js)は~/.kosame/task-vault/cost-ledger.jsonlを
+// 集計元にしていたが、そこへの書き込み経路が存在せず常に$0.00になっていた
+// (テストコードからしか呼ばれていなかった)。実際にLLM呼び出しごとに記録
+// されているapi-usage.jsonlを共通の集計元にする。
+// 「セッション」概念はapi-usage.jsonl側に無いため、本日分で近似する。
+function _todayKey(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function getCostMeterSnapshot() {
+  const entries = _loadApiUsageEntries();
+  const todayKey = _todayKey();
+  const monthKey = _yearMonthKey();
+
+  function aggregate(filterFn) {
+    const byModel = {};
+    let usd = 0;
+    let jpy = 0;
+    entries.filter(filterFn).forEach((e) => {
+      const pricing = PRICING_TABLE[e.model] || { input: 0, output: 0 };
+      const costUsd = (e.inputTokens / 1e6) * (pricing.input || 0) + (e.outputTokens / 1e6) * (pricing.output || 0);
+      usd += costUsd;
+      jpy += e.costJpy || 0;
+      const key = e.model || 'unknown';
+      if (!byModel[key]) byModel[key] = { model: key, provider: e.provider || 'unknown', callCount: 0, inputTokens: 0, outputTokens: 0, costUsd: 0, costJpy: 0, lastUsedAt: null };
+      const m = byModel[key];
+      m.callCount += 1;
+      m.inputTokens += e.inputTokens || 0;
+      m.outputTokens += e.outputTokens || 0;
+      m.costUsd += costUsd;
+      m.costJpy += e.costJpy || 0;
+      if (!m.lastUsedAt || (e.timestamp && e.timestamp > m.lastUsedAt)) m.lastUsedAt = e.timestamp;
+    });
+    return { usd, jpy, byModel };
+  }
+
+  const monthAgg = aggregate((e) => String(e.timestamp || '').startsWith(monthKey));
+  const todayAgg = aggregate((e) => String(e.timestamp || '').startsWith(todayKey));
+
+  const byProvider = {};
+  Object.values(monthAgg.byModel).forEach((m) => {
+    const key = m.provider || 'unknown';
+    if (!byProvider[key]) byProvider[key] = { provider: key, callCount: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, estimatedCostUsd: 0, estimatedCostJpy: 0, lastUsedAt: null };
+    const p = byProvider[key];
+    p.callCount += m.callCount;
+    p.inputTokens += m.inputTokens;
+    p.outputTokens += m.outputTokens;
+    p.totalTokens += m.inputTokens + m.outputTokens;
+    p.estimatedCostUsd += m.costUsd;
+    p.estimatedCostJpy += m.costJpy;
+    if (!p.lastUsedAt || (m.lastUsedAt && m.lastUsedAt > p.lastUsedAt)) p.lastUsedAt = m.lastUsedAt;
+  });
+
+  const byModel = Object.values(monthAgg.byModel).map((m) => ({
+    model: m.model,
+    provider: m.provider,
+    callCount: m.callCount,
+    inputTokens: m.inputTokens,
+    outputTokens: m.outputTokens,
+    totalTokens: m.inputTokens + m.outputTokens,
+    estimatedCostUsd: m.costUsd,
+    estimatedCostJpy: m.costJpy,
+    lastUsedAt: m.lastUsedAt,
+    budgetTier: 'unknown',
+    warning: false,
+  }));
+
+  const budget = isMonthlyBudgetExceeded();
+
+  return {
+    total: {
+      sessionUsd: todayAgg.usd,
+      sessionJpy: todayAgg.jpy,
+      todayUsd: todayAgg.usd,
+      todayJpy: todayAgg.jpy,
+      monthUsd: monthAgg.usd,
+      monthJpy: monthAgg.jpy,
+      unknownCount: 0,
+    },
+    byProvider,
+    byModel,
+    highCostModelWarning: false,
+    unknownUsageCount: 0,
+    sessionBudgetOver: false,
+    dailyBudgetOver: false,
+    monthlyBudgetOver: budget.exceeded,
+    warningCount: budget.exceeded ? 1 : 0,
+    warnings: budget.exceeded ? [`月間予算(約${budget.limitJpy}円)を超過しています(概算 約${Math.round(budget.totalJpy)}円)。`] : [],
+  };
+}
+
 module.exports = {
   estimateTokens,
   extractKeywords,
@@ -475,6 +567,7 @@ module.exports = {
   getMonthlyBudgetLimitJpy,
   isMonthlyBudgetExceeded,
   formatUsageSummaryForChat,
+  getCostMeterSnapshot,
   PRICING_TABLE,
   USD_TO_JPY,
   DEFAULT_MONTHLY_BUDGET_JPY,

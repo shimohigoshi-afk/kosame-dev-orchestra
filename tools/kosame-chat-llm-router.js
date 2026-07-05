@@ -51,8 +51,11 @@ const CHAT_LLM_IDLE_TIMEOUT_MS = 20000;
 // 雑談チャット専用のモデルチェーン。既知のモデル名 → provider/keyEnv の対応。
 // chat-model-config.json はモデル名の文字列だけを指定するので、実際の
 // 呼び出し方法(provider/keyEnv/sanitizedAdvisory)はここで解決する。
+// apiModel: 実際にAPIへ送るmodel文字列。省略時はキー名(chain設定に書く
+// 表示名)をそのまま使う。'claude-haiku-4-5'は日付サフィックスの無い表示名
+// だったため、実際のAnthropic API向けにはapiModelで正式なIDを送る。
 const MODEL_REGISTRY = {
-  'claude-haiku-4-5': { provider: 'anthropic', keyEnv: 'ANTHROPIC_API_KEY' },
+  'claude-haiku-4-5': { provider: 'anthropic', keyEnv: 'ANTHROPIC_API_KEY', apiModel: 'claude-haiku-4-5-20251001' },
   'claude-sonnet-4-6': { provider: 'anthropic', keyEnv: 'ANTHROPIC_API_KEY' },
   'gemini-2.5-flash': { provider: 'gemini', keyEnv: 'GEMINI_API_KEY' },
   'gemini-2.5-pro': { provider: 'gemini', keyEnv: 'GEMINI_API_KEY' },
@@ -188,7 +191,7 @@ async function streamAnthropicCandidate(candidate, systemPrompt, userText, opts,
     'anthropic-version': '2023-06-01',
   };
   const body = JSON.stringify({
-    model: candidate.model,
+    model: candidate.apiModel || candidate.model,
     max_tokens: opts.maxTokens || CHAT_LLM_MAX_TOKENS,
     system: systemPrompt,
     messages: [{ role: 'user', content: userText }],
@@ -270,7 +273,7 @@ async function streamGeminiCandidate(candidate, systemPrompt, userText, opts, on
 async function streamOpenAICompatCandidate(candidate, apiUrl, systemPrompt, userText, opts, onChunk) {
   const authHeader = `Bearer ${process.env[candidate.keyEnv]}`;
   const body = JSON.stringify({
-    model: candidate.model,
+    model: candidate.apiModel || candidate.model,
     messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }],
     max_tokens: opts.maxTokens || CHAT_LLM_MAX_TOKENS,
     temperature: 0.7,
@@ -322,7 +325,7 @@ async function streamCandidate(candidate, systemPrompt, userText, opts, onChunk)
 async function callCandidateBlocking(candidate, apiUrl, systemPrompt, userText, opts) {
   const authHeader = `Bearer ${process.env[candidate.keyEnv]}`;
   const body = JSON.stringify({
-    model: candidate.model,
+    model: candidate.apiModel || candidate.model,
     messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userText }],
     max_tokens: opts.maxTokens || CHAT_LLM_MAX_TOKENS,
     temperature: 0.7,

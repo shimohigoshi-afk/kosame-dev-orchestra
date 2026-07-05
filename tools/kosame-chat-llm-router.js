@@ -21,6 +21,13 @@ const path = require('node:path');
 const { autoMask } = require('./sensitive-data-auto-masker');
 const { loadMemory, formatMemoryForContext } = require('./kosame-memory');
 const { loadChatHistory, formatHistoryForContext } = require('./kosame-chat-history');
+const {
+  searchRelevantHistory,
+  handleMemoryOrCostCommand,
+  maybeExtractMemory,
+  recordApiUsage,
+  isMonthlyBudgetExceeded,
+} = require('./kosame-memory-vault');
 
 const ROOT = path.resolve(__dirname, '..');
 const STATE_DIR = path.join(ROOT, '.kosame-state');
@@ -110,13 +117,17 @@ function keyPresent(keyEnv) {
   return typeof keyEnv === 'string' && typeof process.env[keyEnv] === 'string' && process.env[keyEnv].length > 0;
 }
 
-function buildSystemPrompt(difficulty) {
+function buildSystemPrompt(difficulty, userText) {
   const persona = loadPersonaFile(difficulty);
   let memoryBlock = '';
   let historyBlock = '';
+  let ragBlock = '';
   try { memoryBlock = formatMemoryForContext(loadMemory()); } catch (_) {}
   try { historyBlock = formatHistoryForContext(loadChatHistory()); } catch (_) {}
-  const extra = [memoryBlock, historyBlock].filter(Boolean).join('\n\n');
+  // 直近履歴(loadChatHistory既定20件)の外にある過去会話も、キーワード関連度で
+  // 検索してsystem contextに注入する(Memory Vault RAG検索)。
+  try { ragBlock = searchRelevantHistory(userText || '').block; } catch (_) {}
+  const extra = [memoryBlock, ragBlock, historyBlock].filter(Boolean).join('\n\n');
   return extra ? `${extra}\n\n${persona}` : persona;
 }
 
@@ -186,6 +197,8 @@ async function streamAnthropicCandidate(candidate, systemPrompt, userText, opts,
   const { controller, touch, clear } = _makeIdleController(opts);
   let fullText = '';
   let finishReason = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
   try {
     const res = await fetch(apiUrl, { method: 'POST', headers, body, signal: controller.signal });
     if (!res.ok) { clear(); return { ok: false, reason: `anthropic API error: ${res.status} ${res.statusText}` }; }
@@ -194,17 +207,20 @@ async function streamAnthropicCandidate(candidate, systemPrompt, userText, opts,
       if (!dataStr || dataStr === '[DONE]') return;
       let data;
       try { data = JSON.parse(dataStr); } catch (_) { return; }
-      if (event === 'content_block_delta' && data.delta && data.delta.type === 'text_delta') {
+      if (event === 'message_start' && data.message && data.message.usage) {
+        inputTokens = data.message.usage.input_tokens || 0;
+      } else if (event === 'content_block_delta' && data.delta && data.delta.type === 'text_delta') {
         fullText += data.delta.text;
         onChunk(data.delta.text);
-      } else if (event === 'message_delta' && data.delta && data.delta.stop_reason) {
-        finishReason = data.delta.stop_reason;
+      } else if (event === 'message_delta') {
+        if (data.delta && data.delta.stop_reason) finishReason = data.delta.stop_reason;
+        if (data.usage && typeof data.usage.output_tokens === 'number') outputTokens = data.usage.output_tokens;
       }
     });
     clear();
     process.stderr.write(`[chat-llm-router] anthropic finish_reason=${finishReason || 'unknown'}\n`);
     if (!fullText) return { ok: false, reason: 'anthropic returned empty content' };
-    return { ok: true, reply: fullText.trim(), finishReason };
+    return { ok: true, reply: fullText.trim(), finishReason, inputTokens, outputTokens };
   } catch (e) {
     clear();
     return { ok: false, reason: `fetch error: ${e.message}` };
@@ -222,6 +238,8 @@ async function streamGeminiCandidate(candidate, systemPrompt, userText, opts, on
   const { controller, touch, clear } = _makeIdleController(opts);
   let fullText = '';
   let finishReason = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
   try {
     const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: controller.signal });
     if (!res.ok) { clear(); return { ok: false, reason: `gemini API error: ${res.status} ${res.statusText}` }; }
@@ -234,11 +252,15 @@ async function streamGeminiCandidate(candidate, systemPrompt, userText, opts, on
       const text = cand && cand.content && cand.content.parts && cand.content.parts[0] ? cand.content.parts[0].text : null;
       if (text) { fullText += text; onChunk(text); }
       if (cand && cand.finishReason) finishReason = cand.finishReason;
+      if (data.usageMetadata) {
+        inputTokens = data.usageMetadata.promptTokenCount || inputTokens;
+        outputTokens = data.usageMetadata.candidatesTokenCount || outputTokens;
+      }
     });
     clear();
     process.stderr.write(`[chat-llm-router] gemini finish_reason=${finishReason || 'unknown'}\n`);
     if (!fullText) return { ok: false, reason: 'gemini returned empty content' };
-    return { ok: true, reply: fullText.trim(), finishReason };
+    return { ok: true, reply: fullText.trim(), finishReason, inputTokens, outputTokens };
   } catch (e) {
     clear();
     return { ok: false, reason: `fetch error: ${e.message}` };
@@ -253,10 +275,13 @@ async function streamOpenAICompatCandidate(candidate, apiUrl, systemPrompt, user
     max_tokens: opts.maxTokens || CHAT_LLM_MAX_TOKENS,
     temperature: 0.7,
     stream: true,
+    stream_options: { include_usage: true },
   });
   const { controller, touch, clear } = _makeIdleController(opts);
   let fullText = '';
   let finishReason = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
   try {
     const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: authHeader }, body, signal: controller.signal });
     if (!res.ok) { clear(); return { ok: false, reason: `${candidate.provider} API error: ${res.status} ${res.statusText}` }; }
@@ -271,11 +296,15 @@ async function streamOpenAICompatCandidate(candidate, apiUrl, systemPrompt, user
         onChunk(choice.delta.content);
       }
       if (choice && choice.finish_reason) finishReason = choice.finish_reason;
+      if (data.usage) {
+        inputTokens = data.usage.prompt_tokens || inputTokens;
+        outputTokens = data.usage.completion_tokens || outputTokens;
+      }
     });
     clear();
     process.stderr.write(`[chat-llm-router] ${candidate.provider} finish_reason=${finishReason || 'unknown'}\n`);
     if (!fullText) return { ok: false, reason: `${candidate.provider} returned empty content` };
-    return { ok: true, reply: fullText.trim(), finishReason };
+    return { ok: true, reply: fullText.trim(), finishReason, inputTokens, outputTokens };
   } catch (e) {
     clear();
     return { ok: false, reason: `fetch error: ${e.message}` };
@@ -308,8 +337,15 @@ async function callCandidateBlocking(candidate, apiUrl, systemPrompt, userText, 
     const choice = data && data.choices && data.choices[0];
     const text = choice && choice.message ? choice.message.content : null;
     if (!text) return { ok: false, reason: `${candidate.provider} returned empty content` };
+    const usage = (data && data.usage) || {};
     process.stderr.write(`[chat-llm-router] ${candidate.provider} finish_reason=${(choice && choice.finish_reason) || 'unknown'}\n`);
-    return { ok: true, reply: text.trim(), finishReason: choice && choice.finish_reason };
+    return {
+      ok: true,
+      reply: text.trim(),
+      finishReason: choice && choice.finish_reason,
+      inputTokens: usage.prompt_tokens || 0,
+      outputTokens: usage.completion_tokens || 0,
+    };
   } catch (e) {
     clearTimeout(timer);
     return { ok: false, reason: `fetch error: ${e.message}` };
@@ -339,11 +375,19 @@ async function streamChatLLMChain(userText, opts = {}, onChunk = () => {}) {
   const difficulty = opts.difficulty || pickDifficulty(userText);
   const isEscalated = difficulty !== 'light';
 
+  // Memory Vault関連コマンド(記憶を確認/〇〇を覚えて/忘れて、今月のAPI代)は
+  // ローカルで完結させ、レート制限やLLM呼び出しの対象にしない。
+  const cmdResult = handleMemoryOrCostCommand(userText);
+  if (cmdResult && cmdResult.handled) {
+    onChunk(cmdResult.reply);
+    return { ok: true, reply: cmdResult.reply, modelUsed: 'local-memory-command', difficulty, attempts: [], truncated: false };
+  }
+
   if (!checkRateLimit()) {
     return { ok: false, reply: null, modelUsed: null, difficulty, attempts: [], rateLimited: true, reason: 'rate limit exceeded (5 req/min)' };
   }
 
-  const systemPrompt = buildSystemPrompt(difficulty);
+  const systemPrompt = buildSystemPrompt(difficulty, userText);
   const attempts = [];
   const config = loadChatModelConfig();
 
@@ -386,13 +430,37 @@ async function streamChatLLMChain(userText, opts = {}, onChunk = () => {}) {
     attempts.push({ model: candidate.model, ok: result.ok, reason: result.reason || null, finishReason: result.finishReason || null });
 
     if (result.ok) {
+      recordApiUsage({
+        model: candidate.model,
+        provider: candidate.provider,
+        inputTokens: result.inputTokens || 0,
+        outputTokens: result.outputTokens || 0,
+        purpose: 'chat',
+      });
       const truncated = isTruncatedFinish(candidate.provider, result.finishReason);
       let finalReply = result.reply;
       if (truncated) {
         finalReply = `${result.reply}\n\n…（続きあり）`;
         onChunk('\n\n…（続きあり）');
       }
-      return { ok: true, reply: finalReply, modelUsed: candidate.model, difficulty, attempts, escalated: candidate.model === config.escalation, truncated };
+      const budget = isMonthlyBudgetExceeded();
+      if (budget.exceeded) {
+        const warning = `\n\n⚠️ 今月のAPI利用額が目安（${budget.limitJpy}円）を超えています（概算 約${Math.round(budget.totalJpy)}円）。`;
+        finalReply += warning;
+        onChunk(warning);
+      }
+      // 10往復ごとのMemory自動抽出はバックグラウンドで実行し、応答を遅延させない。
+      maybeExtractMemory().catch(() => {});
+      return {
+        ok: true,
+        reply: finalReply,
+        modelUsed: candidate.model,
+        difficulty,
+        attempts,
+        escalated: candidate.model === config.escalation,
+        truncated,
+        budgetExceeded: budget.exceeded,
+      };
     }
     if (aborted) {
       // ユーザーによる明示的なキャンセル: これ以上他candidateを試さず、

@@ -203,6 +203,34 @@ body {
 .agent-feed-strip { order: 8; }
 .dev-orchestra-focus-section { order: 9; }
 .assist-menu-strip { order: 12; }
+
+/* ── 表示モード切替(チャット中央メイン / コンソール) ─────────────────── */
+.view-mode-toggle { display: flex; gap: 3px; align-self: start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 3px; }
+.view-mode-btn { cursor: pointer; border: none; background: transparent; color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; font-family: inherit; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+.view-mode-btn.is-active { background: rgba(125,211,252,0.18); color: var(--accent); }
+html[data-view-mode="chat"] .project-registry-shell,
+html[data-view-mode="chat"] .active-task-board,
+html[data-view-mode="chat"] .handoff-result-strip,
+html[data-view-mode="chat"] .agent-stream-log-strip,
+html[data-view-mode="chat"] .runner-stream-strip,
+html[data-view-mode="chat"] .agent-feed-strip,
+html[data-view-mode="chat"] .dev-orchestra-focus-section,
+html[data-view-mode="chat"] .ai-roster-shell,
+html[data-view-mode="chat"] .shell-activity-strip,
+html[data-view-mode="chat"] .support-details-outer {
+  display: none;
+}
+html[data-view-mode="chat"] .chat-outer {
+  max-width: 800px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+html[data-view-mode="console"] .view-mode-btn[data-view-mode-btn="console"],
+html[data-view-mode="chat"] .view-mode-btn[data-view-mode-btn="chat"] {
+  background: rgba(125,211,252,0.18);
+  color: var(--accent);
+}
 .chat-panel {
   scroll-margin-top: 20px;
   padding: 22px 24px 20px;
@@ -2135,6 +2163,16 @@ h1 {
 </style>
 </head>
 <body>
+<script>
+(function () {
+  try {
+    var m = localStorage.getItem('kosame-view-mode');
+    document.documentElement.setAttribute('data-view-mode', m === 'console' ? 'console' : 'chat');
+  } catch (_) {
+    document.documentElement.setAttribute('data-view-mode', 'chat');
+  }
+})();
+</script>
   <div class="shell">
     <section class="command-stage" style="margin-bottom:8px">
       <div class="hero-card hero-compact-card">
@@ -2159,6 +2197,10 @@ h1 {
                 </div>
               </div>
               <div class="mission-copy" id="current-mission">Readonly mode / 状態監視のみ</div>
+            </div>
+            <div class="view-mode-toggle" id="view-mode-toggle" role="radiogroup" aria-label="表示モード">
+              <button type="button" class="view-mode-btn" data-view-mode-btn="chat" role="radio" aria-checked="true">💬 チャット</button>
+              <button type="button" class="view-mode-btn" data-view-mode-btn="console" role="radio" aria-checked="false">🖥️ コンソール</button>
             </div>
           </div>
           <div class="hero-bottom-row">
@@ -8359,6 +8401,27 @@ function addChatSystemLog(agent, message) {
   });
   es.onerror = function() { /* reconnect automatically */ };
 })();
+
+// ── 表示モード切替(チャット中央メイン / コンソール) ─────────────────────
+var VIEW_MODE_KEY = 'kosame-view-mode';
+function getViewMode() {
+  try { return localStorage.getItem(VIEW_MODE_KEY) === 'console' ? 'console' : 'chat'; }
+  catch (_) { return 'chat'; }
+}
+function setViewMode(mode) {
+  var m = mode === 'console' ? 'console' : 'chat';
+  document.documentElement.setAttribute('data-view-mode', m);
+  try { localStorage.setItem(VIEW_MODE_KEY, m); } catch (_) {}
+  document.querySelectorAll('[data-view-mode-btn]').forEach(function (btn) {
+    var active = btn.dataset.viewModeBtn === m;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-checked', active ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('[data-view-mode-btn]').forEach(function (btn) {
+  btn.addEventListener('click', function () { setViewMode(btn.dataset.viewModeBtn); });
+});
+setViewMode(getViewMode());
 </script>
 </body>
 </html>

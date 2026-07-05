@@ -6,24 +6,24 @@
 <title>KOSAME Sales Console</title>
 <style>
 :root {
-  --navy: #071A2F;
-  --navy-light: #0B1F3A;
-  --navy-mid: #0F2544;
-  --navy-card: #0F2A42;
-  --navy-card-hover: #132E4A;
+  --navy: #040d1c;
+  --navy-light: #071628;
+  --navy-mid: #0a1d36;
+  --navy-card: #0c2140;
+  --navy-card-hover: #0f2648;
   --gold: #C8A96A;
   --gold-light: #D4BC8A;
-  --gold-pale: rgba(200,169,106,0.12);
-  --gold-glow: rgba(200,169,106,0.25);
-  --gold-border: rgba(200,169,106,0.40);
+  --gold-pale: rgba(200,169,106,0.14);
+  --gold-glow: rgba(200,169,106,0.30);
+  --gold-border: rgba(200,169,106,0.48);
   --blue: #4fc3f7;
-  --blue-dim: rgba(79,195,247,0.12);
-  --blue-glow: rgba(79,195,247,0.20);
+  --blue-dim: rgba(79,195,247,0.10);
+  --blue-glow: rgba(79,195,247,0.18);
   --text: rgba(255,255,255,0.90);
   --text-muted: rgba(255,255,255,0.55);
   --text-dim: rgba(255,255,255,0.35);
-  --border: rgba(200,169,106,0.15);
-  --border-blue: rgba(79,195,247,0.15);
+  --border: rgba(200,169,106,0.18);
+  --border-blue: rgba(79,195,247,0.12);
   --success: #4caf82;
   --danger: #e05555;
   --warn: #e0a040;
@@ -53,10 +53,10 @@ body{
   display:flex;align-items:center;justify-content:center;
 }
 .auth-box{
-  background:rgba(15,37,64,0.70);
+  background:rgba(10,26,48,0.72);
   backdrop-filter:blur(32px);
   -webkit-backdrop-filter:blur(32px);
-  border:1px solid rgba(200,169,106,0.25);
+  border:1px solid rgba(200,169,106,0.28);
   border-radius:var(--radius);
   padding:56px 48px;
   width:400px;max-width:92vw;
@@ -64,19 +64,19 @@ body{
   box-shadow:0 0 100px rgba(200,169,106,0.05),0 4px 40px rgba(0,0,0,0.35);
 }
 .auth-logo{
-  font-size:22px;font-weight:700;color:var(--text);
-  letter-spacing:3px;margin-bottom:40px;
-  line-height:1.4;
+  margin-bottom:32px;
 }
-.auth-logo .accent{color:var(--gold);font-weight:900}
-.auth-logo .line2{font-size:15px;letter-spacing:6px;color:var(--text-muted)}
+.auth-logo-img{
+  width:min(360px,72vw);height:auto;display:block;margin:0 auto;
+  filter:none;
+}
 .auth-field{margin-bottom:20px;text-align:left}
 .auth-field label{
   display:none;
 }
 .auth-input{
   width:100%;background:rgba(255,255,255,0.03);
-  border:1px solid rgba(200,169,106,0.15);
+  border:1px solid rgba(200,169,106,0.20);
   border-radius:6px;padding:14px 16px;
   color:var(--text);font-size:14px;outline:none;
   transition:all 0.30s var(--ease);
@@ -111,18 +111,23 @@ body{
 #app{display:none;min-height:100vh;flex-direction:column}
 #app.visible{display:flex}
 .topbar{
-  height:56px;background:rgba(15,37,64,0.95);
+  height:56px;background:rgba(10,24,44,0.95);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 28px;position:sticky;top:0;z-index:100;
 }
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-logo{
-  font-size:20px;font-weight:900;color:var(--gold);
-  letter-spacing:4px;line-height:1;
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo-img{
+  height:34px;width:auto;display:block;
+  filter:none;object-fit:contain;
 }
+.topbar-brand{
+  font-size:15px;font-weight:600;color:rgba(255,255,255,0.82);
+  letter-spacing:1px;white-space:nowrap;
+}
+.topbar-brand .tbg{color:var(--gold);font-weight:800;letter-spacing:1.5px}
 .topbar-divider{width:1px;height:20px;background:var(--border)}
 .topbar-title{
   font-size:14px;color:var(--text-muted);
@@ -158,76 +163,120 @@ body{
 .section{display:none;max-width:1100px;margin:0 auto}
 .section.active{display:block}
 
-/* ═══ DASHBOARD — LOGO HERO ═══ */
-.dash-hero{
-  text-align:center;margin-bottom:44px;padding-top:20px;
-}
-.dash-logo{
-  font-size:22px;font-weight:700;color:var(--text);
-  letter-spacing:3px;line-height:1.4;
-}
-.dash-logo .accent{color:var(--gold);font-weight:900}
-.dash-logo .line2{font-size:14px;letter-spacing:5px;color:var(--text-muted)}
-.dash-divider{
-  width:28px;height:1px;background:rgba(200,169,106,0.30);
-  margin:16px auto 0;border-radius:1px;
-}
-
 /* ═══ CARD GRID ═══ */
 .card-group{margin-bottom:44px}
 .card-group-label{
   display:flex;align-items:center;gap:10px;
-  font-size:12px;font-weight:600;color:var(--text-muted);
-  letter-spacing:0.08em;margin-bottom:18px;
+  font-size:13px;font-weight:700;color:var(--text);
+  letter-spacing:0.06em;margin-bottom:16px;
 }
 .card-group-label::before{
   content:'';display:inline-block;
-  width:3px;height:12px;background:var(--gold);
-  border-radius:1px;opacity:0.7;
+  width:3px;height:14px;background:var(--gold);
+  border-radius:1px;opacity:0.85;
 }
 
 .nav-cards{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
 }
 .nav-card{
   position:relative;
-  background:linear-gradient(180deg,rgba(15,42,66,0.8) 0%,rgba(7,26,47,0.9) 100%);
-  border:1px solid rgba(200,169,106,0.16);
+  background:linear-gradient(180deg,rgba(15,42,66,0.85) 0%,rgba(7,26,47,0.92) 100%);
+  border:1px solid rgba(200,169,106,0.22);
   border-radius:var(--radius);
-  padding:26px 22px 22px;
+  padding:22px 16px 20px;
+  cursor:pointer;
+  transition:all 0.4s var(--ease);
+  color:var(--text);
+  overflow:hidden;
+  min-height:0;
+}
+.nav-card::after{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.08) 0%,transparent 70%);
+  opacity:0;transition:opacity 0.4s var(--ease);pointer-events:none;
+}
+.nav-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(200,169,106,0.52);
+  box-shadow:0 0 48px rgba(200,169,106,0.08),0 8px 28px rgba(0,0,0,0.3);
+  background:linear-gradient(180deg,rgba(19,46,74,0.9) 0%,rgba(11,31,58,0.95) 100%);
+}
+.nav-card:hover::after{opacity:1}
+.nav-card-icon{
+  font-size:22px;margin-bottom:9px;display:block;
+  transition:transform 0.4s var(--ease);opacity:0.70;
+}
+.nav-card:hover .nav-card-icon{transform:scale(1.06);opacity:0.85}
+.nav-card-title{
+  font-size:13px;font-weight:700;color:var(--text);
+  margin-bottom:4px;letter-spacing:0.03em;
+}
+.nav-card-desc{
+  font-size:10.5px;color:var(--text-muted);
+  line-height:1.50;
+}
+.nav-card-badge{display:none}
+
+/* Core area cards — 3 large columns */
+.nav-cards-core{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.nav-card-core{
+  position:relative;
+  background:linear-gradient(180deg,rgba(15,42,66,0.85) 0%,rgba(7,26,47,0.92) 100%);
+  border:1px solid rgba(200,169,106,0.24);
+  border-radius:var(--radius);
+  padding:28px 22px 24px;
   cursor:pointer;
   transition:all 0.4s var(--ease);
   color:var(--text);
   overflow:hidden;
 }
-.nav-card::after{
+.nav-card-core::after{
   content:'';position:absolute;inset:0;border-radius:var(--radius);
-  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.06) 0%,transparent 70%);
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.08) 0%,transparent 70%);
   opacity:0;transition:opacity 0.4s var(--ease);pointer-events:none;
 }
-.nav-card:hover{
+.nav-card-core:hover{
   transform:translateY(-3px);
-  border-color:rgba(200,169,106,0.42);
-  box-shadow:0 0 40px rgba(200,169,106,0.06),0 8px 28px rgba(0,0,0,0.3);
+  border-color:rgba(200,169,106,0.55);
+  box-shadow:0 0 48px rgba(200,169,106,0.08),0 8px 28px rgba(0,0,0,0.3);
   background:linear-gradient(180deg,rgba(19,46,74,0.9) 0%,rgba(11,31,58,0.95) 100%);
 }
-.nav-card:hover::after{opacity:1}
-.nav-card-icon{
-  font-size:28px;margin-bottom:12px;display:block;
-  transition:transform 0.4s var(--ease);opacity:0.85;
+.nav-card-core:hover::after{opacity:1}
+.nav-card-core .nav-card-icon{font-size:30px;margin-bottom:12px;display:block;transition:transform 0.4s var(--ease);opacity:0.75}
+.nav-card-core:hover .nav-card-icon{transform:scale(1.06);opacity:0.90}
+.nav-card-core .nav-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:0.03em}
+.nav-card-core .nav-card-desc{font-size:12px;color:var(--text-muted);line-height:1.55}
+
+/* Primary card */
+.nav-card-core.primary{
+  border-color:rgba(200,169,106,0.55);
+  background:linear-gradient(180deg,rgba(20,45,70,0.92) 0%,rgba(10,30,50,0.95) 100%);
+  box-shadow:0 0 36px rgba(200,169,106,0.12);
 }
-.nav-card:hover .nav-card-icon{transform:scale(1.06);opacity:1}
-.nav-card-title{
-  font-size:14px;font-weight:700;color:var(--text);
-  margin-bottom:5px;letter-spacing:0.03em;
+.nav-card-core.primary::after{
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,169,106,0.14) 0%,transparent 70%);
+  opacity:0.6;
 }
-.nav-card-desc{
-  font-size:11px;color:var(--text-muted);
-  line-height:1.55;
+.nav-card-core.primary:hover{
+  border-color:rgba(200,169,106,0.70);
+  box-shadow:0 0 56px rgba(200,169,106,0.18),0 12px 32px rgba(0,0,0,0.35);
 }
-.nav-card-badge{display:none}
+.nav-card-core.primary .nav-card-title{font-size:16px}
+.nav-card-card-footnote{
+  display:flex;align-items:center;gap:5px;margin-top:10px;
+  font-size:10px;color:var(--text-dim);
+}
+.nav-card-card-footnote .dot{width:5px;height:5px;border-radius:50%}
+.nav-card-card-footnote .dot.gold{background:var(--gold);opacity:0.6}
+.nav-card-card-footnote .dot.dim{background:var(--text-dim);opacity:0.4}
+.nav-card-card-footnote .warn-text{color:var(--warn);font-size:10px}
 
 /* Collapsible section */
 .collapse-trigger{
@@ -259,6 +308,77 @@ body{
   line-height:1.8;max-width:560px;margin:0 auto;
 }
 .privacy-notice-icon,.privacy-notice-title{display:none}
+
+/* ═══ FLOATING CALCULATOR ═══ */
+.calc-float-btn{
+  position:fixed;bottom:24px;right:24px;z-index:500;
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:var(--navy);border:none;font-size:20px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 20px rgba(200,169,106,0.30);
+  transition:all 0.25s var(--ease);
+  display:flex;align-items:center;justify-content:center;
+}
+.calc-float-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(200,169,106,0.40)}
+.calc-panel{
+  display:none;position:fixed;bottom:84px;right:24px;z-index:501;
+  width:260px;background:rgba(15,37,64,0.97);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(200,169,106,0.38);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.4);
+}
+.calc-panel.open{display:block}
+.calc-display{
+  width:100%;height:44px;background:rgba(0,0,0,0.25);
+  border:1px solid rgba(200,169,106,0.22);
+  border-radius:8px;padding:0 12px;
+  color:var(--gold);font-size:20px;font-weight:700;
+  text-align:right;line-height:44px;overflow:hidden;
+  font-variant-numeric:tabular-nums;
+}
+.calc-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:6px;margin-top:10px;
+}
+.calc-btn{
+  height:40px;border:none;border-radius:8px;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all 0.15s;
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+}
+.calc-btn:hover{background:rgba(200,169,106,0.15);color:var(--gold)}
+.calc-btn:active{background:rgba(200,169,106,0.25)}
+.calc-btn.op{
+  background:rgba(200,169,106,0.08);
+  color:var(--gold);font-weight:700;
+}
+.calc-btn.op:hover{background:rgba(200,169,106,0.20)}
+.calc-btn.eq{
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:var(--navy);font-weight:700;
+}
+.calc-btn.eq:hover{opacity:0.9}
+.calc-btn.clr{
+  background:rgba(224,85,85,0.12);
+  color:var(--danger);
+}
+.calc-btn.clr:hover{background:rgba(224,85,85,0.22)}
+.calc-btn.copy{
+  grid-column:span 2;
+  font-size:11px;background:rgba(79,195,247,0.08);
+  color:var(--blue);
+}
+.calc-btn.copy:hover{background:rgba(79,195,247,0.18)}
+.calc-btn.close{
+  grid-column:span 2;
+  font-size:11px;background:rgba(255,255,255,0.04);
+  color:var(--text-muted);
+}
+.calc-btn.close:hover{background:rgba(255,255,255,0.10)}
 
 /* ═══ TOOL PAGE ═══ */
 .tool-header{
@@ -430,28 +550,42 @@ body{
 canvas{display:block;width:100%;border-radius:8px}
 
 /* ═══ RESPONSIVE ═══ */
+@media(max-width:1200px){
+  .nav-cards{grid-template-columns:repeat(4,1fr)}
+  .nav-cards-core{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:1024px){
-  .nav-cards{grid-template-columns:repeat(2,1fr)}
+  .nav-cards{grid-template-columns:repeat(3,1fr)}
+  .nav-cards-core{grid-template-columns:repeat(2,1fr)}
   .tool-grid{grid-template-columns:1fr}
 }
 @media(max-width:768px){
   .topbar{padding:0 16px}
-  .content{padding:20px 16px}
-  .nav-cards{grid-template-columns:1fr;gap:14px}
-  .nav-card{padding:24px 18px 20px}
+  .topbar-logo-img{height:28px}
+  .topbar-brand{font-size:13px}
+  .topbar-divider{display:none}
+  .topbar-title{display:none}
+  .content{padding:24px 16px}
+  .nav-cards{grid-template-columns:repeat(2,1fr);gap:12px}
+  .nav-card{padding:20px 14px 18px}
+  .nav-cards-core{grid-template-columns:1fr}
+  .nav-card-core{padding:24px 18px 20px}
   .form-grid{grid-template-columns:1fr}
   .form-grid-3{grid-template-columns:1fr 1fr}
   .tool-grid{grid-template-columns:1fr}
   .auth-box{padding:36px 28px}
-  .dash-logo{font-size:19px}
-  .dash-divider{margin:12px auto 0}
+  .calc-float-btn{bottom:16px;right:16px;width:44px;height:44px;font-size:18px}
+  .calc-panel{bottom:72px;right:16px;width:230px}
 }
 @media(max-width:480px){
-  .form-grid-3{grid-template-columns:1fr}
-  .dash-logo{font-size:17px}
-  .topbar-logo{font-size:17px;letter-spacing:3px}
+  .nav-cards{grid-template-columns:1fr}
+  .nav-cards-core{grid-template-columns:1fr}
+  .topbar-logo-img{height:26px}
+  .topbar-brand{font-size:11px}
   .topbar-title{font-size:12px}
+  .form-grid-3{grid-template-columns:1fr}
   .tool-title{font-size:19px}
+  .calc-panel{width:92vw;right:4vw;bottom:72px}
 }
 </style>
 </head>
@@ -461,8 +595,7 @@ canvas{display:block;width:100%;border-radius:8px}
 <div id="auth-overlay">
   <div id="auth-setup-box" class="auth-box" style="display:none">
     <div class="auth-logo">
-      <div><span class="accent">KOSAME</span> Sales Console</div>
-      <div class="line2">初期設定</div>
+      <img class="auth-logo-img" src="assets/kosame-sales-console-logo.png" alt="KOSAME Sales Console">
     </div>
     <div class="auth-field"><input type="email" id="setup-email" class="auth-input" placeholder="管理者メールアドレス"></div>
     <div class="auth-field"><input type="password" id="setup-pw1" class="auth-input" placeholder="パスワード（8文字以上）" onkeydown="if(event.key==='Enter')document.getElementById('setup-pw2').focus()"></div>
@@ -473,7 +606,7 @@ canvas{display:block;width:100%;border-radius:8px}
 
   <div id="auth-login-box" class="auth-box">
     <div class="auth-logo">
-      <div><span class="accent">KOSAME</span> Sales Console</div>
+      <img class="auth-logo-img" src="assets/kosame-sales-console-logo.png" alt="KOSAME Sales Console">
     </div>
     <div class="auth-field"><input type="email" id="login-email" class="auth-input" placeholder="メールアドレス" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"></div>
     <div class="auth-field"><input type="password" id="login-pw" class="auth-input" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -492,7 +625,8 @@ canvas{display:block;width:100%;border-radius:8px}
 <div id="app">
   <header class="topbar">
     <div class="topbar-left">
-      <span class="topbar-logo">KS</span>
+      <img class="topbar-logo-img" src="assets/kosame-logo-umbrella-144.png" alt="KOSAME">
+      <span class="topbar-brand"><span class="tbg">KOSAME</span> Sales Console</span>
       <span class="topbar-divider"></span>
       <span class="topbar-title" id="topbar-title">KOSAME Sales Console</span>
     </div>
@@ -510,77 +644,102 @@ canvas{display:block;width:100%;border-radius:8px}
 
     <!-- ═══ DASHBOARD ═══ -->
     <section id="section-dashboard" class="section active">
-      <div class="dash-hero">
-        <div class="dash-logo">
-          <div><span class="accent">KOSAME</span> Sales Console</div>
+
+      <!-- 面談コア -->
+      <div class="card-group">
+        <div class="card-group-label">面談コア</div>
+        <div class="nav-cards-core">
+          <div class="nav-card-core primary" onclick="navigateTo('insurance')">
+            <span class="nav-card-icon">🛡</span>
+            <div class="nav-card-title">必要保障額</div>
+            <div class="nav-card-desc">万一のときに必要な保障額を確認</div>
+          </div>
+          <div class="nav-card-core" onclick="navigateTo('memo')">
+            <span class="nav-card-icon">📝</span>
+            <div class="nav-card-title">面談メモ</div>
+            <div class="nav-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
+            <div class="nav-card-card-footnote">
+              <span class="dot gold"></span>PDF出力 / 印刷対応予定
+              <span class="dot dim" style="margin-left:8px"></span><span class="warn-text">入力内容はサーバーに保存されません</span>
+            </div>
+          </div>
+          <div class="nav-card-core" onclick="navigateTo('whiteboard')">
+            <span class="nav-card-icon">✏</span>
+            <div class="nav-card-title">手書きボード</div>
+            <div class="nav-card-desc">画面に書きながら説明する</div>
+            <div class="nav-card-card-footnote">
+              <span class="dot gold"></span>PDF出力 / 印刷対応予定
+              <span class="dot dim" style="margin-left:8px"></span><span class="warn-text">入力内容はサーバーに保存されません</span>
+            </div>
+          </div>
         </div>
-        <div class="dash-divider"></div>
       </div>
 
-      <!-- Row 1 -->
+      <!-- 住宅・資金確認 -->
       <div class="card-group">
+        <div class="card-group-label">住宅・資金確認</div>
         <div class="nav-cards">
           <div class="nav-card" onclick="navigateTo('lifetime')">
             <span class="nav-card-icon">📊</span>
             <div class="nav-card-title">匿名ライフプラン</div>
-            <div class="nav-card-desc">生涯収入・支出を匿名で試算。将来設計を一緒に確認。</div>
+            <div class="nav-card-desc">収支・教育費・保障額を匿名で確認</div>
           </div>
           <div class="nav-card" onclick="navigateTo('mortgage')">
             <span class="nav-card-icon">🏠</span>
             <div class="nav-card-title">住宅ローン試算</div>
-            <div class="nav-card-desc">借入額・金利・期間から毎月返済額を計算。</div>
+            <div class="nav-card-desc">月々返済と将来残債を確認</div>
           </div>
-          <div class="nav-card" onclick="navigateTo('insurance')">
-            <span class="nav-card-icon">🛡</span>
-            <div class="nav-card-title">必要保障額</div>
-            <div class="nav-card-desc">遺族の生活費・教育費から必要な保障を試算。</div>
+          <div class="nav-card" onclick="navigateTo('realestate')">
+            <span class="nav-card-icon">🏡</span>
+            <div class="nav-card-title">土地・エリア情報</div>
+            <div class="nav-card-desc">周辺相場と土地情報を確認</div>
           </div>
-          <div class="nav-card" onclick="navigateTo('underwriting')">
-            <span class="nav-card-icon">🔍</span>
-            <div class="nav-card-title">医務査定確認</div>
-            <div class="nav-card-desc">病名・告知内容から、確認ポイントを整理します。<br>最終判断は各保険会社への確認・事前照会に基づきます。</div>
+          <div class="nav-card" onclick="navigateTo('building')">
+            <span class="nav-card-icon">🏗</span>
+            <div class="nav-card-title">建物価格シミュレーション</div>
+            <div class="nav-card-desc">建物・外構・諸費用込みの総額を確認</div>
           </div>
         </div>
       </div>
 
-      <!-- Row 2 -->
+      <!-- 補助ツール -->
       <div class="card-group">
+        <div class="card-group-label">補助ツール</div>
         <div class="nav-cards">
-          <div class="nav-card" onclick="navigateTo('realestate')">
-            <span class="nav-card-icon">🏡</span>
-            <div class="nav-card-title">土地・エリア情報</div>
-            <div class="nav-card-desc">エリアの不動産価格や土地情報を参照。</div>
-          </div>
           <div class="nav-card" onclick="navigateTo('security')">
             <span class="nav-card-icon">🏛</span>
             <div class="nav-card-title">社会保障ナビ</div>
-            <div class="nav-card-desc">公的保障・年金制度の確認。</div>
+            <div class="nav-card-desc">公的保障の目安を確認</div>
           </div>
           <div class="nav-card" onclick="navigateTo('education')">
             <span class="nav-card-icon">🎓</span>
-            <div class="nav-card-title">教育費シミュ</div>
-            <div class="nav-card-desc">教育費の総額・資金計画を試算。</div>
+            <div class="nav-card-title">教育費試算</div>
+            <div class="nav-card-desc">教育費の目安を確認</div>
           </div>
           <div class="nav-card" onclick="navigateTo('tax')">
             <span class="nav-card-icon">💴</span>
             <div class="nav-card-title">税務計算</div>
-            <div class="nav-card-desc">贈与税・相続税の概算計算。</div>
+            <div class="nav-card-desc">贈与税・相続税の概算を確認</div>
           </div>
-        </div>
-      </div>
-
-      <!-- Row 3 -->
-      <div class="card-group">
-        <div class="nav-cards">
+          <div class="nav-card" onclick="navigateTo('underwriting')">
+            <span class="nav-card-icon">🔍</span>
+            <div class="nav-card-title">医務査定確認</div>
+            <div class="nav-card-desc">告知内容の確認ポイントを整理</div>
+          </div>
           <div class="nav-card" onclick="navigateTo('asset')">
             <span class="nav-card-icon">📈</span>
             <div class="nav-card-title">資産運用試算</div>
-            <div class="nav-card-desc">複利シミュレーション・将来資産の目安。</div>
+            <div class="nav-card-desc">積立・一時払いの将来額を確認</div>
           </div>
           <div class="nav-card" onclick="navigateTo('bmi')">
             <span class="nav-card-icon">⚖</span>
             <div class="nav-card-title">健康・体格バランス</div>
-            <div class="nav-card-desc">BMI計算・体格の目安を確認。</div>
+            <div class="nav-card-desc">BMI計算・体格の目安を確認</div>
+          </div>
+          <div class="nav-card" onclick="navigateTo('calc-memo')">
+            <span class="nav-card-icon">🧮</span>
+            <div class="nav-card-title">計算メモ</div>
+            <div class="nav-card-desc">面談中の簡易計算を残す</div>
           </div>
         </div>
       </div>
@@ -1128,14 +1287,14 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-education" class="section">
       <div class="tool-header">
         <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">🎓 教育費シミュ</div>
+        <div class="tool-title">🎓 教育費試算</div>
         <div class="tool-subtitle">教育費の総額・資金計画を試算します</div>
       </div>
       <div class="tool-grid-1">
         <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
           <span class="ph-icon">🎓</span>
           <div class="ph-title">準備中</div>
-          <div class="ph-desc">教育費シミュレーション機能は現在準備中です。</div>
+          <div class="ph-desc">教育費試算機能は現在準備中です。</div>
         </div>
       </div>
     </section>
@@ -1156,7 +1315,126 @@ canvas{display:block;width:100%;border-radius:8px}
       </div>
     </section>
 
+    <!-- ═══ MEMO TOOL ═══ -->
+    <section id="section-memo" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">📝 面談メモ</div>
+        <div class="tool-subtitle">面談中のメモ・確認事項・次回アクションを残す</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="card">
+          <div class="card-title">面談メモ</div>
+          <textarea id="memo-notes" style="width:100%;height:160px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:14px;font-size:13px;color:var(--card-text);resize:vertical;font-family:inherit;line-height:1.7;outline:none" placeholder="面談の要点を記録してください"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="card-title">確認事項</div>
+            <textarea id="memo-checks" style="width:100%;height:120px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px;font-size:13px;color:var(--card-text);resize:vertical;font-family:inherit;line-height:1.7;outline:none" placeholder="確認が必要な事項を記録"></textarea>
+          </div>
+          <div class="card">
+            <div class="card-title">次回アクション</div>
+            <textarea id="memo-actions" style="width:100%;height:120px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px;font-size:13px;color:var(--card-text);resize:vertical;font-family:inherit;line-height:1.7;outline:none" placeholder="次回面談までに準備することを記録"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="window.print()" style="padding:10px 28px">🖨 PDF出力 / 印刷</button>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.10);border-radius:8px;font-size:11px;color:var(--text-dim);line-height:1.8">
+          入力内容はサーバーに保存されません。<br>
+          PDF出力・印刷はご利用端末上で行われます。<br>
+          氏名・住所・電話番号・証券番号・健康情報などの入力は避けてください。
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ BUILDING TOOL ═══ -->
+    <section id="section-building" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">🏗 建物価格シミュレーション</div>
+        <div class="tool-subtitle">建築費・リフォーム費用の目安を試算します</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <span class="ph-icon">🏗</span>
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">建物価格シミュレーション機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ WHITEBOARD TOOL ═══ -->
+    <section id="section-whiteboard" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">✏ 手書きボード</div>
+        <div class="tool-subtitle">画面に書きながら説明する</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="card">
+          <div class="card-title">手書きエリア</div>
+          <canvas id="whiteboard-canvas" style="width:100%;height:400px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.08);border-radius:var(--radius-sm);display:block;cursor:crosshair" onmousedown="startDraw(event)" onmousemove="draw(event)" onmouseup="stopDraw()" onmouseleave="stopDraw()" ontouchstart="touchDraw(event)" ontouchmove="touchDraw(event)" ontouchend="stopDraw()"></canvas>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="clearBoard()">クリア</button>
+            <span style="font-size:11px;color:var(--card-text-muted)">タッチペン / マウス対応・自由に描けます</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="window.print()" style="padding:10px 28px">🖨 PDF出力 / 印刷</button>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.10);border-radius:8px;font-size:11px;color:var(--text-dim);line-height:1.8">
+          入力内容はサーバーに保存されません。<br>
+          PDF出力・印刷はご利用端末上で行われます。
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CALC MEMO TOOL ═══ -->
+    <section id="section-calc-memo" class="section">
+      <div class="tool-header">
+        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
+        <div class="tool-title">🧮 計算メモ</div>
+        <div class="tool-subtitle">電卓代わりの簡易計算メモです</div>
+      </div>
+      <div class="tool-grid-1">
+        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
+          <span class="ph-icon">🧮</span>
+          <div class="ph-title">準備中</div>
+          <div class="ph-desc">計算メモ機能は現在準備中です。</div>
+        </div>
+      </div>
+    </section>
+
   </main>
+</div>
+
+<!-- ═══ FLOATING CALCULATOR ═══ -->
+<button class="calc-float-btn" id="calc-float-btn" onclick="toggleCalc()" title="電卓">🧮</button>
+<div class="calc-panel" id="calc-panel">
+  <div class="calc-display" id="calc-display">0</div>
+  <div class="calc-grid">
+    <button class="calc-btn clr" onclick="calcInput('C')">C</button>
+    <button class="calc-btn" onclick="calcInput('⌫')">⌫</button>
+    <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+    <button class="calc-btn op" onclick="calcInput('*')">×</button>
+    <button class="calc-btn" onclick="calcInput('7')">7</button>
+    <button class="calc-btn" onclick="calcInput('8')">8</button>
+    <button class="calc-btn" onclick="calcInput('9')">9</button>
+    <button class="calc-btn op" onclick="calcInput('-')">−</button>
+    <button class="calc-btn" onclick="calcInput('4')">4</button>
+    <button class="calc-btn" onclick="calcInput('5')">5</button>
+    <button class="calc-btn" onclick="calcInput('6')">6</button>
+    <button class="calc-btn op" onclick="calcInput('+')">＋</button>
+    <button class="calc-btn" onclick="calcInput('1')">1</button>
+    <button class="calc-btn" onclick="calcInput('2')">2</button>
+    <button class="calc-btn" onclick="calcInput('3')">3</button>
+    <button class="calc-btn eq" onclick="calcInput('=')">＝</button>
+    <button class="calc-btn" onclick="calcInput('0')" style="grid-column:span 2">0</button>
+    <button class="calc-btn" onclick="calcInput('.')">.</button>
+    <button class="calc-btn copy" onclick="calcCopy()">📋 コピー</button>
+    <button class="calc-btn close" onclick="toggleCalc()">閉じる</button>
+  </div>
 </div>
 
 <script>
@@ -1207,8 +1485,9 @@ function navigateTo(key) {
     const titles = {
       mortgage:'住宅ローン試算',insurance:'必要保障額',tax:'税務計算',
       bmi:'健康・体格バランス',asset:'資産運用試算',lifetime:'匿名ライフプラン',
-      security:'社会保障ナビ',realestate:'土地・エリア情報',education:'教育費シミュ',
+      security:'社会保障ナビ',realestate:'土地・エリア情報',education:'教育費試算',
       underwriting:'医務査定確認',
+      memo:'面談メモ',building:'建物価格シミュレーション',whiteboard:'手書きボード','calc-memo':'計算メモ',
       mail:'メール文章作成',proposal:'提案資料作成',report:'会社報告テンプレート',minutes:'議事録作成'
     };
     document.getElementById('topbar-title').textContent = titles[key] || key;
@@ -1995,6 +2274,64 @@ function logoutUser() {
   location.reload();
 }
 
+/* ═══ Whiteboard ═══ */
+let _wbDrawing = false, _wbCtx = null;
+function initWhiteboard() {
+  const canvas = document.getElementById('whiteboard-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 400;
+  _wbCtx = canvas.getContext('2d');
+  _wbCtx.strokeStyle = '#333';
+  _wbCtx.lineWidth = 2;
+  _wbCtx.lineCap = 'round';
+  _wbCtx.lineJoin = 'round';
+}
+function getWbPos(e) {
+  const canvas = document.getElementById('whiteboard-canvas');
+  if (!canvas) return {x:0,y:0};
+  const rect = canvas.getBoundingClientRect();
+  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+}
+function startDraw(e) { _wbDrawing = true; const p = getWbPos(e); _wbCtx.beginPath(); _wbCtx.moveTo(p.x, p.y); }
+function draw(e) { if (!_wbDrawing) return; const p = getWbPos(e); _wbCtx.lineTo(p.x, p.y); _wbCtx.stroke(); }
+function stopDraw() { _wbDrawing = false; _wbCtx.beginPath(); }
+function touchDraw(e) { e.preventDefault(); const t = e.touches[0]; const p = {clientX: t.clientX, clientY: t.clientY}; const wp = getWbPos(p); if (e.type === 'touchstart') { _wbDrawing = true; _wbCtx.beginPath(); _wbCtx.moveTo(wp.x, wp.y); } else if (_wbDrawing) { _wbCtx.lineTo(wp.x, wp.y); _wbCtx.stroke(); } }
+function clearBoard() { if (!_wbCtx) return; const canvas = document.getElementById('whiteboard-canvas'); if (!canvas) return; _wbCtx.clearRect(0, 0, canvas.width, canvas.height); }
+
+/* ═══ Calculator ═══ */
+let _calcExpr = '', _calcClearNext = false;
+function toggleCalc() {
+  const panel = document.getElementById('calc-panel');
+  if (!panel) return;
+  panel.classList.toggle('open');
+}
+function calcInput(v) {
+  const display = document.getElementById('calc-display');
+  if (!display) return;
+  if (v === 'C') { _calcExpr = ''; _calcClearNext = false; display.textContent = '0'; return; }
+  if (v === '⌫') { _calcExpr = _calcExpr.slice(0, -1); display.textContent = _calcExpr || '0'; _calcClearNext = false; return; }
+  if (v === '=') {
+    try {
+      let expr = _calcExpr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/＋/g, '+');
+      let result = Function('"use strict"; return (' + expr + ')')();
+      if (!isFinite(result)) { display.textContent = 'Error'; _calcExpr = ''; return; }
+      result = parseFloat(result.toPrecision(12));
+      display.textContent = result; _calcExpr = String(result); _calcClearNext = true;
+    } catch(e) { display.textContent = 'Error'; _calcExpr = ''; }
+    return;
+  }
+  if (_calcClearNext && /[0-9.]/.test(v)) { _calcExpr = ''; _calcClearNext = false; }
+  _calcExpr += v; display.textContent = _calcExpr;
+}
+function calcCopy() {
+  const display = document.getElementById('calc-display');
+  if (!display) return;
+  const text = display.textContent;
+  if (text === '0' || text === 'Error') return;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
 /* ═══ Init ═══ */
 initAuth();
 // Init calculators on load
@@ -2004,6 +2341,7 @@ try { calcBMI(); } catch(e) {}
 try { calcAsset(); } catch(e) {}
 try { calcLifetime(); } catch(e) {}
 try { calcSocialSecurity(); } catch(e) {}
+try { initWhiteboard(); } catch(e) {}
 </script>
 
 </body>

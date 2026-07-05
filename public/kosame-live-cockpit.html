@@ -226,6 +226,18 @@ html[data-view-mode="chat"] .chat-outer {
   margin-left: auto;
   margin-right: auto;
 }
+/* Claude.ai風フラット表示: 会話エリアを囲う角丸パネルの枠・背景・影を撤去 */
+html[data-view-mode="chat"] .chat-panel {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 8px 20px 0;
+}
+html[data-view-mode="chat"] .assist-menu-strip {
+  display: none;
+}
 html[data-view-mode="console"] .view-mode-btn[data-view-mode-btn="console"],
 html[data-view-mode="chat"] .view-mode-btn[data-view-mode-btn="chat"] {
   background: rgba(125,211,252,0.18);

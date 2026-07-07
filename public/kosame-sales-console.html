@@ -170,70 +170,86 @@ body{
 
 /* ═══ HERO PANEL — Hotel Front Desk Style ═══ */
 .dash-hero{
-  display:flex;align-items:center;gap:28px;
-  margin-bottom:48px;padding:28px 32px;
+  display:flex;align-items:center;gap:20px;
+  margin-bottom:40px;padding:26px 28px;
   background:linear-gradient(135deg,#06111f 0%,#081a30 40%,#0b2038 100%);
-  border:1px solid rgba(205,171,92,0.45);
+  border:1px solid rgba(205,171,92,0.40);
   border-radius:var(--radius);
   position:relative;
-  box-shadow:0 0 60px rgba(0,0,0,0.3),0 0 30px rgba(200,169,106,0.06);
+  overflow:hidden;
+  box-shadow:0 0 40px rgba(0,0,0,0.28),0 0 18px rgba(200,169,106,0.05);
 }
 .dash-hero::before{
   content:'';position:absolute;inset:4px;border-radius:12px;
-  border:1px solid rgba(205,171,92,0.18);pointer-events:none;
+  border:1px solid rgba(205,171,92,0.16);pointer-events:none;
 }
 .dash-hero::after{
   content:'';position:absolute;top:8px;left:8px;
-  width:16px;height:16px;
-  border-top:1px solid rgba(205,171,92,0.45);
-  border-left:1px solid rgba(205,171,92,0.45);
+  width:14px;height:14px;
+  border-top:1px solid rgba(205,171,92,0.40);
+  border-left:1px solid rgba(205,171,92,0.40);
+}
+/* しとしと小雨: ごく淡い斜線のみ。豪雨・光条・写真風の演出はしない */
+.dash-hero-rain{
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(
+    112deg,
+    rgba(190,215,235,0.07) 0px,
+    rgba(190,215,235,0.07) 1px,
+    transparent 1px,
+    transparent 26px
+  );
+  -webkit-mask-image:linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,0.15) 85%, transparent 100%);
+  mask-image:linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,0.15) 85%, transparent 100%);
 }
 .dash-hero-l-wrap{
-  flex-shrink:0;
+  flex-shrink:0;position:relative;z-index:1;
 }
 .dash-hero-logo{
-  height:130px;width:auto;display:block;
+  height:60px;width:auto;display:block;
   filter:none;object-fit:contain;margin:0 auto;
 }
 .dash-hero-divider{
-  flex-shrink:0;width:0.5px;height:120px;
+  flex-shrink:0;width:0.5px;height:52px;
   background:rgba(var(--gold-rgb),0.3);
+  position:relative;z-index:1;
 }
-.dash-hero-info{flex:1;min-width:0}
+.dash-hero-info{flex:1;min-width:0;position:relative;z-index:1}
 .dash-hero-title{
   font-family:"Shippori Mincho",serif;
-  font-size:38px;font-weight:600;color:var(--gold-refined);
-  letter-spacing:0.18em;line-height:1.3;margin-bottom:6px;
+  font-size:21px;font-weight:500;color:var(--gold-refined);
+  letter-spacing:0.22em;line-height:1.3;margin-bottom:3px;
 }
 .dash-hero-title .accent{color:var(--gold);font-weight:900}
 .dash-hero-title-sub{
-  display:block;font-size:14px;color:#eef4f8;
-  letter-spacing:0.42em;font-family:'Noto Sans JP',sans-serif;
+  display:block;font-size:9.5px;color:#eef4f8;
+  letter-spacing:0.34em;font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  margin-top:2px;
 }
 .dash-hero-sub{
-  font-size:12px;color:var(--gold-refined);
-  letter-spacing:0.10em;margin-bottom:10px;
+  font-size:10.5px;color:var(--gold-refined);
+  letter-spacing:0.08em;margin-bottom:5px;opacity:0.85;
 }
 .dash-hero-copy{
-  font-size:12px;color:#c3d2de;line-height:1.9;margin-bottom:14px;
+  font-size:10.5px;color:#a9bccb;line-height:1.6;margin-bottom:8px;
 }
 .dash-hero-tags{
-  display:flex;gap:8px;flex-wrap:wrap;align-content:center;
+  display:flex;gap:6px;flex-wrap:wrap;align-content:center;
 }
 .dash-hero-tag{
   display:inline-flex;align-items:center;
-  font-size:12px;color:var(--text-dim);letter-spacing:0.08em;
-  padding:4px 12px;border-radius:4px;
-  background:rgba(200,169,106,0.06);
-  border:1px solid rgba(200,169,106,0.15);
+  font-size:10px;color:var(--text-dim);letter-spacing:0.06em;
+  padding:2px 9px;border-radius:4px;
+  background:rgba(200,169,106,0.05);
+  border:1px solid rgba(200,169,106,0.13);
 }
-.dash-hero-tag .tag-icon{width:12px;height:12px;margin-right:6px;flex:none;stroke:var(--gold-refined);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dash-hero-tag .tag-icon{width:10px;height:10px;margin-right:5px;flex:none;stroke:var(--gold-refined);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* Bottom-right L corner */
 .dash-hero-corner{
-  position:absolute;bottom:8px;right:8px;
-  width:16px;height:16px;
-  border-bottom:1px solid rgba(205,171,92,0.45);
-  border-right:1px solid rgba(205,171,92,0.45);
+  position:absolute;bottom:8px;right:8px;z-index:1;
+  width:14px;height:14px;
+  border-bottom:1px solid rgba(205,171,92,0.40);
+  border-right:1px solid rgba(205,171,92,0.40);
   pointer-events:none;
 }
 
@@ -324,10 +340,10 @@ body{
 .nav-card-badge{display:none}
 .tool-card-body{flex:1;min-width:0;position:relative;z-index:1}
 .nav-card-wm,.nav-card-core-wm,.card-watermark{
-  position:absolute;right:34px;top:50%;transform:translateY(-50%);
-  width:92px;height:92px;
-  opacity:0.07;pointer-events:none;
-  stroke:rgba(var(--gold-rgb),0.9);fill:none;stroke-width:1;
+  position:absolute;right:2px;top:50%;transform:translateY(-50%);
+  width:104px;height:104px;
+  opacity:0.12;pointer-events:none;
+  stroke:rgba(var(--gold-rgb),0.9);fill:none;stroke-width:1.4;
   stroke-linecap:round;stroke-linejoin:round;
 }
 .card-arrow{
@@ -847,7 +863,7 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-3col{grid-template-columns:repeat(3,1fr)}
   .nav-cards-core{grid-template-columns:repeat(3,1fr)}
   .tool-cards-row.cols-5{grid-template-columns:repeat(3,1fr)}
-  .dash-hero-logo{height:40px}
+  .dash-hero-logo{height:52px}
 }
 @media(max-width:1024px){
   .nav-cards{grid-template-columns:repeat(2,1fr)}
@@ -855,10 +871,10 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-core{grid-template-columns:repeat(2,1fr)}
   .tool-cards-row,.tool-cards-row.cols-3,.tool-cards-row.cols-5{grid-template-columns:repeat(2,1fr)}
   .tool-grid{grid-template-columns:1fr}
-  .dash-hero{flex-direction:column;align-items:flex-start;gap:16px;padding:20px 20px 18px}
-  .dash-hero-logo{height:56px}
+  .dash-hero{flex-direction:column;align-items:flex-start;gap:10px;padding:16px 20px}
+  .dash-hero-logo{height:48px}
   .dash-hero-divider{display:none}
-  .dash-hero-title{font-size:24px}
+  .dash-hero-title{font-size:19px}
   .dash-hero-tags{flex-direction:row}
 }
 @media(max-width:768px){
@@ -884,8 +900,8 @@ canvas{display:block;width:100%;border-radius:8px}
   .auth-box{padding:36px 28px}
   .calc-float-btn{bottom:16px;right:16px;width:64px;height:64px;font-size:18px}
   .calc-panel{bottom:72px;right:16px;width:230px}
-  .dash-hero-logo{height:56px}
-  .dash-hero-title{font-size:20px}
+  .dash-hero-logo{height:44px}
+  .dash-hero-title{font-size:17px}
 }
 @media(max-width:480px){
   .nav-cards{grid-template-columns:1fr}
@@ -893,9 +909,9 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-core{grid-template-columns:1fr}
   .topbar-logo-img{height:26px}
   .topbar-brand{font-size:11px}
-  .dash-hero{flex-direction:column;align-items:center;text-align:center;padding:16px}
-  .dash-hero-logo{height:48px}
-  .dash-hero-title{font-size:16px}
+  .dash-hero{flex-direction:column;align-items:center;text-align:center;padding:14px}
+  .dash-hero-logo{height:40px}
+  .dash-hero-title{font-size:15px}
   .dash-hero-tags{justify-content:center}
   .dash-hero-corner{display:none}
   .topbar-title{font-size:12px}
@@ -962,7 +978,11 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-dashboard" class="section active">
 
       <div class="dash-hero">
+        <div class="dash-hero-rain" aria-hidden="true"></div>
         <div class="dash-hero-l-wrap">
+          <!-- 差し替え予定: assets/kosame-sales-umbrella-logo.png が届き次第、
+               srcのみ変更すればよい(サイズ/余白は.dash-hero-logoで制御)。
+               filter加工・色変更・SVG化はしないこと。 -->
           <img class="dash-hero-logo" src="assets/kosame-logo-umbrella-144.png" alt="KOSAME">
         </div>
         <div class="dash-hero-divider"></div>
@@ -992,22 +1012,22 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-3">
             <div class="tool-card primary" onclick="openBoard()">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="16.5" y1="12.5" x2="20" y2="16"/><line x1="18.2" y1="10.8" x2="21" y2="13.6"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">手書きボード</div>
                 <div class="tool-card-desc">画面に書きながら説明する</div>
                 <div class="tool-card-footnote">PDF出力 / 印刷対応 — 入力内容はサーバーに保存されません</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/></svg>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="16.5" y1="12.5" x2="20" y2="16"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openMemo()">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">面談メモ</div>
                 <div class="tool-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" id="calc-memo-card" onclick="openCmemo()">
@@ -1041,12 +1061,12 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('medical-check')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="10" y1="5" x2="10" y2="11"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医療保障チェック</div>
                 <div class="tool-card-desc">公的保障・自己負担・収入減から医療保障の目安を整理</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/></svg>
+              <svg class="card-watermark" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('underwriting')">
@@ -1091,21 +1111,21 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-3">
             <div class="tool-card" onclick="openWorkspace('mortgage')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><rect x="11" y="15" width="2" height="4" rx="0.5"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><line x1="16.5" y1="3.8" x2="18" y2="6.5"/><line x1="19.5" y1="3.8" x2="18" y2="6.5"/><line x1="18" y1="6.5" x2="18" y2="10"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="16.3" y1="8.7" x2="19.7" y2="8.7"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">住宅ローン試算</div>
                 <div class="tool-card-desc">月々返済と将来残債を確認</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              <svg class="card-watermark" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="18" y1="6.5" x2="18" y2="10"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('realestate')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M18 18c0-3.3-2.7-6-6-6s-6 2.7-6 6"/><line x1="4" y1="20" x2="20" y2="20"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">土地・エリア情報</div>
                 <div class="tool-card-desc">周辺相場と土地情報を確認</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M18 18c0-3.3-2.7-6-6-6s-6 2.7-6 6"/></svg>
+              <svg class="card-watermark" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('building')">
@@ -1131,12 +1151,12 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
             <div class="tool-cards-row cols-1">
               <div class="tool-card primary" onclick="openHub('life-tax-hub')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 5c-2-1.5-5-2-8-1v13c3-1 6-.5 8 1c2-1.5 5-2 8-1V4c-3-1-6-.5-8 1z"/><line x1="12" y1="5" x2="12" y2="18"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">ライフプラン・相続・税務</div>
                   <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
                 </div>
-                <svg class="card-watermark" viewBox="0 0 24 24"><path d="M12 5c-2-1.5-5-2-8-1v13c3-1 6-.5 8 1c2-1.5 5-2 8-1V4c-3-1-6-.5-8 1z"/></svg>
+                <svg class="card-watermark" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><circle cx="17" cy="17" r="3"/></svg>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
             </div>

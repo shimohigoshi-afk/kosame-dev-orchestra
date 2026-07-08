@@ -300,9 +300,10 @@ body{
   display:inline-flex;align-items:center;gap:6px;
   font-size:12px;color:#c3d2de;cursor:pointer;
   border:0.5px solid rgba(212,188,125,0.2);border-radius:999px;
-  padding:6px 14px;transition:all 0.2s var(--ease);
+  padding:6px 14px;transition:border-color 0.15s var(--ease),color 0.15s var(--ease);
 }
 .quick-shortcut:hover{border-color:rgba(212,188,125,0.45);color:#eef4f8}
+@media(prefers-reduced-motion:reduce){.quick-shortcut{transition:none}}
 .quick-shortcut svg{width:13px;height:13px;stroke:#d4bc7d;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .nav-card-badge{display:none}
 .tool-card-body{flex:1;min-width:0;position:relative;z-index:1}

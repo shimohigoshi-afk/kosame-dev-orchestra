@@ -360,6 +360,17 @@ body{
 @keyframes catFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.cat-cards.show{animation:none}}
 
+/* クイックジャンプ帯(カテゴリ目次ピル、同一ページ内スクロールのみ) */
+.quickjump-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.quickjump-pill{
+  font-size:12.5px;color:#dbe6ee;cursor:pointer;
+  border:0.5px solid rgba(212,188,125,0.3);border-radius:999px;
+  padding:7px 16px;transition:opacity 0.15s var(--ease),border-color 0.15s var(--ease),color 0.15s var(--ease);
+}
+.quickjump-pill:hover{border-color:rgba(212,188,125,0.55);color:#eef4f8}
+.quickjump-pill.current{border-color:#d4bc7d;color:#d4bc7d;background:rgba(212,188,125,0.08)}
+@media(prefers-reduced-motion:reduce){.quickjump-pill{transition:none}}
+
 /* Collapsible section */
 .collapse-trigger{
   display:flex;align-items:center;gap:8px;
@@ -1032,8 +1043,18 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="cat-tab" data-cat="support">営業支援</span>
       </div>
 
+      <!-- ═══ QUICK JUMP(カテゴリ目次ピル。ページ内スクロールのみ) ═══ -->
+      <div class="quickjump-bar" id="quickjump-bar">
+        <span class="quickjump-pill" data-target="cat-meeting">面談デスク</span>
+        <span class="quickjump-pill" data-target="cat-insurance">保険提案</span>
+        <span class="quickjump-pill" data-target="cat-housing">住宅・不動産</span>
+        <span class="quickjump-pill" data-target="cat-life">生活資金・税務</span>
+        <span class="quickjump-pill" data-target="cat-corp">法人提案</span>
+        <span class="quickjump-pill" data-target="cat-support">営業支援</span>
+      </div>
+
       <!-- MEETING DESK -->
-      <div class="cat-cards show" data-category="meeting"><div class="card-group">
+      <div class="cat-cards show" data-category="meeting" id="cat-meeting"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">MEETING DESK</span>
@@ -1084,7 +1105,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div></div>
 
       <!-- INSURANCE PLANNING -->
-      <div class="cat-cards show" data-category="insurance"><div class="card-group">
+      <div class="cat-cards show" data-category="insurance" id="cat-insurance"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">INSURANCE PLANNING</span>
@@ -1148,7 +1169,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div></div>
 
       <!-- HOUSING CHECK -->
-      <div class="cat-cards show" data-category="housing"><div class="card-group">
+      <div class="cat-cards show" data-category="housing" id="cat-housing"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">HOUSING CHECK</span>
@@ -1190,7 +1211,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div></div>
 
       <!-- LIFE & TAX PLANNING -->
-      <div class="cat-cards show" data-category="life"><div class="card-group">
+      <div class="cat-cards show" data-category="life" id="cat-life"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">LIFE &amp; TAX PLANNING</span>
@@ -1212,7 +1233,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div></div>
 
       <!-- CORPORATE PLANNING -->
-      <div class="cat-cards show" data-category="corp"><div class="card-group">
+      <div class="cat-cards show" data-category="corp" id="cat-corp"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">CORPORATE PLANNING</span>
@@ -1234,7 +1255,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div></div>
 
       <!-- SALES SUPPORT -->
-      <div class="cat-cards show" data-category="support"><div class="card-group">
+      <div class="cat-cards show" data-category="support" id="cat-support"><div class="card-group">
         <div class="section-box">
           <div class="section-label collapse-trigger" onclick="toggleSupport()" role="button" tabindex="0" aria-expanded="false" aria-controls="support-collapse" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSupport();}">
             <span class="section-label-en">SALES SUPPORT</span>
@@ -4311,6 +4332,36 @@ function initCategoryTabs() {
   });
 }
 setTimeout(initCategoryTabs, 200);
+
+/* ═══ Quick Jump(カテゴリ目次ピル。ページ内スクロールのみ、タブ切替はしない) ═══ */
+function initQuickJump() {
+  var mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var pills = Array.prototype.slice.call(document.querySelectorAll('.quickjump-pill'));
+  if (!pills.length) return;
+  pills.forEach(function(p) {
+    p.addEventListener('click', function() {
+      var target = document.getElementById(p.getAttribute('data-target'));
+      if (!target) return;
+      target.scrollIntoView({ behavior: mql.matches ? 'auto' : 'smooth', block: 'start' });
+    });
+  });
+  if (!('IntersectionObserver' in window)) return;
+  var targets = pills.map(function(p) { return document.getElementById(p.getAttribute('data-target')); }).filter(Boolean);
+  if (!targets.length) return;
+  var visible = {};
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) visible[entry.target.id] = true;
+      else delete visible[entry.target.id];
+    });
+    var current = targets.filter(function(t) { return visible[t.id]; })[0];
+    pills.forEach(function(p) {
+      p.classList.toggle('current', !!current && p.getAttribute('data-target') === current.id);
+    });
+  }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+  targets.forEach(function(t) { obs.observe(t); });
+}
+setTimeout(initQuickJump, 250);
 
 /* ═══ Init ═══ */
 initAuth();

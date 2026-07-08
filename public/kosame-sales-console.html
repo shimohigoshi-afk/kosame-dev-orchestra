@@ -734,6 +734,10 @@ body{
   padding:24px;color:var(--card-text);
   box-shadow:0 2px 16px rgba(0,0,0,0.08);
 }
+#section-insurance .card{
+  background:#faf6ec;
+  border:0.5px solid rgba(212,188,125,0.5);
+}
 .card-title{
   font-size:13px;letter-spacing:0.08em;
   color:var(--gold);margin-bottom:18px;
@@ -1461,6 +1465,7 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="form-grid">
               <div class="form-group"><label>月間生活費（万円）</label><input type="number" id="ins-living" value="20" min="0" oninput="calcInsurance()"></div>
               <div class="form-group"><label>必要年数（年）</label><input type="number" id="ins-years" value="25" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>生活費インフレ率（％/年）</label><input type="number" id="ins-inflation" value="0" min="0" step="0.1" oninput="calcInsurance()"></div>
               <div class="form-group"><label>教育費合計（万円）</label><input type="number" id="ins-education" value="800" min="0" oninput="calcInsurance()"></div>
               <div class="form-group"><label>住居費合計（万円）</label><input type="number" id="ins-housing" value="1200" min="0" oninput="calcInsurance()"></div>
             </div>
@@ -1488,6 +1493,9 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div style="margin-top:12px;font-size:11px;color:var(--card-text-muted);line-height:1.7">
             ※遺族年金は概算です。実際の受給額は年金事務所へご確認ください
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:#8fa5b8;line-height:1.7">
+            ※本試算は簡易的な概算であり、将来の金額を保証するものではありません。あくまでご参考としてご活用ください。
           </div>
         </div>
       </div>
@@ -2500,6 +2508,7 @@ function calcInsurance() {
 
   const living = parseFloat(document.getElementById('ins-living').value) || 0;
   const years = parseFloat(document.getElementById('ins-years').value) || 0;
+  const inflation = parseFloat(document.getElementById('ins-inflation').value) || 0;
   const education = parseFloat(document.getElementById('ins-education').value) || 0;
   const housing = parseFloat(document.getElementById('ins-housing').value) || 0;
   const survivorPension = parseFloat(document.getElementById('ins-survivor-pension').value) || 0;
@@ -2507,7 +2516,12 @@ function calcInsurance() {
   const assets = parseFloat(document.getElementById('ins-assets').value) || 0;
   const existing = parseFloat(document.getElementById('ins-existing').value) || 0;
 
-  const livingTotal = living * 12 * years;
+  const inflR = inflation / 100;
+  const yearsN = Math.max(0, Math.round(years));
+  let livingTotal = 0;
+  for (let t = 0; t < yearsN; t++) {
+    livingTotal += living * 12 * Math.pow(1 + inflR, t);
+  }
   const fixed = education + housing;
   const totalNeed = livingTotal + fixed;
   const pensionTotal = survivorPension * 12 * pensionYears;

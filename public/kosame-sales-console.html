@@ -1353,9 +1353,9 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="card-title">残債確認 — 年齢別残高シミュレーション</div>
             <div class="form-grid" style="margin-bottom:12px">
               <div class="form-group"><label>現在年齢（歳）</label><input type="number" id="mb-age" value="35" min="20" max="65" oninput="calcMortgageBalance()"></div>
-              <div class="form-group"><label>借入額（万円）</label><input type="number" id="mb-principal" value="3000" min="100" oninput="calcMortgageBalance()"></div>
+              <div class="form-group"><label>借入額（万円）</label><input type="number" id="mb-principal" value="3000" min="100" oninput="calcMortgageBalance();calcMortgageStepCompare()"></div>
               <div class="form-group"><label>年利率（%）</label><input type="number" id="mb-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgageBalance()"></div>
-              <div class="form-group"><label>借入期間（年）</label><input type="number" id="mb-years" value="35" min="1" max="50" oninput="calcMortgageBalance()"></div>
+              <div class="form-group"><label>借入期間（年）</label><input type="number" id="mb-years" value="35" min="1" max="50" oninput="calcMortgageBalance();calcMortgageStepCompare()"></div>
             </div>
             <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:10px;margin-bottom:10px">
               <div style="font-size:11px;color:var(--card-text-muted);margin-bottom:8px;font-weight:600">繰上げ返済シミュレーション</div>
@@ -1391,6 +1391,40 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>繰上げなし</div>
               <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>繰上げあり</div>
               <div class="legend-item"><div class="legend-dot" style="background:rgba(0,0,0,0.25)"></div>60・65歳マーカー</div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-grid-1" style="margin-top:16px">
+          <div class="card">
+            <div class="card-title">固定 vs 段階変動金利 比較（簡易版）</div>
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group"><label>固定金利（％）</label><input type="number" id="mbc-fix-rate" value="1.5" min="0.01" max="10" step="0.01" oninput="calcMortgageStepCompare()"></div>
+              <div class="form-group"><label>変動金利：当初金利（％）</label><input type="number" id="mbc-var-init-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgageStepCompare()"></div>
+              <div class="form-group"><label>見直し間隔（年ごと）</label><input type="number" id="mbc-var-interval" value="5" min="1" max="50" oninput="calcMortgageStepCompare()"></div>
+              <div class="form-group"><label>見直し時の上昇幅（％）</label><input type="number" id="mbc-var-step" value="0.25" min="0" step="0.01" oninput="calcMortgageStepCompare()"></div>
+            </div>
+            <table style="width:100%;font-size:12px;border-collapse:collapse">
+              <thead><tr style="color:var(--card-text-muted);border-bottom:1px solid rgba(0,0,0,0.08)">
+                <th style="text-align:left;padding:4px 0"></th>
+                <th style="text-align:right;padding:4px;color:#a8894a">固定金利</th>
+                <th style="text-align:right;padding:4px 0;color:#2980b9">変動金利</th>
+              </tr></thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(0,0,0,0.05)">
+                  <td style="padding:6px 0;color:var(--card-text-muted)">毎月返済額（当初）</td>
+                  <td style="text-align:right;padding:6px 4px;color:#a8894a;font-weight:700" id="mbc-fix-monthly">—</td>
+                  <td style="text-align:right;padding:6px 0;color:#2980b9;font-weight:700" id="mbc-var-monthly">—</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;color:var(--card-text-muted)">総返済額</td>
+                  <td style="text-align:right;padding:6px 4px;color:#a8894a;font-weight:700" id="mbc-fix-total">—</td>
+                  <td style="text-align:right;padding:6px 0;color:#2980b9;font-weight:700" id="mbc-var-total">—</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:12px;font-size:11px;color:var(--card-text-muted);line-height:1.7">
+              ※変動金利は「見直し時点の残高・残期間」で毎月返済額を再計算する簡易試算です。実際の金融機関が採用する5年ルール・1.25倍ルールなどの緩和措置は適用していません。<br>
+              ※簡易試算です。実際の返済額は金融機関にご確認ください。
             </div>
           </div>
         </div>
@@ -2302,7 +2336,7 @@ function switchMortgageTab(tab) {
   if (tabEl) tabEl.classList.add('active');
   if (panEl) panEl.classList.add('active');
   if (tab === 'basic') { calcMortgage(); setTimeout(drawMortgageChart, 50); }
-  if (tab === 'balance') setTimeout(calcMortgageBalance, 50);
+  if (tab === 'balance') { setTimeout(calcMortgageBalance, 50); setTimeout(calcMortgageStepCompare, 50); }
   if (tab === 'steprate') setTimeout(calcStepRate, 50);
 }
 
@@ -2442,6 +2476,47 @@ function calcMortgageBalance() {
 
   ctx.fillStyle = '#8a8fa0'; ctx.font = '10px Arial';
   for (let i = 0; i <= 5; i++) ctx.fillText(Math.round(years * i / 5) + '年', pad2.l + cW2 * i / 5 - 8, H - 6);
+}
+
+/* ── 固定 vs 段階変動金利 比較(簡易版) ──
+   5年ルール・1.25倍ルールは適用せず、見直し時点の残高・残期間で
+   毎月返済額をそのまま再計算する簡易試算。 */
+function calcMortgageStepCompare() {
+  const P = parseFloat(document.getElementById('mb-principal').value) || 0;
+  const years = parseInt(document.getElementById('mb-years').value) || 0;
+  const fixRate = parseFloat(document.getElementById('mbc-fix-rate').value) || 0;
+  const varInitRate = parseFloat(document.getElementById('mbc-var-init-rate').value) || 0;
+  const varStep = parseFloat(document.getElementById('mbc-var-step').value) || 0;
+  const varInterval = Math.max(1, parseInt(document.getElementById('mbc-var-interval').value) || 1);
+  if (P <= 0 || years <= 0) return;
+
+  // 固定金利プラン
+  const fixMonthly = mortgageMonthly(P, fixRate, years);
+  const fixTotal = fixMonthly * years * 12;
+
+  // 変動金利プラン(簡易): intervalMonthsごとに残高・残期間で月返済額を再計算
+  const n = years * 12;
+  const intervalMonths = varInterval * 12;
+  let balance = P;
+  let currentRate = varInitRate;
+  let currentMonthly = mortgageMonthly(P, currentRate, years);
+  const initMonthly = currentMonthly;
+  let totalPaid = 0;
+  for (let m = 0; m < n; m++) {
+    if (m > 0 && m % intervalMonths === 0 && balance > 0) {
+      currentRate += varStep;
+      currentMonthly = mortgageMonthly(balance, currentRate, (n - m) / 12);
+    }
+    const interest = balance * (currentRate / 100 / 12);
+    balance -= (currentMonthly - interest);
+    if (balance < 0) { totalPaid += currentMonthly + balance; balance = 0; break; }
+    totalPaid += currentMonthly;
+  }
+
+  document.getElementById('mbc-fix-monthly').textContent = Math.round(fixMonthly * 10000).toLocaleString() + '円/月';
+  document.getElementById('mbc-fix-total').textContent = fmtYen(fixTotal);
+  document.getElementById('mbc-var-monthly').textContent = Math.round(initMonthly * 10000).toLocaleString() + '円/月';
+  document.getElementById('mbc-var-total').textContent = fmtYen(totalPaid);
 }
 
 /* ── Step Rate ── */

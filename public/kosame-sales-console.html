@@ -828,11 +828,11 @@ body{
 /* 住宅ローン基本計算 UX(1項目1行 + トグル + プリセットチップ) */
 .mrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .mrow-label{width:130px;flex-shrink:0;font-size:12px;color:var(--card-text-muted)}
-.mrow input[type=number]{
+.mrow input[type=number],.mrow input[type=month],.mrow select{
   flex:1;min-width:0;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);
   color:var(--card-text);border-radius:8px;padding:9px 11px;font-size:13px;outline:none;
 }
-.mrow input[type=number]:focus{border-color:var(--gold);background:#fffdf7}
+.mrow input[type=number]:focus,.mrow input[type=month]:focus,.mrow select:focus{border-color:var(--gold);background:#fffdf7}
 .mrow-unit{font-size:12px;color:var(--card-text-muted);flex-shrink:0;min-width:32px}
 .mrow-sub{margin:-4px 0 12px 140px}
 
@@ -1323,6 +1323,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <div class="sim-tab active" id="stab-basic" onclick="switchMortgageTab('basic')">基本計算</div>
         <div class="sim-tab" id="stab-balance" onclick="switchMortgageTab('balance')">残債確認</div>
         <div class="sim-tab" id="stab-steprate" onclick="switchMortgageTab('steprate')">段階金利</div>
+        <div class="sim-tab" id="stab-taxdeduct" onclick="switchMortgageTab('taxdeduct')">控除（減税）</div>
       </div>
 
       <!-- Basic -->
@@ -1595,6 +1596,94 @@ canvas{display:block;width:100%;border-radius:8px}
                 上記ルールにより未払い利息が積み上がり、期間満了時に残債が発生することがある。
               </div>
               <div style="margin-top:12px;font-size:11px;color:var(--card-text-muted)">※金融機関により適用ルールは異なります。実際の借入条件をご確認ください。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tax Deduction -->
+      <div class="sim-panel" id="spanel-taxdeduct">
+        <div class="tool-grid">
+          <div class="card">
+            <div class="card-title">住宅ローン控除 試算条件</div>
+            <div class="mrow">
+              <span class="mrow-label">借入額</span>
+              <input type="number" id="ltd-principal" value="4000" min="100" max="100000" oninput="calcLoanTaxDeduction()">
+              <span class="mrow-unit">万円</span>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">金利</span>
+              <input type="number" id="ltd-rate" value="1.0" min="0" max="10" step="0.01" oninput="calcLoanTaxDeduction()">
+              <span class="mrow-unit">%</span>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">返済期間</span>
+              <input type="number" id="ltd-years" value="40" min="1" max="50" oninput="calcLoanTaxDeduction()">
+              <span class="mrow-unit">年</span>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">入居年月</span>
+              <input type="month" id="ltd-movein" value="2026-04" oninput="calcLoanTaxDeduction()">
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">住宅区分</span>
+              <div class="mtoggle" id="ltd-newbuild-toggle">
+                <button type="button" class="mtoggle-btn active" onclick="setLtdNewBuild(true)">新築・買取再販</button>
+                <button type="button" class="mtoggle-btn" onclick="setLtdNewBuild(false)">中古</button>
+              </div>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">住宅種別</span>
+              <select id="ltd-house-type" onchange="calcLoanTaxDeduction()">
+                <option value="certified">認定長期優良・低炭素住宅</option>
+                <option value="zeh">ZEH水準省エネ住宅</option>
+                <option value="energyStd">省エネ基準適合住宅</option>
+                <option value="other">その他の住宅</option>
+              </select>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">年収</span>
+              <input type="number" id="ltd-income" value="500" min="0" oninput="calcLoanTaxDeduction()">
+              <span class="mrow-unit">万円</span>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">19歳未満の扶養親族</span>
+              <input type="number" id="ltd-dependents" value="0" min="0" max="10" oninput="calcLoanTaxDeduction()">
+              <span class="mrow-unit">人</span>
+            </div>
+            <div class="mrow">
+              <span class="mrow-label">子育て世帯等</span>
+              <div class="mtoggle" id="ltd-kosodate-toggle">
+                <button type="button" class="mtoggle-btn active" onclick="setLtdKosodate(false)">該当しない</button>
+                <button type="button" class="mtoggle-btn" onclick="setLtdKosodate(true)">該当する</button>
+              </div>
+            </div>
+            <div style="font-size:10.5px;color:var(--card-text-muted);line-height:1.7;margin:-4px 0 0 140px">
+              ※子育て世帯・若者夫婦世帯: 19歳未満のお子様がいる、または夫婦どちらかが40歳未満
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">住宅ローン控除 試算結果</div>
+            <div id="ltd-excluded-note" style="display:none;margin-bottom:12px;padding:12px;background:#fff5f5;border-radius:8px;border-left:3px solid #e05555;font-size:11.5px;color:#a8433f;line-height:1.7">
+              ※省エネ基準に適合しない新築住宅は、原則として住宅ローン控除の対象外です（一定の時期までに建築確認を受けた場合等の例外あり。詳細は税務署等にご確認ください）
+            </div>
+            <div id="ltd-energystd-note" style="display:none;margin-bottom:12px;font-size:10.5px;color:var(--card-text-muted);line-height:1.7">
+              ※令和10年以降に建築確認を受ける場合は対象外となる予定です
+            </div>
+            <div class="result-highlight">
+              <div class="result-highlight-label">控除合計額（試算期間累計）</div>
+              <div class="result-highlight-value" id="ltd-total">—</div>
+            </div>
+            <div style="overflow-x:auto;margin-top:14px">
+              <table class="mprepay-table" style="min-width:480px">
+                <thead><tr>
+                  <th style="text-align:left">年目</th><th>年末残高（目安）</th><th>限度額適用後</th><th>控除額（上限適用後）</th>
+                </tr></thead>
+                <tbody id="ltd-year-body"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:14px;font-size:11px;color:#8fa5b8;line-height:1.7">
+              ※本試算は簡易計算によるご参考値です。実際の控除額はお住まいの自治体・税務署・税理士にご確認ください。税制は今後の改正により変更される場合があります。
             </div>
           </div>
         </div>
@@ -2596,6 +2685,7 @@ function switchMortgageTab(tab) {
   if (tab === 'basic') { calcMortgage(); setTimeout(drawMortgageChart, 50); }
   if (tab === 'balance') { setTimeout(calcMortgageBalance, 50); setTimeout(calcMortgageStepCompare, 50); }
   if (tab === 'steprate') setTimeout(calcStepRate, 50);
+  if (tab === 'taxdeduct') setTimeout(calcLoanTaxDeduction, 50);
 }
 
 /* ── Mortgage Balance ── */
@@ -2825,6 +2915,145 @@ function calcStepRate() {
     bel.style.color = 'var(--success)';
   }
   document.getElementById('sr-total-paid').textContent = fmtYen(totalPaid);
+}
+
+/* ── 住宅ローン控除(減税) ──
+   税制パラメータは下記定数に集約(年度改正で差し替え前提)。
+   国交省 住宅ローン減税ページの最新表と照合してから本番反映すること。
+   使用住宅(中古)の限度額表は暫定値のため要公式表照合(TODO)。 */
+const LOAN_TAX_RULES = {
+  rate: 0.007,
+  residentTaxCap: 97500,
+  newBuild: {
+    years: 13,
+    limits: {
+      certified: { normal: 45000000, kosodate: 50000000 },
+      zeh:       { normal: 40000000, kosodate: 45000000 },
+      energyStd: { normal: 30000000, kosodate: 35000000 },
+      other:     { normal: 0, kosodate: 0 } // 省エネ基準非適合の新築は原則対象外
+    }
+  },
+  used: {
+    // 省エネ性能あり(certified/zeh/energyStd)は13年、その他(省エネ基準非適合の中古等)は10年
+    years: { certified: 13, zeh: 13, energyStd: 13, other: 10 },
+    limits: {
+      // TODO: 既存住宅の限度額は公式表と要照合。zehはcertifiedと同枠として暫定運用。
+      certified: { normal: 30000000, kosodate: 35000000 },
+      zeh:       { normal: 30000000, kosodate: 35000000 },
+      energyStd: { normal: 20000000, kosodate: 30000000 },
+      other:     { normal: 20000000, kosodate: 20000000 }
+    }
+  }
+};
+
+let _ltdNewBuild = true, _ltdKosodate = false;
+function setLtdNewBuild(isNew) {
+  _ltdNewBuild = isNew;
+  setToggleActive('ltd-newbuild-toggle', isNew ? 0 : 1);
+  calcLoanTaxDeduction();
+}
+function setLtdKosodate(on) {
+  _ltdKosodate = on;
+  setToggleActive('ltd-kosodate-toggle', on ? 1 : 0);
+  calcLoanTaxDeduction();
+}
+
+function buildYearEndBalancesYen(P_yen, rateAnnual, totalYears, neededYears) {
+  const monthly = mortgageMonthly(P_yen, rateAnnual, totalYears);
+  const rM = rateAnnual / 100 / 12;
+  const totalMonths = Math.round(totalYears * 12);
+  let balance = P_yen;
+  const balances = [];
+  let m = 0;
+  for (let y = 1; y <= neededYears; y++) {
+    for (let k = 0; k < 12 && m < totalMonths; k++, m++) {
+      const interest = balance * rM;
+      balance -= (monthly - interest);
+      if (balance < 0) balance = 0;
+    }
+    balances.push(balance);
+    if (balance <= 0 || m >= totalMonths) break;
+  }
+  return balances;
+}
+
+/* 簡易所得税額(給与所得控除→基礎控除48万+扶養1人38万→速算表)。復興特別所得税は含めない簡易版 */
+function simpleIncomeTaxYen(incomeManYen, dependentsUnder19) {
+  const incomeYen = incomeManYen * 10000;
+  let deduction;
+  if (incomeYen <= 1625000) deduction = 550000;
+  else if (incomeYen <= 1800000) deduction = incomeYen * 0.4 - 100000;
+  else if (incomeYen <= 3600000) deduction = incomeYen * 0.3 + 80000;
+  else if (incomeYen <= 6600000) deduction = incomeYen * 0.2 + 440000;
+  else if (incomeYen <= 8500000) deduction = incomeYen * 0.1 + 1100000;
+  else deduction = 1950000;
+  const salaryIncome = Math.max(0, incomeYen - deduction);
+  const basicDeduction = 480000;
+  const dependentDeduction = (dependentsUnder19 || 0) * 380000;
+  const taxableIncome = Math.max(0, Math.floor(salaryIncome - basicDeduction - dependentDeduction));
+  let tax;
+  if (taxableIncome <= 1950000) tax = taxableIncome * 0.05;
+  else if (taxableIncome <= 3300000) tax = taxableIncome * 0.1 - 97500;
+  else if (taxableIncome <= 6950000) tax = taxableIncome * 0.2 - 427500;
+  else if (taxableIncome <= 9000000) tax = taxableIncome * 0.23 - 636000;
+  else if (taxableIncome <= 18000000) tax = taxableIncome * 0.33 - 1536000;
+  else if (taxableIncome <= 40000000) tax = taxableIncome * 0.4 - 2796000;
+  else tax = taxableIncome * 0.45 - 4796000;
+  return Math.max(0, tax);
+}
+
+function calcLoanTaxDeduction() {
+  const P_man = parseFloat(document.getElementById('ltd-principal').value) || 0;
+  const rate = parseFloat(document.getElementById('ltd-rate').value) || 0;
+  const years = parseInt(document.getElementById('ltd-years').value) || 0;
+  const income = parseFloat(document.getElementById('ltd-income').value) || 0;
+  const dependents = parseInt(document.getElementById('ltd-dependents').value) || 0;
+  const houseType = document.getElementById('ltd-house-type').value;
+  if (P_man <= 0 || years <= 0) return;
+
+  const excludedNote = document.getElementById('ltd-excluded-note');
+  const energyStdNote = document.getElementById('ltd-energystd-note');
+  excludedNote.style.display = 'none';
+  energyStdNote.style.display = 'none';
+
+  const category = _ltdNewBuild ? LOAN_TAX_RULES.newBuild : LOAN_TAX_RULES.used;
+  const deductionYears = _ltdNewBuild ? category.years : category.years[houseType];
+  const limitObj = category.limits[houseType];
+  const limit = _ltdKosodate ? limitObj.kosodate : limitObj.normal;
+
+  const tbody = document.getElementById('ltd-year-body');
+  tbody.innerHTML = '';
+
+  if (_ltdNewBuild && houseType === 'other') {
+    excludedNote.style.display = 'block';
+    document.getElementById('ltd-total').textContent = '0円';
+    return;
+  }
+  if (_ltdNewBuild && houseType === 'energyStd') {
+    energyStdNote.style.display = 'block';
+  }
+
+  const P_yen = P_man * 10000;
+  const neededYears = Math.max(0, Math.min(deductionYears, years));
+  const balances = buildYearEndBalancesYen(P_yen, rate, years, neededYears);
+  const incomeTax = simpleIncomeTaxYen(income, dependents);
+  const capPerYear = incomeTax + LOAN_TAX_RULES.residentTaxCap;
+
+  let total = 0;
+  balances.forEach(function(balance, i) {
+    const base = Math.min(balance, limit);
+    const raw = base * LOAN_TAX_RULES.rate;
+    const capped = Math.min(raw, capPerYear);
+    total += capped;
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td style="text-align:left">' + (i + 1) + '年目</td>'
+      + '<td>' + Math.round(balance).toLocaleString() + '円</td>'
+      + '<td>' + Math.round(base).toLocaleString() + '円</td>'
+      + '<td class="mp-val">' + Math.round(capped).toLocaleString() + '円</td>';
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('ltd-total').textContent = Math.round(total).toLocaleString() + '円';
 }
 
 /* ── Insurance ── */

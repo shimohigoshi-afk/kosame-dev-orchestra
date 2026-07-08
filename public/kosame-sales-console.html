@@ -173,53 +173,26 @@ body{
 
 /* ═══ HERO PANEL ═══ */
 .dash-hero{
-  display:flex;align-items:center;gap:24px;
-  margin-bottom:40px;padding:28px 32px;
-  background:#0d1b2e;
-  border:1px solid rgba(212,188,125,0.4);
+  display:flex;align-items:center;gap:20px;
+  margin-bottom:40px;padding:18px 24px;
+  background:linear-gradient(135deg,rgba(8,20,36,0.85) 0%,rgba(10,26,46,0.70) 100%);
+  border:1px solid rgba(200,169,106,0.22);
   border-radius:12px;
   position:relative;
-  overflow:hidden;
-}
-/* しとしと小雨: CSSのみの淡い斜線(画像アセット不要) */
-.dash-hero::before{
-  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:repeating-linear-gradient(115deg,
-    rgba(212,188,125,0.14) 0 1px, transparent 1px 74px);
-  -webkit-mask-image:linear-gradient(90deg, transparent 30%, black 72%);
-  mask-image:linear-gradient(90deg, transparent 30%, black 72%);
 }
 .dash-hero-l-wrap{
   flex-shrink:0;position:relative;z-index:1;
 }
 .dash-hero-logo{
-  height:90px;width:auto;display:block;
+  height:50px;width:auto;display:block;
   filter:none;object-fit:contain;
 }
 .dash-hero-info{flex:1;min-width:0;position:relative;z-index:1}
-.dash-hero-title{
-  font-family:"Shippori Mincho",serif;
-  font-size:30px;font-weight:500;color:#d4bc7d;
-  letter-spacing:0.04em;line-height:1.3;margin-bottom:6px;
-}
-.dash-hero-sub{
-  font-size:13px;color:#c3d2de;
-  letter-spacing:0.04em;margin-bottom:6px;
-}
-.dash-hero-copy{
-  font-size:12.5px;color:#8fa5b8;line-height:1.6;
-}
-.dash-hero-tags{
-  position:absolute;bottom:16px;right:20px;z-index:1;
-  display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;
-}
-.dash-hero-tag{
-  display:inline-flex;align-items:center;
-  font-size:11.5px;color:#d4bc7d;letter-spacing:0.02em;
-  padding:5px 13px;border-radius:999px;
-  background:transparent;
-  border:0.5px solid rgba(212,188,125,0.35);
-}
+.dash-hero-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:2px;margin-bottom:2px}
+.dash-hero-title .accent{color:var(--gold);font-weight:900}
+.dash-hero-sub{font-size:10px;color:var(--text-muted);letter-spacing:0.08em}
+.dash-hero-tags{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.dash-hero-tag{font-size:9px;color:var(--text-dim);letter-spacing:0.06em;padding:2px 8px;border-radius:3px;background:rgba(200,169,106,0.06);border:1px solid rgba(200,169,106,0.12)}
 .dash-hero-tag.active{background:#d4bc7d;color:#0a1420;border-color:#d4bc7d}
 .dash-hero-tag .tag-icon{width:13px;height:13px;margin-right:6px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
@@ -227,7 +200,7 @@ body{
 /* ═══ SECTION BOX(fieldset風の額縁)═══ */
 .card-group{margin-top:26px;margin-bottom:26px}
 .section-box{
-  border:0.5px solid rgba(var(--gold-rgb),0.28);
+  border:0.5px solid rgba(200,169,106,0.18);
   border-radius:12px;
   padding:22px 18px 16px;
   position:relative;
@@ -264,7 +237,7 @@ body{
   display:flex;align-items:center;gap:14px;
   position:relative;
   background:#0e1c31;
-  border:0.5px solid rgba(var(--gold-rgb),0.2);
+  border:0.5px solid rgba(200,169,106,0.14);
   border-radius:10px;
   padding:16px 18px;
   cursor:pointer;
@@ -279,16 +252,17 @@ body{
   box-shadow:0 10px 30px rgba(0,0,0,0.32);
 }
 .nav-card-icon-wrap,.icon-ring{
-  width:56px;height:56px;flex:none;position:relative;
-  border:1px solid rgba(var(--gold-rgb),0.45);
+  width:72px;height:72px;margin:0 auto 8px;
+  border-radius:50%;
+  border:1px solid rgba(205,171,92,0.35);
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle,rgba(var(--gold-rgb),0.08) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(200,169,106,0.08) 0%,transparent 70%);
   transition:all 0.4s var(--ease);
 }
 .nav-card:hover .nav-card-icon-wrap,.tool-card:hover .icon-ring{
-  border-color:rgba(var(--gold-rgb),0.7);
-  background:radial-gradient(circle,rgba(var(--gold-rgb),0.16) 0%,transparent 70%);
+  border-color:rgba(200,169,106,0.55);
+  background:radial-gradient(circle,rgba(200,169,106,0.18) 0%,transparent 70%);
 }
 .nav-card-icon,.card-icon{
   width:26px;height:26px;display:block;
@@ -343,13 +317,23 @@ body{
 /* ハブ(1枚のダッシュボードカードから複数の既存ツールへ振り分ける簡易一覧) */
 .hub-list{display:flex;flex-direction:column;gap:10px}
 .hub-list-item{
-  background:#0e1c31;border:0.5px solid rgba(var(--gold-rgb),0.2);
+  background:#0e1c31;border:0.5px solid rgba(200,169,106,0.14);
   border-radius:10px;padding:14px 16px;cursor:pointer;
   transition:all 0.3s var(--ease);
 }
 .hub-list-item:hover{border-color:rgba(var(--gold-rgb),0.5);transform:translateX(2px)}
 .hub-list-title{font-size:14px;font-family:"Shippori Mincho",serif;color:#eef4f8;letter-spacing:0.06em;margin-bottom:3px}
 .hub-list-desc{font-size:11.5px;color:#8fa5b8}
+
+/* ========== CATEGORY TABS ========== */
+.category-tabs{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap}
+.cat-tab{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,106,0.15);letter-spacing:0.04em;white-space:nowrap}
+.cat-tab:hover{color:var(--text);border-color:rgba(200,169,106,0.35)}
+.cat-tab.active{color:var(--gold);border-color:rgba(200,169,106,0.55);background:rgba(200,169,106,0.10)}
+.cat-cards{display:none}
+.cat-cards.show{display:block;animation:catFadeIn .2s ease-out}
+@keyframes catFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.cat-cards.show{animation:none}}
 
 /* Collapsible section */
 .collapse-trigger{
@@ -978,21 +962,8 @@ canvas{display:block;width:100%;border-radius:8px}
 <div id="app">
   <header class="topbar">
     <div class="topbar-left">
-      <svg class="topbar-logo-img" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KOSAME">
-        <path d="M10 37 Q32 15 54 37" stroke="#C9A45C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M32 15 Q25 25 17 37" stroke="#C9A45C" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-        <path d="M32 15 Q39 25 47 37" stroke="#C9A45C" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-        <path d="M32 15 L32 11" stroke="#F1D58A" stroke-width="1.3" stroke-linecap="round"/>
-        <path d="M32 37 L32 53 Q32 60 25 60 Q19 60 19 55" stroke="#C9A45C" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <g fill="#4FC3F7">
-          <g transform="translate(47,44) scale(0.22)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.55"/></g>
-          <g transform="translate(53,50) scale(0.18)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.42"/></g>
-          <g transform="translate(49,57) scale(0.15)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.35"/></g>
-        </g>
-      </svg>
-      <span class="topbar-kosame">KOSAME</span>
-      <span class="topbar-divider"></span>
-      <span class="topbar-subtitle">Sales Console</span>
+      <img class="topbar-logo-img" src="assets/kosame-logo-umbrella-144.png" alt="KOSAME">
+      <span class="topbar-brand"><span class="tbg">KOSAME</span> Sales Console</span>
       <span class="topbar-divider"></span>
       <span class="topbar-title" id="topbar-title">Dashboard</span>
     </div>
@@ -1028,8 +999,18 @@ canvas{display:block;width:100%;border-radius:8px}
         </div>
       </div>
 
+      <!-- ═══ CATEGORY TABS ═══ -->
+      <div class="category-tabs" id="category-tabs">
+        <span class="cat-tab active" data-cat="meeting">面談デスク</span>
+        <span class="cat-tab" data-cat="insurance">保険提案</span>
+        <span class="cat-tab" data-cat="housing">住宅・不動産</span>
+        <span class="cat-tab" data-cat="life">生活資金</span>
+        <span class="cat-tab" data-cat="corp">法人提案</span>
+        <span class="cat-tab" data-cat="support">営業支援</span>
+      </div>
+
       <!-- MEETING DESK -->
-      <div class="card-group">
+      <div class="cat-cards show" data-category="meeting"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">MEETING DESK</span>
@@ -1037,7 +1018,7 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-3">
             <div class="tool-card primary" onclick="openBoard()">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="16.5" y1="12.5" x2="20" y2="16"/><line x1="18.2" y1="10.8" x2="21" y2="13.6"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="16.5" y1="12.5" x2="20" y2="16"/><line x1="18.2" y1="10.8" x2="21" y2="13.6"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">手書きボード</div>
                 <div class="tool-card-desc">画面に書きながら説明する</div>
@@ -1047,7 +1028,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openMemo()">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">面談メモ</div>
                 <div class="tool-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
@@ -1056,7 +1037,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" id="calc-memo-card" onclick="openCmemo()">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/><circle cx="12" cy="11" r="0.8"/><circle cx="16" cy="11" r="0.8"/><circle cx="8" cy="15" r="0.8"/><circle cx="12" cy="15" r="0.8"/><circle cx="16" cy="15" r="0.8"/><circle cx="12" cy="19" r="0.8"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/><circle cx="12" cy="11" r="0.8"/><circle cx="16" cy="11" r="0.8"/><circle cx="8" cy="15" r="0.8"/><circle cx="12" cy="15" r="0.8"/><circle cx="16" cy="15" r="0.8"/><circle cx="12" cy="19" r="0.8"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">計算メモ <span class="calc-log-badge" id="calc-log-badge" style="display:none">0</span></div>
                 <div class="tool-card-desc">面談中の計算結果を一時集約</div>
@@ -1066,10 +1047,10 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div>
+      </div></div>
 
       <!-- INSURANCE PLANNING -->
-      <div class="card-group">
+      <div class="cat-cards show" data-category="insurance"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">INSURANCE PLANNING</span>
@@ -1077,7 +1058,7 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-3" style="margin-bottom:14px">
             <div class="tool-card" onclick="openWorkspace('insurance')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">必要保障額</div>
                 <div class="tool-card-desc">万一のときに必要な保障額を確認</div>
@@ -1086,7 +1067,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('medical-check')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="10" y1="5" x2="10" y2="11"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="10" y1="5" x2="10" y2="11"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医療保障チェック</div>
                 <div class="tool-card-desc">公的保障・自己負担・収入減から医療保障の目安を整理</div>
@@ -1095,7 +1076,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('underwriting')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医務査定確認</div>
                 <div class="tool-card-desc">告知内容の確認ポイントを整理</div>
@@ -1106,7 +1087,7 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-2">
             <div class="tool-card" onclick="openWorkspace('asset')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">ファンド確認</div>
                 <div class="tool-card-desc">積立・一時払いの将来額を確認</div>
@@ -1115,7 +1096,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('bmi')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><line x1="2" y1="20" x2="7" y2="14"/><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/><line x1="12" y1="16" x2="22" y2="16"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><line x1="2" y1="20" x2="7" y2="14"/><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/><line x1="12" y1="16" x2="22" y2="16"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">健康・体格バランス</div>
                 <div class="tool-card-desc">BMI計算・体格の目安を確認</div>
@@ -1125,10 +1106,10 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div>
+      </div></div>
 
       <!-- HOUSING CHECK -->
-      <div class="card-group">
+      <div class="cat-cards show" data-category="housing"><div class="card-group">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">HOUSING CHECK</span>
@@ -1136,7 +1117,7 @@ canvas{display:block;width:100%;border-radius:8px}
           </div>
           <div class="tool-cards-row cols-3">
             <div class="tool-card" onclick="openWorkspace('mortgage')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><line x1="16.5" y1="3.8" x2="18" y2="6.5"/><line x1="19.5" y1="3.8" x2="18" y2="6.5"/><line x1="18" y1="6.5" x2="18" y2="10"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="16.3" y1="8.7" x2="19.7" y2="8.7"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><line x1="16.5" y1="3.8" x2="18" y2="6.5"/><line x1="19.5" y1="3.8" x2="18" y2="6.5"/><line x1="18" y1="6.5" x2="18" y2="10"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="16.3" y1="8.7" x2="19.7" y2="8.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">住宅ローン試算</div>
                 <div class="tool-card-desc">月々返済と将来残債を確認</div>
@@ -1145,7 +1126,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('realestate')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">土地・エリア情報</div>
                 <div class="tool-card-desc">周辺相場と土地情報を確認</div>
@@ -1154,7 +1135,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('building')">
-              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="4" width="4" height="3"/><rect x="6" y="9" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/><rect x="6" y="14" width="4" height="3"/><rect x="14" y="14" width="4" height="3"/><rect x="9" y="18" width="6" height="4"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="4" width="4" height="3"/><rect x="6" y="9" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/><rect x="6" y="14" width="4" height="3"/><rect x="14" y="14" width="4" height="3"/><rect x="9" y="18" width="6" height="4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">建物価格シミュレーション</div>
                 <div class="tool-card-desc">建物・外構・諸費用込みの総額を確認</div>
@@ -1163,51 +1144,53 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
-        </div>
-      </div>
+        </div></div>
+      </div></div>
 
-      <!-- LIFE & TAX PLANNING / CORPORATE PLANNING -->
-      <div class="card-group">
-        <div class="section-pair">
-          <div class="section-box">
-            <div class="section-label">
-              <span class="section-label-en">LIFE &amp; TAX PLANNING</span>
-              <span class="section-label-ja">生活資金・税務</span>
-            </div>
-            <div class="tool-cards-row cols-1">
-              <div class="tool-card primary" onclick="openHub('life-tax-hub')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
-                <div class="tool-card-body">
-                  <div class="tool-card-title">ライフプラン・相続・税務</div>
-                  <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
-                </div>
-                <svg class="card-watermark" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><circle cx="17" cy="17" r="3"/></svg>
-                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
-              </div>
-            </div>
+      <!-- LIFE & TAX PLANNING -->
+      <div class="cat-cards show" data-category="life"><div class="card-group">
+        <div class="section-box">
+          <div class="section-label">
+            <span class="section-label-en">LIFE &amp; TAX PLANNING</span>
+            <span class="section-label-ja">生活資金・税務</span>
           </div>
-          <div class="section-box">
-            <div class="section-label">
-              <span class="section-label-en">CORPORATE PLANNING</span>
-              <span class="section-label-ja">法人提案</span>
-            </div>
-            <div class="tool-cards-row cols-1">
-              <div class="tool-card primary" onclick="openHub('corp-hub')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
-                <div class="tool-card-body">
-                  <div class="tool-card-title">事業保障・退職金・法人保険</div>
-                  <div class="tool-card-desc">事業保障・退職金・法人保険をトータル提案</div>
-                </div>
-                <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="2" y1="12" x2="30" y2="12"/></svg>
-                <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          <div class="tool-cards-row cols-1">
+            <div class="tool-card primary" onclick="openHub('life-tax-hub')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">ライフプラン・相続・税務</div>
+                <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
               </div>
+              <svg class="card-watermark" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><circle cx="17" cy="17" r="3"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
         </div>
-      </div>
+      </div></div>
+
+      <!-- CORPORATE PLANNING -->
+      <div class="cat-cards show" data-category="corp"><div class="card-group">
+        <div class="section-box">
+          <div class="section-label">
+            <span class="section-label-en">CORPORATE PLANNING</span>
+            <span class="section-label-ja">法人提案</span>
+          </div>
+          <div class="tool-cards-row cols-1">
+            <div class="tool-card primary" onclick="openHub('corp-hub')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">事業保障・退職金・法人保険</div>
+                <div class="tool-card-desc">事業保障・退職金・法人保険をトータル提案</div>
+              </div>
+              <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="2" y1="12" x2="30" y2="12"/></svg>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
 
       <!-- SALES SUPPORT -->
-      <div class="card-group">
+      <div class="cat-cards show" data-category="support"><div class="card-group">
         <div class="section-box">
           <div class="section-label collapse-trigger" onclick="toggleSupport()" role="button" tabindex="0" aria-expanded="false" aria-controls="support-collapse" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSupport();}">
             <span class="section-label-en">SALES SUPPORT</span>
@@ -1217,7 +1200,7 @@ canvas{display:block;width:100%;border-radius:8px}
           <div class="collapse-content" id="support-collapse">
             <div class="tool-cards-row cols-3">
               <div class="tool-card" onclick="navigateTo('mail')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">メール文章作成</div>
                   <div class="tool-card-desc">フォローメール・提案メールのテンプレート</div>
@@ -1226,7 +1209,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('proposal')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">提案資料作成</div>
                   <div class="tool-card-desc">計算結果をもとにした提案資料の下書き</div>
@@ -1235,7 +1218,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('report')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">会社報告テンプレート</div>
                   <div class="tool-card-desc">日報・週報・活動報告のテンプレート</div>
@@ -1244,7 +1227,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('minutes')">
-                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg><svg class="icon-droplet" viewBox="0 0 24 24"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z"/></svg></div>
+                <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">議事録作成</div>
                   <div class="tool-card-desc">面談の要点を記録し、次回提案に活かす</div>
@@ -1255,7 +1238,7 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div>
+      </div></div>
 
       <div class="privacy-notice">
         <div class="privacy-notice-text">
@@ -4203,6 +4186,33 @@ setTimeout(function() {
   makeDraggable('memo-panel', 'memo-header');
   makeDraggable('cmemo-panel', 'cmemo-header');
 }, 300);
+
+
+/* ═══ Category Tabs ═══ */
+function initCategoryTabs() {
+  var tabs = document.querySelectorAll('.cat-tab');
+  var panels = document.querySelectorAll('.cat-cards');
+  tabs.forEach(function(t) {
+    t.addEventListener('click', function() {
+      tabs.forEach(function(x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      var cat = t.getAttribute('data-cat');
+      panels.forEach(function(p) {
+        if (p.getAttribute('data-category') === cat) {
+          p.classList.add('show');
+        } else {
+          p.classList.remove('show');
+        }
+      });
+    });
+  });
+  panels.forEach(function(p) {
+    if (p.getAttribute('data-category') !== 'meeting') {
+      p.classList.remove('show');
+    }
+  });
+}
+setTimeout(initCategoryTabs, 200);
 
 /* ═══ Init ═══ */
 initAuth();

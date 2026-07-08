@@ -219,8 +219,6 @@ body{
   padding:0 12px;
   display:flex;gap:10px;align-items:baseline;
 }
-.section-label.collapse-trigger{cursor:pointer;user-select:none;margin-bottom:0}
-.section-label .collapse-arrow{margin-left:2px;position:static}
 .label-en,.section-label-en{
   font-size:10.5px;font-weight:600;color:var(--gold-refined);
   letter-spacing:0.3em;text-transform:uppercase;
@@ -350,15 +348,7 @@ body{
 .hub-list-title{font-size:14px;font-family:"Shippori Mincho",serif;color:#eef4f8;letter-spacing:0.06em;margin-bottom:3px}
 .hub-list-desc{font-size:11.5px;color:#8fa5b8}
 
-/* ========== CATEGORY TABS ========== */
-.category-tabs{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
-.cat-tab{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,106,0.15);letter-spacing:0.04em;white-space:nowrap}
-.cat-tab:hover{color:var(--text);border-color:rgba(200,169,106,0.35)}
-.cat-tab.active{color:var(--gold);border-color:rgba(200,169,106,0.55);background:rgba(200,169,106,0.10)}
-.cat-cards{display:none}
-.cat-cards.show{display:block;animation:catFadeIn .2s ease-out}
-@keyframes catFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.cat-cards.show{animation:none}}
+/* カテゴリタブ切替UIは廃止(全カテゴリ縦一覧+クイックジャンプへ移行) */
 
 /* クイックジャンプ帯(カテゴリ目次ピル、同一ページ内スクロールのみ) */
 .quickjump-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
@@ -371,23 +361,7 @@ body{
 .quickjump-pill.current{border-color:#d4bc7d;color:#d4bc7d;background:rgba(212,188,125,0.08)}
 @media(prefers-reduced-motion:reduce){.quickjump-pill{transition:none}}
 
-/* Collapsible section */
-.collapse-trigger{
-  display:flex;align-items:center;gap:8px;
-  cursor:pointer;user-select:none;
-  transition:all 0.25s var(--ease);
-}
-.collapse-trigger .collapse-arrow{margin-left:auto}
-.collapse-arrow{
-  display:inline-block;transition:transform 0.25s var(--ease);
-  font-size:13px;color:var(--text-dim);
-}
-.collapse-arrow.open{transform:rotate(90deg)}
-.collapse-content{
-  overflow:hidden;max-height:0;opacity:0;
-  transition:max-height 0.5s var(--ease),opacity 0.4s var(--ease),margin 0.4s var(--ease);
-}
-.collapse-content.expanded{max-height:600px;opacity:1}
+/* 折りたたみUI(.collapse-*)はSALES SUPPORT常時表示化に伴い廃止 */
 
 /* ═══ PRIVACY NOTICE ═══ */
 .privacy-notice{
@@ -1033,16 +1007,6 @@ canvas{display:block;width:100%;border-radius:8px}
         </div>
       </div>
 
-      <!-- ═══ CATEGORY TABS ═══ -->
-      <div class="category-tabs" id="category-tabs">
-        <span class="cat-tab active" data-cat="meeting">面談デスク</span>
-        <span class="cat-tab" data-cat="insurance">保険提案</span>
-        <span class="cat-tab" data-cat="housing">住宅・不動産</span>
-        <span class="cat-tab" data-cat="life">生活資金</span>
-        <span class="cat-tab" data-cat="corp">法人提案</span>
-        <span class="cat-tab" data-cat="support">営業支援</span>
-      </div>
-
       <!-- ═══ QUICK JUMP(カテゴリ目次ピル。ページ内スクロールのみ) ═══ -->
       <div class="quickjump-bar" id="quickjump-bar">
         <span class="quickjump-pill" data-target="cat-meeting">面談デスク</span>
@@ -1067,7 +1031,7 @@ canvas{display:block;width:100%;border-radius:8px}
       </div>
 
       <!-- MEETING DESK -->
-      <div class="cat-cards show" data-category="meeting" id="cat-meeting"><div class="card-group">
+      <div class="card-group" id="cat-meeting">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">MEETING DESK</span>
@@ -1107,10 +1071,10 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div></div>
+      </div>
 
       <!-- INSURANCE PLANNING -->
-      <div class="cat-cards show" data-category="insurance" id="cat-insurance"><div class="card-group">
+      <div class="card-group" id="cat-insurance">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">INSURANCE PLANNING</span>
@@ -1171,10 +1135,10 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div></div>
+      </div>
 
       <!-- HOUSING CHECK -->
-      <div class="cat-cards show" data-category="housing" id="cat-housing"><div class="card-group">
+      <div class="card-group" id="cat-housing">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">HOUSING CHECK</span>
@@ -1212,11 +1176,11 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
-        </div></div>
-      </div></div>
+        </div>
+      </div>
 
       <!-- LIFE & TAX PLANNING -->
-      <div class="cat-cards show" data-category="life" id="cat-life"><div class="card-group">
+      <div class="card-group" id="cat-life">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">LIFE &amp; TAX PLANNING</span>
@@ -1235,10 +1199,10 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div></div>
+      </div>
 
       <!-- CORPORATE PLANNING -->
-      <div class="cat-cards show" data-category="corp" id="cat-corp"><div class="card-group">
+      <div class="card-group" id="cat-corp">
         <div class="section-box">
           <div class="section-label">
             <span class="section-label-en">CORPORATE PLANNING</span>
@@ -1257,18 +1221,16 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div></div>
+      </div>
 
       <!-- SALES SUPPORT -->
-      <div class="cat-cards show" data-category="support" id="cat-support"><div class="card-group">
+      <div class="card-group" id="cat-support">
         <div class="section-box">
-          <div class="section-label collapse-trigger" onclick="toggleSupport()" role="button" tabindex="0" aria-expanded="false" aria-controls="support-collapse" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSupport();}">
+          <div class="section-label">
             <span class="section-label-en">SALES SUPPORT</span>
             <span class="section-label-ja">営業支援</span>
-            <span class="collapse-arrow" id="support-arrow">▶</span>
           </div>
-          <div class="collapse-content" id="support-collapse">
-            <div class="tool-cards-row cols-3">
+          <div class="tool-cards-row cols-2">
               <div class="tool-card" onclick="navigateTo('mail')">
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg></div>
                 <div class="tool-card-body">
@@ -1312,7 +1274,6 @@ canvas{display:block;width:100%;border-radius:8px}
             </div>
           </div>
         </div>
-      </div></div>
 
       <div class="privacy-notice">
         <div class="privacy-notice-text">
@@ -2413,15 +2374,7 @@ function navigateTo(key) {
 
 function goDashboard() { navigateTo('dashboard'); }
 
-/* ── Collapsible sections ── */
-function toggleSupport() {
-  const el = document.getElementById('support-collapse');
-  const arrow = document.getElementById('support-arrow');
-  const trigger = arrow.closest('.collapse-trigger');
-  const isOpen = el.classList.toggle('expanded');
-  arrow.classList.toggle('open', isOpen);
-  if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-}
+/* toggleSupport()はSALES SUPPORT常時表示化に伴い廃止 */
 
 /* ── Mortgage ── */
 function mortgageMonthly(P, rAnnual, years) {
@@ -4312,31 +4265,8 @@ setTimeout(function() {
 }, 300);
 
 
-/* ═══ Category Tabs ═══ */
-function initCategoryTabs() {
-  var tabs = document.querySelectorAll('.cat-tab');
-  var panels = document.querySelectorAll('.cat-cards');
-  tabs.forEach(function(t) {
-    t.addEventListener('click', function() {
-      tabs.forEach(function(x) { x.classList.remove('active'); });
-      t.classList.add('active');
-      var cat = t.getAttribute('data-cat');
-      panels.forEach(function(p) {
-        if (p.getAttribute('data-category') === cat) {
-          p.classList.add('show');
-        } else {
-          p.classList.remove('show');
-        }
-      });
-    });
-  });
-  panels.forEach(function(p) {
-    if (p.getAttribute('data-category') !== 'meeting') {
-      p.classList.remove('show');
-    }
-  });
-}
-setTimeout(initCategoryTabs, 200);
+/* カテゴリタブ切替(initCategoryTabs)は廃止。全カテゴリ縦一覧+
+   クイックジャンプ(initQuickJump)に統一。 */
 
 /* ═══ Quick Jump(カテゴリ目次ピル。ページ内スクロールのみ、タブ切替はしない) ═══ */
 function initQuickJump() {

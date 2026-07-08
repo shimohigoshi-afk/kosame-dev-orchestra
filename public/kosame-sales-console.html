@@ -128,11 +128,14 @@ body{
   height:34px;width:auto;display:block;
   filter:none;object-fit:contain;
 }
-.topbar-brand{
-  font-size:15px;font-weight:600;color:rgba(255,255,255,0.82);
-  letter-spacing:1px;white-space:nowrap;
+.topbar-kosame{
+  font-family:"Shippori Mincho",serif;
+  font-size:15px;font-weight:600;color:#d4bc7d;
+  letter-spacing:0.24em;white-space:nowrap;
 }
-.topbar-brand .tbg{color:var(--gold);font-weight:800;letter-spacing:1.5px}
+.topbar-subtitle{
+  font-size:13px;color:#eef4f8;white-space:nowrap;
+}
 .topbar-divider{width:1px;height:20px;background:var(--border)}
 .topbar-title{
   font-size:14px;color:var(--gold-refined);
@@ -168,90 +171,57 @@ body{
 .section{display:none;max-width:1100px;margin:0 auto}
 .section.active{display:block}
 
-/* ═══ HERO PANEL — Hotel Front Desk Style ═══ */
+/* ═══ HERO PANEL ═══ */
 .dash-hero{
-  display:flex;align-items:center;gap:20px;
-  margin-bottom:40px;padding:26px 28px;
-  background:linear-gradient(135deg,#06111f 0%,#081a30 40%,#0b2038 100%);
-  border:1px solid rgba(205,171,92,0.40);
-  border-radius:var(--radius);
+  display:flex;align-items:center;gap:24px;
+  margin-bottom:40px;padding:28px 32px;
+  background:#0d1b2e;
+  border:1px solid rgba(212,188,125,0.4);
+  border-radius:12px;
   position:relative;
   overflow:hidden;
-  box-shadow:0 0 40px rgba(0,0,0,0.28),0 0 18px rgba(200,169,106,0.05);
 }
+/* しとしと小雨: CSSのみの淡い斜線(画像アセット不要) */
 .dash-hero::before{
-  content:'';position:absolute;inset:4px;border-radius:12px;
-  border:1px solid rgba(205,171,92,0.16);pointer-events:none;
-}
-.dash-hero::after{
-  content:'';position:absolute;top:8px;left:8px;
-  width:14px;height:14px;
-  border-top:1px solid rgba(205,171,92,0.40);
-  border-left:1px solid rgba(205,171,92,0.40);
-}
-/* しとしと小雨: ごく淡い斜線のみ。豪雨・光条・写真風の演出はしない */
-.dash-hero-rain{
-  position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:repeating-linear-gradient(
-    112deg,
-    rgba(190,215,235,0.07) 0px,
-    rgba(190,215,235,0.07) 1px,
-    transparent 1px,
-    transparent 26px
-  );
-  -webkit-mask-image:linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,0.15) 85%, transparent 100%);
-  mask-image:linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,0.15) 85%, transparent 100%);
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(115deg,
+    rgba(212,188,125,0.14) 0 1px, transparent 1px 74px);
+  -webkit-mask-image:linear-gradient(90deg, transparent 30%, black 72%);
+  mask-image:linear-gradient(90deg, transparent 30%, black 72%);
 }
 .dash-hero-l-wrap{
   flex-shrink:0;position:relative;z-index:1;
 }
 .dash-hero-logo{
-  height:60px;width:auto;display:block;
-  filter:none;object-fit:contain;margin:0 auto;
-}
-.dash-hero-divider{
-  flex-shrink:0;width:0.5px;height:52px;
-  background:rgba(var(--gold-rgb),0.3);
-  position:relative;z-index:1;
+  height:90px;width:auto;display:block;
+  filter:none;object-fit:contain;
 }
 .dash-hero-info{flex:1;min-width:0;position:relative;z-index:1}
 .dash-hero-title{
   font-family:"Shippori Mincho",serif;
-  font-size:21px;font-weight:500;color:var(--gold-refined);
-  letter-spacing:0.22em;line-height:1.3;margin-bottom:3px;
-}
-.dash-hero-title .accent{color:var(--gold);font-weight:900}
-.dash-hero-title-sub{
-  display:block;font-size:9.5px;color:#eef4f8;
-  letter-spacing:0.34em;font-family:'Noto Sans JP',sans-serif;font-weight:400;
-  margin-top:2px;
+  font-size:30px;font-weight:500;color:#d4bc7d;
+  letter-spacing:0.04em;line-height:1.3;margin-bottom:6px;
 }
 .dash-hero-sub{
-  font-size:10.5px;color:var(--gold-refined);
-  letter-spacing:0.08em;margin-bottom:5px;opacity:0.85;
+  font-size:13px;color:#c3d2de;
+  letter-spacing:0.04em;margin-bottom:6px;
 }
 .dash-hero-copy{
-  font-size:10.5px;color:#a9bccb;line-height:1.6;margin-bottom:8px;
+  font-size:12.5px;color:#8fa5b8;line-height:1.6;
 }
 .dash-hero-tags{
-  display:flex;gap:6px;flex-wrap:wrap;align-content:center;
+  position:absolute;bottom:16px;right:20px;z-index:1;
+  display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;
 }
 .dash-hero-tag{
   display:inline-flex;align-items:center;
-  font-size:10px;color:var(--text-dim);letter-spacing:0.06em;
-  padding:2px 9px;border-radius:4px;
-  background:rgba(200,169,106,0.05);
-  border:1px solid rgba(200,169,106,0.13);
+  font-size:11.5px;color:#d4bc7d;letter-spacing:0.02em;
+  padding:5px 13px;border-radius:999px;
+  background:transparent;
+  border:0.5px solid rgba(212,188,125,0.35);
 }
-.dash-hero-tag .tag-icon{width:10px;height:10px;margin-right:5px;flex:none;stroke:var(--gold-refined);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-/* Bottom-right L corner */
-.dash-hero-corner{
-  position:absolute;bottom:8px;right:8px;z-index:1;
-  width:14px;height:14px;
-  border-bottom:1px solid rgba(205,171,92,0.40);
-  border-right:1px solid rgba(205,171,92,0.40);
-  pointer-events:none;
-}
+.dash-hero-tag.active{background:#d4bc7d;color:#0a1420;border-color:#d4bc7d}
+.dash-hero-tag .tag-icon{width:13px;height:13px;margin-right:6px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
 /* ═══ CARD GRID ═══ */
 /* ═══ SECTION BOX(fieldset風の額縁)═══ */
@@ -916,7 +886,7 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-3col{grid-template-columns:repeat(3,1fr)}
   .nav-cards-core{grid-template-columns:repeat(3,1fr)}
   .tool-cards-row.cols-5{grid-template-columns:repeat(3,1fr)}
-  .dash-hero-logo{height:52px}
+  .dash-hero-logo{height:70px}
 }
 @media(max-width:1024px){
   .nav-cards{grid-template-columns:repeat(2,1fr)}
@@ -925,16 +895,15 @@ canvas{display:block;width:100%;border-radius:8px}
   .tool-cards-row,.tool-cards-row.cols-3,.tool-cards-row.cols-5{grid-template-columns:repeat(2,1fr)}
   .tool-grid{grid-template-columns:1fr}
   .dash-hero{flex-direction:column;align-items:flex-start;gap:10px;padding:16px 20px}
-  .dash-hero-logo{height:48px}
-  .dash-hero-divider{display:none}
-  .dash-hero-title{font-size:19px}
-  .dash-hero-tags{flex-direction:row}
+  .dash-hero-logo{height:56px}
+  .dash-hero-title{font-size:22px}
+  .dash-hero-tags{position:static;justify-content:flex-start;margin-top:10px}
 }
 @media(max-width:768px){
   .topbar{padding:0 16px}
   .topbar-logo-img{height:28px}
-  .topbar-brand{font-size:13px}
-  .topbar-divider{display:none}
+  .topbar-kosame{font-size:13px}
+  .topbar-subtitle,.topbar-divider{display:none}
   .topbar-title{display:none}
   .content{padding:20px 16px}
   .nav-cards{grid-template-columns:repeat(2,1fr);gap:10px}
@@ -961,12 +930,11 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-3col{grid-template-columns:1fr}
   .nav-cards-core{grid-template-columns:1fr}
   .topbar-logo-img{height:26px}
-  .topbar-brand{font-size:11px}
+  .topbar-kosame{font-size:11px}
   .dash-hero{flex-direction:column;align-items:center;text-align:center;padding:14px}
   .dash-hero-logo{height:40px}
-  .dash-hero-title{font-size:15px}
-  .dash-hero-tags{justify-content:center}
-  .dash-hero-corner{display:none}
+  .dash-hero-title{font-size:17px}
+  .dash-hero-tags{position:static;justify-content:center;margin-top:10px}
   .topbar-title{font-size:12px}
   .form-grid-3{grid-template-columns:1fr}
   .tool-title{font-size:19px}
@@ -1022,9 +990,11 @@ canvas{display:block;width:100%;border-radius:8px}
           <g transform="translate(49,57) scale(0.15)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.35"/></g>
         </g>
       </svg>
-      <span class="topbar-brand"><span class="tbg">KOSAME</span> Sales Console</span>
+      <span class="topbar-kosame">KOSAME</span>
       <span class="topbar-divider"></span>
-      <span class="topbar-title" id="topbar-title">KOSAME Sales Console</span>
+      <span class="topbar-subtitle">Sales Console</span>
+      <span class="topbar-divider"></span>
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
     </div>
     <div class="topbar-right">
       <button class="topbar-back" id="topbar-back-btn" onclick="goDashboard()">← ダッシュボード</button>
@@ -1042,37 +1012,20 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-dashboard" class="section active">
 
       <div class="dash-hero">
-        <div class="dash-hero-rain" aria-hidden="true"></div>
         <div class="dash-hero-l-wrap">
-          <svg class="dash-hero-logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KOSAME">
-            <path d="M10 37 Q32 15 54 37" stroke="#C9A45C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M32 15 Q25 25 17 37" stroke="#C9A45C" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-            <path d="M32 15 Q39 25 47 37" stroke="#C9A45C" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-            <path d="M32 15 L32 11" stroke="#F1D58A" stroke-width="1.3" stroke-linecap="round"/>
-            <path d="M32 37 L32 53 Q32 60 25 60 Q19 60 19 55" stroke="#C9A45C" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <g fill="#4FC3F7">
-              <g transform="translate(47,44) scale(0.22)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.55"/></g>
-              <g transform="translate(53,50) scale(0.18)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.42"/></g>
-              <g transform="translate(49,57) scale(0.15)"><path d="M12 2C12 2 5 11 5 15a7 7 0 0014 0C19 11 12 2 12 2z" transform="translate(-12,-12)" opacity="0.35"/></g>
-            </g>
-          </svg>
+          <img class="dash-hero-logo" src="assets/kosame-sales-console-logo.png" alt="KOSAME Sales Console">
         </div>
-        <div class="dash-hero-divider"></div>
         <div class="dash-hero-info">
-          <div class="dash-hero-title">KOSAME<span class="dash-hero-title-sub">SALES CONSOLE</span></div>
+          <div class="dash-hero-title">KOSAME Sales Console</div>
           <div class="dash-hero-sub">Meeting Desk / Proposal Support</div>
-          <div class="dash-hero-copy">
-            お客様の人生に寄り添い、最適な安心を届けるために。<br>
-            一つひとつのご相談を、誠実に、丁寧にサポートします。
-          </div>
-          <div class="dash-hero-tags">
-            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M12 2C8.5 2 5.5 5.5 5.5 9.5c0 5.5 6.5 12 6.5 12s6.5-6.5 6.5-12C18.5 5.5 15.5 2 12 2z"/><circle cx="12" cy="9.5" r="2.3"/></svg>Local only</span>
-            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>No server save</span>
-            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print ready</span>
-            <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</span>
-          </div>
+          <div class="dash-hero-copy">あらゆる面談を、スマートに支援します。</div>
         </div>
-        <div class="dash-hero-corner"></div>
+        <div class="dash-hero-tags">
+          <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>Local only</span>
+          <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>No server save</span>
+          <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print ready</span>
+          <span class="dash-hero-tag active"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</span>
+        </div>
       </div>
 
       <!-- MEETING DESK -->

@@ -174,7 +174,7 @@ body{
 /* ═══ HERO PANEL ═══ */
 .dash-hero{
   display:flex;align-items:center;gap:20px;
-  margin-bottom:40px;padding:18px 24px;
+  margin-bottom:32px;padding:22px 28px;
   background:linear-gradient(135deg,rgba(8,20,36,0.85) 0%,rgba(10,26,46,0.70) 100%);
   border:1px solid rgba(200,169,106,0.22);
   border-radius:12px;
@@ -193,13 +193,16 @@ body{
   box-sizing:content-box;
 }
 .dash-hero-info{flex:1;min-width:0;position:relative;z-index:1}
-.dash-hero-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:2px;margin-bottom:2px}
+.dash-hero-title{
+  font-family:"Shippori Mincho","Yu Mincho",serif;
+  font-size:18px;font-weight:700;color:var(--text);letter-spacing:2px;margin-bottom:2px;
+}
 .dash-hero-title .accent{color:var(--gold);font-weight:900}
 .dash-hero-sub{font-size:10px;color:var(--text-muted);letter-spacing:0.08em}
-.dash-hero-tags{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
-.dash-hero-tag{font-size:9px;color:var(--text-dim);letter-spacing:0.06em;padding:2px 8px;border-radius:3px;background:rgba(200,169,106,0.06);border:1px solid rgba(200,169,106,0.12)}
-.dash-hero-tag.active{background:#d4bc7d;color:#0a1420;border-color:#d4bc7d}
-.dash-hero-tag .tag-icon{width:13px;height:13px;margin-right:6px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dash-hero-copy{font-size:11px;color:#8fa5b8;margin-top:3px}
+.dash-hero-tags{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.dash-hero-tag{font-size:9px;color:#d4bc7d;letter-spacing:0.06em;padding:2px 8px;border-radius:3px;background:transparent;border:0.5px solid rgba(212,188,125,0.3)}
+.dash-hero-tag .tag-icon{width:11px;height:11px;margin-right:5px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
 /* ═══ CARD GRID ═══ */
 /* ═══ SECTION BOX(fieldset風の額縁)═══ */
@@ -892,7 +895,6 @@ canvas{display:block;width:100%;border-radius:8px}
   .nav-cards-3col{grid-template-columns:repeat(3,1fr)}
   .nav-cards-core{grid-template-columns:repeat(3,1fr)}
   .tool-cards-row.cols-5{grid-template-columns:repeat(3,1fr)}
-  .dash-hero-logo{height:70px}
 }
 @media(max-width:1024px){
   .nav-cards{grid-template-columns:repeat(2,1fr)}
@@ -901,9 +903,9 @@ canvas{display:block;width:100%;border-radius:8px}
   .tool-cards-row,.tool-cards-row.cols-3,.tool-cards-row.cols-5{grid-template-columns:repeat(2,1fr)}
   .tool-grid{grid-template-columns:1fr}
   .dash-hero{flex-direction:column;align-items:flex-start;gap:10px;padding:16px 20px}
-  .dash-hero-logo{height:56px}
-  .dash-hero-title{font-size:22px}
-  .dash-hero-tags{position:static;justify-content:flex-start;margin-top:10px}
+  .dash-hero-logo{height:46px}
+  .dash-hero-title{font-size:18px}
+  .dash-hero-tags{justify-content:flex-start;margin-top:8px}
 }
 @media(max-width:768px){
   .topbar{padding:0 16px}
@@ -928,8 +930,8 @@ canvas{display:block;width:100%;border-radius:8px}
   .auth-box{padding:36px 28px}
   .calc-float-btn{bottom:16px;right:16px;width:64px;height:64px;font-size:18px}
   .calc-panel{bottom:72px;right:16px;width:230px}
-  .dash-hero-logo{height:44px}
-  .dash-hero-title{font-size:17px}
+  .dash-hero-logo{height:42px}
+  .dash-hero-title{font-size:16px}
 }
 @media(max-width:480px){
   .nav-cards{grid-template-columns:1fr}
@@ -938,9 +940,9 @@ canvas{display:block;width:100%;border-radius:8px}
   .topbar-logo-img{height:26px}
   .topbar-kosame{font-size:11px}
   .dash-hero{flex-direction:column;align-items:center;text-align:center;padding:14px}
-  .dash-hero-logo{height:40px}
-  .dash-hero-title{font-size:17px}
-  .dash-hero-tags{position:static;justify-content:center;margin-top:10px}
+  .dash-hero-logo{height:38px}
+  .dash-hero-title{font-size:16px}
+  .dash-hero-tags{justify-content:center;margin-top:10px}
   .topbar-title{font-size:12px}
   .form-grid-3{grid-template-columns:1fr}
   .tool-title{font-size:19px}
@@ -1017,7 +1019,6 @@ canvas{display:block;width:100%;border-radius:8px}
           <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>Local only</span>
           <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>No server save</span>
           <span class="dash-hero-tag"><svg class="tag-icon" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print ready</span>
-          <span class="dash-hero-tag active"><svg class="tag-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</span>
         </div>
       </div>
 

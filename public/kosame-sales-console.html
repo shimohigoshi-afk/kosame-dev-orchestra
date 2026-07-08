@@ -564,6 +564,9 @@ body{
 .memo-panel.open{display:block}
 .memo-textarea{width:100%;height:100px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px;font-size:13px;color:var(--card-text);resize:vertical;font-family:inherit;line-height:1.7;outline:none}
 @media(max-width:768px){.memo-panel{margin-left:0;left:16px;right:16px;width:auto;top:20px}}
+.memo-panel.memo-maximized{display:flex;flex-direction:column;overflow-y:hidden}
+.memo-panel.memo-maximized .board-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+.memo-panel.memo-maximized #memo-notes-fl{flex:1;min-height:80px}
 
 /* ═══ PRINT STYLES ═══ */
 .wb-print-area{display:none}
@@ -1971,6 +1974,7 @@ canvas{display:block;width:100%;border-radius:8px}
   <div class="board-header" id="memo-header">
     <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
     <span class="board-header-title">面談メモ<span class="ghost"> / Meeting Notes</span></span>
+    <button class="board-btn clear" id="memo-max-btn" onclick="toggleMemoMaximize()" style="font-size:14px;padding:2px 8px" title="最大化">□</button>
     <button class="board-btn close-btn" onclick="closeMemo()">✕</button>
   </div>
   <div class="board-body">
@@ -1980,10 +1984,11 @@ canvas{display:block;width:100%;border-radius:8px}
       <div><span style="font-size:11px;color:var(--text-dim)">確認事項</span><textarea class="memo-textarea" id="memo-checks-fl" style="height:80px" placeholder="確認が必要な事項"></textarea></div>
       <div><span style="font-size:11px;color:var(--text-dim)">次回アクション</span><textarea class="memo-textarea" id="memo-actions-fl" style="height:80px" placeholder="次回面談までに準備すること"></textarea></div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button class="board-btn clear" onclick="window.print()">印刷</button>
+    <div class="board-toolbar" style="justify-content:flex-end">
+      <button class="board-btn print" onclick="memoPrintCurrent()">現在ページ印刷</button>
+      <button class="board-btn clear" onclick="memoSavePng()">PNG保存</button>
     </div>
-    <div class="board-notice">入力内容はサーバーに保存されません。PDF出力・印刷はご利用端末上で行われます。</div>
+    <div class="board-notice">入力内容はサーバーに保存されません。印刷・PNG保存はご利用端末上で行われます。</div>
   </div>
 </div>
 
@@ -3195,6 +3200,124 @@ function closeMemo() {
   const panel = document.getElementById('memo-panel');
   if (!panel) return;
   panel.classList.remove('open');
+}
+
+/* ═══ Memo Maximize (whiteboard toggleMaximize()と同仕様) ═══ */
+let _memoMaximized = false, _memoPreState = null;
+function toggleMemoMaximize() {
+  const panel = document.getElementById('memo-panel');
+  const btn = document.getElementById('memo-max-btn');
+  if (!panel || !btn) return;
+  if (_memoMaximized) {
+    // Restore
+    if (_memoPreState) {
+      panel.style.left = _memoPreState.left;
+      panel.style.top = _memoPreState.top;
+      panel.style.width = _memoPreState.width;
+      panel.style.height = _memoPreState.height;
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      panel.style.marginLeft = _memoPreState.marginLeft || '';
+      panel.style.margin = '0';
+      panel.style.transform = 'none';
+    } else {
+      panel.style.left = ''; panel.style.top = ''; panel.style.width = '';
+      panel.style.height = ''; panel.style.right = ''; panel.style.bottom = '';
+      panel.style.marginLeft = '';
+    }
+    panel.classList.remove('memo-maximized');
+    btn.textContent = '□'; btn.title = '最大化';
+    _memoMaximized = false;
+  } else {
+    // Save current state
+    const rect = panel.getBoundingClientRect();
+    _memoPreState = {
+      left: panel.style.left || rect.left + 'px',
+      top: panel.style.top || rect.top + 'px',
+      width: panel.style.width || rect.width + 'px',
+      height: panel.style.height || rect.height + 'px',
+      marginLeft: panel.style.marginLeft || ''
+    };
+    // Maximize
+    panel.style.left = '24px'; panel.style.top = '24px';
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.width = 'calc(100vw - 48px)';
+    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.marginLeft = '0';
+    panel.classList.add('memo-maximized');
+    btn.textContent = '↙'; btn.title = '元に戻す';
+    _memoMaximized = true;
+  }
+}
+
+/* ═══ Memo Print / PNG (手書きボードの印刷・保存機能と同仕様) ═══ */
+function memoPrintCurrent() {
+  const notes = document.getElementById('memo-notes-fl').value;
+  const checks = document.getElementById('memo-checks-fl').value;
+  const actions = document.getElementById('memo-actions-fl').value;
+  const esc = function(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  const w = window.open('', '_blank', 'width=800,height=600');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>面談メモ</title><style>'
+    + 'body{font-family:sans-serif;padding:24px;line-height:1.8;color:#222}'
+    + 'h2{color:#8a6d2f;font-size:16px;margin-bottom:16px}'
+    + '.sec{margin-bottom:18px}.lbl{font-weight:700;font-size:12px;color:#8a6d2f;margin-bottom:4px}'
+    + '.val{white-space:pre-wrap;border:1px solid #ddd;border-radius:8px;padding:10px 12px;background:#faf6ec;font-size:13px;min-height:1.6em}'
+    + '</style></head><body>'
+    + '<h2>面談メモ / Meeting Notes</h2>'
+    + '<div class="sec"><div class="lbl">面談メモ</div><div class="val">' + (esc(notes) || '（記入なし）') + '</div></div>'
+    + '<div class="sec"><div class="lbl">確認事項</div><div class="val">' + (esc(checks) || '（記入なし）') + '</div></div>'
+    + '<div class="sec"><div class="lbl">次回アクション</div><div class="val">' + (esc(actions) || '（記入なし）') + '</div></div>'
+    + '</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 300);
+}
+function memoSavePng() {
+  const notes = document.getElementById('memo-notes-fl').value || '（記入なし）';
+  const checks = document.getElementById('memo-checks-fl').value || '（記入なし）';
+  const actions = document.getElementById('memo-actions-fl').value || '（記入なし）';
+  const esc = function(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  const W = 640;
+  function estH(text) {
+    const perLine = 78;
+    const lines = text.split('\n').reduce(function(acc, l) { return acc + Math.max(1, Math.ceil(l.length / perLine)); }, 0);
+    return lines * 18 + 40;
+  }
+  const H = 100 + estH(notes) + estH(checks) + estH(actions);
+  const html = '<div xmlns="http://www.w3.org/1999/xhtml" style="font-family:sans-serif;font-size:13px;line-height:1.6;color:#222;padding:24px;width:' + (W - 48) + 'px;background:#faf6ec">'
+    + '<div style="font-weight:700;font-size:15px;color:#8a6d2f;margin-bottom:14px">面談メモ / Meeting Notes</div>'
+    + '<div style="font-weight:700;font-size:11px;color:#8a6d2f;margin-bottom:4px">面談メモ</div>'
+    + '<div style="white-space:pre-wrap;margin-bottom:16px">' + esc(notes) + '</div>'
+    + '<div style="font-weight:700;font-size:11px;color:#8a6d2f;margin-bottom:4px">確認事項</div>'
+    + '<div style="white-space:pre-wrap;margin-bottom:16px">' + esc(checks) + '</div>'
+    + '<div style="font-weight:700;font-size:11px;color:#8a6d2f;margin-bottom:4px">次回アクション</div>'
+    + '<div style="white-space:pre-wrap">' + esc(actions) + '</div>'
+    + '</div>';
+  const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"><foreignObject width="100%" height="100%">' + html + '</foreignObject></svg>';
+  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = function() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#faf6ec'; ctx.fillRect(0, 0, W, H);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      const png = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = png; a.download = 'meeting-memo-' + new Date().toISOString().slice(0, 10) + '.png';
+      a.click();
+    } catch (e) {
+      URL.revokeObjectURL(url);
+      alert('お使いのブラウザではPNG保存に対応していません。「現在ページ印刷」をご利用ください。');
+    }
+  };
+  img.onerror = function() {
+    URL.revokeObjectURL(url);
+    alert('PNG保存に失敗しました。「現在ページ印刷」をご利用ください。');
+  };
+  img.src = url;
 }
 
 function openCmemo() {

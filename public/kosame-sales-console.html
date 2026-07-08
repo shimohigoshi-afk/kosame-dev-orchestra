@@ -825,6 +825,39 @@ body{
 .sim-panel{display:none}
 .sim-panel.active{display:block}
 
+/* 住宅ローン基本計算 UX(1項目1行 + トグル + プリセットチップ) */
+.mrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mrow-label{width:130px;flex-shrink:0;font-size:12px;color:var(--card-text-muted)}
+.mrow input[type=number]{
+  flex:1;min-width:0;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);
+  color:var(--card-text);border-radius:8px;padding:9px 11px;font-size:13px;outline:none;
+}
+.mrow input[type=number]:focus{border-color:var(--gold);background:#fffdf7}
+.mrow-unit{font-size:12px;color:var(--card-text-muted);flex-shrink:0;min-width:32px}
+.mrow-sub{margin:-4px 0 12px 140px}
+
+.mtoggle{display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid rgba(212,188,125,0.4)}
+.mtoggle-btn{padding:7px 16px;font-size:12px;background:#f8f6f0;color:var(--card-text-muted);border:none;cursor:pointer;transition:all 0.2s}
+.mtoggle-btn+.mtoggle-btn{border-left:1px solid rgba(212,188,125,0.25)}
+.mtoggle-btn.active{background:#d4bc7d;color:#0a1420;font-weight:700}
+
+.mchips{display:flex;gap:6px;flex-wrap:wrap}
+.mchip{padding:4px 11px;font-size:11px;border-radius:14px;border:1px solid rgba(212,188,125,0.4);background:transparent;color:var(--card-text-muted);cursor:pointer;transition:all 0.2s}
+.mchip:hover{border-color:#d4bc7d;color:#a8894a}
+.mchip.active{background:#d4bc7d;color:#0a1420;border-color:#d4bc7d;font-weight:700}
+
+.mfr-inline{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--card-text-muted)}
+.mfr-inline input{width:56px;background:#f8f6f0;border:1px solid rgba(0,0,0,0.1);color:var(--card-text);border-radius:8px;padding:8px 9px;font-size:13px;outline:none;text-align:center}
+.mfr-inline input:focus{border-color:var(--gold);background:#fffdf7}
+
+.mprepay-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:6px}
+.mprepay-table th{font-size:10.5px;color:var(--card-text-muted);font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(0,0,0,0.08);text-align:right}
+.mprepay-table th:first-child{text-align:left}
+.mprepay-table td{padding:8px 4px;text-align:right;border-bottom:1px solid rgba(0,0,0,0.05)}
+.mprepay-table td:first-child{text-align:left;color:var(--card-text-muted)}
+.mprepay-table td.mp-diff{color:#4fc3f7;font-weight:700}
+.mprepay-table td.mp-val{font-weight:700;color:var(--card-text)}
+
 /* BMI */
 .bmi-scale-wrapper{margin:20px 0}
 .bmi-zone-labels{
@@ -1298,29 +1331,125 @@ canvas{display:block;width:100%;border-radius:8px}
           <div>
             <div class="card">
               <div class="card-title">借入条件入力</div>
-              <div class="form-grid" style="margin-bottom:12px">
-                <div class="form-group"><label>借入額（万円）</label><input type="number" id="m-principal" value="3000" min="100" max="100000" oninput="calcMortgage()"></div>
-                <div class="form-group"><label>期間（年）</label><input type="number" id="m-years" value="35" min="1" max="50" oninput="calcMortgage()"></div>
-                <div class="form-group"><label>年利率（%）</label><input type="number" id="m-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgage()"></div>
-                <div class="form-group"><label>ボーナス払い（万円/回）</label><input type="number" id="m-bonus" value="0" min="0" oninput="calcMortgage()"></div>
+              <div class="mrow">
+                <span class="mrow-label">借入額</span>
+                <input type="number" id="m-principal" value="3000" min="100" max="100000" oninput="calcMortgage()">
+                <span class="mrow-unit">万円</span>
               </div>
+              <div class="mrow">
+                <span class="mrow-label">返済期間</span>
+                <input type="number" id="m-years" value="35" min="1" max="50" oninput="calcMortgage()">
+                <span class="mrow-unit">年</span>
+              </div>
+              <div class="mrow">
+                <span class="mrow-label">年利率</span>
+                <input type="number" id="m-rate" value="0.5" min="0.01" max="10" step="0.01" oninput="calcMortgage()">
+                <span class="mrow-unit">%</span>
+              </div>
+              <div class="mrow-sub">
+                <div class="mchips">
+                  <button type="button" class="mchip" onclick="applyRatePreset('fixed35')">固定35年目安</button>
+                  <button type="button" class="mchip" onclick="applyRatePreset('fixed10')">固定10年目安</button>
+                  <button type="button" class="mchip" onclick="applyRatePreset('variable')">変動目安</button>
+                </div>
+              </div>
+
+              <div class="mrow">
+                <span class="mrow-label">ボーナス払い</span>
+                <div class="mtoggle" id="m-bonus-toggle">
+                  <button type="button" class="mtoggle-btn active" onclick="setBonusMode(false)">利用しない</button>
+                  <button type="button" class="mtoggle-btn" onclick="setBonusMode(true)">利用する</button>
+                </div>
+              </div>
+              <div id="m-bonus-detail" style="display:none">
+                <div class="mrow">
+                  <span class="mrow-label">ボーナス払い額</span>
+                  <input type="number" id="m-bonus" value="0" min="0" oninput="calcMortgage()">
+                  <span class="mrow-unit">万円/回</span>
+                </div>
+                <div class="mrow-sub">
+                  <div class="mchips">
+                    <button type="button" class="mchip" onclick="applyBonusRatio(10)">借入額の10%</button>
+                    <button type="button" class="mchip" onclick="applyBonusRatio(20)">借入額の20%</button>
+                    <button type="button" class="mchip" onclick="applyBonusRatio(25)">借入額の25%</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mrow">
+                <span class="mrow-label">将来の金利変動</span>
+                <div class="mtoggle" id="m-futurerate-toggle">
+                  <button type="button" class="mtoggle-btn active" onclick="setFutureRateMode(false)">考慮しない</button>
+                  <button type="button" class="mtoggle-btn" onclick="setFutureRateMode(true)">考慮する</button>
+                </div>
+              </div>
+              <div id="m-futurerate-detail" style="display:none">
+                <div class="mrow">
+                  <span class="mrow-label"></span>
+                  <div class="mfr-inline">
+                    <input type="number" id="m-fr-start" value="5" min="1" max="50" oninput="calcMortgage()">年後から
+                    <input type="number" id="m-fr-interval" value="5" min="1" max="50" oninput="calcMortgage()">年ごとに
+                    <input type="number" id="m-fr-step" value="0.25" min="0" step="0.01" oninput="calcMortgage()">%上昇
+                  </div>
+                </div>
+                <div class="mrow-sub">
+                  <div class="mchips">
+                    <button type="button" class="mchip" onclick="applyFutureRatePreset(0.1)">+0.1%/5年ごと</button>
+                    <button type="button" class="mchip" onclick="applyFutureRatePreset(0.25)">+0.25%/5年ごと</button>
+                    <button type="button" class="mchip" onclick="applyFutureRatePreset(0.5)">+0.5%/5年ごと</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="result-box" id="m-result" style="display:none">
-                <div class="result-row"><span class="result-label">毎月返済額</span><span class="result-value big" id="m-monthly">—</span></div>
+                <div class="result-row"><span class="result-label">毎月返済額（当初）</span><span class="result-value big" id="m-monthly">—</span></div>
                 <div class="result-row"><span class="result-label">総返済額</span><span class="result-value" id="m-total">—</span></div>
                 <div class="result-row"><span class="result-label">総利息</span><span class="result-value blue" id="m-interest">—</span></div>
               </div>
             </div>
             <div class="card" style="margin-top:16px">
               <div class="card-title">繰上げ返済シミュレーション</div>
-              <div class="form-grid">
-                <div class="form-group"><label>繰上げ額（万円）</label><input type="number" id="m-prepay" value="100" min="0" oninput="calcPrepay()"></div>
-                <div class="form-group"><label>繰上げ時期（年後）</label><input type="number" id="m-prepay-year" value="5" min="1" oninput="calcPrepay()"></div>
+              <div class="mrow">
+                <span class="mrow-label">繰上げタイプ</span>
+                <div class="mtoggle" id="m-prepay-type-toggle">
+                  <button type="button" class="mtoggle-btn active" onclick="setPrepayType('reduce')">返済額軽減</button>
+                  <button type="button" class="mtoggle-btn" onclick="setPrepayType('shorten')">期間短縮</button>
+                </div>
+              </div>
+              <div class="mrow">
+                <span class="mrow-label">繰上げ額</span>
+                <input type="number" id="m-prepay" value="100" min="0" oninput="calcPrepay()">
+                <span class="mrow-unit">万円</span>
+              </div>
+              <div class="mrow">
+                <span class="mrow-label">繰上げ時期</span>
+                <input type="number" id="m-prepay-year" value="5" min="1" oninput="calcPrepay()">
+                <span class="mrow-unit">年後</span>
               </div>
               <div class="result-box" id="m-prepay-result" style="display:none">
-                <div class="result-row"><span class="result-label">短縮期間</span><span class="result-value green" id="m-save-months">—</span></div>
+                <table class="mprepay-table">
+                  <thead><tr>
+                    <th></th><th>繰り上げ返済なし</th><th>あり</th><th>軽減額</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr>
+                      <td>毎月返済分</td>
+                      <td class="mp-val" id="mp-monthly-none">—</td>
+                      <td class="mp-val" id="mp-monthly-with">—</td>
+                      <td class="mp-diff" id="mp-monthly-diff">—</td>
+                    </tr>
+                    <tr>
+                      <td>総返済額</td>
+                      <td class="mp-val" id="mp-total-none">—</td>
+                      <td class="mp-val" id="mp-total-with">—</td>
+                      <td class="mp-diff" id="mp-total-diff">—</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="result-row" id="m-save-months-row"><span class="result-label">短縮期間</span><span class="result-value green" id="m-save-months">—</span></div>
               </div>
               <div class="result-highlight" id="m-prepay-saving-box" style="display:none">
-                <div class="result-highlight-label">総利息節約額</div>
+                <div class="result-highlight-label">利息軽減額</div>
                 <div class="result-highlight-value" id="m-save-interest">—</div>
               </div>
             </div>
@@ -2202,14 +2331,98 @@ function mortgageMonthly(P, rAnnual, years) {
   return P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
 }
 
+/* ダミー値: 実勢金利に合わせて随時更新すること */
+const RATE_PRESETS = { fixed35: 1.8, fixed10: 1.4, variable: 0.6 };
+
+let _bonusMode = false, _futureRateMode = false, _prepayType = 'reduce';
+
+function setToggleActive(containerId, activeIndex) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.querySelectorAll('.mtoggle-btn').forEach(function(b, i) { b.classList.toggle('active', i === activeIndex); });
+}
+function applyRatePreset(key) {
+  const v = RATE_PRESETS[key];
+  if (v === undefined) return;
+  document.getElementById('m-rate').value = v;
+  calcMortgage();
+}
+function setBonusMode(on) {
+  _bonusMode = on;
+  setToggleActive('m-bonus-toggle', on ? 1 : 0);
+  document.getElementById('m-bonus-detail').style.display = on ? 'block' : 'none';
+  if (!on) document.getElementById('m-bonus').value = 0;
+  calcMortgage();
+}
+function applyBonusRatio(pct) {
+  const P = parseFloat(document.getElementById('m-principal').value) || 0;
+  const years = parseFloat(document.getElementById('m-years').value) || 0;
+  if (P <= 0 || years <= 0) return;
+  // 借入額のpct%分をボーナス払い(年2回)に均等配分した1回あたりの額
+  const bonusPerPayment = (P * pct / 100) / (years * 2);
+  document.getElementById('m-bonus').value = Math.round(bonusPerPayment * 100) / 100;
+  calcMortgage();
+}
+function setFutureRateMode(on) {
+  _futureRateMode = on;
+  setToggleActive('m-futurerate-toggle', on ? 1 : 0);
+  document.getElementById('m-futurerate-detail').style.display = on ? 'block' : 'none';
+  calcMortgage();
+}
+function applyFutureRatePreset(step) {
+  document.getElementById('m-fr-start').value = 5;
+  document.getElementById('m-fr-interval').value = 5;
+  document.getElementById('m-fr-step').value = step;
+  calcMortgage();
+}
+function setPrepayType(type) {
+  _prepayType = type;
+  setToggleActive('m-prepay-type-toggle', type === 'shorten' ? 1 : 0);
+  calcPrepay();
+}
+
+/* 開始年から一定間隔で金利が段階的に上昇するケースの当初月返済額/総返済額(簡易版) */
+function computeSteppedMortgage(P, initRate, years, frStart, frInterval, frStep) {
+  const n = Math.round(years * 12);
+  const startMonth = Math.max(1, Math.round(frStart * 12));
+  const intervalMonths = Math.max(1, Math.round(frInterval * 12));
+  let balance = P;
+  let rate = initRate;
+  let monthly = mortgageMonthly(P, rate, years);
+  const initMonthly = monthly;
+  let totalPaid = 0;
+  for (let m = 0; m < n; m++) {
+    if (m >= startMonth && (m - startMonth) % intervalMonths === 0 && balance > 0) {
+      rate += frStep;
+      monthly = mortgageMonthly(balance, rate, (n - m) / 12);
+    }
+    const interest = balance * (rate / 100 / 12);
+    balance -= (monthly - interest);
+    if (balance < 0) { totalPaid += monthly + balance; balance = 0; break; }
+    totalPaid += monthly;
+  }
+  return { initMonthly: initMonthly, totalPaid: totalPaid };
+}
+
 function calcMortgage() {
   const P = parseFloat(document.getElementById('m-principal').value) || 0;
   const r = parseFloat(document.getElementById('m-rate').value) || 0;
   const y = parseInt(document.getElementById('m-years').value) || 0;
   const bonus = parseFloat(document.getElementById('m-bonus').value) || 0;
   if (P <= 0 || y <= 0) return;
-  const monthly = mortgageMonthly(P, r, y);
-  const total = monthly * y * 12 + bonus * y * 2;
+
+  let monthly, total;
+  if (_futureRateMode) {
+    const frStart = parseFloat(document.getElementById('m-fr-start').value) || 5;
+    const frInterval = parseFloat(document.getElementById('m-fr-interval').value) || 5;
+    const frStep = parseFloat(document.getElementById('m-fr-step').value) || 0;
+    const sched = computeSteppedMortgage(P, r, y, frStart, frInterval, frStep);
+    monthly = sched.initMonthly;
+    total = sched.totalPaid + bonus * y * 2;
+  } else {
+    monthly = mortgageMonthly(P, r, y);
+    total = monthly * y * 12 + bonus * y * 2;
+  }
   const interest = total - P;
   document.getElementById('m-result').style.display = 'block';
   document.getElementById('m-monthly').textContent = Math.round(monthly * 10000).toLocaleString() + '円/月';
@@ -2233,30 +2446,73 @@ function calcPrepay() {
   const monthly = mortgageMonthly(P, r, y);
   const rMonthly = r / 100 / 12;
   const n = y * 12;
-  const paidMonths = prepayYear * 12;
+  const paidMonths = Math.min(prepayYear * 12, n);
+
   let balance = P;
-  for (let i = 0; i < paidMonths && i < n; i++) {
+  for (let i = 0; i < paidMonths; i++) {
     const interestPart = balance * rMonthly;
     const principalPart = monthly - interestPart;
     balance -= principalPart;
     if (balance < 0) { balance = 0; break; }
   }
-  balance -= prepay;
-  if (balance < 0) balance = 0;
+  const balanceBeforePrepay = balance;
+  const newBalance = Math.max(0, balance - prepay);
   const remainingMonths = n - paidMonths;
-  if (remainingMonths <= 0) return;
-  const originalTotalRemaining = monthly * remainingMonths;
-  const newMonthly = mortgageMonthly(balance, r, remainingMonths / 12);
-  const newTotalRemaining = newMonthly * remainingMonths;
-  const savedInterest = originalTotalRemaining - newTotalRemaining - prepay;
-  const newN = balance > 0 ? remainingMonths : 0;
-  const savedMonths = remainingMonths - newN;
+
+  if (remainingMonths <= 0 || balanceBeforePrepay <= 0) {
+    document.getElementById('m-prepay-result').style.display = 'none';
+    document.getElementById('m-prepay-saving-box').style.display = 'none';
+    return;
+  }
+
+  const totalPaidSoFar = monthly * paidMonths;
+  const originalRemainingTotal = monthly * remainingMonths;
+  const totalWithoutPrepay = totalPaidSoFar + originalRemainingTotal;
+
+  let newMonthly, newRemainingMonths, totalWithPrepay;
+
+  if (_prepayType === 'reduce') {
+    // 返済額軽減型: 残期間そのまま、残高減少分だけ毎月返済額を下げる
+    newRemainingMonths = remainingMonths;
+    newMonthly = newBalance > 0 ? mortgageMonthly(newBalance, r, remainingMonths / 12) : 0;
+    totalWithPrepay = totalPaidSoFar + prepay + newMonthly * remainingMonths;
+  } else {
+    // 期間短縮型: 毎月返済額そのまま、残高減少分だけ残り月数を逆算して縮める
+    newMonthly = monthly;
+    if (newBalance <= 0) {
+      newRemainingMonths = 0;
+    } else if (rMonthly === 0) {
+      newRemainingMonths = newBalance / monthly;
+    } else {
+      const ratio = 1 - (rMonthly * newBalance) / monthly;
+      newRemainingMonths = ratio > 0 ? Math.log(1 / ratio) / Math.log(1 + rMonthly) : remainingMonths;
+    }
+    newRemainingMonths = Math.min(remainingMonths, Math.max(0, Math.round(newRemainingMonths)));
+    totalWithPrepay = totalPaidSoFar + prepay + monthly * newRemainingMonths;
+  }
+
+  const savedMonths = Math.max(0, remainingMonths - newRemainingMonths);
+  const interestSaved = totalWithoutPrepay - totalWithPrepay;
 
   document.getElementById('m-prepay-result').style.display = 'block';
-  document.getElementById('m-save-months').textContent = savedMonths > 0 ? Math.floor(savedMonths / 12) + '年' + (savedMonths % 12) + 'ヶ月 短縮' : '効果なし';
-  if (savedInterest > 0) {
+  document.getElementById('mp-monthly-none').textContent = Math.round(monthly * 10000).toLocaleString() + '円';
+  document.getElementById('mp-monthly-with').textContent = Math.round(newMonthly * 10000).toLocaleString() + '円';
+  document.getElementById('mp-monthly-diff').textContent = Math.round((monthly - newMonthly) * 10000).toLocaleString() + '円';
+  document.getElementById('mp-total-none').textContent = Math.round(totalWithoutPrepay * 10000).toLocaleString() + '円';
+  document.getElementById('mp-total-with').textContent = Math.round(totalWithPrepay * 10000).toLocaleString() + '円';
+  document.getElementById('mp-total-diff').textContent = Math.round(interestSaved * 10000).toLocaleString() + '円';
+
+  const monthsRow = document.getElementById('m-save-months-row');
+  if (_prepayType === 'shorten' && savedMonths > 0) {
+    monthsRow.style.display = '';
+    document.getElementById('m-save-months').textContent = Math.floor(savedMonths / 12) + '年' + Math.round(savedMonths % 12) + 'ヶ月 短縮';
+  } else {
+    monthsRow.style.display = 'none';
+  }
+
+  if (interestSaved > 0) {
     document.getElementById('m-prepay-saving-box').style.display = 'block';
-    document.getElementById('m-save-interest').textContent = fmtYen(savedInterest) + ' 節約';
+    document.getElementById('m-save-interest').textContent = fmtYen(interestSaved);
   } else {
     document.getElementById('m-prepay-saving-box').style.display = 'none';
   }

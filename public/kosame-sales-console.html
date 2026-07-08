@@ -203,7 +203,7 @@ body{
 
 /* ═══ CARD GRID ═══ */
 /* ═══ SECTION BOX(fieldset風の額縁)═══ */
-.card-group{margin-top:26px;margin-bottom:26px}
+.card-group{margin-top:20px;margin-bottom:20px}
 .section-box{
   border:0.5px solid rgba(200,169,106,0.18);
   border-radius:12px;
@@ -231,7 +231,7 @@ body{
 .nav-cards,.tool-cards-row{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:14px;
+  gap:18px;
 }
 .nav-cards-3col,.tool-cards-row.cols-3{grid-template-columns:repeat(3,1fr)}
 .tool-cards-row.cols-5{grid-template-columns:repeat(5,1fr)}
@@ -253,7 +253,7 @@ body{
 }
 .nav-card:hover,.nav-card-core:hover,.tool-card:hover{
   transform:translateY(-2px);
-  border-color:rgba(var(--gold-rgb),0.5);
+  border-color:rgba(200,169,106,0.40);
   box-shadow:0 10px 30px rgba(0,0,0,0.32);
 }
 .nav-card-icon-wrap,.icon-ring{
@@ -281,23 +281,40 @@ body{
   font-size:16px;font-family:"Shippori Mincho",serif;
   color:#eef4f8;margin-bottom:4px;letter-spacing:0.1em;
 }
+.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.card-tag{
+  font-size:10.5px;color:#a9bccb;
+  background:rgba(212,188,125,0.08);border-radius:5px;
+  padding:3px 8px;letter-spacing:0.02em;
+}
 .nav-card-desc,.tool-card-desc{
   font-size:11.5px;color:#8fa5b8;
   line-height:1.5;letter-spacing:0.02em;
 }
 .nav-card-footnote,.tool-card-footnote{font-size:10px;color:var(--text-dim);margin-top:6px}
+.quick-shortcuts-wrap{margin-top:14px;padding:0 4px}
+.quick-shortcuts-label{font-size:10.5px;letter-spacing:0.2em;color:#d4bc7d;margin-bottom:10px}
+.quick-shortcuts{display:flex;gap:10px;flex-wrap:wrap}
+.quick-shortcut{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;color:#c3d2de;cursor:pointer;
+  border:0.5px solid rgba(212,188,125,0.2);border-radius:999px;
+  padding:6px 14px;transition:all 0.2s var(--ease);
+}
+.quick-shortcut:hover{border-color:rgba(212,188,125,0.45);color:#eef4f8}
+.quick-shortcut svg{width:13px;height:13px;stroke:#d4bc7d;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .nav-card-badge{display:none}
 .tool-card-body{flex:1;min-width:0;position:relative;z-index:1}
 .nav-card-wm,.nav-card-core-wm,.card-watermark{
-  position:absolute;right:2px;top:50%;transform:translateY(-50%);
-  width:104px;height:104px;
-  opacity:0.12;pointer-events:none;
-  stroke:rgba(var(--gold-rgb),0.9);fill:none;stroke-width:1.4;
+  position:absolute;right:-5px;bottom:-5px;top:auto;transform:none;
+  width:90px;height:90px;
+  opacity:0.07;pointer-events:none;
+  stroke:rgba(200,169,106,0.7);fill:none;stroke-width:1.4;
   stroke-linecap:round;stroke-linejoin:round;
 }
 .card-arrow{
   width:26px;height:26px;flex:none;
-  border:0.5px solid rgba(var(--gold-rgb),0.5);
+  border:0.5px solid rgba(200,169,106,0.40);
   border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   margin-left:auto;position:relative;z-index:1;
@@ -326,12 +343,12 @@ body{
   border-radius:10px;padding:14px 16px;cursor:pointer;
   transition:all 0.3s var(--ease);
 }
-.hub-list-item:hover{border-color:rgba(var(--gold-rgb),0.5);transform:translateX(2px)}
+.hub-list-item:hover{border-color:rgba(200,169,106,0.40);transform:translateX(2px)}
 .hub-list-title{font-size:14px;font-family:"Shippori Mincho",serif;color:#eef4f8;letter-spacing:0.06em;margin-bottom:3px}
 .hub-list-desc{font-size:11.5px;color:#8fa5b8}
 
 /* ========== CATEGORY TABS ========== */
-.category-tabs{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap}
+.category-tabs{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
 .cat-tab{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.03);border:1px solid rgba(200,169,106,0.15);letter-spacing:0.04em;white-space:nowrap}
 .cat-tab:hover{color:var(--text);border-color:rgba(200,169,106,0.35)}
 .cat-tab.active{color:var(--gold);border-color:rgba(200,169,106,0.55);background:rgba(200,169,106,0.10)}
@@ -1026,6 +1043,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="16.5" y1="12.5" x2="20" y2="16"/><line x1="18.2" y1="10.8" x2="21" y2="13.6"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">手書きボード</div>
+                <div class="card-tags"><span class="card-tag">ペン色</span><span class="card-tag">PNG</span><span class="card-tag">印刷</span></div>
                 <div class="tool-card-desc">画面に書きながら説明する</div>
                 <div class="tool-card-footnote">PDF出力 / 印刷対応 — 入力内容はサーバーに保存されません</div>
               </div>
@@ -1036,6 +1054,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">面談メモ</div>
+                <div class="card-tags"><span class="card-tag">メモ</span><span class="card-tag">確認事項</span><span class="card-tag">次回アクション</span></div>
                 <div class="tool-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg>
@@ -1045,11 +1064,20 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/><circle cx="12" cy="11" r="0.8"/><circle cx="16" cy="11" r="0.8"/><circle cx="8" cy="15" r="0.8"/><circle cx="12" cy="15" r="0.8"/><circle cx="16" cy="15" r="0.8"/><circle cx="12" cy="19" r="0.8"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">計算メモ <span class="calc-log-badge" id="calc-log-badge" style="display:none">0</span></div>
+                <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">一時集約</span><span class="card-tag">コピー</span></div>
                 <div class="tool-card-desc">面談中の計算結果を一時集約</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="11" r="0.8"/></svg>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
+          </div>
+        </div>
+        <div class="quick-shortcuts-wrap">
+          <div class="quick-shortcuts-label">よく使う項目</div>
+          <div class="quick-shortcuts">
+            <span class="quick-shortcut" onclick="openWorkspace('insurance')"><svg viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg>必要保障額</span>
+            <span class="quick-shortcut" onclick="openWorkspace('mortgage')"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/></svg>住宅ローン試算</span>
+            <span class="quick-shortcut" onclick="openBoard()"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>手書きボード</span>
           </div>
         </div>
       </div></div>
@@ -1066,6 +1094,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">必要保障額</div>
+                <div class="card-tags"><span class="card-tag">遺族生活費</span><span class="card-tag">教育費</span><span class="card-tag">遺族年金差引</span></div>
                 <div class="tool-card-desc">万一のときに必要な保障額を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/></svg>
@@ -1075,6 +1104,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="10" y1="5" x2="10" y2="11"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医療保障チェック</div>
+                <div class="card-tags"><span class="card-tag">公的保障</span><span class="card-tag">自己負担</span><span class="card-tag">収入減</span></div>
                 <div class="tool-card-desc">公的保障・自己負担・収入減から医療保障の目安を整理</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg>
@@ -1084,6 +1114,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医務査定確認</div>
+                <div class="card-tags"><span class="card-tag">告知内容</span><span class="card-tag">確認ポイント</span></div>
                 <div class="tool-card-desc">告知内容の確認ポイントを整理</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
@@ -1095,6 +1126,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">ファンド確認</div>
+                <div class="card-tags"><span class="card-tag">積立</span><span class="card-tag">一時払い</span><span class="card-tag">将来額</span></div>
                 <div class="tool-card-desc">積立・一時払いの将来額を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg>
@@ -1104,6 +1136,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><line x1="2" y1="20" x2="7" y2="14"/><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/><line x1="12" y1="16" x2="22" y2="16"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">健康・体格バランス</div>
+                <div class="card-tags"><span class="card-tag">BMI</span><span class="card-tag">体格目安</span></div>
                 <div class="tool-card-desc">BMI計算・体格の目安を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/></svg>
@@ -1125,6 +1158,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><line x1="16.5" y1="3.8" x2="18" y2="6.5"/><line x1="19.5" y1="3.8" x2="18" y2="6.5"/><line x1="18" y1="6.5" x2="18" y2="10"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="16.3" y1="8.7" x2="19.7" y2="8.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">住宅ローン試算</div>
+                <div class="card-tags"><span class="card-tag">毎月返済</span><span class="card-tag">総利息</span><span class="card-tag">繰上げ</span></div>
                 <div class="tool-card-desc">月々返済と将来残債を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="18" y1="6.5" x2="18" y2="10"/></svg>
@@ -1134,6 +1168,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">土地・エリア情報</div>
+                <div class="card-tags"><span class="card-tag">周辺相場</span><span class="card-tag">土地情報</span></div>
                 <div class="tool-card-desc">周辺相場と土地情報を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/></svg>
@@ -1143,6 +1178,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="4" width="4" height="3"/><rect x="6" y="9" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/><rect x="6" y="14" width="4" height="3"/><rect x="14" y="14" width="4" height="3"/><rect x="9" y="18" width="6" height="4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">建物価格シミュレーション</div>
+                <div class="card-tags"><span class="card-tag">建物</span><span class="card-tag">外構</span><span class="card-tag">諸費用</span></div>
                 <div class="tool-card-desc">建物・外構・諸費用込みの総額を確認</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/></svg>
@@ -1164,6 +1200,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">ライフプラン・相続・税務</div>
+                <div class="card-tags"><span class="card-tag">ライフプラン</span><span class="card-tag">相続</span><span class="card-tag">税務</span></div>
                 <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><circle cx="17" cy="17" r="3"/></svg>
@@ -1185,6 +1222,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">事業保障・退職金・法人保険</div>
+                <div class="card-tags"><span class="card-tag">事業保障</span><span class="card-tag">退職金</span><span class="card-tag">法人保険</span></div>
                 <div class="tool-card-desc">事業保障・退職金・法人保険をトータル提案</div>
               </div>
               <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="2" y1="12" x2="30" y2="12"/></svg>
@@ -1208,6 +1246,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">メール文章作成</div>
+                  <div class="card-tags"><span class="card-tag">フォローメール</span><span class="card-tag">提案メール</span><span class="card-tag">テンプレート</span></div>
                   <div class="tool-card-desc">フォローメール・提案メールのテンプレート</div>
                 </div>
                 <svg class="card-watermark" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2"/><polyline points="3,7 16,17 29,7"/></svg>
@@ -1217,6 +1256,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">提案資料作成</div>
+                  <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">提案資料</span><span class="card-tag">下書き</span></div>
                   <div class="tool-card-desc">計算結果をもとにした提案資料の下書き</div>
                 </div>
                 <svg class="card-watermark" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1"/><line x1="8" y1="10" x2="24" y2="10"/></svg>
@@ -1226,6 +1266,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">会社報告テンプレート</div>
+                  <div class="card-tags"><span class="card-tag">日報</span><span class="card-tag">週報</span><span class="card-tag">活動報告</span></div>
                   <div class="tool-card-desc">日報・週報・活動報告のテンプレート</div>
                 </div>
                 <svg class="card-watermark" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2"/><line x1="10" y1="11" x2="22" y2="11"/></svg>
@@ -1235,6 +1276,7 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">議事録作成</div>
+                  <div class="card-tags"><span class="card-tag">面談要点</span><span class="card-tag">次回提案</span></div>
                   <div class="tool-card-desc">面談の要点を記録し、次回提案に活かす</div>
                 </div>
                 <svg class="card-watermark" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10"/><polyline points="16,8 16,14 20,17"/></svg>

@@ -545,6 +545,10 @@ body{
   .board-canvas{height:280px}
   .board-panel{left:16px;right:16px;width:auto;top:30px;margin-left:0}
 }
+.board-panel.wb-maximized{display:flex;flex-direction:column}
+.board-panel.wb-maximized .board-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.board-panel.wb-maximized .board-canvas-wrap{flex:1;min-height:0}
+.board-panel.wb-maximized .board-canvas{height:100%}
 
 /* ═══ FLOATING MEETING NOTES ═══ */
 .memo-panel{
@@ -625,33 +629,42 @@ body{
 /* ═══ KOSAME UMBRELLA STATUS ═══ */
 .kosame-status{
   position:fixed;bottom:20px;left:20px;z-index:400;display:none;
-  width:44px;height:60px;pointer-events:none;
+  width:44px;height:70px;pointer-events:none;
 }
 .kosame-status.visible{display:block}
 .kosame-umbrella{
   width:40px;height:auto;display:block;margin:0 auto;
   filter:none;object-fit:contain;position:relative;z-index:1;
+  transform-origin:50% 20%;
+  animation:kd-sway 3.2s ease-in-out infinite;
+}
+@keyframes kd-sway{
+  0%,100%{transform:rotate(-3deg)}
+  50%{transform:rotate(3deg)}
 }
 .kosame-raindrop{
-  position:absolute;top:0;left:50%;width:2px;height:8px;
+  position:absolute;top:44px;width:2px;height:8px;
   background:rgba(79,195,247,0.55);border-radius:0 0 2px 2px;
   transform:translateX(-50%);animation:none;opacity:0;
 }
-.kosame-status.active .kosame-raindrop{opacity:1}
-.kosame-status.active .kosame-raindrop:nth-child(2){animation:kd-rain 1.8s 0s infinite}
-.kosame-status.active .kosame-raindrop:nth-child(3){animation:kd-rain 1.8s .45s infinite}
-.kosame-status.active .kosame-raindrop:nth-child(4){animation:kd-rain 1.8s .9s infinite}
+.kosame-raindrop:nth-child(2){left:38%}
+.kosame-raindrop:nth-child(3){left:50%}
+.kosame-raindrop:nth-child(4){left:62%}
+.kosame-status.active .kosame-raindrop:nth-child(2){animation:kd-rain 1.6s 0s infinite}
+.kosame-status.active .kosame-raindrop:nth-child(3){animation:kd-rain 1.6s .5s infinite}
+.kosame-status.active .kosame-raindrop:nth-child(4){animation:kd-rain 1.6s 1.0s infinite}
 .kosame-status.fadeout .kosame-raindrop{animation:kd-rain-out .6s forwards}
 @keyframes kd-rain{
-  0%{top:0;opacity:0;transform:translateX(-50%) scaleY(1)}
-  15%{opacity:1}
+  0%{opacity:0;transform:translateX(-50%) translateY(-4px)}
+  15%{opacity:0.9}
   85%{opacity:0.3}
-  100%{top:36px;opacity:0;transform:translateX(-50%) scaleY(0.5)}
+  100%{opacity:0;transform:translateX(-50%) translateY(22px)}
 }
 @keyframes kd-rain-out{
   0%{opacity:1}100%{opacity:0}
 }
 @media(prefers-reduced-motion:reduce){
+  .kosame-umbrella{animation:none!important}
   .kosame-raindrop{animation:none!important;opacity:0!important}
 }
 
@@ -2016,7 +2029,6 @@ canvas{display:block;width:100%;border-radius:8px}
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
-  <div class="kosame-raindrop"></div>
 </div>
 
 <!-- ═══ TOAST ═══ -->
@@ -2151,7 +2163,7 @@ function calcMortgage() {
   const total = monthly * y * 12 + bonus * y * 2;
   const interest = total - P;
   document.getElementById('m-result').style.display = 'block';
-  document.getElementById('m-monthly').textContent = Math.round(monthly).toLocaleString() + '円/月';
+  document.getElementById('m-monthly').textContent = Math.round(monthly * 10000).toLocaleString() + '円/月';
   document.getElementById('m-total').textContent = fmtYen(total);
   document.getElementById('m-interest').textContent = fmtYen(interest);
   drawMortgageChart();
@@ -2222,9 +2234,9 @@ function drawMortgageChart() {
   const el = document.getElementById('m-compare-result');
   if (el) {
     el.style.display = 'block';
-    document.getElementById('mc-var-monthly').textContent = Math.round(varM).toLocaleString() + '円/月';
+    document.getElementById('mc-var-monthly').textContent = Math.round(varM * 10000).toLocaleString() + '円/月';
     document.getElementById('mc-var-interest').textContent = fmtYen(varInterest);
-    document.getElementById('mc-fix-monthly').textContent = Math.round(fixM).toLocaleString() + '円/月';
+    document.getElementById('mc-fix-monthly').textContent = Math.round(fixM * 10000).toLocaleString() + '円/月';
     document.getElementById('mc-fix-interest').textContent = fmtYen(fixInterest);
   }
 
@@ -2294,7 +2306,7 @@ function calcMortgageBalance() {
   const n = years * 12;
   const monthly = mortgageMonthly(P, r, years);
   const endAge = age + years;
-  document.getElementById('mb-monthly').textContent = Math.round(monthly).toLocaleString() + '円/月';
+  document.getElementById('mb-monthly').textContent = Math.round(monthly * 10000).toLocaleString() + '円/月';
   document.getElementById('mb-end-age').textContent = endAge + '歳 完済';
 
   function balAt(months) {
@@ -2455,9 +2467,9 @@ function calcStepRate() {
   const balloon = Math.max(0, balance);
 
   document.getElementById('sr-result').style.display = 'block';
-  document.getElementById('sr-init-monthly').textContent = Math.round(initMonthly).toLocaleString() + '円/月';
-  document.getElementById('sr-required-monthly').textContent = Math.round(requiredAfterRise).toLocaleString() + '円/月';
-  document.getElementById('sr-capped-monthly').textContent = Math.round(cappedAfterRise).toLocaleString() + '円/月';
+  document.getElementById('sr-init-monthly').textContent = Math.round(initMonthly * 10000).toLocaleString() + '円/月';
+  document.getElementById('sr-required-monthly').textContent = Math.round(requiredAfterRise * 10000).toLocaleString() + '円/月';
+  document.getElementById('sr-capped-monthly').textContent = Math.round(cappedAfterRise * 10000).toLocaleString() + '円/月';
   const bel = document.getElementById('sr-balloon');
   if (balloon > 1) {
     bel.textContent = fmtYen(balloon) + '（一括請求）';
@@ -2959,7 +2971,9 @@ function getWbPos(e) {
   const canvas = document.getElementById('board-canvas');
   if (!canvas) return {x:0,y:0};
   const rect = canvas.getBoundingClientRect();
-  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+  const sx = rect.width ? canvas.width / rect.width : 1;
+  const sy = rect.height ? canvas.height / rect.height : 1;
+  return {x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy};
 }
 function startDraw(e) { _wbDrawing = true; const p = getWbPos(e); _wbCtx.beginPath(); _wbCtx.moveTo(p.x, p.y); }
 function draw(e) { if (!_wbDrawing) return; const p = getWbPos(e); _wbCtx.lineTo(p.x, p.y); _wbCtx.stroke(); }
@@ -3035,6 +3049,17 @@ function closeBoard() {
 
 /* ═══ Board Maximize ═══ */
 let _wbMaximized = false, _wbPreState = null;
+function resizeCanvas(canvas) {
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas, 0, 0);
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = Math.floor(r.width);
+  canvas.height = Math.floor(r.height);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#faf6ec'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+}
 function toggleMaximize() {
   const panel = document.getElementById('board-panel');
   const btn = document.getElementById('board-max-btn');
@@ -3056,6 +3081,7 @@ function toggleMaximize() {
       panel.style.height = ''; panel.style.right = ''; panel.style.bottom = '';
       panel.style.marginLeft = '';
     }
+    panel.classList.remove('wb-maximized');
     btn.textContent = '□'; btn.title = '最大化';
     _wbMaximized = false;
   } else {
@@ -3074,18 +3100,15 @@ function toggleMaximize() {
     panel.style.width = 'calc(100vw - 48px)';
     panel.style.height = 'calc(100vh - 48px)';
     panel.style.marginLeft = '0';
+    panel.classList.add('wb-maximized');
     btn.textContent = '↙'; btn.title = '元に戻す';
     _wbMaximized = true;
   }
-  // Resize canvas
-  wbSaveCurrentPage();
+  // Resize canvas (preserve drawn content, scaled into the new size)
   setTimeout(function() {
     const canvas = document.getElementById('board-canvas');
     if (!canvas) return;
-    const wrap = canvas.parentElement;
-    canvas.width = wrap.offsetWidth;
-    canvas.height = wrap.offsetHeight;
-    wbLoadPage(_wbCurrent);
+    resizeCanvas(canvas);
   }, 150);
 }
 

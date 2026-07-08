@@ -389,7 +389,7 @@ body{
 }
 .collapse-trigger .collapse-arrow{margin-left:auto}
 .collapse-arrow{
-  display:inline-block;transition:transform 0.3s var(--ease);
+  display:inline-block;transition:transform 0.25s var(--ease);
   font-size:13px;color:var(--text-dim);
 }
 .collapse-arrow.open{transform:rotate(90deg)}
@@ -1223,7 +1223,7 @@ canvas{display:block;width:100%;border-radius:8px}
       <!-- SALES SUPPORT -->
       <div class="card-group">
         <div class="section-box">
-          <div class="section-label collapse-trigger" onclick="toggleSupport()">
+          <div class="section-label collapse-trigger" onclick="toggleSupport()" role="button" tabindex="0" aria-expanded="false" aria-controls="support-collapse" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSupport();}">
             <span class="section-label-en">SALES SUPPORT</span>
             <span class="section-label-ja">営業支援</span>
             <span class="collapse-arrow" id="support-arrow">▶</span>
@@ -2188,8 +2188,10 @@ function goDashboard() { navigateTo('dashboard'); }
 function toggleSupport() {
   const el = document.getElementById('support-collapse');
   const arrow = document.getElementById('support-arrow');
+  const trigger = arrow.closest('.collapse-trigger');
   const isOpen = el.classList.toggle('expanded');
   arrow.classList.toggle('open', isOpen);
+  if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
 /* ── Mortgage ── */

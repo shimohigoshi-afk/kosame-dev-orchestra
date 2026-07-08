@@ -2241,6 +2241,7 @@ canvas{display:block;width:100%;border-radius:8px}
     <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/></svg>
     <span class="board-header-title">Calculation Log<span class="ghost"> / 計算メモ</span></span>
     <span style="font-size:11px;color:var(--text-dim);margin-right:8px" id="clog-count">0件</span>
+    <button class="board-btn clear" id="cmemo-max-btn" onclick="toggleCmemoMaximize()" style="font-size:14px;padding:2px 8px" title="最大化">□</button>
     <button class="board-btn close-btn" onclick="closeCmemo()">✕</button>
   </div>
   <div class="board-body">
@@ -3813,7 +3814,50 @@ function toggleMemoMaximize() {
   }
 }
 
-/* ═══ Memo Print / PNG (手書きボードの印刷・保存機能と同仕様) ═══ */
+/* ═══ Cmemo Maximize ═══ */
+let _cmemoMaximized = false, _cmemoPreState = null;
+function toggleCmemoMaximize() {
+  const panel = document.getElementById('cmemo-panel');
+  const btn = document.getElementById('cmemo-max-btn');
+  if (!panel || !btn) return;
+  if (_cmemoMaximized) {
+    if (_cmemoPreState) {
+      panel.style.left = _cmemoPreState.left;
+      panel.style.top = _cmemoPreState.top;
+      panel.style.width = _cmemoPreState.width;
+      panel.style.height = _cmemoPreState.height;
+      panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      panel.style.marginLeft = _cmemoPreState.marginLeft || '';
+      panel.style.margin = '0'; panel.style.transform = 'none';
+    } else {
+      panel.style.left = ''; panel.style.top = ''; panel.style.width = '';
+      panel.style.height = ''; panel.style.right = ''; panel.style.bottom = '';
+      panel.style.marginLeft = '';
+    }
+    panel.classList.remove('cmemo-maximized');
+    btn.textContent = '□'; btn.title = '最大化';
+    _cmemoMaximized = false;
+  } else {
+    const rect = panel.getBoundingClientRect();
+    _cmemoPreState = {
+      left: panel.style.left || rect.left + 'px',
+      top: panel.style.top || rect.top + 'px',
+      width: panel.style.width || rect.width + 'px',
+      height: panel.style.height || rect.height + 'px',
+      marginLeft: panel.style.marginLeft || ''
+    };
+    panel.style.left = '24px'; panel.style.top = '24px';
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.width = 'calc(100vw - 48px)';
+    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.marginLeft = '0';
+    panel.classList.add('cmemo-maximized');
+    btn.textContent = '↙'; btn.title = '元に戻す';
+    _cmemoMaximized = true;
+  }
+}
+
+/* ═══ Memo Print / PNG ═══ */
 function memoPrintCurrent() {
   const notes = document.getElementById('memo-notes-fl').value;
   const checks = document.getElementById('memo-checks-fl').value;
@@ -4188,6 +4232,8 @@ function makeDraggable(panelId, handleId) {
   handle.addEventListener('pointerdown', function(e) {
     if (e.button !== undefined && e.button !== 0) return;
     if (_wbMaximized && panelId === 'board-panel') return;
+    if (_memoMaximized && panelId === 'memo-panel') return;
+    if (_cmemoMaximized && panelId === 'cmemo-panel') return;
     if (e.target.closest('button,input,select,textarea,canvas,.resize-handle,.no-drag')) return;
 
     const rect = panel.getBoundingClientRect();

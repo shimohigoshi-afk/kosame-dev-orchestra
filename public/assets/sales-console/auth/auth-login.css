@@ -1,0 +1,187 @@
+/* KOSAME Sales Console Auth Login - repo asset based */
+/* Scope this block to #auth-overlay only. Do not affect dashboard cards. */
+
+#auth-overlay {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(216,181,106,.10), transparent 34%),
+    radial-gradient(circle at 80% 10%, rgba(70,124,190,.12), transparent 42%),
+    #020a14;
+  overflow: auto;
+}
+
+#auth-overlay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("/assets/sales-console/auth/auth-bg-motif.svg");
+  background-size: cover;
+  background-position: center;
+  opacity: .72;
+}
+
+#auth-overlay .auth-box {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 460px);
+  min-height: auto;
+  padding: 42px 44px 36px;
+  border: 1px solid rgba(216,181,106,.34);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(12,27,50,.94), rgba(7,17,32,.98));
+  box-shadow:
+    0 26px 90px rgba(0,0,0,.46),
+    0 0 0 1px rgba(255,255,255,.025) inset;
+}
+
+#auth-overlay .auth-logo {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin: 0 0 28px;
+  text-align: center;
+}
+
+#auth-overlay .auth-logo-img,
+#auth-overlay .auth-mark {
+  width: 156px;
+  height: 156px;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 0 18px rgba(216,181,106,.24));
+}
+
+#auth-overlay .auth-brand-title {
+  margin: 0;
+  color: #f3f7fb;
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: .04em;
+}
+
+#auth-overlay .auth-logo-sub,
+#auth-overlay .auth-subtitle {
+  margin: 0;
+  color: rgba(224,232,242,.72);
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: .045em;
+}
+
+#auth-overlay .auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+#auth-overlay .auth-field {
+  margin: 0;
+  position: relative;
+}
+
+#auth-overlay .auth-field input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 48px 0 48px;
+  border: 1px solid rgba(216,181,106,.28);
+  border-radius: 14px;
+  background: rgba(4,13,26,.66);
+  color: #f3f7fb;
+  font-size: 15px;
+  letter-spacing: .02em;
+  outline: none;
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+#auth-overlay .auth-field input:focus {
+  border-color: rgba(216,181,106,.72);
+  box-shadow:
+    0 0 0 3px rgba(216,181,106,.10),
+    0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+#auth-overlay .auth-field-icon,
+#auth-overlay .auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(216,181,106,.62);
+}
+
+#auth-overlay .auth-field-icon { left: 18px; }
+
+#auth-overlay .auth-password-toggle {
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+#auth-overlay .auth-password-toggle:hover {
+  background: rgba(216,181,106,.10);
+}
+
+#auth-overlay .auth-submit,
+#auth-overlay button[type="submit"] {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0d999, #d8b56a 52%, #b98635);
+  color: #06101f;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  cursor: pointer;
+  box-shadow:
+    0 14px 34px rgba(216,181,106,.18),
+    0 1px 0 rgba(255,255,255,.45) inset;
+}
+
+#auth-overlay .auth-submit:hover,
+#auth-overlay button[type="submit"]:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+#auth-overlay .auth-notice {
+  margin-top: 26px;
+  padding: 16px 18px;
+  border: 1px solid rgba(216,181,106,.18);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  color: rgba(224,232,242,.60);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 520px) {
+  #auth-overlay {
+    padding: 16px;
+  }
+  #auth-overlay .auth-box {
+    width: min(100%, 420px);
+    padding: 34px 24px 28px;
+    border-radius: 22px;
+  }
+  #auth-overlay .auth-logo-img,
+  #auth-overlay .auth-mark {
+    width: 128px;
+    height: 128px;
+  }
+}

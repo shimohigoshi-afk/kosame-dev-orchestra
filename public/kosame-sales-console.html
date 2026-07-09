@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/sales-console/auth/auth-login.css">
 <style>
 :root {
   --navy: #040d1c;
@@ -63,40 +64,39 @@ body::before{
 
 /* ═══ AUTH OVERLAY ═══ */
 #auth-overlay{
-  position:fixed;inset:0;z-index:9999;
-  background:#0a1420;
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
+  position:fixed;inset:0;z-index:9999;min-height:100vh;
+  display:grid;place-items:center;padding:24px;overflow:auto;
+  background:radial-gradient(circle at 50% 18%,rgba(216,181,106,.10),transparent 34%),radial-gradient(circle at 80% 10%,rgba(70,124,190,.12),transparent 42%),#020a14;
 }
-/* しとしと小雨: ごく淡いCSSのみの斜線。強い雨・写真風演出はしない */
 #auth-overlay::before{
-  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
-  background:repeating-linear-gradient(115deg,
-    rgba(212,188,125,0.06) 0 1px, transparent 1px 60px);
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:url("assets/sales-console/auth/auth-bg-motif.svg");
+  background-size:cover;background-position:center;opacity:.72;
 }
 .auth-box{
   position:relative;z-index:1;
-  background:rgba(13,26,44,0.9);
+  background:linear-gradient(180deg,rgba(12,27,50,.94),rgba(7,17,32,.98));
   backdrop-filter:blur(24px);
   -webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(212,188,125,0.5);
-  border-radius:16px;
-  padding:44px 40px;
+  border:1px solid rgba(216,181,106,.34);
+  border-radius:28px;
+  padding:42px 44px 36px;
   max-width:460px;width:92vw;
   text-align:center;
-  box-shadow:0 4px 40px rgba(0,0,0,0.35);
+  box-shadow:0 26px 90px rgba(0,0,0,.46),0 0 0 1px rgba(255,255,255,.025) inset;
 }
 .auth-logo{
-  margin-bottom:28px;
+  display:grid;justify-items:center;gap:14px;margin:0 0 28px;text-align:center;
 }
 .auth-logo-img{
-  width:min(260px,70%);height:auto;display:block;margin:0 auto;
-  filter:none;
+  width:156px;height:156px;display:block;margin:0 auto;
+  object-fit:contain;object-position:center center;
+  filter:drop-shadow(0 0 18px rgba(216,181,106,.24));
 }
 .auth-logo-sub{
-  margin-top:10px;font-size:12px;color:#c3d2de;letter-spacing:0.04em;
+  margin:0;color:rgba(224,232,242,.72);font-size:13px;line-height:1.6;letter-spacing:.045em;
 }
-.auth-field{position:relative;margin-bottom:20px;text-align:left}
+.auth-field{position:relative;margin:0;text-align:left}
 .auth-field label{
   display:none;
 }
@@ -108,14 +108,15 @@ body::before{
 }
 .auth-input{
   box-sizing:border-box;
-  width:100%;height:52px;background:transparent;
-  border:0.5px solid rgba(212,188,125,0.3);
-  border-radius:10px;padding:0 42px 0 42px;
-  color:var(--text);font-size:14px;outline:none;
-  transition:border-color 0.25s var(--ease),background 0.25s var(--ease);
+  width:100%;min-height:56px;background:rgba(4,13,26,.66);
+  border:1px solid rgba(216,181,106,.28);
+  border-radius:14px;padding:0 48px;
+  color:#f3f7fb;font-size:15px;outline:none;letter-spacing:.02em;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
+  transition:border-color 0.25s var(--ease),box-shadow 0.25s var(--ease);
 }
 .auth-input::placeholder{color:rgba(255,255,255,0.25)}
-.auth-input:focus{border-color:#d4bc7d;background:rgba(212,188,125,0.05)}
+.auth-input:focus{border-color:rgba(216,181,106,.72);box-shadow:0 0 0 3px rgba(216,181,106,.10),0 1px 0 rgba(255,255,255,.04) inset;background:rgba(4,13,26,.72)}
 .auth-field-eye{
   position:absolute;right:10px;top:50%;transform:translateY(-50%);
   width:26px;height:26px;background:transparent;border:none;cursor:pointer;
@@ -125,22 +126,21 @@ body::before{
 .auth-field-eye:hover{color:#d4bc7d}
 .auth-field-eye svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .auth-btn{
-  width:100%;height:52px;background:#d4bc7d;
-  color:#0a1420;border:none;border-radius:10px;
-  font-weight:700;font-size:14px;
-  cursor:pointer;margin-top:12px;
-  transition:background 0.25s var(--ease);
-  letter-spacing:0.2em;
+  width:100%;min-height:58px;margin-top:2px;border:0;border-radius:14px;
+  background:linear-gradient(135deg,#f0d999,#d8b56a 52%,#b98635);
+  color:#06101f;font-size:16px;font-weight:800;letter-spacing:.16em;
+  cursor:pointer;
+  box-shadow:0 14px 34px rgba(216,181,106,.18),0 1px 0 rgba(255,255,255,.45) inset;
+  transition:filter 0.2s,transform 0.2s;
 }
-.auth-btn:hover{background:#e0cd96}
-.auth-btn:disabled{opacity:0.5;cursor:default}
+.auth-btn:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.auth-btn:disabled{opacity:0.5;cursor:default;transform:none}
 .auth-error{font-size:12px;color:var(--danger);margin-top:16px;min-height:18px}
 .auth-lock-msg{display:none;font-size:12px;color:var(--danger);margin-top:12px}
 .auth-notice{
-  margin-top:28px;padding:14px 16px;
-  background:rgba(212,188,125,0.04);
-  border:1px solid rgba(212,188,125,0.15);
-  border-radius:10px;font-size:11px;color:var(--text-dim);
+  margin-top:26px;padding:16px 18px;
+  border:1px solid rgba(216,181,106,.18);
+  border-radius:14px;background:rgba(255,255,255,.035);color:rgba(224,232,242,.60);font-size:12px;
   line-height:1.8;
   display:flex;gap:10px;align-items:flex-start;text-align:left;
 }
@@ -328,8 +328,7 @@ body::before{
 .quick-card-label{font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;color:#f5f8fb;white-space:nowrap;letter-spacing:0.02em}
 .quick-shortcuts{display:flex;gap:10px;flex-wrap:wrap}
 .quick-shortcuts-label{font-size:10.5px;letter-spacing:0.2em;color:var(--gold-refined);font-weight:700;margin-bottom:12px}
-.tool-card-body{flex:1;min-width:0;position:relative;z-index:1;padding-right:88px}
-.tool-cards-row.cols-1 .tool-card-body,.tool-cards-row.cols-2 .tool-card-body{padding-right:110px}
+.tool-card-body{flex:1;min-width:0;position:relative;z-index:1}
 .nav-card-wm,.nav-card-core-wm,.card-watermark{
   position:absolute;right:-10px;bottom:-10px;top:auto;transform:none;
   width:172px;height:172px;
@@ -397,6 +396,9 @@ body::before{
 .sales-support-header .section-label-en{font-size:11px}
 .sales-support-header .section-label-ja{font-size:14.5px}
 .sales-support-header .collapse-arrow{margin-left:auto}
+.collapse-content .tool-cards-row{gap:24px}
+.collapse-content .tool-card{min-height:160px;padding:26px 28px}
+.card-group:has(.sales-support-header){padding-bottom:24px}
 
 /* ═══ PRIVACY NOTICE ═══ */
 .privacy-notice{
@@ -1030,6 +1032,45 @@ canvas{display:block;width:100%;border-radius:8px}
   .tool-title{font-size:19px}
   .calc-panel{width:92vw;right:4vw;bottom:72px}
 }
+
+
+/* DASHBOARD CARD OVERRIDES */
+.tool-card{
+  position:relative!important;display:block!important;
+  min-height:124px!important;
+  padding:22px 190px 22px 28px!important;
+  overflow:hidden!important;
+}
+.tool-card .tool-card-body{
+  position:relative;z-index:2;min-width:0;max-width:100%;
+}
+.tool-card-title{
+  max-width:100%;white-space:normal;word-break:keep-all;overflow-wrap:normal;line-height:1.35;
+}
+.tool-card .card-visual{
+  position:absolute!important;z-index:1;
+  right:22px;top:50%;transform:translateY(-50%);
+  width:160px;height:100px;
+  display:flex!important;align-items:center;justify-content:center;
+  opacity:.95!important;visibility:visible!important;pointer-events:none;overflow:visible;
+}
+.tool-card .card-visual-img{
+  display:block!important;width:100%!important;height:100%!important;max-width:none!important;
+  object-fit:contain;opacity:1!important;
+  filter:drop-shadow(0 0 12px rgba(216,181,106,.16));
+}
+.tool-card:hover .card-visual-img{transform:translateX(2px)}
+.tool-card>.icon-ring,.tool-card>.card-arrow{display:none!important}
+
+/* 横長カード(cols-1: ライフプラン・相続・税務 / 事業保障・退職金・法人保険)は右画像を大きく */
+.tool-cards-row.cols-1 .tool-card{padding-right:250px!important}
+.tool-cards-row.cols-1 .card-visual{width:210px;height:112px}
+
+/* 営業支援カードも同方式・やや大きめ */
+#sales-support-content .tool-card{min-height:150px!important;padding-right:250px!important}
+#sales-support-content .card-visual{width:210px;height:112px}
+
+@media(max-width:768px){.tool-card{padding:20px 24px!important}.card-visual{display:none!important}}
 </style>
 </head>
 <body>
@@ -1038,7 +1079,7 @@ canvas{display:block;width:100%;border-radius:8px}
 <div id="auth-overlay">
   <div id="auth-setup-box" class="auth-box" style="display:none">
     <div class="auth-logo">
-      <img class="auth-logo-img" src="assets/kosame-brand-umbrella-transparent.png" alt="KOSAME">
+      <img class="auth-logo-img" src="assets/sales-console/auth/auth-brand-lockup.png" alt="KOSAME Sales Console">
       <div class="auth-logo-sub">Meeting Desk / Proposal Support</div>
     </div>
     <div class="auth-field">
@@ -1061,7 +1102,7 @@ canvas{display:block;width:100%;border-radius:8px}
 
   <div id="auth-login-box" class="auth-box">
     <div class="auth-logo">
-      <img class="auth-logo-img" src="assets/kosame-brand-umbrella-transparent.png" alt="KOSAME">
+      <img class="auth-logo-img" src="assets/sales-console/auth/auth-brand-lockup.png" alt="KOSAME Sales Console">
       <div class="auth-logo-sub">Meeting Desk / Proposal Support</div>
     </div>
     <div class="auth-field">
@@ -1150,10 +1191,10 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">手書きボード</div>
                 <div class="card-tags"><span class="card-tag">ペン色</span><span class="card-tag">PNG</span></div>
-                <div class="tool-card-desc">画面に書きながら説明する</div>
+                <div class="tool-card-desc">面談中の要点や図解をその場で整理します。</div>
                 <div class="tool-card-footnote">PDF出力 / 印刷対応 — 入力内容はサーバーに保存されません</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="10" y="15" width="60" height="45" rx="2"/><path d="M20 28h30M20 38h22M20 48h26"/><path d="M35 60l-4 15h-8M43 60l4 15h8"/><path d="M62 30l22 22-30 30-14 3 3-14z"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/board.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openMemo()">
@@ -1161,9 +1202,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">面談メモ</div>
                 <div class="card-tags"><span class="card-tag">メモ</span><span class="card-tag">確認事項</span></div>
-                <div class="tool-card-desc">面談中のメモ・確認事項・次回アクションを残す</div>
+                <div class="tool-card-desc">面談内容・確認事項・次回対応を整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="15" y="12" width="55" height="76" rx="4"/><circle cx="24" cy="8" r="2.5"/><circle cx="38" cy="8" r="2.5"/><circle cx="52" cy="8" r="2.5"/><circle cx="66" cy="8" r="2.5"/><path d="M25 30l5 5 10-12M25 48l5 5 10-12M25 66l5 5 10-12"/><path d="M40 30h20M40 48h20M40 66h15"/><path d="M78 55l18 18-10 10-18-18z"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/meeting-memo.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" id="calc-memo-card" onclick="openCmemo()">
@@ -1171,9 +1212,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">計算メモ <span class="calc-log-badge" id="calc-log-badge" style="display:none">0</span></div>
                 <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">一時集約</span></div>
-                <div class="tool-card-desc">面談中の計算結果を一時集約</div>
+                <div class="tool-card-desc">その場の試算メモや数字の確認を整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="8" y="10" width="45" height="70" rx="5"/><rect x="15" y="18" width="31" height="14" rx="2"/><circle cx="19" cy="42" r="3"/><circle cx="30.5" cy="42" r="3"/><circle cx="42" cy="42" r="3"/><circle cx="19" cy="55" r="3"/><circle cx="30.5" cy="55" r="3"/><circle cx="42" cy="55" r="3"/><circle cx="19" cy="68" r="3"/><circle cx="30.5" cy="68" r="3"/><circle cx="42" cy="68" r="3"/><text x="62" y="38" font-size="16" font-family="monospace" stroke="none" fill="rgba(212,188,125,0.9)">1 2 3</text><text x="62" y="58" font-size="16" font-family="monospace" stroke="none" fill="rgba(212,188,125,0.9)">4 5 6</text><text x="62" y="78" font-size="16" font-family="monospace" stroke="none" fill="rgba(212,188,125,0.9)">7 8 9</text></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/calc-memo.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1191,11 +1232,11 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="tool-card" onclick="openWorkspace('insurance')">
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg></div>
               <div class="tool-card-body">
-                <div class="tool-card-title">必要保障額</div>
+                <div class="tool-card-title">必要保障額の目安</div>
                 <div class="card-tags"><span class="card-tag">遺族生活費</span><span class="card-tag">教育費</span></div>
-                <div class="tool-card-desc">万一のときに必要な保障額を確認</div>
+                <div class="tool-card-desc">万一に備える金額の目安を、一般的な家計設計として確認します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><path d="M50 8l30 12v20c0 25-18 38-30 42-12-4-30-17-30-42V20z"/><circle cx="38" cy="45" r="7"/><path d="M28 68c0-8 6-13 10-13s10 5 10 13"/><circle cx="60" cy="42" r="9"/><path d="M47 70c0-10 7-17 13-17s13 7 13 17"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/required-coverage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('medical-check')">
@@ -1203,9 +1244,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">医療保障チェック</div>
                 <div class="card-tags"><span class="card-tag">公的保障</span><span class="card-tag">自己負担</span></div>
-                <div class="tool-card-desc">公的保障・自己負担・収入減から医療保障の目安を整理</div>
+                <div class="tool-card-desc">公的保障・自己負担・収入減少など、医療保障の確認ポイントを整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><path d="M50 85C20 62 6 44 6 26A18 18 0 0142 18A18 18 0 0178 26c0 18-14 36-28 59z"/><path d="M50 28v20M40 38h20"/><polyline points="55,70 68,55 78,62 92,40"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/medical-coverage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('underwriting')">
@@ -1213,9 +1254,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">医務査定確認</div>
                 <div class="card-tags"><span class="card-tag">告知内容</span><span class="card-tag">確認ポイント</span></div>
-                <div class="tool-card-desc">告知内容の確認ポイントを整理</div>
+                <div class="tool-card-desc">告知内容や確認資料のポイントを整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="8" y="8" width="46" height="64" rx="3"/><path d="M18 24h26M18 36h26M18 48h18"/><circle cx="72" cy="62" r="20"/><path d="M86 76l14 14"/><path d="M62 62l7 7 14-14"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/underwriting.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1225,9 +1266,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">ファンド確認</div>
                 <div class="card-tags"><span class="card-tag">積立</span><span class="card-tag">一時払い</span></div>
-                <div class="tool-card-desc">積立・一時払いの将来額を確認</div>
+                <div class="tool-card-desc">ファンド情報や資料の確認、推移確認を補助します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><path d="M6 92h88"/><polyline points="10,80 28,55 42,68 60,32 76,44 94,12"/><circle cx="94" cy="12" r="3" fill="rgba(212,188,125,0.9)" stroke="none"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/fund-check.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('bmi')">
@@ -1235,9 +1276,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">健康・体格バランス</div>
                 <div class="card-tags"><span class="card-tag">BMI</span><span class="card-tag">体格目安</span></div>
-                <div class="tool-card-desc">BMI計算・体格の目安を確認</div>
+                <div class="tool-card-desc">身長・体重などの体格目安を確認します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><circle cx="30" cy="18" r="10"/><path d="M30 28v34M16 42h28M20 92l10-30 10 30"/><path d="M70 8v84"/><path d="M70 20h10M70 36h10M70 52h10M70 68h10"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/health-balance.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1257,9 +1298,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">住宅ローン試算</div>
                 <div class="card-tags"><span class="card-tag">毎月返済</span><span class="card-tag">総利息</span></div>
-                <div class="tool-card-desc">月々返済と将来残債を確認</div>
+                <div class="tool-card-desc">返済額・金利・期間の目安を確認します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><path d="M6 55L50 15l44 40"/><path d="M18 48v40h64V48"/><rect x="42" y="62" width="16" height="26"/><path d="M68 26v-14h12v22"/><path d="M28 65h14M28 76h14"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/mortgage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('realestate')">
@@ -1267,9 +1308,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">土地・エリア情報</div>
                 <div class="card-tags"><span class="card-tag">周辺相場</span><span class="card-tag">土地情報</span></div>
-                <div class="tool-card-desc">周辺相場と土地情報を確認</div>
+                <div class="tool-card-desc">土地や周辺エリアの確認ポイントを整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><path d="M8 20l26-8 26 8 26-8v70l-26 8-26-8-26 8z"/><path d="M34 12v70M60 4v70"/><path d="M84 42c0-11 9-20 20-20s20 9 20 20c0 15-20 34-20 34s-20-19-20-34z"/><circle cx="104" cy="42" r="7"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/land-area.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
             <div class="tool-card" onclick="openWorkspace('building')">
@@ -1277,9 +1318,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card-body">
                 <div class="tool-card-title">建物価格シミュレーション</div>
                 <div class="card-tags"><span class="card-tag">建物</span><span class="card-tag">外構</span></div>
-                <div class="tool-card-desc">建物・外構・諸費用込みの総額を確認</div>
+                <div class="tool-card-desc">建物価格や付帯費用の目安を整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="15" y="15" width="48" height="75"/><path d="M24 26h8M24 26v8M40 26h8M40 26v8M24 42h8M24 42v8M40 42h8M40 42v8M24 58h8M24 58v8M40 58h8M40 58v8"/><path d="M72 90V20l14-8v78"/><path d="M72 30h14M72 50h14M72 70h14"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/building-price.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1297,11 +1338,21 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="tool-card primary" onclick="openHub('life-tax-hub')">
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg></div>
               <div class="tool-card-body">
-                <div class="tool-card-title">ライフプラン・相続・税務</div>
+                <div class="tool-card-title">ライフプラン・相続</div>
                 <div class="card-tags"><span class="card-tag">ライフプラン</span><span class="card-tag">相続</span></div>
-                <div class="tool-card-desc">ライフプラン・相続・税務の最適化をサポート</div>
+                <div class="tool-card-desc">家計・将来資金・相続に関する確認事項を整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><circle cx="26" cy="20" r="8"/><path d="M14 55c0-10 6-17 12-17s12 7 12 17"/><circle cx="50" cy="24" r="9"/><path d="M36 60c0-11 7-19 14-19s14 8 14 19"/><circle cx="74" cy="20" r="8"/><path d="M62 55c0-10 6-17 12-17s12 7 12 17"/><rect x="10" y="66" width="80" height="26" rx="2"/><path d="M20 76h30M20 84h20"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/lifeplan-inheritance.png" alt=""></div>
+              <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+            </div>
+            <div class="tool-card primary" onclick="openHub('life-tax-hub')">
+              <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2v20M6 6h9a3.5 3.5 0 010 7H8a3.5 3.5 0 000 7h10"/></svg></div>
+              <div class="tool-card-body">
+                <div class="tool-card-title">税務計算</div>
+                <div class="card-tags"><span class="card-tag">概算</span><span class="card-tag">確認ポイント</span></div>
+                <div class="tool-card-desc">税務に関する概算と確認ポイントを整理します。</div>
+              </div>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/tax-calculation.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1319,11 +1370,11 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="tool-card primary" onclick="openHub('corp-hub')">
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg></div>
               <div class="tool-card-body">
-                <div class="tool-card-title">事業保障・退職金・法人保険</div>
+                <div class="tool-card-title">事業保障・退職金確認</div>
                 <div class="card-tags"><span class="card-tag">事業保障</span><span class="card-tag">退職金</span></div>
-                <div class="tool-card-desc">事業保障・退職金・法人保険をトータル提案</div>
+                <div class="tool-card-desc">事業継続・役員退職金・資金準備の考え方を整理します。</div>
               </div>
-              <svg class="card-watermark" viewBox="0 0 100 100"><rect x="8" y="45" width="55" height="40" rx="3"/><path d="M25 45v-10a10 10 0 0120 0v10"/><path d="M8 62h55"/><rect x="34" y="58" width="8" height="8"/><rect x="72" y="20" width="16" height="65"/><rect x="90" y="35" width="16" height="50"/><path d="M76 30h8M76 42h8M76 54h8M94 45h8M94 57h8M94 69h8"/></svg>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/corporate-insurance.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -1345,9 +1396,9 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="tool-card-body">
                   <div class="tool-card-title">メール文章作成</div>
                   <div class="card-tags"><span class="card-tag">フォローメール</span><span class="card-tag">提案メール</span></div>
-                  <div class="tool-card-desc">フォローメール・提案メールのテンプレート</div>
+                  <div class="tool-card-desc">面談後の御礼・日程調整・確認連絡を作成します。</div>
                 </div>
-                <svg class="card-watermark" viewBox="0 0 100 100"><rect x="8" y="20" width="82" height="60" rx="4"/><polyline points="8,20 50,55 90,20"/><path d="M25 65h20M25 74h30"/></svg>
+                <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/email-compose.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('proposal')">
@@ -1355,29 +1406,29 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="tool-card-body">
                   <div class="tool-card-title">提案資料作成</div>
                   <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">提案資料</span></div>
-                  <div class="tool-card-desc">計算結果をもとにした提案資料の下書き</div>
+                  <div class="tool-card-desc">試算結果・確認事項をもとに資料の下書きを作成します。</div>
                 </div>
-                <svg class="card-watermark" viewBox="0 0 100 100"><rect x="6" y="12" width="88" height="72" rx="3"/><rect x="30" y="2" width="40" height="14"/><path d="M50 16v70"/><path d="M22 32h20M22 44h20"/><rect x="20" y="66" width="18" height="14" rx="2"/><rect x="60" y="66" width="18" height="14" rx="2"/></svg>
+                <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/proposal-doc.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('report')">
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg></div>
                 <div class="tool-card-body">
-                  <div class="tool-card-title">会社報告テンプレート</div>
+                  <div class="tool-card-title">面談報告テンプレート</div>
                   <div class="card-tags"><span class="card-tag">日報</span><span class="card-tag">週報</span></div>
-                  <div class="tool-card-desc">日報・週報・活動報告のテンプレート</div>
+                  <div class="tool-card-desc">面談内容・確認事項・次回対応を社内共有用に整理します。</div>
                 </div>
-                <svg class="card-watermark" viewBox="0 0 100 100"><rect x="15" y="14" width="68" height="78" rx="4"/><rect x="35" y="4" width="28" height="14"/><path d="M28 34h44M28 48h44M28 62h32"/></svg>
+                <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/report-template.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
               <div class="tool-card" onclick="navigateTo('minutes')">
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg></div>
                 <div class="tool-card-body">
-                  <div class="tool-card-title">議事録作成</div>
-                  <div class="card-tags"><span class="card-tag">面談要点</span><span class="card-tag">次回提案</span></div>
-                  <div class="tool-card-desc">面談の要点を記録し、次回提案に活かす</div>
+                  <div class="tool-card-title">面談記録作成</div>
+                  <div class="card-tags"><span class="card-tag">面談要点</span><span class="card-tag">次回対応</span></div>
+                  <div class="tool-card-desc">面談の要点・確認事項・次回対応を記録します。</div>
                 </div>
-                <svg class="card-watermark" viewBox="0 0 100 100"><circle cx="42" cy="40" r="32"/><polyline points="42,22 42,40 58,50"/><rect x="8" y="76" width="26" height="18" rx="2"/><path d="M42 82h44M42 92h30"/></svg>
+                <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/minutes.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
               </div>
             </div>

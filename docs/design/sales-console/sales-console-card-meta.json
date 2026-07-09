@@ -1,0 +1,177 @@
+{
+  "updated": "2026-07-09",
+  "asset_policy": "Use the provided PNG files as design-source assets. Do not redraw, regenerate, or convert them into new SVG/CSS illustrations.",
+  "cards_count": 18,
+  "cards": [
+    {
+      "slug": "board",
+      "category": "面談デスク",
+      "title": "手書きボード",
+      "description": "面談中の要点や図解をその場で整理します。",
+      "asset": "assets/sales-console/cards/board.png",
+      "repo_path": "public/assets/sales-console/cards/board.png",
+      "note": ""
+    },
+    {
+      "slug": "meeting-memo",
+      "category": "面談デスク",
+      "title": "面談メモ",
+      "description": "面談内容・確認事項・次回対応を整理します。",
+      "asset": "assets/sales-console/cards/meeting-memo.png",
+      "repo_path": "public/assets/sales-console/cards/meeting-memo.png",
+      "note": ""
+    },
+    {
+      "slug": "calc-memo",
+      "category": "面談デスク",
+      "title": "計算メモ",
+      "description": "その場の試算メモや数字の確認を整理します。",
+      "asset": "assets/sales-console/cards/calc-memo.png",
+      "repo_path": "public/assets/sales-console/cards/calc-memo.png",
+      "note": ""
+    },
+    {
+      "slug": "required-coverage",
+      "category": "保険提案",
+      "title": "必要保障額の目安",
+      "description": "万一に備える金額の目安を、一般的な家計設計として確認します。",
+      "asset": "assets/sales-console/cards/required-coverage.png",
+      "repo_path": "public/assets/sales-console/cards/required-coverage.png",
+      "note": "「必要保障額」単独より「目安」表記を優先。特定商品推奨にしない。"
+    },
+    {
+      "slug": "medical-coverage",
+      "category": "保険提案",
+      "title": "医療保障チェック",
+      "description": "公的保障・自己負担・収入減少など、医療保障の確認ポイントを整理します。",
+      "asset": "assets/sales-console/cards/medical-coverage.png",
+      "repo_path": "public/assets/sales-console/cards/medical-coverage.png",
+      "note": "最適・十分・給付される等の断定禁止。"
+    },
+    {
+      "slug": "underwriting",
+      "category": "保険提案",
+      "title": "医務査定確認",
+      "description": "告知内容や確認資料のポイントを整理します。",
+      "asset": "assets/sales-console/cards/underwriting.png",
+      "repo_path": "public/assets/sales-console/cards/underwriting.png",
+      "note": "加入可能・査定OK・通る等の断定禁止。"
+    },
+    {
+      "slug": "fund-check",
+      "category": "保険提案",
+      "title": "ファンド確認",
+      "description": "ファンド情報や資料の確認、推移確認を補助します。",
+      "asset": "assets/sales-console/cards/fund-check.png",
+      "repo_path": "public/assets/sales-console/cards/fund-check.png",
+      "note": "おすすめ・ランキング・運用成果断定を出さない。"
+    },
+    {
+      "slug": "health-balance",
+      "category": "保険提案",
+      "title": "健康・体格バランス",
+      "description": "身長・体重などの体格目安を確認します。",
+      "asset": "assets/sales-console/cards/health-balance.png",
+      "repo_path": "public/assets/sales-console/cards/health-balance.png",
+      "note": "医療・引受判断の断定にしない。"
+    },
+    {
+      "slug": "mortgage",
+      "category": "住宅・不動産",
+      "title": "住宅ローン試算",
+      "description": "返済額・金利・期間の目安を確認します。",
+      "asset": "assets/sales-console/cards/mortgage.png",
+      "repo_path": "public/assets/sales-console/cards/mortgage.png",
+      "note": ""
+    },
+    {
+      "slug": "land-area",
+      "category": "住宅・不動産",
+      "title": "土地・エリア情報",
+      "description": "土地や周辺エリアの確認ポイントを整理します。",
+      "asset": "assets/sales-console/cards/land-area.png",
+      "repo_path": "public/assets/sales-console/cards/land-area.png",
+      "note": ""
+    },
+    {
+      "slug": "building-price",
+      "category": "住宅・不動産",
+      "title": "建物価格シミュレーション",
+      "description": "建物価格や付帯費用の目安を整理します。",
+      "asset": "assets/sales-console/cards/building-price.png",
+      "repo_path": "public/assets/sales-console/cards/building-price.png",
+      "note": ""
+    },
+    {
+      "slug": "lifeplan-inheritance",
+      "category": "生活資金・税務",
+      "title": "ライフプラン・相続",
+      "description": "家計・将来資金・相続に関する確認事項を整理します。",
+      "asset": "assets/sales-console/cards/lifeplan-inheritance.png",
+      "repo_path": "public/assets/sales-console/cards/lifeplan-inheritance.png",
+      "note": "税務計算とは分離。旧 lifeplan-tax の役割をこちらへ寄せる。"
+    },
+    {
+      "slug": "tax-calculation",
+      "category": "生活資金・税務",
+      "title": "税務計算",
+      "description": "税務に関する概算と確認ポイントを整理します。",
+      "asset": "assets/sales-console/cards/tax-calculation.png",
+      "repo_path": "public/assets/sales-console/cards/tax-calculation.png",
+      "note": "税務判断・節税断定ではなく、概算・確認補助として扱う。"
+    },
+    {
+      "slug": "corporate-insurance",
+      "category": "法人提案",
+      "title": "事業保障・退職金確認",
+      "description": "事業継続・役員退職金・資金準備の考え方を整理します。",
+      "asset": "assets/sales-console/cards/corporate-insurance.png",
+      "repo_path": "public/assets/sales-console/cards/corporate-insurance.png",
+      "note": "法人保険・節税保険・最適商品比較の表現は禁止。"
+    },
+    {
+      "slug": "email-compose",
+      "category": "営業支援",
+      "title": "メール文章作成",
+      "description": "面談後の御礼・日程調整・確認連絡を作成します。",
+      "asset": "assets/sales-console/cards/email-compose.png",
+      "repo_path": "public/assets/sales-console/cards/email-compose.png",
+      "note": "加入促進・申込案内・保険提案メールに寄せない。"
+    },
+    {
+      "slug": "proposal-doc",
+      "category": "営業支援",
+      "title": "提案資料作成",
+      "description": "試算結果・確認事項をもとに資料の下書きを作成します。",
+      "asset": "assets/sales-console/cards/proposal-doc.png",
+      "repo_path": "public/assets/sales-console/cards/proposal-doc.png",
+      "note": "おすすめ商品を自動選定・申込資料作成にしない。"
+    },
+    {
+      "slug": "report-template",
+      "category": "営業支援",
+      "title": "面談報告テンプレート",
+      "description": "面談内容・確認事項・次回対応を社内共有用に整理します。",
+      "asset": "assets/sales-console/cards/report-template.png",
+      "repo_path": "public/assets/sales-console/cards/report-template.png",
+      "note": "成約見込み・申込見込み・クロージング状況の表現は禁止。"
+    },
+    {
+      "slug": "minutes",
+      "category": "営業支援",
+      "title": "面談記録作成",
+      "description": "面談の要点・確認事項・次回対応を記録します。",
+      "asset": "assets/sales-console/cards/minutes.png",
+      "repo_path": "public/assets/sales-console/cards/minutes.png",
+      "note": "保険提案議事録・申込意向記録に寄せない。"
+    }
+  ],
+  "auth": {
+    "slug": "auth-brand-lockup",
+    "title": "KOSAME Sales Console ログインロックアップ",
+    "asset": "assets/sales-console/auth/auth-brand-lockup.png",
+    "repo_path": "public/assets/sales-console/auth/auth-brand-lockup.png",
+    "source_note": "ログイン画面用。この画像をそのまま使う。傘や文字を描き直さない。"
+  },
+  "compliance_notice": "本機能は一般的な確認・試算・整理を目的とした補助機能です。特定の保険商品・保険会社の推奨、契約申込の誘導を目的とするものではありません。"
+}

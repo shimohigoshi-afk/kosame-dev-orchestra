@@ -66,32 +66,57 @@ body::before{
 #auth-overlay{
   position:fixed;inset:0;z-index:9999;min-height:100vh;
   display:grid;place-items:center;padding:24px;overflow:auto;
-  background:radial-gradient(circle at 50% 18%,rgba(216,181,106,.10),transparent 34%),radial-gradient(circle at 80% 10%,rgba(70,124,190,.12),transparent 42%),#020a14;
+  background:
+    repeating-linear-gradient(-8deg, transparent 0px, transparent 4px, rgba(79,195,247,0.014) 5px, transparent 5px, transparent 8px),
+    repeating-linear-gradient(112deg, transparent 0px, transparent 90px, rgba(212,188,125,0.020) 91px, transparent 91px, transparent 92px),
+    radial-gradient(ellipse 900px 500px at 50% 5%, rgba(212,188,125,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 600px 800px at 82% 15%, rgba(70,124,190,0.07) 0%, transparent 50%),
+    #01050d;
 }
 #auth-overlay::before{
   content:"";position:fixed;inset:0;pointer-events:none;
   background-image:url("assets/sales-console/auth/auth-bg-motif.svg");
-  background-size:cover;background-position:center;opacity:.72;
+  background-size:cover;background-position:center;opacity:.5;
 }
 .auth-box{
   position:relative;z-index:1;
   background:linear-gradient(180deg,rgba(12,27,50,.94),rgba(7,17,32,.98));
   backdrop-filter:blur(24px);
   -webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(216,181,106,.34);
+  border:1px solid rgba(212,188,125,.44);
   border-radius:28px;
-  padding:42px 44px 36px;
+  padding:58px 60px 50px;
   max-width:460px;width:92vw;
   text-align:center;
-  box-shadow:0 26px 90px rgba(0,0,0,.46),0 0 0 1px rgba(255,255,255,.025) inset;
+  box-shadow:0 26px 90px rgba(0,0,0,.46),0 0 0 1px rgba(255,255,255,.025) inset,0 0 0 1px rgba(212,188,125,.04) inset;
 }
 .auth-logo{
-  display:grid;justify-items:center;gap:14px;margin:0 0 28px;text-align:center;
+  display:grid;justify-items:center;gap:16px;margin:0 0 34px;text-align:center;
 }
 .auth-logo-img{
-  width:156px;height:156px;display:block;margin:0 auto;
+  width:min(280px,72%);height:auto;display:block;margin:0 auto;
   object-fit:contain;object-position:center center;
-  filter:drop-shadow(0 0 18px rgba(216,181,106,.24));
+}
+/* auth-login.css の #auth-overlay 系ルールより後段・同specificityで上書き
+   (このセッションは public/kosame-sales-console.html のみ変更可のため) */
+#auth-overlay .auth-box{
+  background:linear-gradient(180deg,rgba(15,34,62,.95),rgba(8,20,42,.98));
+  max-width:500px;
+  padding:62px 64px 54px;
+}
+#auth-overlay .auth-form-grid{
+  display:flex;flex-direction:column;gap:20px;
+}
+#auth-overlay .auth-field{
+  margin:0;
+}
+#auth-overlay .auth-logo-img,
+#auth-overlay .auth-mark{
+  width:min(280px,72%);height:auto;
+  object-fit:contain;object-position:center center;
+}
+@media(max-width:520px){
+  #auth-overlay .auth-box{max-width:min(100%,420px);padding:40px 30px 34px}
 }
 .auth-logo-sub{
   margin:0;color:rgba(224,232,242,.72);font-size:13px;line-height:1.6;letter-spacing:.045em;
@@ -101,7 +126,7 @@ body::before{
   display:none;
 }
 .auth-field-icon{
-  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  position:absolute;left:18px;top:50%;transform:translateY(-50%);
   width:16px;height:16px;pointer-events:none;
   stroke:rgba(212,188,125,0.55);fill:none;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;
@@ -110,15 +135,26 @@ body::before{
   box-sizing:border-box;
   width:100%;min-height:56px;background:rgba(4,13,26,.66);
   border:1px solid rgba(216,181,106,.28);
-  border-radius:14px;padding:0 48px;
+  border-radius:14px;padding:0 52px;
   color:#f3f7fb;font-size:15px;outline:none;letter-spacing:.02em;
   box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
   transition:border-color 0.25s var(--ease),box-shadow 0.25s var(--ease);
 }
 .auth-input::placeholder{color:rgba(255,255,255,0.25)}
 .auth-input:focus{border-color:rgba(216,181,106,.72);box-shadow:0 0 0 3px rgba(216,181,106,.10),0 1px 0 rgba(255,255,255,.04) inset;background:rgba(4,13,26,.72)}
+input,
+input:focus,
+input:active,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #eaf0fb !important;
+  caret-color: #d4bc7d;
+  box-shadow: 0 0 0 1000px rgba(4,14,30,0.92) inset !important;
+  transition: background-color 9999s ease-out 0s;
+}
 .auth-field-eye{
-  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
   width:26px;height:26px;background:transparent;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   color:rgba(255,255,255,0.35);
@@ -126,7 +162,7 @@ body::before{
 .auth-field-eye:hover{color:#d4bc7d}
 .auth-field-eye svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .auth-btn{
-  width:100%;min-height:58px;margin-top:2px;border:0;border-radius:14px;
+  width:100%;min-height:60px;margin-top:0;border:0;border-radius:14px;
   background:linear-gradient(135deg,#f0d999,#d8b56a 52%,#b98635);
   color:#06101f;font-size:16px;font-weight:800;letter-spacing:.16em;
   cursor:pointer;
@@ -135,14 +171,26 @@ body::before{
 }
 .auth-btn:hover{filter:brightness(1.05);transform:translateY(-1px)}
 .auth-btn:disabled{opacity:0.5;cursor:default;transform:none}
-.auth-error{font-size:12px;color:var(--danger);margin-top:16px;min-height:18px}
-.auth-lock-msg{display:none;font-size:12px;color:var(--danger);margin-top:12px}
+.auth-error{font-size:12px;color:var(--danger);margin-top:0;min-height:18px}
+.auth-lock-msg{display:none;font-size:12px;color:var(--danger);margin-top:0}
 .auth-notice{
-  margin-top:26px;padding:16px 18px;
+  position:relative;
+  margin-top:0;padding:18px 20px;
   border:1px solid rgba(216,181,106,.18);
   border-radius:14px;background:rgba(255,255,255,.035);color:rgba(224,232,242,.60);font-size:12px;
   line-height:1.8;
   display:flex;gap:10px;align-items:flex-start;text-align:left;
+}
+.auth-notice::before{
+  content:'';position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+  width:80px;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(212,188,125,0.28) 25%,rgba(212,188,125,0.48) 50%,rgba(212,188,125,0.28) 75%,transparent 100%);
+}
+.auth-notice::after{
+  content:'';position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(212,188,125,0.42);
+  box-shadow:0 0 4px rgba(212,188,125,0.18);
 }
 .auth-notice-icon{
   width:16px;height:16px;flex:none;margin-top:2px;
@@ -153,44 +201,173 @@ body::before{
 /* ═══ TOPBAR ═══ */
 #app{display:none;min-height:100vh;flex-direction:column}
 #app.visible{display:flex}
+
+/* ═══ LOGIN TRANSITION CURTAIN ═══ */
+.login-transition-curtain{
+  position:fixed;inset:0;z-index:99999;
+  background:#000;
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.login-transition-curtain.is-active{
+  opacity:1;visibility:visible;
+}
+.login-transition-curtain.is-revealing{
+  opacity:0;
+  transition:opacity 1100ms cubic-bezier(0.22,0.8,0.24,1);
+}
+@media(prefers-reduced-motion:reduce){
+  .login-transition-curtain{transition:none!important;opacity:0!important;visibility:hidden!important}
+}
+
 .topbar{
-  height:72px;background:rgba(10,24,44,0.95);
+  min-height:112px;background:rgba(10,24,44,0.95);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 28px;position:sticky;top:0;z-index:100;
 }
-.topbar-left{display:flex;align-items:center;gap:18px}
-.topbar-logo-wrap{position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center;flex:none;animation:kosa-sway 2.8s ease-in-out infinite;transform-origin:50% 20%}
-.topbar-logo-img{height:auto;width:38px;display:block;filter:drop-shadow(0 0 2px rgba(212,188,125,0.6)) drop-shadow(0 0 4px rgba(212,188,125,0.3));object-fit:contain;transform:scale(2.4)}
-.topbar-rain{position:absolute;top:6px;width:2px;height:8px;background:rgba(79,195,247,0.7);border-radius:0 0 1px 1px;opacity:0;pointer-events:none}
-.topbar-rain.tr1{left:20%;animation:tr-cycle 5.2s 0s infinite}
-.topbar-rain.tr2{left:38%;animation:tr-cycle 5.2s .4s infinite}
-.topbar-rain.tr3{left:54%;animation:tr-cycle 5.2s .8s infinite}
-.topbar-rain.tr4{left:70%;animation:tr-cycle 5.2s 1.2s infinite}
-.topbar-rain.tr5{left:85%;animation:tr-cycle 5.2s 1.6s infinite}
-@keyframes kosa-sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
-@keyframes tr-cycle{
-  0%,3%{opacity:0;transform:translateY(0)}
-  10%{opacity:0.88}
-  30%{opacity:0.4}
-  40%{opacity:0;transform:translateY(24px)}
-  40.1%,100%{opacity:0;transform:translateY(0)}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-logo-wrap{
+  position:relative;
+  width:116px;height:112px;
+  flex:0 0 116px;
+  display:grid;place-items:center;
+  overflow:visible;
 }
-@media(prefers-reduced-motion:reduce){.topbar-logo-wrap{animation:none}.topbar-rain{animation:none!important}}
-.topbar-kosame{
+.kosame-header-animation{
+  width:108px;height:124px;
+  display:block;
+  overflow:visible;
+}
+.kosame-brand-umbrella-image{
+  opacity:1;
+  transform-box:fill-box;
+  transform-origin:50% 15%;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.32)) drop-shadow(0 0 2px rgba(212,188,125,.12));
+  animation:kosameBrandUmbrellaTimeline 10s cubic-bezier(0.42,0,0.24,1) infinite;
+}
+.kosame-brand-rain-line{
+  fill:none;
+  stroke:#3ca6dc;
+  stroke-width:6;
+  stroke-linecap:round;
+  stroke-dasharray:14 14;
+  stroke-dashoffset:28;
+  opacity:0;
+  animation:kosameBrandRainVisibility 10s linear infinite, kosameBrandRainFlow 800ms linear infinite;
+}
+.rain-c{
+  animation-delay:0s, -320ms;
+  opacity:.72;
+}
+.kosame-brand-runoff{
+  fill:none;
+  stroke:#35a5dd;
+  stroke-width:7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  path-length:1;
+  stroke-dasharray:.14 .86;
+  stroke-dashoffset:1;
+  opacity:0;
+  filter:drop-shadow(0 0 2px rgba(53,165,221,.24));
+  animation:kosameBrandRunoffTimeline 10s linear infinite;
+}
+.kosame-brand-drip{
+  fill:#279ed8;
+  transform-box:fill-box;
+  transform-origin:center;
+  opacity:0;
+}
+.kosame-brand-drip-main{
+  animation:kosameBrandMainDripTimeline 10s linear infinite;
+}
+.kosame-brand-drip-small{
+  animation:kosameBrandSmallDripTimeline 10s linear infinite;
+}
+
+@keyframes kosameBrandRainVisibility{
+  0%{opacity:0}
+  2%{opacity:.78}
+  28%{opacity:.78}
+  29%{opacity:0}
+  45%{opacity:0}
+  47%{opacity:.78}
+  73%{opacity:.78}
+  74%{opacity:0}
+  100%{opacity:0}
+}
+@keyframes kosameBrandRainFlow{
+  from{stroke-dashoffset:28}
+  to{stroke-dashoffset:0}
+}
+@keyframes kosameBrandRunoffTimeline{
+  0%,5%{opacity:0;stroke-dashoffset:1}
+  7%{opacity:.92;stroke-dashoffset:1}
+  24%{opacity:.92;stroke-dashoffset:.06}
+  25%,45%{opacity:0;stroke-dashoffset:0}
+  46%,47%{opacity:0;stroke-dashoffset:1}
+  49%{opacity:.92;stroke-dashoffset:1}
+  66%{opacity:.92;stroke-dashoffset:.06}
+  67%,100%{opacity:0;stroke-dashoffset:0}
+}
+@keyframes kosameBrandMainDripTimeline{
+  0%,23%{opacity:0;transform:translateY(0) scale(.84)}
+  24%{opacity:.92;transform:translateY(0) scale(.92)}
+  28%{opacity:0;transform:translateY(60px) scale(1)}
+  29%,64%{opacity:0;transform:translateY(0) scale(.84)}
+  65%{opacity:.92;transform:translateY(0) scale(.92)}
+  69%{opacity:0;transform:translateY(60px) scale(1)}
+  70%,100%{opacity:0;transform:translateY(0) scale(.84)}
+}
+@keyframes kosameBrandSmallDripTimeline{
+  0%,24%{opacity:0;transform:translateY(0) scale(.72)}
+  25%{opacity:.58;transform:translateY(0) scale(.78)}
+  29%{opacity:0;transform:translateY(40px) scale(.88)}
+  30%,65%{opacity:0;transform:translateY(0) scale(.72)}
+  66%{opacity:.58;transform:translateY(0) scale(.78)}
+  70%{opacity:0;transform:translateY(40px) scale(.88)}
+  71%,100%{opacity:0;transform:translateY(0) scale(.72)}
+}
+@keyframes kosameBrandUmbrellaTimeline{
+  0%,28%{transform:translateY(0) rotate(0deg)}
+  31%{transform:translateY(-1.5px) rotate(-4.5deg)}
+  36%{transform:translateY(0) rotate(4deg)}
+  42%{transform:translateY(-.8px) rotate(-2.5deg)}
+  45%,73%{transform:translateY(0) rotate(0deg)}
+  76%{transform:translateY(-1.5px) rotate(-4.5deg)}
+  82%{transform:translateY(0) rotate(4deg)}
+  90%{transform:translateY(-.8px) rotate(-2.5deg)}
+  95%{transform:translateY(0) rotate(1deg)}
+  100%{transform:translateY(0) rotate(0deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
+  .kosame-brand-rain-line{animation:none!important;opacity:0!important}
+  .kosame-brand-runoff{animation:none!important;opacity:0!important}
+  .kosame-brand-drip{animation:none!important;opacity:0!important}
+}
+
+.topbar-brand{
+  display:flex;flex-direction:column;gap:1px;
+  white-space:nowrap;
+}
+.tbg{
   font-family:"Shippori Mincho",serif;
-  font-size:15px;font-weight:600;color:#d4bc7d;
-  letter-spacing:0.24em;white-space:nowrap;
+  font-size:17px;font-weight:650;color:#d4bc7d;
+  letter-spacing:0.28em;line-height:1.2;
 }
-.topbar-subtitle{
-  font-size:13px;color:#eef4f8;white-space:nowrap;
+.tbs{
+  font-family:"Shippori Mincho",serif;
+  font-size:11px;font-weight:400;color:rgba(190,206,222,0.58);
+  letter-spacing:0.16em;line-height:1.2;
 }
-.topbar-divider{width:1px;height:20px;background:var(--border)}
+.topbar-divider{width:1px;height:26px;background:rgba(212,188,125,0.20)}
 .topbar-title{
-  font-size:14px;color:var(--gold-refined);
-  letter-spacing:1px;
+  font-size:12px;font-weight:400;color:rgba(224,232,242,0.52);
+  letter-spacing:0.12em;
+  margin-left:6px;
 }
 .topbar-right{display:flex;align-items:center;gap:16px}
 .topbar-user{
@@ -308,18 +485,11 @@ body::before{
   line-height:1.4;
   word-break:normal;overflow-wrap:break-word;
 }
-.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
-.card-tag{
-  font-size:10.5px;color:#a9bccb;
-  background:rgba(212,188,125,0.08);border-radius:5px;
-  padding:3px 8px;letter-spacing:0.02em;
-}
-.nav-card-desc,.tool-card-desc{
+.tool-card-desc{
   font-size:12.5px;color:#9fb4c4;
-  line-height:1.55;letter-spacing:0.01em;
-  word-break:normal;overflow-wrap:break-word;
+  letter-spacing:0.01em;margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.nav-card-footnote,.tool-card-footnote{font-size:10px;color:var(--text-dim);margin-top:6px}
 .quick-shortcuts-wrap{margin-bottom:24px;padding:0}
 .quick-card{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(8,20,36,0.97) 0%,rgba(2,7,14,0.99) 100%);border:1px solid rgba(212,188,125,0.5);border-radius:10px;padding:13px 20px;cursor:pointer;transition:transform 0.15s var(--ease),border-color 0.15s var(--ease),background 0.15s var(--ease),box-shadow 0.15s var(--ease);flex:1;min-width:160px;max-width:280px}
 .quick-card:hover{transform:translateY(-1px);border-color:rgba(212,188,125,0.85);background:linear-gradient(180deg,rgba(12,32,54,0.97) 0%,rgba(4,14,26,0.99) 100%);box-shadow:0 6px 18px rgba(0,0,0,0.32),0 0 18px rgba(212,188,125,0.12)}
@@ -416,17 +586,22 @@ body::before{
 
 /* ═══ FLOATING CALCULATOR ═══ */
 .calc-float-btn{
-  position:fixed;bottom:24px;right:24px;z-index:500;
-  width:76px;height:76px;border-radius:50%;
-  background:linear-gradient(135deg,var(--gold),var(--gold-light));
-  color:var(--navy);border:none;font-size:32px;font-weight:700;
-  cursor:pointer;box-shadow:0 4px 20px rgba(200,169,106,0.30);
-  transition:all 0.25s var(--ease);
-  display:flex;align-items:center;justify-content:center;
+  position:fixed;bottom:32px;right:32px;z-index:500;
+  box-sizing:border-box;
+  width:72px;height:72px;padding:14px;
+  border-radius:20px;
+  border:1px solid rgba(212,188,125,0.42);
+  background:linear-gradient(145deg,rgba(10,29,54,0.94),rgba(3,12,25,0.96));
+  box-shadow:0 16px 34px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  cursor:pointer;
+  opacity:.92;
+  transition:opacity 0.2s var(--ease),transform 0.2s var(--ease);
+  display:grid;place-items:center;
 }
-.calc-float-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(200,169,106,0.45)}
-.calc-float-btn:active{transform:scale(0.95)}
-@media(prefers-reduced-motion:reduce){.calc-float-btn{transition:none}.calc-float-btn:hover{transform:none}}
+.calc-float-icon{width:38px;height:38px;object-fit:contain;display:block;pointer-events:none;opacity:1;filter:brightness(1.28) contrast(1.22) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12))}
+.calc-float-btn:hover,.calc-float-btn:focus-visible{opacity:1}
+@media(prefers-reduced-motion:reduce){.calc-float-btn{transition:none}}
 .calc-panel{
   display:none;position:fixed;bottom:110px;right:24px;z-index:501;
   width:410px;height:560px;
@@ -677,9 +852,7 @@ body::before{
 
 
 /* ═══ KOSAME DOCK ═══ */
-.kosame-dock-btn{cursor:pointer;transition:transform 0.2s var(--ease),filter 0.2s var(--ease);border-radius:50%}
-.kosame-dock-btn:hover,.kosame-dock-btn:focus-visible{transform:scale(1.1);filter:drop-shadow(0 0 6px rgba(212,188,125,0.5))}
-.kosame-dock-btn:active{transform:scale(0.95)}
+.kosame-dock-btn{cursor:pointer}
 .kosame-dock-btn:focus-visible{outline:1px solid rgba(212,188,125,0.65);outline-offset:4px}
 .kosame-dock-tooltip{
   position:absolute;left:0;bottom:calc(100% + 8px);
@@ -698,7 +871,7 @@ body::before{
 @media(prefers-reduced-motion:reduce){
   .kosame-dock-btn,.kosame-dock-tooltip{transition:none}
 }
-.kosame-dock-menu{display:none;position:fixed;bottom:96px;left:20px;z-index:1501;width:210px;max-width:calc(100vw - 32px);max-height:calc(100vh - 120px);overflow:auto;background:rgba(8,20,36,0.98);border:1px solid rgba(212,188,125,0.45);border-radius:12px;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,0.45),0 0 0 1px rgba(212,188,125,0.06)}
+.kosame-dock-menu{display:none;position:fixed;bottom:126px;left:20px;z-index:1501;width:210px;max-width:calc(100vw - 32px);max-height:calc(100vh - 150px);overflow:auto;background:rgba(8,20,36,0.98);border:1px solid rgba(212,188,125,0.45);border-radius:12px;padding:6px 0;box-shadow:0 8px 32px rgba(0,0,0,0.45),0 0 0 1px rgba(212,188,125,0.06)}
 .kosame-dock-menu.open{display:block}
 .kosame-dock-item{display:block;width:100%;padding:8px 16px;font-size:12px;color:var(--text-muted);text-decoration:none;background:none;border:none;cursor:pointer;text-align:left;transition:all 0.15s}
 .kosame-dock-item:hover{color:var(--gold);background:rgba(200,169,106,0.08)}
@@ -706,16 +879,26 @@ body::before{
 
 /* ═══ KOSAME UMBRELLA STATUS ═══ */
 .kosame-status{
-  position:fixed;bottom:20px;left:20px;z-index:1500;display:none;
-  width:44px;height:70px;pointer-events:auto;
+  position:fixed;bottom:28px;left:28px;z-index:1500;display:none;
+  box-sizing:border-box;
+  width:72px;height:72px;padding:9px;
+  border-radius:20px;
+  border:1px solid rgba(212,188,125,0.42);
+  background:linear-gradient(145deg,rgba(10,29,54,0.94),rgba(3,12,25,0.96));
+  box-shadow:0 16px 34px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  pointer-events:auto;
 }
 .kosame-status.visible{display:block}
 .kosame-umbrella{
-  width:40px;height:auto;display:block;margin:0 auto;
-  filter:none;object-fit:contain;position:relative;z-index:1;
+  width:48px;height:auto;display:block;margin:0 auto;
+  filter:brightness(1.28) contrast(1.22) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12));object-fit:contain;position:relative;z-index:1;
   transform-origin:50% 20%;
+  opacity:1;transition:opacity 0.2s var(--ease);
   /* 左下Dockは静かなボタンとして常時静止。揺れは左上ブランド傘のみに限定する */
 }
+.kosame-dock-btn:hover .kosame-umbrella,.kosame-dock-btn:focus-visible .kosame-umbrella{opacity:1}
+@media(prefers-reduced-motion:reduce){.kosame-umbrella{transition:none}}
 .kosame-raindrop{
   position:absolute;top:44px;width:2px;height:8px;
   background:rgba(79,195,247,0.55);border-radius:0 0 2px 2px;
@@ -997,10 +1180,8 @@ canvas{display:block;width:100%;border-radius:8px}
 }
 @media(max-width:768px){
   .topbar{padding:0 16px}
-  .topbar-logo-wrap{width:50px;height:50px}
-  .topbar-logo-img{width:32px}
-  .topbar-kosame{font-size:13px}
-  .topbar-subtitle,.topbar-divider{display:none}
+  .tbg{font-size:14px}.tbs{font-size:10px}
+  .topbar-divider{display:none}
   .topbar-title{display:none}
   .content{padding:20px 16px}
   .nav-cards{grid-template-columns:repeat(2,1fr);gap:10px}
@@ -1017,16 +1198,15 @@ canvas{display:block;width:100%;border-radius:8px}
   .form-grid-3{grid-template-columns:1fr 1fr}
   .tool-grid{grid-template-columns:1fr}
   .auth-box{padding:36px 28px}
-  .calc-float-btn{bottom:16px;right:16px;width:68px;height:68px;font-size:28px}
+  .calc-float-btn{bottom:24px;right:24px}
+  .calc-float-icon{width:38px;height:auto}
   .calc-panel{bottom:94px;right:16px;width:calc(100vw - 32px)}
 }
 @media(max-width:480px){
   .nav-cards{grid-template-columns:1fr}
   .nav-cards-3col{grid-template-columns:1fr}
   .nav-cards-core{grid-template-columns:1fr}
-  .topbar-logo-wrap{width:42px;height:42px}
-  .topbar-logo-img{width:28px}
-  .topbar-kosame{font-size:11px}
+  .tbg{font-size:12px}.tbs{font-size:9px}
   .topbar-title{font-size:12px}
   .form-grid-3{grid-template-columns:1fr}
   .tool-title{font-size:19px}
@@ -1037,40 +1217,45 @@ canvas{display:block;width:100%;border-radius:8px}
 /* DASHBOARD CARD OVERRIDES */
 .tool-card{
   position:relative!important;display:block!important;
-  min-height:124px!important;
-  padding:22px 190px 22px 28px!important;
+  min-height:168px!important;
+  padding:20px 24px!important;
   overflow:hidden!important;
+  background:linear-gradient(180deg, rgba(9,27,58,0.94), rgba(5,18,40,0.98))!important;
+  border:1px solid rgba(199,163,84,0.42)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02), 0 10px 28px rgba(0,0,0,0.30)!important;
 }
 .tool-card .tool-card-body{
-  position:relative;z-index:2;min-width:0;max-width:100%;
+  position:relative;z-index:2;min-width:0;max-width:52%;
 }
 .tool-card-title{
   max-width:100%;white-space:normal;word-break:keep-all;overflow-wrap:normal;line-height:1.35;
 }
+.tool-card-subtitle{
+  display:block;font-size:10px;letter-spacing:0.1em;color:rgba(212,176,92,0.55);
+  margin:-2px 0 6px;text-transform:uppercase;
+}
 .tool-card .card-visual{
   position:absolute!important;z-index:1;
-  right:22px;top:50%;transform:translateY(-50%);
-  width:160px;height:100px;
+  right:10px;top:50%;bottom:auto;
+  transform:translateY(-50%);
+  width:48%;height:80%;
   display:flex!important;align-items:center;justify-content:center;
-  opacity:.95!important;visibility:visible!important;pointer-events:none;overflow:visible;
+  pointer-events:none;overflow:visible;
 }
 .tool-card .card-visual-img{
-  display:block!important;width:100%!important;height:100%!important;max-width:none!important;
-  object-fit:contain;opacity:1!important;
-  filter:drop-shadow(0 0 12px rgba(216,181,106,.16));
+  display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+  object-fit:contain;opacity:.95!important;
+  filter:none;transform:none;
 }
-.tool-card:hover .card-visual-img{transform:translateX(2px)}
 .tool-card>.icon-ring,.tool-card>.card-arrow{display:none!important}
 
-/* 横長カード(cols-1: ライフプラン・相続・税務 / 事業保障・退職金・法人保険)は右画像を大きく */
-.tool-cards-row.cols-1 .tool-card{padding-right:250px!important}
-.tool-cards-row.cols-1 .card-visual{width:210px;height:112px}
+/* 横長カード(cols-1: ライフプラン・相続 / 税務計算 / 事業保障・退職金確認)は右画像をさらに大きく */
+.tool-cards-row.cols-1 .card-visual{width:44%;height:84%}
 
-/* 営業支援カードも同方式・やや大きめ */
-#sales-support-content .tool-card{min-height:150px!important;padding-right:250px!important}
-#sales-support-content .card-visual{width:210px;height:112px}
+/* 営業支援カードも同方式 */
+#sales-support-content .tool-card{min-height:190px!important}
 
-@media(max-width:768px){.tool-card{padding:20px 24px!important}.card-visual{display:none!important}}
+@media(max-width:768px){.tool-card{padding:20px 24px!important}.card-visual{display:none!important}.tool-card .tool-card-body{max-width:100%}}
 </style>
 </head>
 <body>
@@ -1079,9 +1264,10 @@ canvas{display:block;width:100%;border-radius:8px}
 <div id="auth-overlay">
   <div id="auth-setup-box" class="auth-box" style="display:none">
     <div class="auth-logo">
-      <img class="auth-logo-img" src="assets/sales-console/auth/auth-brand-lockup.png" alt="KOSAME Sales Console">
+      <img class="auth-logo-img" src="assets/sales-console/auth-brand-lockup.png" alt="KOSAME Sales Console">
       <div class="auth-logo-sub">Meeting Desk / Proposal Support</div>
     </div>
+    <div class="auth-form-grid">
     <div class="auth-field">
       <svg class="auth-field-icon" viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><polyline points="3,6 12,13 21,6"/></svg>
       <input type="email" id="setup-email" class="auth-input" placeholder="管理者メールアドレス">
@@ -1097,14 +1283,16 @@ canvas{display:block;width:100%;border-radius:8px}
       <button type="button" class="auth-field-eye" onclick="toggleAuthPwVisibility('setup-pw2', this)" tabindex="-1" aria-label="パスワードを表示"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
     <button class="auth-btn" onclick="setupAdmin()">作成</button>
+    </div>
     <div id="setup-error" class="auth-error"></div>
   </div>
 
   <div id="auth-login-box" class="auth-box">
     <div class="auth-logo">
-      <img class="auth-logo-img" src="assets/sales-console/auth/auth-brand-lockup.png" alt="KOSAME Sales Console">
+      <img class="auth-logo-img" src="assets/sales-console/auth-brand-lockup.png" alt="KOSAME Sales Console">
       <div class="auth-logo-sub">Meeting Desk / Proposal Support</div>
     </div>
+    <div class="auth-form-grid">
     <div class="auth-field">
       <svg class="auth-field-icon" viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><polyline points="3,6 12,13 21,6"/></svg>
       <input type="email" id="login-email" class="auth-input" placeholder="メールアドレス" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
@@ -1115,8 +1303,6 @@ canvas{display:block;width:100%;border-radius:8px}
       <button type="button" class="auth-field-eye" onclick="toggleAuthPwVisibility('login-pw', this)" tabindex="-1" aria-label="パスワードを表示"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
     </div>
     <button class="auth-btn" id="auth-login-btn" onclick="doLogin()">ログイン</button>
-    <div id="login-error" class="auth-error"></div>
-    <div id="login-lock-msg" class="auth-lock-msg">試行回数超過 — 5分後に再試行してください</div>
     <div class="auth-notice">
       <svg class="auth-notice-icon" viewBox="0 0 24 24"><path d="M12 2l7 3v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V5z"/><polyline points="9,11.5 11,13.5 15,9"/></svg>
       <div>
@@ -1124,22 +1310,35 @@ canvas{display:block;width:100%;border-radius:8px}
         氏名・住所・電話番号・証券番号・健康情報は入力しないでください。
       </div>
     </div>
+    </div>
+    <div id="login-error" class="auth-error"></div>
+    <div id="login-lock-msg" class="auth-lock-msg">試行回数超過 — 5分後に再試行してください</div>
   </div>
 </div>
+
+<!-- ═══ LOGIN TRANSITION CURTAIN ═══ -->
+<div class="login-transition-curtain" id="login-curtain"></div>
 
 <!-- ═══ APP ═══ -->
 <div id="app">
   <header class="topbar">
     <div class="topbar-left">
       <span class="topbar-logo-wrap" aria-hidden="true">
-        <img class="topbar-logo-img" src="assets/kosame-brand-umbrella-transparent.png" alt="">
-        <span class="topbar-rain tr1"></span>
-        <span class="topbar-rain tr2"></span>
-        <span class="topbar-rain tr3"></span>
-        <span class="topbar-rain tr4"></span>
-        <span class="topbar-rain tr5"></span>
-      </span>
-      <span class="topbar-brand"><span class="tbg">KOSAME</span> Sales Console</span>
+<svg class="kosame-header-animation" viewBox="0 -110 651 810">
+<image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
+<g class="kosame-brand-rain">
+<line class="kosame-brand-rain-line rain-a" x1="190" y1="-110" x2="190" y2="106"/>
+<line class="kosame-brand-rain-line rain-b" x1="365" y1="-105" x2="365" y2="76"/>
+<line class="kosame-brand-rain-line rain-c" x1="505" y1="-100" x2="505" y2="134"/>
+</g>
+<path class="kosame-brand-runoff" pathLength="1" d="M450 101 C490 114 525 144 550 177 C577 210 598 250 608 292 C614 316 618 340 620 361"/>
+<g class="kosame-brand-drips">
+<ellipse class="kosame-brand-drip kosame-brand-drip-main" cx="620" cy="365" rx="7" ry="12"/>
+<ellipse class="kosame-brand-drip kosame-brand-drip-small" cx="612" cy="363" rx="4" ry="7"/>
+</g>
+</svg>
+</span>
+      <span class="topbar-brand"><span class="tbg">KOSAME</span><span class="tbs">Sales Console</span></span>
       <span class="topbar-divider"></span>
       <span class="topbar-title" id="topbar-title">Dashboard</span>
     </div>
@@ -1190,9 +1389,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/><line x1="7" y1="16" x2="12" y2="16"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="16.5" y1="12.5" x2="20" y2="16"/><line x1="18.2" y1="10.8" x2="21" y2="13.6"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">手書きボード</div>
-                <div class="card-tags"><span class="card-tag">ペン色</span><span class="card-tag">PNG</span></div>
-                <div class="tool-card-desc">面談中の要点や図解をその場で整理します。</div>
-                <div class="tool-card-footnote">PDF出力 / 印刷対応 — 入力内容はサーバーに保存されません</div>
+                <div class="tool-card-subtitle">Handwriting Board</div>
+                <div class="tool-card-desc">面談中の要点をその場で整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/board.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1201,8 +1399,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9,15.3 10.4,16.7 13.5,13.3"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">面談メモ</div>
-                <div class="card-tags"><span class="card-tag">メモ</span><span class="card-tag">確認事項</span></div>
-                <div class="tool-card-desc">面談内容・確認事項・次回対応を整理します。</div>
+                <div class="tool-card-subtitle">Meeting Memo</div>
+                <div class="tool-card-desc">確認事項・次回対応を記録</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/meeting-memo.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1211,8 +1409,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/><circle cx="8" cy="11" r="0.8"/><circle cx="12" cy="11" r="0.8"/><circle cx="16" cy="11" r="0.8"/><circle cx="8" cy="15" r="0.8"/><circle cx="12" cy="15" r="0.8"/><circle cx="16" cy="15" r="0.8"/><circle cx="12" cy="19" r="0.8"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">計算メモ <span class="calc-log-badge" id="calc-log-badge" style="display:none">0</span></div>
-                <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">一時集約</span></div>
-                <div class="tool-card-desc">その場の試算メモや数字の確認を整理します。</div>
+                <div class="tool-card-subtitle">Calc Memo</div>
+                <div class="tool-card-desc">その場の試算を一時集約</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/calc-memo.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1233,8 +1431,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">必要保障額の目安</div>
-                <div class="card-tags"><span class="card-tag">遺族生活費</span><span class="card-tag">教育費</span></div>
-                <div class="tool-card-desc">万一に備える金額の目安を、一般的な家計設計として確認します。</div>
+                <div class="tool-card-subtitle">Required Coverage</div>
+                <div class="tool-card-desc">万一に備える金額の目安を確認</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/required-coverage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1243,8 +1441,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="10" y1="5" x2="10" y2="11"/><path d="M15.5 18c-.3 0-2.5-1.6-2.5-3.3c0-.8.7-1.5 1.5-1.5c.4 0 .8.2 1 .5c.2-.3.6-.5 1-.5c.8 0 1.5.7 1.5 1.5c0 1.7-2.2 3.3-2.5 3.3z"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医療保障チェック</div>
-                <div class="card-tags"><span class="card-tag">公的保障</span><span class="card-tag">自己負担</span></div>
-                <div class="tool-card-desc">公的保障・自己負担・収入減少など、医療保障の確認ポイントを整理します。</div>
+                <div class="tool-card-subtitle">Medical Coverage</div>
+                <div class="tool-card-desc">医療保障の確認ポイントを整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/medical-coverage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1253,8 +1451,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">医務査定確認</div>
-                <div class="card-tags"><span class="card-tag">告知内容</span><span class="card-tag">確認ポイント</span></div>
-                <div class="tool-card-desc">告知内容や確認資料のポイントを整理します。</div>
+                <div class="tool-card-subtitle">Underwriting Check</div>
+                <div class="tool-card-desc">告知内容の確認ポイントを整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/underwriting.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1265,8 +1463,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polyline points="2,22 6,14 10,18 14,10 18,16 22,4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">ファンド確認</div>
-                <div class="card-tags"><span class="card-tag">積立</span><span class="card-tag">一時払い</span></div>
-                <div class="tool-card-desc">ファンド情報や資料の確認、推移確認を補助します。</div>
+                <div class="tool-card-subtitle">Fund Check</div>
+                <div class="tool-card-desc">資料の確認・推移確認を補助</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/fund-check.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1275,8 +1473,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><line x1="2" y1="20" x2="7" y2="14"/><circle cx="7" cy="10" r="4"/><line x1="12" y1="20" x2="22" y2="20"/><line x1="12" y1="16" x2="22" y2="16"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">健康・体格バランス</div>
-                <div class="card-tags"><span class="card-tag">BMI</span><span class="card-tag">体格目安</span></div>
-                <div class="tool-card-desc">身長・体重などの体格目安を確認します。</div>
+                <div class="tool-card-subtitle">Health Balance</div>
+                <div class="tool-card-desc">体格の目安を確認</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/health-balance.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1297,8 +1495,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/><line x1="16.5" y1="3.8" x2="18" y2="6.5"/><line x1="19.5" y1="3.8" x2="18" y2="6.5"/><line x1="18" y1="6.5" x2="18" y2="10"/><line x1="16.3" y1="7.4" x2="19.7" y2="7.4"/><line x1="16.3" y1="8.7" x2="19.7" y2="8.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">住宅ローン試算</div>
-                <div class="card-tags"><span class="card-tag">毎月返済</span><span class="card-tag">総利息</span></div>
-                <div class="tool-card-desc">返済額・金利・期間の目安を確認します。</div>
+                <div class="tool-card-subtitle">Mortgage Simulation</div>
+                <div class="tool-card-desc">返済額・金利の目安を確認</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/mortgage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1307,8 +1505,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">土地・エリア情報</div>
-                <div class="card-tags"><span class="card-tag">周辺相場</span><span class="card-tag">土地情報</span></div>
-                <div class="tool-card-desc">土地や周辺エリアの確認ポイントを整理します。</div>
+                <div class="tool-card-subtitle">Land &amp; Area Info</div>
+                <div class="tool-card-desc">土地・周辺エリアを確認</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/land-area.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1317,8 +1515,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20"/><rect x="6" y="4" width="4" height="3"/><rect x="14" y="4" width="4" height="3"/><rect x="6" y="9" width="4" height="3"/><rect x="14" y="9" width="4" height="3"/><rect x="6" y="14" width="4" height="3"/><rect x="14" y="14" width="4" height="3"/><rect x="9" y="18" width="6" height="4"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">建物価格シミュレーション</div>
-                <div class="card-tags"><span class="card-tag">建物</span><span class="card-tag">外構</span></div>
-                <div class="tool-card-desc">建物価格や付帯費用の目安を整理します。</div>
+                <div class="tool-card-subtitle">Building Price Sim</div>
+                <div class="tool-card-desc">建物価格の目安を整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/building-price.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1339,8 +1537,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M5 2h9l4 4v16H5V2z"/><polyline points="14,2 14,6 18,6"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="8" y1="15" x2="12" y2="15"/><circle cx="17" cy="17" r="3"/><circle cx="17" cy="17" r="1.3"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">ライフプラン・相続</div>
-                <div class="card-tags"><span class="card-tag">ライフプラン</span><span class="card-tag">相続</span></div>
-                <div class="tool-card-desc">家計・将来資金・相続に関する確認事項を整理します。</div>
+                <div class="tool-card-subtitle">Lifeplan &amp; Inheritance</div>
+                <div class="tool-card-desc">将来資金・相続を整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/lifeplan-inheritance.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1349,8 +1547,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2v20M6 6h9a3.5 3.5 0 010 7H8a3.5 3.5 0 000 7h10"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">税務計算</div>
-                <div class="card-tags"><span class="card-tag">概算</span><span class="card-tag">確認ポイント</span></div>
-                <div class="tool-card-desc">税務に関する概算と確認ポイントを整理します。</div>
+                <div class="tool-card-subtitle">Tax Calculation</div>
+                <div class="tool-card-desc">税務の概算を整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/tax-calculation.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1371,8 +1569,8 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><line x1="2" y1="12" x2="30" y2="12"/><polygon points="6,8 10,8 10,10 6,10" fill="none"/><polyline points="20,16 26,8 30,12" fill="none"/></svg></div>
               <div class="tool-card-body">
                 <div class="tool-card-title">事業保障・退職金確認</div>
-                <div class="card-tags"><span class="card-tag">事業保障</span><span class="card-tag">退職金</span></div>
-                <div class="tool-card-desc">事業継続・役員退職金・資金準備の考え方を整理します。</div>
+                <div class="tool-card-subtitle">Corporate Insurance</div>
+                <div class="tool-card-desc">事業継続・退職金を整理</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/corporate-insurance.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1395,8 +1593,8 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="19" rx="2" fill="none"/><polyline points="3,7 16,17 29,7"/><circle cx="16" cy="17" r="2"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">メール文章作成</div>
-                  <div class="card-tags"><span class="card-tag">フォローメール</span><span class="card-tag">提案メール</span></div>
-                  <div class="tool-card-desc">面談後の御礼・日程調整・確認連絡を作成します。</div>
+                  <div class="tool-card-subtitle">Email Compose</div>
+                  <div class="tool-card-desc">御礼・日程調整の連絡を作成</div>
                 </div>
                 <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/email-compose.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1405,8 +1603,8 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">提案資料作成</div>
-                  <div class="card-tags"><span class="card-tag">計算結果</span><span class="card-tag">提案資料</span></div>
-                  <div class="tool-card-desc">試算結果・確認事項をもとに資料の下書きを作成します。</div>
+                  <div class="tool-card-subtitle">Proposal Document</div>
+                  <div class="tool-card-desc">資料の下書きを作成</div>
                 </div>
                 <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/proposal-doc.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1415,8 +1613,8 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="25" rx="2" fill="none"/><rect x="12" y="2" width="8" height="4"/><line x1="10" y1="11" x2="22" y2="11"/><line x1="10" y1="16" x2="22" y2="16"/><line x1="10" y1="21" x2="18" y2="21"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">面談報告テンプレート</div>
-                  <div class="card-tags"><span class="card-tag">日報</span><span class="card-tag">週報</span></div>
-                  <div class="tool-card-desc">面談内容・確認事項・次回対応を社内共有用に整理します。</div>
+                  <div class="tool-card-subtitle">Report Template</div>
+                  <div class="tool-card-desc">社内共有用に整理</div>
                 </div>
                 <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/report-template.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -1425,8 +1623,8 @@ canvas{display:block;width:100%;border-radius:8px}
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><circle cx="16" cy="14" r="10" fill="none"/><polyline points="16,8 16,14 20,17"/><rect x="2" y="24" width="8" height="6" rx="1"/><line x1="13" y1="26" x2="28" y2="26"/><line x1="13" y1="29" x2="28" y2="29"/></svg></div>
                 <div class="tool-card-body">
                   <div class="tool-card-title">面談記録作成</div>
-                  <div class="card-tags"><span class="card-tag">面談要点</span><span class="card-tag">次回対応</span></div>
-                  <div class="tool-card-desc">面談の要点・確認事項・次回対応を記録します。</div>
+                  <div class="tool-card-subtitle">Meeting Minutes</div>
+                  <div class="tool-card-desc">要点・次回対応を記録</div>
                 </div>
                 <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/minutes.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -2441,9 +2639,9 @@ canvas{display:block;width:100%;border-radius:8px}
 </div>
 
 <!-- ═══ KOSAME UMBRELLA STATUS ═══ -->
-<div class="kosame-status visible kosame-dock-btn" id="kosame-status" role="button" tabindex="0" aria-expanded="false" aria-controls="kosame-dock-menu" aria-label="KOSAME Dock" onclick="toggleKosameDock()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleKosameDock();}">
+<div class="kosame-status visible kosame-dock-btn" id="kosame-status" role="button" tabindex="0" aria-expanded="false" aria-controls="kosame-dock-menu" aria-label="KOSAMEについて" onclick="toggleKosameDock()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleKosameDock();}">
   <span class="kosame-dock-tooltip">KOSAME Dock ／ メニューを開く</span>
-  <img class="kosame-umbrella" src="assets/kosame-logo-umbrella-144.png" alt="">
+  <img class="kosame-umbrella" src="assets/sales-console/brand-umbrella-transparent.png" alt="">
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
@@ -2461,7 +2659,7 @@ canvas{display:block;width:100%;border-radius:8px}
 <div class="calc-toast" id="calc-toast"></div>
 
 <!-- ═══ FLOATING CALCULATOR ═══ -->
-<button class="calc-float-btn" id="calc-float-btn" onclick="toggleCalc()" title="電卓">🧮</button>
+<button class="calc-float-btn" id="calc-float-btn" onclick="toggleCalc()" title="電卓" aria-label="電卓を開く"><img class="calc-float-icon" src="assets/sales-console/calculator-fab.png" alt=""></button>
 <div class="calc-panel" id="calc-panel">
   <div class="board-header" id="calc-header" style="margin:-16px -16px 8px;border-radius:var(--radius) var(--radius) 0 0;background:none;flex-shrink:0">
     <span class="board-header-title" style="font-size:12px">Calculator<span class="ghost" style="font-size:10px"> / 電卓</span></span>
@@ -2519,12 +2717,33 @@ let _currentSection = 'dashboard';
 function showAppUI(session) {
   const overlay = document.getElementById('auth-overlay');
   if (overlay) { overlay.style.display = 'none'; overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }
-  document.getElementById('app').classList.add('visible');
+  const app = document.getElementById('app');
+  app.classList.add('visible');
   document.getElementById('topbar-user-chip').style.display = 'inline-flex';
   document.getElementById('topbar-user-email').textContent = session.email;
   document.getElementById('topbar-logout-btn').style.display = 'inline-block';
   if (session.role === 'admin') {
     document.getElementById('topbar-admin-badge').style.display = 'inline';
+  }
+  const curtain = document.getElementById('login-curtain');
+  if (curtain) {
+    curtain.classList.add('is-active');
+    let cleared = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          let h = function() {
+            if (cleared) return;
+            cleared = true;
+            curtain.removeEventListener('transitionend', h);
+            curtain.classList.remove('is-revealing', 'is-active');
+          };
+          curtain.addEventListener('transitionend', h);
+          curtain.classList.add('is-revealing');
+          setTimeout(() => { if (!cleared) h(); }, 1600);
+        }, 100);
+      });
+    });
   }
   kosameStatus('idle');
   goDashboard();

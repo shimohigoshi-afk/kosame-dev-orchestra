@@ -230,13 +230,13 @@ input:-webkit-autofill:focus {
 .topbar-left{display:flex;align-items:center;gap:16px}
 .topbar-logo-wrap{
   position:relative;
-  width:116px;height:112px;
-  flex:0 0 116px;
+  width:61px;height:59px;
+  flex:0 0 61px;
   display:grid;place-items:center;
   overflow:visible;
 }
 .kosame-header-animation{
-  width:108px;height:124px;
+  width:52px;height:65px;
   display:block;
   overflow:visible;
 }
@@ -245,7 +245,7 @@ input:-webkit-autofill:focus {
   transform-box:fill-box;
   transform-origin:50% 15%;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.32)) drop-shadow(0 0 2px rgba(212,188,125,.12));
-  animation:kosameBrandUmbrellaTimeline 10s cubic-bezier(0.42,0,0.24,1) infinite;
+  animation:kosameBrandUmbrellaSway 4s ease-in-out infinite;
 }
 .kosame-brand-rain-line{
   fill:none;
@@ -260,31 +260,6 @@ input:-webkit-autofill:focus {
 .rain-c{
   animation-delay:0s, -320ms;
   opacity:.72;
-}
-.kosame-brand-runoff{
-  fill:none;
-  stroke:#35a5dd;
-  stroke-width:7;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  path-length:1;
-  stroke-dasharray:.14 .86;
-  stroke-dashoffset:1;
-  opacity:0;
-  filter:drop-shadow(0 0 2px rgba(53,165,221,.24));
-  animation:kosameBrandRunoffTimeline 10s linear infinite;
-}
-.kosame-brand-drip{
-  fill:#279ed8;
-  transform-box:fill-box;
-  transform-origin:center;
-  opacity:0;
-}
-.kosame-brand-drip-main{
-  animation:kosameBrandMainDripTimeline 10s linear infinite;
-}
-.kosame-brand-drip-small{
-  animation:kosameBrandSmallDripTimeline 10s linear infinite;
 }
 
 @keyframes kosameBrandRainVisibility{
@@ -302,51 +277,14 @@ input:-webkit-autofill:focus {
   from{stroke-dashoffset:28}
   to{stroke-dashoffset:0}
 }
-@keyframes kosameBrandRunoffTimeline{
-  0%,5%{opacity:0;stroke-dashoffset:1}
-  7%{opacity:.92;stroke-dashoffset:1}
-  24%{opacity:.92;stroke-dashoffset:.06}
-  25%,45%{opacity:0;stroke-dashoffset:0}
-  46%,47%{opacity:0;stroke-dashoffset:1}
-  49%{opacity:.92;stroke-dashoffset:1}
-  66%{opacity:.92;stroke-dashoffset:.06}
-  67%,100%{opacity:0;stroke-dashoffset:0}
-}
-@keyframes kosameBrandMainDripTimeline{
-  0%,23%{opacity:0;transform:translateY(0) scale(.84)}
-  24%{opacity:.92;transform:translateY(0) scale(.92)}
-  28%{opacity:0;transform:translateY(60px) scale(1)}
-  29%,64%{opacity:0;transform:translateY(0) scale(.84)}
-  65%{opacity:.92;transform:translateY(0) scale(.92)}
-  69%{opacity:0;transform:translateY(60px) scale(1)}
-  70%,100%{opacity:0;transform:translateY(0) scale(.84)}
-}
-@keyframes kosameBrandSmallDripTimeline{
-  0%,24%{opacity:0;transform:translateY(0) scale(.72)}
-  25%{opacity:.58;transform:translateY(0) scale(.78)}
-  29%{opacity:0;transform:translateY(40px) scale(.88)}
-  30%,65%{opacity:0;transform:translateY(0) scale(.72)}
-  66%{opacity:.58;transform:translateY(0) scale(.78)}
-  70%{opacity:0;transform:translateY(40px) scale(.88)}
-  71%,100%{opacity:0;transform:translateY(0) scale(.72)}
-}
-@keyframes kosameBrandUmbrellaTimeline{
-  0%,28%{transform:translateY(0) rotate(0deg)}
-  31%{transform:translateY(-1.5px) rotate(-4.5deg)}
-  36%{transform:translateY(0) rotate(4deg)}
-  42%{transform:translateY(-.8px) rotate(-2.5deg)}
-  45%,73%{transform:translateY(0) rotate(0deg)}
-  76%{transform:translateY(-1.5px) rotate(-4.5deg)}
-  82%{transform:translateY(0) rotate(4deg)}
-  90%{transform:translateY(-.8px) rotate(-2.5deg)}
-  95%{transform:translateY(0) rotate(1deg)}
-  100%{transform:translateY(0) rotate(0deg)}
+@keyframes kosameBrandUmbrellaSway{
+  0%{transform:rotate(-3.5deg)}
+  50%{transform:rotate(3.5deg)}
+  100%{transform:rotate(-3.5deg)}
 }
 @media(prefers-reduced-motion:reduce){
   .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
   .kosame-brand-rain-line{animation:none!important;opacity:0!important}
-  .kosame-brand-runoff{animation:none!important;opacity:0!important}
-  .kosame-brand-drip{animation:none!important;opacity:0!important}
 }
 
 .topbar-brand{
@@ -400,7 +338,7 @@ input:-webkit-autofill:focus {
 .section.active{display:block}
 
 /* ═══ STATUS BAR (replaces hero panel) ═══ */
-.status-bar{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+.status-bar{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
 .status-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);letter-spacing:0.04em}
 .status-chip svg{width:12px;height:12px;stroke:var(--gold);fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:0.6}
 
@@ -432,7 +370,7 @@ input:-webkit-autofill:focus {
 .nav-cards,.tool-cards-row{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:18px;
+  gap:14px;
 }
 .nav-cards-3col,.tool-cards-row.cols-3{grid-template-columns:repeat(3,1fr)}
 .tool-cards-row.cols-5{grid-template-columns:repeat(5,1fr)}
@@ -490,14 +428,6 @@ input:-webkit-autofill:focus {
   letter-spacing:0.01em;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.quick-shortcuts-wrap{margin-bottom:24px;padding:0}
-.quick-card{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(8,20,36,0.97) 0%,rgba(2,7,14,0.99) 100%);border:1px solid rgba(212,188,125,0.5);border-radius:10px;padding:13px 20px;cursor:pointer;transition:transform 0.15s var(--ease),border-color 0.15s var(--ease),background 0.15s var(--ease),box-shadow 0.15s var(--ease);flex:1;min-width:160px;max-width:280px}
-.quick-card:hover{transform:translateY(-1px);border-color:rgba(212,188,125,0.85);background:linear-gradient(180deg,rgba(12,32,54,0.97) 0%,rgba(4,14,26,0.99) 100%);box-shadow:0 6px 18px rgba(0,0,0,0.32),0 0 18px rgba(212,188,125,0.12)}
-@media(prefers-reduced-motion:reduce){.quick-card{transition:none}.quick-card:hover{transform:none}}
-.quick-card-icon{width:29px;height:29px;flex:none;stroke:var(--gold-refined);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.quick-card-label{font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;color:#f5f8fb;white-space:nowrap;letter-spacing:0.02em}
-.quick-shortcuts{display:flex;gap:10px;flex-wrap:wrap}
-.quick-shortcuts-label{font-size:10.5px;letter-spacing:0.2em;color:var(--gold-refined);font-weight:700;margin-bottom:12px}
 .tool-card-body{flex:1;min-width:0;position:relative;z-index:1}
 .nav-card-wm,.nav-card-core-wm,.card-watermark{
   position:absolute;right:-10px;bottom:-10px;top:auto;transform:none;
@@ -589,18 +519,18 @@ input:-webkit-autofill:focus {
   position:fixed;bottom:32px;right:32px;z-index:500;
   box-sizing:border-box;
   width:72px;height:72px;padding:14px;
-  border-radius:20px;
-  border:1px solid rgba(212,188,125,0.42);
-  background:linear-gradient(145deg,rgba(10,29,54,0.94),rgba(3,12,25,0.96));
+  border-radius:14px;
+  border:0.5px solid rgba(212,188,125,0.4);
+  background:rgba(212,188,125,0.06);
   box-shadow:0 16px 34px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.04);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   cursor:pointer;
   opacity:.92;
-  transition:opacity 0.2s var(--ease),transform 0.2s var(--ease);
+  transition:opacity 0.2s var(--ease),background 0.2s var(--ease),transform 0.2s var(--ease);
   display:grid;place-items:center;
 }
-.calc-float-icon{width:38px;height:38px;object-fit:contain;display:block;pointer-events:none;opacity:1;filter:brightness(1.28) contrast(1.22) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12))}
-.calc-float-btn:hover,.calc-float-btn:focus-visible{opacity:1}
+.calc-float-icon{width:38px;height:38px;object-fit:contain;display:block;pointer-events:none;opacity:1;filter:brightness(1.35) contrast(1.2) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12))}
+.calc-float-btn:hover,.calc-float-btn:focus-visible{opacity:1;background:rgba(212,188,125,0.12)}
 @media(prefers-reduced-motion:reduce){.calc-float-btn{transition:none}}
 .calc-panel{
   display:none;position:fixed;bottom:110px;right:24px;z-index:501;
@@ -630,6 +560,20 @@ input:-webkit-autofill:focus {
 .resize-handle svg{width:13px;height:13px;stroke:rgba(212,188,125,0.55);fill:none;stroke-width:1.4;stroke-linecap:round}
 .resize-handle:hover svg{stroke:rgba(212,188,125,0.95)}
 .memo-panel.memo-maximized .resize-handle,.cmemo-panel.cmemo-maximized .resize-handle{display:none}
+/* ═══ Drag/resize performance: kill expensive repaints while pointer is down ═══ */
+.panel-dragging{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:none!important}
+/* ═══ 8-direction resize handles (board/memo/cmemo/workspace 共通) ═══ */
+.rz8{position:absolute;z-index:20;touch-action:none}
+.rz8:hover,.rz8.rz8-active{background:rgba(212,188,125,0.16)}
+.rz8-n{top:-4px;left:10px;right:10px;height:8px;cursor:ns-resize}
+.rz8-s{bottom:-4px;left:10px;right:10px;height:8px;cursor:ns-resize}
+.rz8-e{right:-4px;top:10px;bottom:10px;width:8px;cursor:ew-resize}
+.rz8-w{left:-4px;top:10px;bottom:10px;width:8px;cursor:ew-resize}
+.rz8-ne{top:-4px;right:-4px;width:16px;height:16px;cursor:nesw-resize}
+.rz8-nw{top:-4px;left:-4px;width:16px;height:16px;cursor:nwse-resize}
+.rz8-se{bottom:-4px;right:-4px;width:16px;height:16px;cursor:nwse-resize}
+.rz8-sw{bottom:-4px;left:-4px;width:16px;height:16px;cursor:nesw-resize}
+.board-panel.wb-maximized .rz8,.memo-panel.memo-maximized .rz8,.cmemo-panel.cmemo-maximized .rz8{display:none}
 .calc-panel *{min-height:0}
 .calc-tabs{display:flex;gap:4px;margin:0 0 8px}
 .calc-tab{padding:3px 12px;border-radius:12px;font-size:10px;font-weight:600;color:var(--text-dim);cursor:pointer;border:1px solid rgba(200,169,106,0.15);transition:all 0.15s;white-space:nowrap}
@@ -881,18 +825,19 @@ input:-webkit-autofill:focus {
 .kosame-status{
   position:fixed;bottom:28px;left:28px;z-index:1500;display:none;
   box-sizing:border-box;
-  width:72px;height:72px;padding:9px;
-  border-radius:20px;
+  width:64px;height:64px;padding:9px;
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(212,188,125,0.42);
   background:linear-gradient(145deg,rgba(10,29,54,0.94),rgba(3,12,25,0.96));
   box-shadow:0 16px 34px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.04);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   pointer-events:auto;
 }
-.kosame-status.visible{display:block}
+.kosame-status.visible{display:flex}
 .kosame-umbrella{
-  width:48px;height:auto;display:block;margin:0 auto;
-  filter:brightness(1.28) contrast(1.22) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12));object-fit:contain;position:relative;z-index:1;
+  height:38px;width:auto;display:block;
+  filter:brightness(1.28) contrast(1.22) saturate(1.08) drop-shadow(0 0 6px rgba(212,188,125,0.28)) drop-shadow(0 0 14px rgba(212,188,125,0.12));position:relative;z-index:1;
   transform-origin:50% 20%;
   opacity:1;transition:opacity 0.2s var(--ease);
   /* 左下Dockは静かなボタンとして常時静止。揺れは左上ブランド傘のみに限定する */
@@ -900,7 +845,7 @@ input:-webkit-autofill:focus {
 .kosame-dock-btn:hover .kosame-umbrella,.kosame-dock-btn:focus-visible .kosame-umbrella{opacity:1}
 @media(prefers-reduced-motion:reduce){.kosame-umbrella{transition:none}}
 .kosame-raindrop{
-  position:absolute;top:44px;width:2px;height:8px;
+  position:absolute;top:38px;width:2px;height:8px;
   background:rgba(79,195,247,0.55);border-radius:0 0 2px 2px;
   transform:translateX(-50%);animation:none;opacity:0;
 }
@@ -932,7 +877,9 @@ input:-webkit-autofill:focus {
 }
 .workspace-panel.open{display:flex}
 .workspace-box{
+  position:relative;
   width:min(1080px,calc(100vw - 64px));height:calc(100vh - 96px);
+  min-width:480px;min-height:420px;
   background:rgba(8,20,36,0.99);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border:1px solid rgba(200,169,106,0.42);
@@ -945,7 +892,9 @@ input:-webkit-autofill:focus {
   padding:14px 20px;flex-shrink:0;
   background:rgba(12,28,48,0.95);
   border-bottom:1px solid rgba(200,169,106,0.15);
+  cursor:grab;user-select:none;
 }
+.ws-header:active{cursor:grabbing}
 .ws-header-icon{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .ws-header-info{flex:1;min-width:0}
 .ws-header-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:0.04em}
@@ -1221,7 +1170,7 @@ canvas{display:block;width:100%;border-radius:8px}
   padding:20px 24px!important;
   overflow:hidden!important;
   background:linear-gradient(180deg, rgba(9,27,58,0.94), rgba(5,18,40,0.98))!important;
-  border:1px solid rgba(199,163,84,0.42)!important;
+  border:0.5px solid rgba(212,188,125,0.18)!important;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02), 0 10px 28px rgba(0,0,0,0.30)!important;
 }
 .tool-card .tool-card-body{
@@ -1238,7 +1187,7 @@ canvas{display:block;width:100%;border-radius:8px}
   position:absolute!important;z-index:1;
   right:10px;top:50%;bottom:auto;
   transform:translateY(-50%);
-  width:48%;height:80%;
+  width:44%;height:74%;
   display:flex!important;align-items:center;justify-content:center;
   pointer-events:none;overflow:visible;
 }
@@ -1328,13 +1277,7 @@ canvas{display:block;width:100%;border-radius:8px}
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 <g class="kosame-brand-rain">
 <line class="kosame-brand-rain-line rain-a" x1="190" y1="-110" x2="190" y2="106"/>
-<line class="kosame-brand-rain-line rain-b" x1="365" y1="-105" x2="365" y2="76"/>
 <line class="kosame-brand-rain-line rain-c" x1="505" y1="-100" x2="505" y2="134"/>
-</g>
-<path class="kosame-brand-runoff" pathLength="1" d="M450 101 C490 114 525 144 550 177 C577 210 598 250 608 292 C614 316 618 340 620 361"/>
-<g class="kosame-brand-drips">
-<ellipse class="kosame-brand-drip kosame-brand-drip-main" cx="620" cy="365" rx="7" ry="12"/>
-<ellipse class="kosame-brand-drip kosame-brand-drip-small" cx="612" cy="363" rx="4" ry="7"/>
 </g>
 </svg>
 </span>
@@ -1361,20 +1304,6 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="status-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg> Local only</span>
         <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg> No server save</span>
         <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print ready</span>
-      </div>
-
-
-      <!-- ═══ よく使う項目 ═══ -->
-      <div class="quick-shortcuts-wrap">
-        <div class="quick-shortcuts-label">よく使う項目</div>
-        <div class="quick-shortcuts">
-          <div class="quick-card" onclick="openWorkspace('insurance')"><svg class="quick-card-icon" viewBox="0 0 24 24"><path d="M12 2L4 8v6c0 5 4 8 8 8s8-3 8-8V8z"/><line x1="9" y1="12" x2="11" y2="14"/><line x1="11" y1="14" x2="15" y2="10"/></svg><span class="quick-card-label">必要保障額</span></div>
-          <div class="quick-card" onclick="openWorkspace('mortgage')"><svg class="quick-card-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><rect x="9" y="14" width="6" height="9"/></svg><span class="quick-card-label">住宅ローン試算</span></div>
-          <div class="quick-card" onclick="openBoard()"><svg class="quick-card-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg><span class="quick-card-label">手書きボード</span></div>
-          <div class="quick-card" onclick="openMemo()"><svg class="quick-card-icon" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg><span class="quick-card-label">面談メモ</span></div>
-          <div class="quick-card" onclick="openCmemo()"><svg class="quick-card-icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8" cy="7" r="0.8"/><circle cx="12" cy="7" r="0.8"/><circle cx="16" cy="7" r="0.8"/></svg><span class="quick-card-label">計算メモ</span></div>
-          <div class="quick-card" onclick="openWorkspace('underwriting')"><svg class="quick-card-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg><span class="quick-card-label">医務査定確認</span></div>
-        </div>
       </div>
 
       <!-- MEETING DESK -->
@@ -2592,12 +2521,12 @@ canvas{display:block;width:100%;border-radius:8px}
       <div><span style="font-size:11px;color:var(--text-dim)">次回アクション</span><textarea class="memo-textarea" id="memo-actions-fl" style="height:80px" placeholder="次回面談までに準備すること"></textarea></div>
     </div>
     <div class="board-toolbar" style="justify-content:flex-end">
+      <button class="board-btn clear" onclick="memoOpenWindow()" title="別ウィンドウで開く">別ウィンドウで開く</button>
       <button class="board-btn print" onclick="memoPrintCurrent()">現在ページ印刷</button>
       <button class="board-btn clear" onclick="memoSavePng()">PNG保存</button>
     </div>
     <div class="board-notice">入力内容はサーバーに保存されません。印刷・PNG保存はご利用端末上で行われます。</div>
   </div>
-  <div class="resize-handle" id="memo-resize-handle" title="ドラッグしてサイズ変更"><svg viewBox="0 0 16 16"><line x1="13" y1="3" x2="3" y2="13"/><line x1="13" y1="7" x2="7" y2="13"/><line x1="13" y1="11" x2="11" y2="13"/></svg></div>
 </div>
 
 <!-- ═══ FLOATING CALC MEMO ═══ -->
@@ -2615,18 +2544,18 @@ canvas{display:block;width:100%;border-radius:8px}
       <div style="text-align:center;color:var(--text-dim);padding:20px;font-size:12px">まだ計算結果が追加されていません</div>
     </div>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button class="board-btn clear" onclick="cmemoOpenWindow()" title="別ウィンドウで開く">別ウィンドウで開く</button>
       <button class="board-btn clear" onclick="calcLogCopy()">📋 コピー</button>
       <button class="board-btn print" onclick="calcLogPrint()">印刷</button>
       <button class="board-btn clear" style="margin-left:auto" onclick="calcLogClear()">全クリア</button>
     </div>
   </div>
-  <div class="resize-handle" id="cmemo-resize-handle" title="ドラッグしてサイズ変更"><svg viewBox="0 0 16 16"><line x1="13" y1="3" x2="3" y2="13"/><line x1="13" y1="7" x2="7" y2="13"/><line x1="13" y1="11" x2="11" y2="13"/></svg></div>
 </div>
 
 <!-- ═══ WORKSPACE PANEL ═══ -->
 <div class="workspace-panel" id="workspace-panel">
-  <div class="workspace-box">
-    <div class="ws-header">
+  <div class="workspace-box" id="workspace-box">
+    <div class="ws-header" id="ws-header">
       <svg class="ws-header-icon" id="ws-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
       <div class="ws-header-info">
         <div class="ws-header-title" id="ws-title">—</div>
@@ -2641,7 +2570,7 @@ canvas{display:block;width:100%;border-radius:8px}
 <!-- ═══ KOSAME UMBRELLA STATUS ═══ -->
 <div class="kosame-status visible kosame-dock-btn" id="kosame-status" role="button" tabindex="0" aria-expanded="false" aria-controls="kosame-dock-menu" aria-label="KOSAMEについて" onclick="toggleKosameDock()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleKosameDock();}">
   <span class="kosame-dock-tooltip">KOSAME Dock ／ メニューを開く</span>
-  <img class="kosame-umbrella" src="assets/sales-console/brand-umbrella-transparent.png" alt="">
+  <img class="kosame-umbrella" src="assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" alt="">
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
   <div class="kosame-raindrop"></div>
@@ -4175,7 +4104,7 @@ function wbStandaloneHTML() {
     + '.hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0a1d36;border-bottom:1px solid rgba(200,169,106,0.2);flex-shrink:0}'
     + '.hdr svg{stroke:#C8A96A;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}'
     + '.hdr-title{font-size:13px;font-weight:600;letter-spacing:0.04em}.hdr-title .dim{color:rgba(255,255,255,0.4);font-weight:400;font-size:11px;margin-left:4px}'
-    + '.hdr-spacer{flex:1}.hdr-ind{font-size:11px;color:rgba(255,255,255,0.35)}'
+    + '.hdr-spacer{flex:1}.hdr-ind{font-size:18px;font-weight:700;color:#f6dda0;background:rgba(200,169,106,0.18);border:1px solid rgba(200,169,106,0.45);border-radius:8px;padding:4px 16px;letter-spacing:0.02em;white-space:nowrap}'
     + '.tb{display:flex;gap:6px;padding:8px 16px;flex-wrap:wrap;flex-shrink:0;background:#071628;border-bottom:1px solid rgba(200,169,106,0.1);align-items:center}'
     + '.tb button{font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7)}'
     + '.tb button:hover{background:rgba(200,169,106,0.15);color:#C8A96A;border-color:rgba(200,169,106,0.3)}'
@@ -4188,11 +4117,11 @@ function wbStandaloneHTML() {
     + '.cwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;background:#faf8f2;margin:12px;border-radius:12px;border:1px solid rgba(0,0,0,0.08);overflow:hidden}'
     + 'canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}'
     + '.note{padding:6px 16px;font-size:10px;color:rgba(255,255,255,0.3);text-align:center;flex-shrink:0}'
-    + '@media print{body>*:not(.cwrap){display:none!important}.cwrap{margin:0;border:none;border-radius:0;padding:0}}'
+    + '@media print{body>*:not(.cwrap){display:none!important}html,body{height:auto!important}.cwrap{flex:none!important;margin:0;border:none;border-radius:0;padding:0;width:100%;height:100vh}}'
     + '</style></head><body>'
     + '<div class="hdr"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>'
     + '<span class="hdr-title">Handwriting Board<span class="dim"> / 手書きボード</span></span><span class="hdr-spacer"></span>'
-    + '<span class="hdr-ind" id="pi">1/1</span></div>'
+    + '<span class="hdr-ind" id="pi">1 / 1 ページ</span></div>'
     + '<div class="tb">'
     + '<button onclick="pi.prev()">◀ 前</button><button onclick="pi.next()">次 ▶</button>'
     + '<button onclick="pi.add()">＋追加</button><button onclick="pi.del()">削除</button>'
@@ -4215,19 +4144,48 @@ function wbStandaloneHTML() {
     + '<button onclick="pi.saveAllPng()">全PNG保存</button>'
     + '</div><div class="cwrap"><canvas id="mc"></canvas></div>'
     + '<div class="note">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。</div>'
-    + '<script>var _p=' + pagesJson + ',_i=0;var pi={prev:function(){pi.save();if(_i>0)_i--;pi.load();pi.upd();},next:function(){pi.save();if(_i<_p.length-1)_i++;pi.load();pi.upd();},add:function(){pi.save();_p.splice(_i+1,0,"");_i++;pi.clear();pi.upd();},del:function(){if(_p.length<=1)return;pi.save();_p.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";},save:function(){var c=document.getElementById("mc");if(!c)return;_p[_i]=c.toDataURL("image/png");},load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);if(_p[_i]){var img=new Image();img.onload=function(){x.drawImage(img,0,0);};img.src=_p[_i];}},upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+"/"+_p.length;},savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},saveAllPng:function(){pi.save();_p.forEach(function(s,i){if(!s)return;setTimeout(function(){var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},printCur:function(){pi.save();window.print();},printAll:function(){pi.save();var w=window.open("","_blank");w.document.write("<!DOCTYPE html><html><head><meta charset=UTF-8><title>Print</title><style>.pg{page-break-after:always;text-align:center}.pg:last-child{page-break-after:auto}.pg img{max-width:100%}.pg .lbl{font-size:12px;color:#666}</style></head><body>");_p.forEach(function(s,i){w.document.write("<div class=pg><div class=lbl>Page "+(i+1)+" / "+_p.length+"</div>"+(s?"<img src="+s+">":"<div style=height:200px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999>（白紙）</div>")+"</div>");});w.document.write("</body></html>");w.document.close();setTimeout(function(){w.print();},300);},color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},eraser:function(){_erasing=!_erasing;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);_style();}};'
+    + '<script>'
+    + 'var _p=' + pagesJson + ',_i=0,_loadTok=0,_pending=false;'
+    + 'var _hasContent=_p.map(function(s){return !!s;});'
     + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_dpr=window.devicePixelRatio||1,_last=null;'
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
-    + 'function _style(){x.lineCap="round";x.lineJoin="round";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*2,12)*_dpr;}else{x.globalCompositeOperation="source-over";x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
+    + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
+    + 'function _style(){x.lineCap="round";x.lineJoin="round";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*3,18)*_dpr;}else{x.globalCompositeOperation="source-over";x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
     + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.fillStyle="#faf8f2";x.fillRect(0,0,c.width,c.height);x.drawImage(tmp,0,0,c.width,c.height);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
+    + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
+    + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
+    + 'function _stop(){_d=false;_last=null;}'
+    + 'function _bind(){c.onpointerdown=_start;c.onpointermove=_move;c.onpointerup=_stop;c.onpointerleave=_stop;c.onpointercancel=_stop;_d=false;_last=null;_style();}'
+    + 'function _wbPrintPages(list){var w=window.open("","_blank");if(!w)return;var total=_p.length;var dt=_fmtDT(new Date());var html="<!DOCTYPE html><html><head><meta charset=UTF-8><title>Print</title><style>"'
+    + '+"@page{size:A4;margin:15mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif}"'
+    + '+".pg{width:100%;height:267mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;position:relative}"'
+    + '+".pg:last-child{page-break-after:auto}.pg img{max-width:100%;max-height:calc(100% - 20px);object-fit:contain}"'
+    + '+".pg .blank{color:#999;font-size:14px;border:1px dashed #ccc;width:80%;height:60%;display:flex;align-items:center;justify-content:center}"'
+    + '+".pg .meta{position:absolute;bottom:6mm;right:8mm;font-size:10px;color:#666}"'
+    + '+"</style></head><body>";'
+    + 'list.forEach(function(item){html+="<div class=pg>"+(item.src?("<img src="+JSON.stringify(item.src)+">"):"<div class=blank>（白紙）</div>")+"<div class=meta>Page "+(item.idx+1)+" / "+total+"　"+dt+"</div></div>";});'
+    + 'html+="</body></html>";w.document.write(html);w.document.close();setTimeout(function(){w.print();},300);}'
+    + 'var pi={'
+    + 'prev:function(){pi.save();if(_i>0)_i--;pi.load();pi.upd();},'
+    + 'next:function(){pi.save();if(_i<_p.length-1)_i++;pi.load();pi.upd();},'
+    + 'add:function(){pi.save();_p.splice(_i+1,0,"");_hasContent.splice(_i+1,0,false);_i++;pi.clear();pi.upd();},'
+    + 'del:function(){if(_p.length<=1)return;pi.save();_p.splice(_i,1);_hasContent.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},'
+    + 'clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";_hasContent[_i]=false;},'
+    + 'save:function(){if(_pending)return;var c=document.getElementById("mc");if(!c)return;_p[_i]=c.toDataURL("image/png");},'
+    + 'load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");_loadTok++;var tok=_loadTok;x.clearRect(0,0,c.width,c.height);if(_p[_i]){_pending=true;var img=new Image();img.onload=function(){if(tok!==_loadTok)return;x.drawImage(img,0,0);_pending=false;};img.src=_p[_i];}else{_pending=false;}},'
+    + 'upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+" / "+_p.length+" ページ";_bind();},'
+    + 'savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},'
+    + 'saveAllPng:function(){pi.save();_p.forEach(function(s,i){if(!s)return;setTimeout(function(){var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},'
+    + 'printCur:function(){pi.save();_wbPrintPages([{src:_p[_i],idx:_i}]);},'
+    + 'printAll:function(){pi.save();var list=[];_p.forEach(function(s,i){if(_hasContent[i])list.push({src:s,idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
+    + 'color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},'
+    + 'width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},'
+    + 'eraser:function(){_erasing=!_erasing;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);_style();}'
+    + '};'
     + '_wbResize();'
     + 'var _rt;window.onresize=function(){clearTimeout(_rt);_rt=setTimeout(_wbResize,150);};'
-    + 'function _start(e){_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
-    + 'function _move(e){if(!_d||!_last)return;var p=_wbPos(e.clientX,e.clientY);var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
-    + 'function _stop(){_d=false;_last=null;}'
-    + 'c.onpointerdown=_start;c.onpointermove=_move;c.onpointerup=_stop;c.onpointerleave=_stop;c.onpointercancel=_stop;'
-    + '_style();'
+    + '_bind();'
     + 'if(_p[0]){var img=new Image();img.onload=function(){x.drawImage(img,0,0);};img.src=_p[0];}'
     + 'pi.upd();'
     + '<\/script></body></html>';
@@ -4376,6 +4334,38 @@ function toggleCmemoMaximize() {
 }
 
 /* ═══ Memo Print / PNG ═══ */
+function escHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function memoOpenWindow() {
+  const notes = document.getElementById('memo-notes-fl').value;
+  const checks = document.getElementById('memo-checks-fl').value;
+  const actions = document.getElementById('memo-actions-fl').value;
+  let w;
+  try { w = window.open('', '_blank', 'width=720,height=700'); } catch (e) { w = null; }
+  if (!w || w.closed || typeof w.closed === 'undefined') return false;
+  try {
+    w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>面談メモ</title><style>'
+      + '*{box-sizing:border-box}body{background:#040d1c;color:rgba(255,255,255,0.92);font-family:sans-serif;margin:0;padding:24px}'
+      + 'h2{color:#C8A96A;font-size:16px;margin:0 0 18px;font-weight:700}'
+      + '.sec{margin-bottom:16px}.lbl{font-size:11px;font-weight:700;color:#C8A96A;letter-spacing:0.04em;margin-bottom:6px}'
+      + 'textarea{width:100%;background:#f8f6f0;color:#222;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:12px;font-size:14px;line-height:1.7;font-family:inherit;resize:vertical}'
+      + '#t1{height:160px}#t2{height:120px}#t3{height:120px}'
+      + 'button{margin-top:14px;padding:8px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#C8A96A,#D4BC8A);color:#040d1c;font-weight:700;font-size:12px;cursor:pointer}'
+      + '.note{margin-top:16px;font-size:10px;color:rgba(255,255,255,0.35)}'
+      + '@media print{body{background:#fff;color:#000}textarea{border:1px solid #999;background:#fff}button{display:none}}'
+      + '</style></head><body>'
+      + '<h2>面談メモ / Meeting Notes</h2>'
+      + '<div class="sec"><div class="lbl">面談メモ</div><textarea id="t1">' + escHtml(notes) + '</textarea></div>'
+      + '<div class="sec"><div class="lbl">確認事項</div><textarea id="t2">' + escHtml(checks) + '</textarea></div>'
+      + '<div class="sec"><div class="lbl">次回アクション</div><textarea id="t3">' + escHtml(actions) + '</textarea></div>'
+      + '<button onclick="window.print()">印刷</button>'
+      + '<div class="note">入力内容はサーバーに保存されません。印刷はご利用端末上で行われます。</div>'
+      + '</body></html>');
+    w.document.close();
+  } catch (e) { return false; }
+  return true;
+}
 function memoPrintCurrent() {
   const notes = document.getElementById('memo-notes-fl').value;
   const checks = document.getElementById('memo-checks-fl').value;
@@ -4518,6 +4508,40 @@ function calcLogCopy() {
   }).join('\n\n');
   navigator.clipboard.writeText(text).catch(() => {});
   showToast('クリップボードにコピーしました');
+}
+function cmemoOpenWindow() {
+  let w;
+  try { w = window.open('', '_blank', 'width=720,height=700'); } catch (e) { w = null; }
+  if (!w || w.closed || typeof w.closed === 'undefined') return false;
+  const itemsHtml = calculationLog.length === 0
+    ? '<div class="empty">まだ計算結果が追加されていません</div>'
+    : calculationLog.map(function(l) {
+        return '<div class="item"><span class="type">' + escHtml(l.type) + '</span><span class="time">' + escHtml(l.time) + '</span>'
+          + (l.conditions ? '<div class="body">条件: ' + escHtml(l.conditions) + '</div>' : '')
+          + (l.results ? '<div class="body result">結果: ' + escHtml(l.results) + '</div>' : '')
+          + (l.note ? '<div class="body note">' + escHtml(l.note) + '</div>' : '')
+          + '</div>';
+      }).join('');
+  try {
+    w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>計算メモ</title><style>'
+      + 'body{background:#040d1c;color:rgba(255,255,255,0.92);font-family:sans-serif;margin:0;padding:24px}'
+      + 'h2{color:#C8A96A;font-size:16px;margin:0 0 18px;font-weight:700}'
+      + '.item{border:1px solid rgba(200,169,106,0.3);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,0.03)}'
+      + '.type{color:#C8A96A;font-weight:700;font-size:12px}.time{color:rgba(255,255,255,0.4);font-size:11px;margin-left:8px}'
+      + '.body{margin-top:4px;font-size:13px}.result{font-weight:700}.note{color:rgba(255,255,255,0.5);font-size:12px}'
+      + '.empty{text-align:center;color:rgba(255,255,255,0.4);padding:30px;font-size:13px}'
+      + 'button{margin-top:6px;padding:8px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#C8A96A,#D4BC8A);color:#040d1c;font-weight:700;font-size:12px;cursor:pointer}'
+      + '.note-ft{margin-top:16px;font-size:10px;color:rgba(255,255,255,0.35)}'
+      + '@media print{body{background:#fff;color:#000}.item{border:1px solid #ccc;background:#fff}button{display:none}}'
+      + '</style></head><body>'
+      + '<h2>計算メモ / Calculation Log</h2>'
+      + '<div id="list">' + itemsHtml + '</div>'
+      + '<button onclick="window.print()">印刷</button>'
+      + '<div class="note-ft">この内容は保存されません。</div>'
+      + '</body></html>');
+    w.document.close();
+  } catch (e) { return false; }
+  return true;
 }
 function calcLogPrint() {
   if (calculationLog.length === 0) return;
@@ -4752,7 +4776,7 @@ function makeDraggable(panelId, handleId) {
     if (_wbMaximized && panelId === 'board-panel') return;
     if (_memoMaximized && panelId === 'memo-panel') return;
     if (_cmemoMaximized && panelId === 'cmemo-panel') return;
-    if (e.target.closest('button,input,select,textarea,canvas,.resize-handle,.no-drag')) return;
+    if (e.target.closest('button,input,select,textarea,canvas,.resize-handle,.rz8,.no-drag')) return;
 
     const rect = panel.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
@@ -4768,6 +4792,7 @@ function makeDraggable(panelId, handleId) {
     panel.style.marginLeft = '0';
 
     dragging = true;
+    panel.classList.add('panel-dragging');
     if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
     e.preventDefault();
   });
@@ -4790,6 +4815,7 @@ function makeDraggable(panelId, handleId) {
   const stopDrag = function(e) {
     if (!dragging) return;
     dragging = false;
+    panel.classList.remove('panel-dragging');
     if (handle.releasePointerCapture) handle.releasePointerCapture(e.pointerId);
   };
   handle.addEventListener('pointerup', stopDrag);
@@ -4800,6 +4826,7 @@ setTimeout(function() {
   makeDraggable('calc-panel', 'calc-header');
   makeDraggable('memo-panel', 'memo-header');
   makeDraggable('cmemo-panel', 'cmemo-header');
+  makeDraggable('workspace-box', 'ws-header');
 }, 300);
 
 /* ═══ Resize handle(電卓/面談メモ/計算メモ 共通・pointer-eventsベース) ═══
@@ -4859,8 +4886,113 @@ function makeResizable(panelId, handleId, opts) {
 }
 setTimeout(function() {
   makeResizable('calc-panel', 'calc-resize-handle', { minWidth: 340, minHeight: 440 });
-  makeResizable('memo-panel', 'memo-resize-handle', { minWidth: 340, minHeight: 360, maximizedClass: 'memo-maximized' });
-  makeResizable('cmemo-panel', 'cmemo-resize-handle', { minWidth: 260, minHeight: 280, maximizedClass: 'cmemo-maximized' });
+}, 300);
+
+/* ═══ 8-direction resize (手書きボード/面談メモ/計算メモ/必要保障額 共通) ═══
+   四隅＋四辺の8ハンドルをJSで生成し、方向ごとに正しい符号でwidth/height/left/topを更新する。
+   クランプ後の実移動量からleft/topを導出することで、最小サイズ到達時に位置が反転するバグを防ぐ。 */
+function makeResizable8(panelId, opts) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  opts = opts || {};
+  const minW = opts.minWidth || 300;
+  const minH = opts.minHeight || 240;
+  const maximizedClass = opts.maximizedClass || null;
+  const dirs = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+  const handles = {};
+  dirs.forEach(function(dir) {
+    const h = document.createElement('div');
+    h.className = 'rz8 rz8-' + dir + ' no-drag';
+    h.setAttribute('aria-hidden', 'true');
+    panel.appendChild(h);
+    handles[dir] = h;
+  });
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(v, hi)); }
+
+  let resizing = false, dir = null;
+  let startX = 0, startY = 0, startW = 0, startH = 0, startLeft = 0, startTop = 0;
+
+  function onDown(activeDir) {
+    return function(e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      if (maximizedClass && panel.classList.contains(maximizedClass)) return;
+
+      const rect = panel.getBoundingClientRect();
+      panel.style.position = 'fixed';
+      panel.style.left = rect.left + 'px';
+      panel.style.top = rect.top + 'px';
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+      panel.style.transform = 'none';
+      panel.style.margin = '0';
+      panel.style.marginLeft = '0';
+
+      dir = activeDir;
+      startX = e.clientX; startY = e.clientY;
+      startW = rect.width; startH = rect.height;
+      startLeft = rect.left; startTop = rect.top;
+
+      resizing = true;
+      panel.classList.add('panel-dragging');
+      handles[activeDir].classList.add('rz8-active');
+      if (handles[activeDir].setPointerCapture) handles[activeDir].setPointerCapture(e.pointerId);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+  }
+
+  function onMove(e) {
+    if (!resizing) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    let newW = startW, newH = startH, newLeft = startLeft, newTop = startTop;
+
+    if (dir.indexOf('e') !== -1) {
+      newW = clamp(startW + dx, minW, window.innerWidth - 8 - startLeft);
+    }
+    if (dir.indexOf('w') !== -1) {
+      newW = clamp(startW - dx, minW, startLeft + startW - 8);
+      newLeft = startLeft + (startW - newW);
+    }
+    if (dir.indexOf('s') !== -1) {
+      newH = clamp(startH + dy, minH, window.innerHeight - 8 - startTop);
+    }
+    if (dir.indexOf('n') !== -1) {
+      newH = clamp(startH - dy, minH, startTop + startH - 8);
+      newTop = startTop + (startH - newH);
+    }
+
+    panel.style.width = newW + 'px';
+    panel.style.height = newH + 'px';
+    panel.style.left = newLeft + 'px';
+    panel.style.top = newTop + 'px';
+  }
+
+  const stopResize = function(e) {
+    if (!resizing) return;
+    resizing = false;
+    panel.classList.remove('panel-dragging');
+    if (handles[dir]) {
+      handles[dir].classList.remove('rz8-active');
+      if (handles[dir].releasePointerCapture) {
+        try { handles[dir].releasePointerCapture(e.pointerId); } catch (err) {}
+      }
+    }
+    dir = null;
+  };
+
+  dirs.forEach(function(d) {
+    handles[d].addEventListener('pointerdown', onDown(d));
+    handles[d].addEventListener('pointermove', onMove);
+    handles[d].addEventListener('pointerup', stopResize);
+    handles[d].addEventListener('pointercancel', stopResize);
+  });
+}
+setTimeout(function() {
+  makeResizable8('board-panel', { minWidth: 520, minHeight: 380 });
+  makeResizable8('memo-panel', { minWidth: 360, minHeight: 300, maximizedClass: 'memo-maximized' });
+  makeResizable8('cmemo-panel', { minWidth: 360, minHeight: 300, maximizedClass: 'cmemo-maximized' });
+  makeResizable8('workspace-box', { minWidth: 480, minHeight: 420 });
 }, 300);
 
 

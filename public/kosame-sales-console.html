@@ -562,17 +562,19 @@ input:-webkit-autofill:focus {
 .memo-panel.memo-maximized .resize-handle,.cmemo-panel.cmemo-maximized .resize-handle{display:none}
 /* ═══ Drag/resize performance: kill expensive repaints while pointer is down ═══ */
 .panel-dragging{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:none!important}
-/* ═══ 8-direction resize handles (board/memo/cmemo/workspace 共通) ═══ */
-.rz8{position:absolute;z-index:20;touch-action:none}
+/* ═══ 8-direction resize handles (board/memo/cmemo/workspace 共通) ═══
+   四辺・四隅ともパネルの「内側」に正のinsetで配置する（負のoffsetで外側にはみ出させない）。
+   overflow:hidden/auto なパネルでも東・南・南東側のヒット領域が欠けないようにするための対策。 */
+.rz8{position:absolute;z-index:50;touch-action:none}
 .rz8:hover,.rz8.rz8-active{background:rgba(212,188,125,0.16)}
-.rz8-n{top:-4px;left:10px;right:10px;height:8px;cursor:ns-resize}
-.rz8-s{bottom:-4px;left:10px;right:10px;height:8px;cursor:ns-resize}
-.rz8-e{right:-4px;top:10px;bottom:10px;width:8px;cursor:ew-resize}
-.rz8-w{left:-4px;top:10px;bottom:10px;width:8px;cursor:ew-resize}
-.rz8-ne{top:-4px;right:-4px;width:16px;height:16px;cursor:nesw-resize}
-.rz8-nw{top:-4px;left:-4px;width:16px;height:16px;cursor:nwse-resize}
-.rz8-se{bottom:-4px;right:-4px;width:16px;height:16px;cursor:nwse-resize}
-.rz8-sw{bottom:-4px;left:-4px;width:16px;height:16px;cursor:nesw-resize}
+.rz8-n{top:0;left:14px;right:14px;height:10px;cursor:ns-resize}
+.rz8-s{bottom:0;left:14px;right:14px;height:10px;cursor:ns-resize}
+.rz8-e{right:0;top:14px;bottom:14px;width:10px;cursor:ew-resize}
+.rz8-w{left:0;top:14px;bottom:14px;width:10px;cursor:ew-resize}
+.rz8-ne{top:0;right:0;width:18px;height:18px;cursor:nesw-resize}
+.rz8-nw{top:0;left:0;width:18px;height:18px;cursor:nwse-resize}
+.rz8-se{bottom:0;right:0;width:18px;height:18px;cursor:nwse-resize}
+.rz8-sw{bottom:0;left:0;width:18px;height:18px;cursor:nesw-resize}
 .board-panel.wb-maximized .rz8,.memo-panel.memo-maximized .rz8,.cmemo-panel.cmemo-maximized .rz8{display:none}
 .calc-panel *{min-height:0}
 .calc-tabs{display:flex;gap:4px;margin:0 0 8px}
@@ -647,7 +649,7 @@ input:-webkit-autofill:focus {
   padding:12px 16px;
   background:rgba(12,28,48,0.95);
   border-bottom:1px solid rgba(200,169,106,0.15);
-  cursor:grab;user-select:none;
+  cursor:default;user-select:none;
 }
 .board-header:active{cursor:grabbing}
 .board-header-title{
@@ -659,9 +661,16 @@ input:-webkit-autofill:focus {
 .board-canvas-wrap{
   background:#faf8f2;border:1px solid rgba(0,0,0,0.08);
   border-radius:var(--radius-sm);overflow:hidden;
+  position:relative;
+}
+.board-canvas-wrap.wb-drop-active{outline:2px dashed var(--gold-refined);outline-offset:-2px}
+.board-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;pointer-events:none;display:none;z-index:0;
 }
 .board-canvas{
   display:block;width:100%;height:400px;cursor:crosshair;touch-action:none;
+  position:relative;z-index:1;background:transparent;
 }
 .board-toolbar{
   display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;
@@ -684,6 +693,7 @@ input:-webkit-autofill:focus {
 .wb-width-swatch:hover{background:rgba(255,255,255,0.12);color:var(--text)}
 .wb-width-swatch.active{background:rgba(212,188,125,0.20);border-color:rgba(212,188,125,0.55);color:var(--gold-refined)}
 #board-eraser-btn.active{background:rgba(212,188,125,0.22);border-color:rgba(212,188,125,0.6);color:var(--gold-refined)}
+#board-marker-btn.active{background:rgba(245,217,10,0.22);border-color:rgba(245,217,10,0.6);color:#f5d90a}
 .board-btn{
   padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;
   cursor:pointer;transition:all 0.2s;border:none;
@@ -892,7 +902,7 @@ input:-webkit-autofill:focus {
   padding:14px 20px;flex-shrink:0;
   background:rgba(12,28,48,0.95);
   border-bottom:1px solid rgba(200,169,106,0.15);
-  cursor:grab;user-select:none;
+  cursor:default;user-select:none;
 }
 .ws-header:active{cursor:grabbing}
 .ws-header-icon{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
@@ -966,6 +976,16 @@ input:-webkit-autofill:focus {
 .form-group input:focus,.form-group select:focus{
   border-color:var(--gold);background:#fffdf7;
 }
+/* 必要保障額：入力欄を拡大しコントラストを強化 */
+.ins-field{
+  height:52px;font-size:18px;font-weight:600;
+  border:1.5px solid rgba(0,0,0,0.28)!important;
+  background:#fffdf9!important;color:#0d1220!important;
+}
+.ins-field:focus{border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(200,169,106,0.25)}
+.ins-resultbox{border-color:rgba(200,169,106,0.35)}
+.ins-highlight{background:rgba(200,169,106,0.20);border-left-width:4px}
+.ins-highlight .result-highlight-value{color:#7a5f22;font-size:26px}
 
 /* Results */
 .result-box{
@@ -1962,9 +1982,9 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="card-title">収入・社会保険料</div>
             <div class="form-group" style="margin-bottom:14px">
               <label>年収（万円）</label>
-              <input type="number" id="ins-income" value="600" min="0" oninput="calcInsurance()">
+              <input type="number" class="ins-field" id="ins-income" value="600" min="0" oninput="calcInsurance()">
             </div>
-            <div class="result-box" id="ins-social" style="background:#f8f6f0">
+            <div class="result-box ins-resultbox" id="ins-social" style="background:#f8f6f0">
               <div class="result-row"><span class="result-label">健康保険料（本人負担）</span><span class="result-value" id="ins-health">—</span></div>
               <div class="result-row"><span class="result-label">厚生年金保険料（本人負担）</span><span class="result-value" id="ins-pension">—</span></div>
               <div class="result-row"><span class="result-label">雇用保険料（本人負担）</span><span class="result-value" id="ins-employ">—</span></div>
@@ -1974,30 +1994,30 @@ canvas{display:block;width:100%;border-radius:8px}
           <div class="card" style="margin-top:16px">
             <div class="card-title">遺族の必要費用</div>
             <div class="form-grid">
-              <div class="form-group"><label>月間生活費（万円）</label><input type="number" id="ins-living" value="20" min="0" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>必要年数（年）</label><input type="number" id="ins-years" value="25" min="0" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>生活費インフレ率（％/年）</label><input type="number" id="ins-inflation" value="0" min="0" step="0.1" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>教育費合計（万円）</label><input type="number" id="ins-education" value="800" min="0" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>住居費合計（万円）</label><input type="number" id="ins-housing" value="1200" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>月間生活費（万円）</label><input type="number" class="ins-field" id="ins-living" value="20" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>必要年数（年）</label><input type="number" class="ins-field" id="ins-years" value="25" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>生活費インフレ率（％/年）</label><input type="number" class="ins-field" id="ins-inflation" value="0" min="0" step="0.1" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>教育費合計（万円）</label><input type="number" class="ins-field" id="ins-education" value="800" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>住居費合計（万円）</label><input type="number" class="ins-field" id="ins-housing" value="1200" min="0" oninput="calcInsurance()"></div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-title">公的保障・必要保障額</div>
           <div class="form-grid" style="margin-bottom:14px">
-            <div class="form-group"><label>遺族年金（月額・万円）</label><input type="number" id="ins-survivor-pension" value="12" min="0" oninput="calcInsurance()"></div>
-            <div class="form-group"><label>遺族年金受給年数</label><input type="number" id="ins-pension-years" value="20" min="0" oninput="calcInsurance()"></div>
-            <div class="form-group"><label>その他の資産（万円）</label><input type="number" id="ins-assets" value="500" min="0" oninput="calcInsurance()"></div>
-            <div class="form-group"><label>既存の保険金額（万円）</label><input type="number" id="ins-existing" value="0" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>遺族年金（月額・万円）</label><input type="number" class="ins-field" id="ins-survivor-pension" value="12" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>遺族年金受給年数</label><input type="number" class="ins-field" id="ins-pension-years" value="20" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>その他の資産（万円）</label><input type="number" class="ins-field" id="ins-assets" value="500" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>既存の保険金額（万円）</label><input type="number" class="ins-field" id="ins-existing" value="0" min="0" oninput="calcInsurance()"></div>
           </div>
-          <div class="result-box">
+          <div class="result-box ins-resultbox">
             <div class="result-row"><span class="result-label">生活費総計</span><span class="result-value" id="ins-r-living">—</span></div>
             <div class="result-row"><span class="result-label">教育費 + 住居費</span><span class="result-value" id="ins-r-fixed">—</span></div>
             <div class="result-row" style="border-top:1px solid rgba(0,0,0,0.08)"><span class="result-label">必要総額</span><span class="result-value" id="ins-r-total-need">—</span></div>
             <div class="result-row"><span class="result-label">－ 遺族年金</span><span class="result-value blue" id="ins-r-pension">—</span></div>
             <div class="result-row"><span class="result-label">－ その他の資産</span><span class="result-value blue" id="ins-r-assets">—</span></div>
             <div class="result-row"><span class="result-label">－ 既存保険</span><span class="result-value blue" id="ins-r-existing">—</span></div>
-            <div class="result-highlight">
+            <div class="result-highlight ins-highlight">
               <div class="result-highlight-label">純粋に必要な保障額</div>
               <div class="result-highlight-value" id="ins-r-needed">—</div>
             </div>
@@ -2459,12 +2479,13 @@ canvas{display:block;width:100%;border-radius:8px}
   <div class="board-header" id="board-header">
     <svg width="16" height="16" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>
     <span class="board-header-title">Handwriting Board<span class="ghost"> / 手書きボード</span></span>
-    <span style="font-size:11px;color:var(--text-dim);margin-right:8px" id="board-page-ind">1/1</span>
+    <span style="font-size:18px;font-weight:700;color:#f6dda0;background:rgba(200,169,106,0.18);border:1px solid rgba(200,169,106,0.45);border-radius:8px;padding:3px 14px;letter-spacing:0.02em;margin-right:8px" id="board-page-ind">1ページ</span>
     <button class="board-btn clear" id="board-max-btn" onclick="toggleMaximize()" style="font-size:14px;padding:2px 8px" title="最大化">□</button>
     <button class="board-btn close-btn" onclick="closeBoard()">✕</button>
   </div>
   <div class="board-body">
-    <div class="board-canvas-wrap">
+    <div class="board-canvas-wrap" id="board-canvas-wrap">
+      <img class="board-bg-img" id="board-bg-img" alt="">
       <canvas class="board-canvas" id="board-canvas" onpointerdown="startDraw(event)" onpointermove="draw(event)" onpointerup="stopDraw()" onpointerleave="stopDraw()" onpointercancel="stopDraw()"></canvas>
     </div>
     <div class="board-toolbar">
@@ -2480,12 +2501,14 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="wb-color-swatch" data-color="#3b7dd8" style="background:#3b7dd8" onclick="setPenColor('#3b7dd8')" title="青"></span>
         <span class="wb-color-swatch" data-color="#3f9142" style="background:#3f9142" onclick="setPenColor('#3f9142')" title="緑"></span>
         <span class="wb-color-swatch" data-color="#c9a45c" style="background:#c9a45c" onclick="setPenColor('#c9a45c')" title="ゴールド"></span>
+        <span class="wb-color-swatch" data-color="#f5d90a" style="background:#f5d90a" onclick="setPenColor('#f5d90a')" title="黄（マーカー向け）"></span>
+        <span class="wb-color-swatch" data-color="#4fc3f7" style="background:#4fc3f7" onclick="setPenColor('#4fc3f7')" title="水色（マーカー向け）"></span>
         <span class="wb-tool-divider"></span>
         <button class="wb-width-swatch" data-width="2" onclick="setPenWidth(2)">細</button>
         <button class="wb-width-swatch active" data-width="4" onclick="setPenWidth(4)">中</button>
         <button class="wb-width-swatch" data-width="6" onclick="setPenWidth(6)">太</button>
-        <button class="wb-width-swatch" data-width="10" onclick="setPenWidth(10)">極太</button>
         <span class="wb-tool-divider"></span>
+        <button class="board-btn clear" id="board-marker-btn" onclick="toggleMarker()" title="マーカー（半透明・蛍光ペン風）">マーカー</button>
         <button class="board-btn clear" id="board-eraser-btn" onclick="toggleEraser()">消しゴム</button>
         <button class="board-btn clear" onclick="clearBoard()">クリア</button>
       </div>
@@ -2498,7 +2521,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <button class="board-btn clear" onclick="wbSaveAllPng()">全PNG保存</button>
       </div>
     </div>
-    <div class="board-notice">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。</div>
+    <div class="board-notice">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。画像・PDFをボードにドラッグ＆ドロップすると背景として配置できます（<a href="#" onclick="wbClearBackground();return false;" style="color:var(--gold-refined)">背景を削除</a>）。</div>
   </div>
 </div>
 
@@ -3373,26 +3396,39 @@ function calcLoanTaxDeduction() {
 }
 
 /* ── Insurance ── */
+/* openWorkspace() は #section-xxx の innerHTML をそのまま #ws-body に複製するため、
+   同一idの要素がドキュメント内に重複する。document.getElementById は常に最初の
+   （非表示の元セクション側の）要素を返してしまい、モーダル側の入力が反映されない
+   バグの原因だった。表示中のワークスペース内に同idの要素があればそちらを優先する。 */
+function qid(id) {
+  const panel = document.getElementById('workspace-panel');
+  if (panel && panel.classList.contains('open')) {
+    const wsBody = document.getElementById('ws-body');
+    const el = wsBody && wsBody.querySelector('#' + id);
+    if (el) return el;
+  }
+  return document.getElementById(id);
+}
 function calcInsurance() {
-  const income = parseFloat(document.getElementById('ins-income').value) || 0;
+  const income = parseFloat(qid('ins-income').value) || 0;
   const health = income * 0.0499;
   const pension = income * 0.0915;
   const employ = income * 0.006;
   const socialTotal = health + pension + employ;
-  document.getElementById('ins-health').textContent = fmt(health);
-  document.getElementById('ins-pension').textContent = fmt(pension);
-  document.getElementById('ins-employ').textContent = fmt(employ);
-  document.getElementById('ins-social-total').textContent = fmt(socialTotal);
+  qid('ins-health').textContent = fmt(health);
+  qid('ins-pension').textContent = fmt(pension);
+  qid('ins-employ').textContent = fmt(employ);
+  qid('ins-social-total').textContent = fmt(socialTotal);
 
-  const living = parseFloat(document.getElementById('ins-living').value) || 0;
-  const years = parseFloat(document.getElementById('ins-years').value) || 0;
-  const inflation = parseFloat(document.getElementById('ins-inflation').value) || 0;
-  const education = parseFloat(document.getElementById('ins-education').value) || 0;
-  const housing = parseFloat(document.getElementById('ins-housing').value) || 0;
-  const survivorPension = parseFloat(document.getElementById('ins-survivor-pension').value) || 0;
-  const pensionYears = parseFloat(document.getElementById('ins-pension-years').value) || 0;
-  const assets = parseFloat(document.getElementById('ins-assets').value) || 0;
-  const existing = parseFloat(document.getElementById('ins-existing').value) || 0;
+  const living = parseFloat(qid('ins-living').value) || 0;
+  const years = parseFloat(qid('ins-years').value) || 0;
+  const inflation = parseFloat(qid('ins-inflation').value) || 0;
+  const education = parseFloat(qid('ins-education').value) || 0;
+  const housing = parseFloat(qid('ins-housing').value) || 0;
+  const survivorPension = parseFloat(qid('ins-survivor-pension').value) || 0;
+  const pensionYears = parseFloat(qid('ins-pension-years').value) || 0;
+  const assets = parseFloat(qid('ins-assets').value) || 0;
+  const existing = parseFloat(qid('ins-existing').value) || 0;
 
   const inflR = inflation / 100;
   const yearsN = Math.max(0, Math.round(years));
@@ -3405,13 +3441,13 @@ function calcInsurance() {
   const pensionTotal = survivorPension * 12 * pensionYears;
   const needed = Math.max(0, totalNeed - pensionTotal - assets - existing);
 
-  document.getElementById('ins-r-living').textContent = fmt(livingTotal);
-  document.getElementById('ins-r-fixed').textContent = fmt(fixed);
-  document.getElementById('ins-r-total-need').textContent = fmt(totalNeed);
-  document.getElementById('ins-r-pension').textContent = fmt(pensionTotal);
-  document.getElementById('ins-r-assets').textContent = fmt(assets);
-  document.getElementById('ins-r-existing').textContent = fmt(existing);
-  document.getElementById('ins-r-needed').textContent = fmt(needed);
+  qid('ins-r-living').textContent = fmt(livingTotal);
+  qid('ins-r-fixed').textContent = fmt(fixed);
+  qid('ins-r-total-need').textContent = fmt(totalNeed);
+  qid('ins-r-pension').textContent = fmt(pensionTotal);
+  qid('ins-r-assets').textContent = fmt(assets);
+  qid('ins-r-existing').textContent = fmt(existing);
+  qid('ins-r-needed').textContent = fmt(needed);
 }
 
 /* ── Gift Tax ── */
@@ -3818,7 +3854,9 @@ function logoutUser() {
 
 /* ═══ Whiteboard ═══ */
 let _wbDrawing = false, _wbCtx = null, _wbPages = [null], _wbCurrent = 0;
-let _wbColor = '#2b2b2b', _wbWidth = 4, _wbEraser = false, _wbLastPoint = null, _wbDpr = 1;
+let _wbHasContent = [false];
+let _wbBgImages = [null];
+let _wbColor = '#2b2b2b', _wbWidth = 4, _wbEraser = false, _wbMarker = false, _wbLastPoint = null, _wbDpr = 1;
 
 function wbSaveCurrentPage() {
   const canvas = document.getElementById('board-canvas');
@@ -3834,10 +3872,138 @@ function wbLoadPage(idx) {
     img.onload = function() { _wbCtx.drawImage(img, 0, 0); };
     img.src = _wbPages[idx];
   }
+  wbRedrawWithBg();
+}
+/* ═══ 背景レイヤー（画像/PDFドラッグ&ドロップ） ═══ */
+function wbRedrawWithBg() {
+  const bgImg = document.getElementById('board-bg-img');
+  if (!bgImg) return;
+  const src = _wbBgImages[_wbCurrent];
+  if (src) {
+    bgImg.src = src;
+    bgImg.style.display = 'block';
+  } else {
+    bgImg.removeAttribute('src');
+    bgImg.style.display = 'none';
+  }
+}
+function wbSetBackground(dataUrl) {
+  _wbBgImages[_wbCurrent] = dataUrl;
+  wbRedrawWithBg();
+  showToast('背景画像を設定しました');
+}
+function wbClearBackground() {
+  _wbBgImages[_wbCurrent] = null;
+  wbRedrawWithBg();
+}
+let _wbPdfJsLoading = null;
+function wbEnsurePdfJs() {
+  if (window.pdfjsLib) return Promise.resolve();
+  if (_wbPdfJsLoading) return _wbPdfJsLoading;
+  _wbPdfJsLoading = new Promise(function(resolve, reject) {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function() {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+      resolve();
+    };
+    s.onerror = function() { reject(new Error('pdf.js load failed')); };
+    document.head.appendChild(s);
+  });
+  return _wbPdfJsLoading;
+}
+function wbHandleDroppedFile(file) {
+  if (!file) return;
+  if (file.type.indexOf('image/') === 0) {
+    const reader = new FileReader();
+    reader.onload = function(ev) { wbSetBackground(ev.target.result); };
+    reader.readAsDataURL(file);
+    return;
+  }
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '')) {
+    showToast('PDFを読み込んでいます…');
+    wbEnsurePdfJs().then(function() {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const typedArray = new Uint8Array(ev.target.result);
+        window.pdfjsLib.getDocument({ data: typedArray }).promise.then(function(pdf) {
+          return pdf.getPage(1);
+        }).then(function(page) {
+          const viewport = page.getViewport({ scale: 2 });
+          const off = document.createElement('canvas');
+          off.width = viewport.width; off.height = viewport.height;
+          const octx = off.getContext('2d');
+          return page.render({ canvasContext: octx, viewport: viewport }).promise.then(function() {
+            wbSetBackground(off.toDataURL('image/png'));
+          });
+        }).catch(function() { showToast('PDFの読み込みに失敗しました'); });
+      };
+      reader.readAsArrayBuffer(file);
+    }).catch(function() { showToast('PDFライブラリの読み込みに失敗しました'); });
+    return;
+  }
+  showToast('画像またはPDFファイルをドロップしてください');
+}
+function wbInitDragDrop() {
+  const wrap = document.getElementById('board-canvas-wrap');
+  if (!wrap || wrap.dataset.wbDropBound) return;
+  wrap.dataset.wbDropBound = '1';
+  ['dragenter', 'dragover'].forEach(function(evt) {
+    wrap.addEventListener(evt, function(e) {
+      e.preventDefault(); e.stopPropagation();
+      wrap.classList.add('wb-drop-active');
+    });
+  });
+  ['dragleave', 'dragend'].forEach(function(evt) {
+    wrap.addEventListener(evt, function(e) {
+      e.preventDefault(); e.stopPropagation();
+      wrap.classList.remove('wb-drop-active');
+    });
+  });
+  wrap.addEventListener('drop', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    wrap.classList.remove('wb-drop-active');
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) wbHandleDroppedFile(files[0]);
+  });
+}
+/* 背景+ペンを1枚に合成（印刷・PNG保存用）。背景が無ければ従来通り単層のまま返す */
+function wbCompositeForPage(idx) {
+  return new Promise(function(resolve) {
+    const strokeSrc = _wbPages[idx];
+    const bgSrc = _wbBgImages[idx];
+    if (!bgSrc) { resolve(strokeSrc); return; }
+    const canvas = document.getElementById('board-canvas');
+    const w = (canvas && canvas.width) || 800, h = (canvas && canvas.height) || 600;
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const octx = off.getContext('2d');
+    octx.fillStyle = '#faf8f2';
+    octx.fillRect(0, 0, w, h);
+    const bgImg = new Image();
+    bgImg.onload = function() {
+      const scale = Math.min(w / bgImg.width, h / bgImg.height);
+      const dw = bgImg.width * scale, dh = bgImg.height * scale;
+      const dx = (w - dw) / 2, dy = (h - dh) / 2;
+      octx.drawImage(bgImg, dx, dy, dw, dh);
+      if (strokeSrc) {
+        const strokeImg = new Image();
+        strokeImg.onload = function() { octx.drawImage(strokeImg, 0, 0, w, h); resolve(off.toDataURL('image/png')); };
+        strokeImg.onerror = function() { resolve(off.toDataURL('image/png')); };
+        strokeImg.src = strokeSrc;
+      } else {
+        resolve(off.toDataURL('image/png'));
+      }
+    };
+    bgImg.onerror = function() { resolve(strokeSrc); };
+    bgImg.src = bgSrc;
+  });
 }
 function wbUpdateIndicator() {
   const el = document.getElementById('board-page-ind');
-  if (el) el.textContent = (_wbCurrent + 1) + '/' + _wbPages.length;
+  if (el) el.textContent = (_wbCurrent + 1) + 'ページ';
 }
 function wbPrevPage() {
   if (_wbCurrent <= 0) return;
@@ -3850,6 +4016,8 @@ function wbNextPage() {
 function wbAddPage() {
   wbSaveCurrentPage();
   _wbPages.splice(_wbCurrent + 1, 0, null);
+  _wbHasContent.splice(_wbCurrent + 1, 0, false);
+  _wbBgImages.splice(_wbCurrent + 1, 0, null);
   _wbCurrent++;
   const canvas = document.getElementById('board-canvas');
   if (canvas && _wbCtx) _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3859,6 +4027,8 @@ function wbDelPage() {
   if (_wbPages.length <= 1) return;
   wbSaveCurrentPage();
   _wbPages.splice(_wbCurrent, 1);
+  _wbHasContent.splice(_wbCurrent, 1);
+  _wbBgImages.splice(_wbCurrent, 1);
   if (_wbCurrent >= _wbPages.length) _wbCurrent = _wbPages.length - 1;
   wbLoadPage(_wbCurrent); wbUpdateIndicator();
 }
@@ -3870,10 +4040,17 @@ function _wbApplyStyle() {
   if (_wbEraser) {
     _wbCtx.globalCompositeOperation = 'destination-out';
     _wbCtx.strokeStyle = 'rgba(0,0,0,1)';
-    _wbCtx.lineWidth = Math.max(_wbWidth * 2, 12) * _wbDpr;
+    _wbCtx.globalAlpha = 1;
+    _wbCtx.lineWidth = Math.max(_wbWidth * 5, 44) * _wbDpr;
+  } else if (_wbMarker) {
+    _wbCtx.globalCompositeOperation = 'source-over';
+    _wbCtx.strokeStyle = _wbColor;
+    _wbCtx.globalAlpha = 0.4;
+    _wbCtx.lineWidth = Math.max(_wbWidth * 4, 24) * _wbDpr;
   } else {
     _wbCtx.globalCompositeOperation = 'source-over';
     _wbCtx.strokeStyle = _wbColor;
+    _wbCtx.globalAlpha = 1;
     _wbCtx.lineWidth = _wbWidth * _wbDpr;
   }
 }
@@ -3895,9 +4072,21 @@ function setPenWidth(w) {
 }
 function toggleEraser() {
   _wbEraser = !_wbEraser;
+  if (_wbEraser) _wbMarker = false;
   _wbApplyStyle();
   const btn = document.getElementById('board-eraser-btn');
   if (btn) btn.classList.toggle('active', _wbEraser);
+  const mBtn = document.getElementById('board-marker-btn');
+  if (mBtn) mBtn.classList.remove('active');
+}
+function toggleMarker() {
+  _wbMarker = !_wbMarker;
+  if (_wbMarker) _wbEraser = false;
+  _wbApplyStyle();
+  const btn = document.getElementById('board-marker-btn');
+  if (btn) btn.classList.toggle('active', _wbMarker);
+  const eBtn = document.getElementById('board-eraser-btn');
+  if (eBtn) eBtn.classList.remove('active');
 }
 function initWhiteboard() {
   const canvas = document.getElementById('board-canvas');
@@ -3916,6 +4105,8 @@ function initWhiteboard() {
     img.src = _wbPages[_wbCurrent];
   }
   wbUpdateIndicator();
+  wbRedrawWithBg();
+  wbInitDragDrop();
 }
 function getWbPos(e) {
   const canvas = document.getElementById('board-canvas');
@@ -3925,14 +4116,64 @@ function getWbPos(e) {
   const sy = rect.height ? canvas.height / rect.height : 1;
   return {x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy};
 }
+/* マーカーは半透明ストロークを都度stroke()すると、線分の継ぎ目が二重に
+   ブレンドされて「点線状（ドットの数珠つなぎ）」に見えてしまう。
+   これを避けるため、ストローク中は不透明の一時レイヤーに1本の連続パスとして
+   描画し、都度「元のcanvas + 一時レイヤーをalpha=0.4で合成」した結果を
+   本canvasに描き直すことで、重なり部分も含めて均一な半透明の帯になるようにする。 */
+let _wbMarkerSnap = null, _wbMarkerTemp = null, _wbMarkerTempCtx = null;
+function _wbMarkerBegin(canvas, p) {
+  _wbMarkerSnap = document.createElement('canvas');
+  _wbMarkerSnap.width = canvas.width; _wbMarkerSnap.height = canvas.height;
+  _wbMarkerSnap.getContext('2d').drawImage(canvas, 0, 0);
+  _wbMarkerTemp = document.createElement('canvas');
+  _wbMarkerTemp.width = canvas.width; _wbMarkerTemp.height = canvas.height;
+  _wbMarkerTempCtx = _wbMarkerTemp.getContext('2d');
+  _wbMarkerTempCtx.lineCap = 'round';
+  _wbMarkerTempCtx.lineJoin = 'round';
+  _wbMarkerTempCtx.strokeStyle = _wbColor;
+  _wbMarkerTempCtx.globalAlpha = 1;
+  _wbMarkerTempCtx.lineWidth = Math.max(_wbWidth * 4, 24) * _wbDpr;
+  _wbMarkerTempCtx.beginPath();
+  _wbMarkerTempCtx.moveTo(p.x, p.y);
+  _wbMarkerTempCtx.lineTo(p.x + 0.01, p.y + 0.01);
+  _wbMarkerTempCtx.stroke();
+  _wbMarkerComposite(canvas);
+}
+function _wbMarkerExtend(canvas, from, to) {
+  _wbMarkerTempCtx.beginPath();
+  _wbMarkerTempCtx.moveTo(from.x, from.y);
+  _wbMarkerTempCtx.lineTo(to.x, to.y);
+  _wbMarkerTempCtx.stroke();
+  _wbMarkerComposite(canvas);
+}
+function _wbMarkerComposite(canvas) {
+  _wbCtx.globalAlpha = 1;
+  _wbCtx.globalCompositeOperation = 'source-over';
+  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
+  _wbCtx.drawImage(_wbMarkerSnap, 0, 0);
+  _wbCtx.globalAlpha = 0.4;
+  _wbCtx.drawImage(_wbMarkerTemp, 0, 0);
+  _wbCtx.globalAlpha = 1;
+}
+function _wbMarkerEnd() {
+  _wbMarkerSnap = null; _wbMarkerTemp = null; _wbMarkerTempCtx = null;
+}
 function startDraw(e) {
   if (!_wbCtx) return;
+  const canvas = document.getElementById('board-canvas');
+  if (!canvas) return;
   _wbDrawing = true;
+  _wbHasContent[_wbCurrent] = true;
   if (e.pointerId !== undefined && e.target && e.target.setPointerCapture) {
     try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
   }
   const p = getWbPos(e);
   _wbLastPoint = p;
+  if (_wbMarker) {
+    _wbMarkerBegin(canvas, p);
+    return;
+  }
   _wbCtx.beginPath();
   _wbCtx.moveTo(p.x, p.y);
   _wbCtx.lineTo(p.x + 0.01, p.y + 0.01);
@@ -3942,7 +4183,14 @@ function startDraw(e) {
 }
 function draw(e) {
   if (!_wbDrawing || !_wbCtx || !_wbLastPoint) return;
+  const canvas = document.getElementById('board-canvas');
+  if (!canvas) return;
   const p = getWbPos(e);
+  if (_wbMarker) {
+    _wbMarkerExtend(canvas, _wbLastPoint, p);
+    _wbLastPoint = p;
+    return;
+  }
   const midX = (_wbLastPoint.x + p.x) / 2, midY = (_wbLastPoint.y + p.y) / 2;
   _wbCtx.quadraticCurveTo(_wbLastPoint.x, _wbLastPoint.y, midX, midY);
   _wbCtx.stroke();
@@ -3953,6 +4201,7 @@ function draw(e) {
 function stopDraw() {
   _wbDrawing = false;
   _wbLastPoint = null;
+  if (_wbMarker) _wbMarkerEnd();
 }
 function clearBoard() {
   if (!_wbCtx) return;
@@ -3960,44 +4209,94 @@ function clearBoard() {
   if (!canvas) return;
   _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
   _wbPages[_wbCurrent] = null;
+  _wbHasContent[_wbCurrent] = false;
+  _wbBgImages[_wbCurrent] = null;
+  wbRedrawWithBg();
 }
 
 /* Print & PNG */
+/* ═══ 印刷：A4縦1枚に横向きボードを上下2段配置（1ページ2枚） ═══ */
+function wbFmtDateTime(d) {
+  function p(n) { return (n < 10 ? '0' : '') + n; }
+  return d.getFullYear() + '年' + p(d.getMonth() + 1) + '月' + p(d.getDate()) + '日 ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function wbTierHtml(item) {
+  if (!item) {
+    return '<div class="tier-inner"></div>';
+  }
+  return '<div class="tier-inner">'
+    + (item.src ? '<img src="' + item.src + '" alt="">' : '<div class="blank">（白紙）</div>')
+    + '<div class="tier-label">' + (item.idx + 1) + 'ページ</div>'
+    + '</div>';
+}
+function wbBuildPrintHTML(list) {
+  const dt = wbFmtDateTime(new Date());
+  let pagesHtml = '';
+  for (let i = 0; i < list.length; i += 2) {
+    const top = list[i], bottom = list[i + 1] || null;
+    pagesHtml += '<div class="ppage">'
+      + '<div class="ppage-dt">' + dt + '</div>'
+      + '<div class="tier">' + wbTierHtml(top) + '</div>'
+      + '<div class="tier">' + wbTierHtml(bottom) + '</div>'
+      + '</div>';
+  }
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>Handwriting Board Print</title><style>'
+    + '@page{size:A4 portrait;margin:12mm}'
+    + '*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif}'
+    + '.ppage{width:100%;height:273mm;display:flex;flex-direction:column;page-break-after:always}'
+    + '.ppage:last-child{page-break-after:auto}'
+    + '.ppage-dt{font-size:14px;font-weight:600;text-align:left;padding:2mm 0;flex-shrink:0;color:#222}'
+    + '.tier{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed #ccc;position:relative}'
+    + '.tier:last-child{border-bottom:none}'
+    + '.tier-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}'
+    + '.tier-inner img{max-width:96%;max-height:calc(100% - 26px);object-fit:contain}'
+    + '.tier-label{font-size:13px;color:#666;margin-top:4px}'
+    + '.blank{color:#999;font-size:14px;border:1px dashed #ccc;width:80%;height:60%;display:flex;align-items:center;justify-content:center}'
+    + '</style></head><body>' + pagesHtml + '</body></html>';
+}
+function wbPrintPages(list) {
+  if (!list.length) { showToast('印刷できる描画があるページがありません'); return; }
+  let w;
+  try { w = window.open('', '_blank'); } catch (e) { w = null; }
+  if (!w) return;
+  w.document.write(wbBuildPrintHTML(list));
+  w.document.close();
+  setTimeout(function() { w.print(); }, 300);
+}
 function wbPrintCurrent() {
   wbSaveCurrentPage();
-  window.print();
+  wbCompositeForPage(_wbCurrent).then(function(src) {
+    wbPrintPages([{ src: src, idx: _wbCurrent }]);
+  });
 }
 function wbPrintAll() {
   wbSaveCurrentPage();
-  const area = document.getElementById('whiteboard-print-area');
-  if (!area) return;
-  area.innerHTML = '';
-  _wbPages.forEach(function(src, i) {
-    const div = document.createElement('div');
-    div.className = 'wb-print-page';
-    div.innerHTML = '<div class="wb-page-label">Page ' + (i + 1) + ' / ' + _wbPages.length + '</div>'
-      + (src ? '<img src="' + src + '" alt="Page ' + (i + 1) + '"/>' : '<div style="height:200px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;color:#999">（白紙）</div>');
-    area.appendChild(div);
+  const idxs = [];
+  _wbPages.forEach(function(src, i) { if (_wbHasContent[i]) idxs.push(i); });
+  Promise.all(idxs.map(wbCompositeForPage)).then(function(srcs) {
+    const list = idxs.map(function(idx, k) { return { src: srcs[k], idx: idx }; });
+    wbPrintPages(list);
   });
-  window.print();
-  setTimeout(function() { area.innerHTML = ''; }, 500);
 }
 function wbSavePng() {
   wbSaveCurrentPage();
-  const src = _wbPages[_wbCurrent];
-  if (!src) return;
-  const a = document.createElement('a');
-  a.href = src; a.download = 'whiteboard-page-' + (_wbCurrent + 1) + '.png';
-  a.click();
+  wbCompositeForPage(_wbCurrent).then(function(src) {
+    if (!src) return;
+    const a = document.createElement('a');
+    a.href = src; a.download = 'whiteboard-page-' + (_wbCurrent + 1) + '.png';
+    a.click();
+  });
 }
 function wbSaveAllPng() {
   wbSaveCurrentPage();
   _wbPages.forEach(function(src, i) {
     if (!src) return;
     setTimeout(function() {
-      const a = document.createElement('a');
-      a.href = src; a.download = 'whiteboard-page-' + (i + 1) + '.png';
-      a.click();
+      wbCompositeForPage(i).then(function(compSrc) {
+        const a = document.createElement('a');
+        a.href = compSrc; a.download = 'whiteboard-page-' + (i + 1) + '.png';
+        a.click();
+      });
     }, i * 200);
   });
 }
@@ -4121,7 +4420,7 @@ function wbStandaloneHTML() {
     + '</style></head><body>'
     + '<div class="hdr"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>'
     + '<span class="hdr-title">Handwriting Board<span class="dim"> / 手書きボード</span></span><span class="hdr-spacer"></span>'
-    + '<span class="hdr-ind" id="pi">1 / 1 ページ</span></div>'
+    + '<span class="hdr-ind" id="pi">1ページ</span></div>'
     + '<div class="tb">'
     + '<button onclick="pi.prev()">◀ 前</button><button onclick="pi.next()">次 ▶</button>'
     + '<button onclick="pi.add()">＋追加</button><button onclick="pi.del()">削除</button>'
@@ -4131,11 +4430,13 @@ function wbStandaloneHTML() {
     + '<span class="swatch" data-c="#3b7dd8" style="background:#3b7dd8" onclick="pi.color(this,\'#3b7dd8\')" title="青"></span>'
     + '<span class="swatch" data-c="#3f9142" style="background:#3f9142" onclick="pi.color(this,\'#3f9142\')" title="緑"></span>'
     + '<span class="swatch" data-c="#c9a45c" style="background:#c9a45c" onclick="pi.color(this,\'#c9a45c\')" title="ゴールド"></span>'
+    + '<span class="swatch" data-c="#f5d90a" style="background:#f5d90a" onclick="pi.color(this,\'#f5d90a\')" title="黄（マーカー向け）"></span>'
+    + '<span class="swatch" data-c="#4fc3f7" style="background:#4fc3f7" onclick="pi.color(this,\'#4fc3f7\')" title="水色（マーカー向け）"></span>'
     + '<span class="div"></span>'
     + '<button data-w="2" onclick="pi.width(this,2)">細</button>'
     + '<button data-w="4" class="wact" onclick="pi.width(this,4)">中</button>'
     + '<button data-w="6" onclick="pi.width(this,6)">太</button>'
-    + '<button data-w="10" onclick="pi.width(this,10)">極太</button>'
+    + '<button id="markerBtn" onclick="pi.marker()" title="マーカー（半透明・蛍光ペン風）">マーカー</button>'
     + '<button id="eraserBtn" onclick="pi.eraser()">消しゴム</button>'
     + '<button onclick="pi.clear()">クリア</button><span style="flex:1"></span>'
     + '<button class="pri" onclick="pi.printCur()">現在ページ印刷</button>'
@@ -4147,25 +4448,37 @@ function wbStandaloneHTML() {
     + '<script>'
     + 'var _p=' + pagesJson + ',_i=0,_loadTok=0,_pending=false;'
     + 'var _hasContent=_p.map(function(s){return !!s;});'
-    + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_dpr=window.devicePixelRatio||1,_last=null;'
+    + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_marking=false,_dpr=window.devicePixelRatio||1,_last=null;'
+    + 'var _markSnap=null,_markTemp=null,_markTempCtx=null;'
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
     + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
-    + 'function _style(){x.lineCap="round";x.lineJoin="round";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*3,18)*_dpr;}else{x.globalCompositeOperation="source-over";x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
+    + 'function _style(){x.lineCap="round";x.lineJoin="round";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.globalAlpha=1;x.lineWidth=Math.max(_wid*5,44)*_dpr;}else if(_marking){x.globalCompositeOperation="source-over";x.strokeStyle=_col;x.globalAlpha=0.4;x.lineWidth=Math.max(_wid*4,24)*_dpr;}else{x.globalCompositeOperation="source-over";x.strokeStyle=_col;x.globalAlpha=1;x.lineWidth=_wid*_dpr;}}'
     + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.fillStyle="#faf8f2";x.fillRect(0,0,c.width,c.height);x.drawImage(tmp,0,0,c.width,c.height);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
-    + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
-    + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
-    + 'function _stop(){_d=false;_last=null;}'
+    + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="round";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=Math.max(_wid*4,24)*_dpr;_markTempCtx.beginPath();_markTempCtx.moveTo(p.x,p.y);_markTempCtx.lineTo(p.x+0.01,p.y+0.01);_markTempCtx.stroke();_markComposite();}'
+    + 'function _markExtend(from,to){_markTempCtx.beginPath();_markTempCtx.moveTo(from.x,from.y);_markTempCtx.lineTo(to.x,to.y);_markTempCtx.stroke();_markComposite();}'
+    + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.4;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
+    + 'function _markEnd(){_markSnap=null;_markTemp=null;_markTempCtx=null;}'
+    + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
+    + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
+    + 'function _stop(){_d=false;_last=null;if(_marking)_markEnd();}'
     + 'function _bind(){c.onpointerdown=_start;c.onpointermove=_move;c.onpointerup=_stop;c.onpointerleave=_stop;c.onpointercancel=_stop;_d=false;_last=null;_style();}'
-    + 'function _wbPrintPages(list){var w=window.open("","_blank");if(!w)return;var total=_p.length;var dt=_fmtDT(new Date());var html="<!DOCTYPE html><html><head><meta charset=UTF-8><title>Print</title><style>"'
-    + '+"@page{size:A4;margin:15mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif}"'
-    + '+".pg{width:100%;height:267mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;position:relative}"'
-    + '+".pg:last-child{page-break-after:auto}.pg img{max-width:100%;max-height:calc(100% - 20px);object-fit:contain}"'
-    + '+".pg .blank{color:#999;font-size:14px;border:1px dashed #ccc;width:80%;height:60%;display:flex;align-items:center;justify-content:center}"'
-    + '+".pg .meta{position:absolute;bottom:6mm;right:8mm;font-size:10px;color:#666}"'
-    + '+"</style></head><body>";'
-    + 'list.forEach(function(item){html+="<div class=pg>"+(item.src?("<img src="+JSON.stringify(item.src)+">"):"<div class=blank>（白紙）</div>")+"<div class=meta>Page "+(item.idx+1)+" / "+total+"　"+dt+"</div></div>";});'
-    + 'html+="</body></html>";w.document.write(html);w.document.close();setTimeout(function(){w.print();},300);}'
+    + 'function _tierHtml(item,total){if(!item)return "<div class=tier-inner></div>";return "<div class=tier-inner>"+(item.src?("<img src="+JSON.stringify(item.src)+">"):"<div class=blank>（白紙）</div>")+"<div class=tier-label>"+(item.idx+1)+" / "+total+"ページ</div></div>";}'
+    + 'function _wbPrintPages(list){if(!list.length){alert("印刷できる描画があるページがありません。");return;}var w=window.open("","_blank");if(!w)return;var total=_p.length;var dt=_fmtDT(new Date());var pagesHtml="";'
+    + 'for(var i=0;i<list.length;i+=2){var top=list[i],bottom=list[i+1]||null;pagesHtml+="<div class=ppage><div class=ppage-dt>"+dt+"</div><div class=tier>"+_tierHtml(top,total)+"</div><div class=tier>"+_tierHtml(bottom,total)+"</div></div>";}'
+    + 'var html="<!DOCTYPE html><html><head><meta charset=UTF-8><title>Print</title><style>"'
+    + '+"@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif}"'
+    + '+".ppage{width:100%;height:273mm;display:flex;flex-direction:column;page-break-after:always}"'
+    + '+".ppage:last-child{page-break-after:auto}"'
+    + '+".ppage-dt{font-size:14px;font-weight:600;text-align:left;padding:2mm 0;flex-shrink:0;color:#222}"'
+    + '+".tier{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed #ccc;position:relative}"'
+    + '+".tier:last-child{border-bottom:none}"'
+    + '+".tier-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}"'
+    + '+".tier-inner img{max-width:96%;max-height:calc(100% - 26px);object-fit:contain}"'
+    + '+".tier-label{font-size:12px;color:#666;margin-top:4px}"'
+    + '+".blank{color:#999;font-size:13px;border:1px dashed #ccc;width:80%;height:60%;display:flex;align-items:center;justify-content:center}"'
+    + '+"</style></head><body>"+pagesHtml+"</body></html>";'
+    + 'w.document.write(html);w.document.close();setTimeout(function(){w.print();},300);}'
     + 'var pi={'
     + 'prev:function(){pi.save();if(_i>0)_i--;pi.load();pi.upd();},'
     + 'next:function(){pi.save();if(_i<_p.length-1)_i++;pi.load();pi.upd();},'
@@ -4174,14 +4487,15 @@ function wbStandaloneHTML() {
     + 'clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";_hasContent[_i]=false;},'
     + 'save:function(){if(_pending)return;var c=document.getElementById("mc");if(!c)return;_p[_i]=c.toDataURL("image/png");},'
     + 'load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");_loadTok++;var tok=_loadTok;x.clearRect(0,0,c.width,c.height);if(_p[_i]){_pending=true;var img=new Image();img.onload=function(){if(tok!==_loadTok)return;x.drawImage(img,0,0);_pending=false;};img.src=_p[_i];}else{_pending=false;}},'
-    + 'upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+" / "+_p.length+" ページ";_bind();},'
+    + 'upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+"ページ";_bind();},'
     + 'savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},'
     + 'saveAllPng:function(){pi.save();_p.forEach(function(s,i){if(!s)return;setTimeout(function(){var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},'
     + 'printCur:function(){pi.save();_wbPrintPages([{src:_p[_i],idx:_i}]);},'
     + 'printAll:function(){pi.save();var list=[];_p.forEach(function(s,i){if(_hasContent[i])list.push({src:s,idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
     + 'color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},'
     + 'width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},'
-    + 'eraser:function(){_erasing=!_erasing;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);_style();}'
+    + 'eraser:function(){_erasing=!_erasing;if(_erasing)_marking=false;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");_style();},'
+    + 'marker:function(){_marking=!_marking;if(_marking)_erasing=false;var m=document.getElementById("markerBtn");if(m)m.classList.toggle("wact",_marking);var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");_style();}'
     + '};'
     + '_wbResize();'
     + 'var _rt;window.onresize=function(){clearTimeout(_rt);_rt=setTimeout(_wbResize,150);};'
@@ -4652,6 +4966,10 @@ function openWorkspace(key) {
   const body = document.getElementById('ws-body');
   if (sec && body) {
     body.innerHTML = sec.innerHTML;
+    if (key === 'insurance') {
+      const backBtn = body.querySelector('.tool-back-btn');
+      if (backBtn) backBtn.remove();
+    }
   }
   panel.classList.add('open');
   kosameStatus('think');
@@ -4752,8 +5070,15 @@ function formatTaxCond() {
 function formatTaxResult() {
   return '贈与税 ' + (document.getElementById('gt-amount')?.textContent||'—') + ' / 相続税 ' + (document.getElementById('ih-tax')?.textContent||'—');
 }
-function formatInsCond() { return '年収' + (document.getElementById('ins-income')?.value||'?') + '万円'; }
-function formatInsResult() { return '必要保障額 ' + (document.getElementById('ins-r-needed')?.textContent||'—'); }
+function formatInsCond() {
+  const income = qid('ins-income') ? qid('ins-income').value : '?';
+  const living = qid('ins-living') ? qid('ins-living').value : '?';
+  const years = qid('ins-years') ? qid('ins-years').value : '?';
+  const education = qid('ins-education') ? qid('ins-education').value : '?';
+  const housing = qid('ins-housing') ? qid('ins-housing').value : '?';
+  return '年収' + income + '万・生活費' + living + '万×' + years + '年・教育' + education + '・住居' + housing;
+}
+function formatInsResult() { return (qid('ins-r-needed') ? qid('ins-r-needed').textContent : '—'); }
 function formatAssetCond() {
   const m = document.getElementById('ast-monthly'); const y = document.getElementById('ast-years'); const r = document.getElementById('ast-rate');
   if (!m || !y || !r) return '';

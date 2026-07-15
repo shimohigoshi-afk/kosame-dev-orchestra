@@ -261,6 +261,17 @@ input:-webkit-autofill:focus {
   display:block;
   overflow:visible;
 }
+/* SVG（傘）とその兄弟である雫オーバーレイをまとめる、傘の実寸に密着した
+   箱。auth-lockup-umbrella-wrap（高さ112pxの中央寄せflex）やtopbar-logo-wrap
+   （56x56）のように、外側のwrapは目的ごとに箱の大きさが異なる（余白を
+   持たせて中央寄せしているだけの場合がある）。雫の位置決め基準を外側wrapに
+   直接置くと、wrapの箱の高さ次第で「傘の直上」から大きくズレてしまうため、
+   傘SVGちょうどのサイズにshrink-wrapするこの内側の箱をposition:relativeの
+   基準にする。 */
+.kosame-brand-icon-box{
+  position:relative;display:inline-flex;
+  font-size:56px;
+}
 /* ブランド傘アニメ：マスターサイクルは1箇所（--kosame-brand-cycle）で調整する。
    雫が先に落ちて傘に当たり、そのあと傘が揺れて、雨が上がると傘も収まる、
    という因果を意識した構成。参照実装：public/kosame-live-cockpit.html
@@ -273,17 +284,36 @@ input:-webkit-autofill:focus {
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.32)) drop-shadow(0 0 2px rgba(212,188,125,.12));
   animation:kosameUmbrellaSwayCycle var(--kosame-brand-cycle) ease-in-out infinite;
 }
+/* 雫は傘SVGのviewBoxの外側、SVGの兄弟要素として重ねる（参照実装
+   public/kosame-live-cockpit.html 2079〜2100行付近と同じ構造）。
+   傘viewBoxは傘の実寸に密着させたまま維持しつつ、雫だけ独立して
+   好きな比率で配置・拡大できるようにするための構造分離。
+   position:absoluteの基準は親（.auth-lockup-umbrella-wrap /
+   .topbar-logo-wrap、いずれもposition:relative）。topはパーセントではなく
+   emで指定する。.auth-lockup-umbrella-wrapは高さ112pxの中央寄せflexボックス
+   だが傘の実描画サイズは56pxしかないため、wrapの高さに対する%では傘の
+   実際のキャノピー位置とズレる。em（=傘の実寸として設定したfont-size）を
+   基準にすることで、wrapの箱の高さに関係なく傘の直上（参照実装のtop:-22%
+   相当）に正しく揃う。 */
+.kosame-brand-rain{
+  position:absolute;top:-0.22em;left:50%;
+  transform:translateX(-50%);
+  display:flex;align-items:flex-start;gap:0.16em;
+  pointer-events:none;
+}
 .kosame-brand-drop{
-  fill:#00bcd4;
+  display:block;
+  /* 傘の実寸（親のfont-size）に対して高さ約15%。参照実装の傘20px:雫3px
+     という比率に合わせている。 */
+  width:0.11em;height:0.15em;
   opacity:0;
-  transform-box:fill-box;
-  transform-origin:50% 50%;
   animation:kosameRainDropCycle var(--kosame-brand-cycle) ease-in infinite;
 }
+.kosame-brand-drop:nth-child(2){width:0.09em;height:0.12em;margin-top:-0.05em}
 /* ディレイは絶対秒ではなく --kosame-brand-cycle に対する比率(0%/2%/4%)で
    算出する。サイクル長を変えてもズレの比率が保たれる。
    3滴は .kosame-brand-rain の直接の子（各々ラップ用<g>を挟まない）である
-   必要がある。ラップすると各pathが自分の親の唯一の子になり:nth-childが
+   必要がある。ラップすると各要素が自分の親の唯一の子になり:nth-childが
    常に1にしか一致せず、3滴とも同じディレイになってしまう（雫が実質見えない
    ように見えていた一因）。 */
 .kosame-brand-drop:nth-child(1){animation-delay:0s}
@@ -302,12 +332,17 @@ input:-webkit-autofill:focus {
   41%{transform:rotate(0deg)}
   100%{transform:rotate(0deg)}
 }
+/* translateYの単位はem（=傘の実寸基準）。SVGのviewBox内部にいた頃は
+   ここがSVGユーザー単位（±40 / 700viewBox ≒ ±5.7%）だったが、雫を
+   viewBoxの外に出したことで通常のCSS px相当になったため、雫自身の高さ
+   (0.15em)に対して同程度（約1.3倍）落下するよう em に置き換えて同じ
+   見え方の比率を保っている。0%/2%/8%/20%/100%のタイミング自体は変更しない。 */
 @keyframes kosameRainDropCycle{
-  0%{opacity:0;transform:translateY(-40px)}
-  2%{opacity:0;transform:translateY(-40px)}
+  0%{opacity:0;transform:translateY(-0.2em)}
+  2%{opacity:0;transform:translateY(-0.2em)}
   8%{opacity:1;transform:translateY(0)}
-  20%{opacity:0;transform:translateY(40px)}
-  100%{opacity:0;transform:translateY(40px)}
+  20%{opacity:0;transform:translateY(0.2em)}
+  100%{opacity:0;transform:translateY(0.2em)}
 }
 @media(prefers-reduced-motion:reduce){
   .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
@@ -548,7 +583,15 @@ input:-webkit-autofill:focus {
   width:72px;height:72px;padding:14px;
   border-radius:14px;
   border:0.5px solid rgba(212,188,125,0.4);
-  background:rgba(212,188,125,0.06);
+  /* 左下の傘ドック(.kosame-status)はほぼ不透明な紺のグラデーション背景を
+     持つのに対し、こちらは rgba(212,188,125,0.06) とほぼ素通しだった。
+     ピクセル計測で確認した限り電卓アイコン自体の線色・線幅は傘アイコンと
+     大差ない（むしろ僅かに明るい金）ため、視認性の差の主因は
+     filter（brightness/contrast/saturate）の弱さではなく、アイコンの
+     背後に十分な暗さのソリッドな地色が無く、ぼかし越しに背景が透けて
+     コントラストが弱まっていたことにある。傘ドックと同系統の紺で
+     ほぼ不透明な背景に変更し、地の暗さでアイコンの金線を持ち上げる。 */
+  background:rgba(8,20,36,0.88);
   box-shadow:0 16px 34px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.04);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   cursor:pointer;
@@ -556,9 +599,9 @@ input:-webkit-autofill:focus {
   transition:background 0.2s var(--ease),transform 0.2s var(--ease);
   display:grid;place-items:center;
 }
-.calc-float-icon{width:38px;height:38px;object-fit:contain;display:block;pointer-events:none;opacity:1;filter:brightness(1.5) contrast(1.3) saturate(1.15)}
-.calc-float-btn:hover,.calc-float-btn:focus-visible{background:rgba(212,188,125,0.12)}
-.calc-float-btn:hover .calc-float-icon,.calc-float-btn:focus-visible .calc-float-icon{filter:brightness(1.65) contrast(1.3) saturate(1.15)}
+.calc-float-icon{width:38px;height:38px;object-fit:contain;display:block;pointer-events:none;opacity:1;filter:brightness(1.6) contrast(1.4) saturate(1.2)}
+.calc-float-btn:hover,.calc-float-btn:focus-visible{background:rgba(12,28,48,0.92)}
+.calc-float-btn:hover .calc-float-icon,.calc-float-btn:focus-visible .calc-float-icon{filter:brightness(1.75) contrast(1.4) saturate(1.2)}
 @media(prefers-reduced-motion:reduce){.calc-float-btn{transition:none}}
 .calc-panel{
   display:none;position:fixed;bottom:110px;right:24px;z-index:800;
@@ -627,11 +670,16 @@ input:-webkit-autofill:focus {
   height:40px;border:none;border-radius:8px;
   font-size:14px;font-weight:600;cursor:pointer;
   transition:all 0.15s;
-  background:rgba(255,255,255,0.06);
-  color:var(--text);
+  /* 実測ピクセル値に基づく調整：パネル背景(#102540系・輝度約34.5)に対して
+     従来の rgba(255,255,255,0.06) は輝度+13.6程度しか浮いておらず、
+     キーがパネルに溶けて見えていた。パネルと同じ色相・彩度のまま明度だけ
+     輝度+27前後（目安60前後）まで上げた紺色をソリッドで指定し、
+     グロー等を使わず明度差と隙間だけでボタンとして独立して見えるようにする。 */
+  background:#1d4374;
+  color:#fff;
 }
-.calc-btn:hover{background:rgba(200,169,106,0.15);color:var(--gold)}
-.calc-btn:active{background:rgba(200,169,106,0.25)}
+.calc-btn:hover{background:#23518c;color:var(--gold)}
+.calc-btn:active{background:#18375f}
 .calc-btn.op{
   background:rgba(200,169,106,0.08);
   color:var(--gold);font-weight:700;
@@ -680,11 +728,22 @@ input:-webkit-autofill:focus {
   background:rgba(12,28,48,0.95);
   border-bottom:1px solid rgba(200,169,106,0.15);
   cursor:default;user-select:none;
+  /* flex-directionがcolumnの親（最大化時のパネル）の中で、本文側の
+     textarea等がどれだけ縦に伸びても、ヘッダーがそれに押し潰されたり
+     裏に回り込まれたりしないよう、常に自身のサイズを保ち独立した
+     スタッキングコンテキストを持つ。position/z-indexをヘッダー要素自体に
+     与えることで、本文側（後からDOMに現れる兄弟要素）が万一ジオメトリ上
+     重なっても、ペイント順・ヒットテストの両方で必ずヘッダーが勝つ
+     ようにする（ボタン単体へのz-index指定だけでは、ヘッダーというブロック
+     自体が本文より先にDOMへ現れる普通の兄弟要素でしかないため、重なりが
+     起きた場合に後勝ちのペイント順で本文側に食われてしまう）。 */
+  flex-shrink:0;
+  position:relative;z-index:2;
 }
 .board-header:active{cursor:grabbing}
 /* ヘッダー内のボタン（×・最大化）は常にクリック可能であることを明示。
-   最大化中に見えているのに反応しない場合の保険として、pointer-events と
-   スタッキングを明示的に確定させておく（ヘッダー自体のz-indexは変更しない）。 */
+   ヘッダー自身のスタッキング（上記）に加え、ヘッダー内でも他の兄弟
+   （タイトル文字列など）より確実に手前に出るよう保険をかけておく。 */
 .board-header button{pointer-events:auto;position:relative;z-index:1}
 .board-header-title{
   font-size:13px;font-weight:600;color:var(--text);
@@ -1273,14 +1332,16 @@ canvas{display:block;width:100%;border-radius:8px}
     <div class="auth-logo">
       <div class="auth-logo-lockup">
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
+<span class="kosame-brand-icon-box">
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
-<g class="kosame-brand-rain">
-<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
-<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
-<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
-</g>
 </svg>
+<span class="kosame-brand-rain">
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+</span>
+</span>
         </span>
         <div class="auth-lockup-text">
           <div class="auth-lockup-kosame">KOSAME</div>
@@ -1313,14 +1374,16 @@ canvas{display:block;width:100%;border-radius:8px}
     <div class="auth-logo">
       <div class="auth-logo-lockup">
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
+<span class="kosame-brand-icon-box">
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
-<g class="kosame-brand-rain">
-<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
-<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
-<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
-</g>
 </svg>
+<span class="kosame-brand-rain">
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+</span>
+</span>
         </span>
         <div class="auth-lockup-text">
           <div class="auth-lockup-kosame">KOSAME</div>
@@ -1361,14 +1424,16 @@ canvas{display:block;width:100%;border-radius:8px}
   <header class="topbar">
     <div class="topbar-left">
       <span class="topbar-logo-wrap" aria-hidden="true">
+<span class="kosame-brand-icon-box">
 <svg class="kosame-header-animation" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
-<g class="kosame-brand-rain">
-<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
-<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
-<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
-</g>
 </svg>
+<span class="kosame-brand-rain">
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
+</span>
+</span>
 </span>
       <span class="topbar-brand"><span class="tbg">KOSAME</span><span class="tbs">Sales Console</span></span>
       <span class="topbar-divider"></span>
@@ -4267,7 +4332,7 @@ function getWbPos(e) {
    描画し、都度「元のcanvas + 一時レイヤーをalpha=0.4で合成」した結果を
    本canvasに描き直すことで、重なり部分も含めて均一な半透明の帯になるようにする。 */
 let _wbMarkerSnap = null, _wbMarkerTemp = null, _wbMarkerTempCtx = null;
-let _wbMarkerStart = null, _wbMarkerMaxDist = 0;
+let _wbMarkerStart = null, _wbMarkerMaxDist = 0, _wbMarkerPoints = null;
 function _wbMarkerBegin(canvas, p) {
   _wbMarkerSnap = document.createElement('canvas');
   _wbMarkerSnap.width = canvas.width; _wbMarkerSnap.height = canvas.height;
@@ -4287,13 +4352,22 @@ function _wbMarkerBegin(canvas, p) {
      「単一点・極短ストロークだった場合だけ」描く。 */
   _wbMarkerStart = p;
   _wbMarkerMaxDist = 0;
+  _wbMarkerPoints = [p];
 }
 function _wbMarkerExtend(canvas, from, to) {
   const dx = to.x - _wbMarkerStart.x, dy = to.y - _wbMarkerStart.y;
   _wbMarkerMaxDist = Math.max(_wbMarkerMaxDist, Math.sqrt(dx * dx + dy * dy));
+  _wbMarkerPoints.push(to);
+  /* 線分ごとにbeginPath→stroke()すると、方向が変わる角でbuttキャップ
+     同士がかみ合わず三角形の隙間（ノッチ）ができる。ストロークの全点を
+     毎回1本の連続パスとして引き直すことで、buttはストローク全体の
+     真の始点・終点にしか付かず、途中の角はlineJoin:roundが処理する。 */
+  _wbMarkerTempCtx.clearRect(0, 0, canvas.width, canvas.height);
   _wbMarkerTempCtx.beginPath();
-  _wbMarkerTempCtx.moveTo(from.x, from.y);
-  _wbMarkerTempCtx.lineTo(to.x, to.y);
+  _wbMarkerTempCtx.moveTo(_wbMarkerPoints[0].x, _wbMarkerPoints[0].y);
+  for (let i = 1; i < _wbMarkerPoints.length; i++) {
+    _wbMarkerTempCtx.lineTo(_wbMarkerPoints[i].x, _wbMarkerPoints[i].y);
+  }
   _wbMarkerTempCtx.stroke();
   _wbMarkerComposite(canvas);
 }
@@ -4314,6 +4388,7 @@ function _wbMarkerEnd(canvas) {
     _wbMarkerComposite(canvas);
   }
   _wbMarkerSnap = null; _wbMarkerTemp = null; _wbMarkerTempCtx = null; _wbMarkerStart = null;
+  _wbMarkerPoints = null;
 }
 function startDraw(e) {
   if (!_wbCtx) return;
@@ -4499,6 +4574,18 @@ function closeBoard() {
      編集内容が失われる。 */
   wbSaveCurrentPage();
   panel.classList.remove('open');
+  /* 最大化したまま閉じられた場合、_wbMaximized/クラス/インラインの
+     width・heightが残ったままになる。次にopenBoardModal()で開いた際、
+     位置だけ通常位置にリセットされ、サイズは最大化時の値が残ってしまい
+     「開いたら画面外にはみ出て消えたように見える」原因になるため、
+     閉じる時点で最大化状態を必ず解除しておく。 */
+  if (_wbMaximized) {
+    panel.classList.remove('wb-maximized');
+    panel.style.width = ''; panel.style.height = '';
+    _wbMaximized = false;
+    const btn = document.getElementById('board-max-btn');
+    if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  }
 }
 
 /* ═══ Board Maximize ═══ */
@@ -4647,16 +4734,16 @@ function wbStandaloneHTML() {
     + 'if(typeof _i!=="number"||_i<0||_i>=_p.length)_i=0;'
     + 'var _loadTok=0,_pending=false;'
     + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_marking=false,_mwid=20,_dpr=window.devicePixelRatio||1,_last=null;'
-    + 'var _markSnap=null,_markTemp=null,_markTempCtx=null,_markStart=null,_markMaxDist=0;'
+    + 'var _markSnap=null,_markTemp=null,_markTempCtx=null,_markStart=null,_markMaxDist=0,_markPoints=null;'
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
     + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
     + 'function _style(){x.lineCap="round";x.lineJoin="round";x.globalAlpha=1;x.globalCompositeOperation="source-over";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*5,44)*_dpr;}else if(_marking){x.strokeStyle=_col;x.lineWidth=_mwid*_dpr;}else{x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
     + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.drawImage(tmp,0,0,c.width,c.height);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
-    + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="butt";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.fillStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=_mwid*_dpr;_markStart=p;_markMaxDist=0;}'
-    + 'function _markExtend(from,to){var dx=to.x-_markStart.x,dy=to.y-_markStart.y;_markMaxDist=Math.max(_markMaxDist,Math.sqrt(dx*dx+dy*dy));_markTempCtx.beginPath();_markTempCtx.moveTo(from.x,from.y);_markTempCtx.lineTo(to.x,to.y);_markTempCtx.stroke();_markComposite();}'
+    + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="butt";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.fillStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=_mwid*_dpr;_markStart=p;_markMaxDist=0;_markPoints=[p];}'
+    + 'function _markExtend(from,to){var dx=to.x-_markStart.x,dy=to.y-_markStart.y;_markMaxDist=Math.max(_markMaxDist,Math.sqrt(dx*dx+dy*dy));_markPoints.push(to);_markTempCtx.clearRect(0,0,c.width,c.height);_markTempCtx.beginPath();_markTempCtx.moveTo(_markPoints[0].x,_markPoints[0].y);for(var _mi=1;_mi<_markPoints.length;_mi++){_markTempCtx.lineTo(_markPoints[_mi].x,_markPoints[_mi].y);}_markTempCtx.stroke();_markComposite();}'
     + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.5;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
-    + 'function _markEnd(){var mw=_mwid*_dpr;if(_markTempCtx&&_markStart&&_markMaxDist<mw){_markTempCtx.fillRect(_markStart.x-mw/2,_markStart.y-mw/2,mw,mw);_markComposite();}_markSnap=null;_markTemp=null;_markTempCtx=null;_markStart=null;}'
+    + 'function _markEnd(){var mw=_mwid*_dpr;if(_markTempCtx&&_markStart&&_markMaxDist<mw){_markTempCtx.fillRect(_markStart.x-mw/2,_markStart.y-mw/2,mw,mw);_markComposite();}_markSnap=null;_markTemp=null;_markTempCtx=null;_markStart=null;_markPoints=null;}'
     + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
     + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
     + 'function _stop(){if(!_d){return;}_d=false;_last=null;if(_marking)_markEnd();pi.save();}'
@@ -4754,6 +4841,17 @@ function closeMemo() {
   const panel = document.getElementById('memo-panel');
   if (!panel) return;
   panel.classList.remove('open');
+  /* 最大化したまま閉じると_memoMaximized/クラス/インラインwidth・heightが
+     残り、再度openMemo()で開いた時に位置だけ通常位置・サイズは最大化時の
+     まま、という不整合な状態になり画面外にはみ出て消えて見える。閉じる
+     時点で必ず最大化状態を解除する。 */
+  if (_memoMaximized) {
+    panel.classList.remove('memo-maximized');
+    panel.style.width = ''; panel.style.height = '';
+    _memoMaximized = false;
+    const btn = document.getElementById('memo-max-btn');
+    if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  }
 }
 
 /* ═══ Memo Maximize (whiteboard toggleMaximize()と同仕様) ═══ */
@@ -5042,6 +5140,17 @@ function closeCmemo() {
   const panel = document.getElementById('cmemo-panel');
   if (!panel) return;
   panel.classList.remove('open');
+  /* 最大化したまま閉じると_cmemoMaximized/クラス/インラインwidth・heightが
+     残り、再度openCmemo()で開いた時に位置だけ通常位置・サイズは最大化時の
+     まま、という不整合な状態になり画面外にはみ出て消えて見える。閉じる
+     時点で必ず最大化状態を解除する。 */
+  if (_cmemoMaximized) {
+    panel.classList.remove('cmemo-maximized');
+    panel.style.width = ''; panel.style.height = '';
+    _cmemoMaximized = false;
+    const btn = document.getElementById('cmemo-max-btn');
+    if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  }
 }
 
 /* ═══ Calculation Log ═══ */
@@ -5305,6 +5414,16 @@ function toggleCalc() {
     panel.style.right = ''; panel.style.bottom = '';
     panel.style.transform = ''; panel.style.margin = '';
     panel.style.marginLeft = '';
+  } else if (_calcMaximized) {
+    /* 最大化したまま閉じると_calcMaximized/クラス/インラインwidth・height
+       が残り、次にopeningブロックで通常位置に戻ってもサイズは最大化時の
+       まま、という不整合な状態になり画面外にはみ出て消えて見える。閉じる
+       時点で必ず最大化状態を解除する。 */
+    panel.classList.remove('calc-maximized');
+    panel.style.width = ''; panel.style.height = '';
+    _calcMaximized = false;
+    const btn = document.getElementById('calc-max-btn');
+    if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
   }
 }
 function calcInput(v) {

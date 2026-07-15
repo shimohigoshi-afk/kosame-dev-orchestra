@@ -671,6 +671,7 @@ input:-webkit-autofill:focus {
   background:rgba(12,28,48,0.95);
   border-bottom:1px solid rgba(200,169,106,0.15);
   cursor:default;user-select:none;
+  flex-shrink:0;position:relative;z-index:5;
 }
 .board-header:active{cursor:grabbing}
 .board-header-title{
@@ -713,6 +714,10 @@ input:-webkit-autofill:focus {
 }
 .wb-width-swatch:hover{background:rgba(255,255,255,0.12);color:var(--text)}
 .wb-width-swatch.active{background:rgba(212,188,125,0.20);border-color:rgba(212,188,125,0.55);color:var(--gold-refined)}
+/* ペン太さ／マーカー太さは排他表示：マーカー選択中はマーカー用のみ表示する */
+.wb-marker-width-swatch{display:none}
+.board-panel.wb-marker-mode-active .wb-marker-width-swatch{display:inline-block}
+.board-panel.wb-marker-mode-active .wb-width-swatch:not(.wb-marker-width-swatch){display:none}
 #board-eraser-btn.active{background:rgba(212,188,125,0.22);border-color:rgba(212,188,125,0.6);color:var(--gold-refined)}
 #board-marker-btn.active{background:rgba(245,217,10,0.22);border-color:rgba(245,217,10,0.6);color:#f5d90a}
 .board-btn{
@@ -4030,7 +4035,7 @@ function wbInitDragDrop() {
   });
 }
 /* 背景+ペンを1枚に合成（印刷・PNG保存用）。背景が無ければ従来通り単層のまま返す */
-function wbCompositeForPage(idx) {
+function wbCompositeForPage(idx, fillColor) {
   return new Promise(function(resolve) {
     const strokeSrc = _wbPages[idx];
     const bgSrc = _wbBgImages[idx];
@@ -4040,7 +4045,7 @@ function wbCompositeForPage(idx) {
     const off = document.createElement('canvas');
     off.width = w; off.height = h;
     const octx = off.getContext('2d');
-    octx.fillStyle = '#faf8f2';
+    octx.fillStyle = fillColor || '#faf8f2';
     octx.fillRect(0, 0, w, h);
     const bgImg = new Image();
     bgImg.onload = function() {
@@ -4128,7 +4133,7 @@ function setPenColor(c) {
 function setPenWidth(w) {
   _wbWidth = parseFloat(w) || 4;
   _wbApplyStyle();
-  document.querySelectorAll('.wb-width-swatch').forEach(function(el) {
+  document.querySelectorAll('.wb-width-swatch:not(.wb-marker-width-swatch)').forEach(function(el) {
     el.classList.toggle('active', parseFloat(el.getAttribute('data-width')) === _wbWidth);
   });
 }
@@ -4147,6 +4152,8 @@ function toggleEraser() {
   if (btn) btn.classList.toggle('active', _wbEraser);
   const mBtn = document.getElementById('board-marker-btn');
   if (mBtn) mBtn.classList.remove('active');
+  const panel = document.getElementById('board-panel');
+  if (panel) panel.classList.remove('wb-marker-mode-active');
 }
 function toggleMarker() {
   _wbMarker = !_wbMarker;
@@ -4156,6 +4163,8 @@ function toggleMarker() {
   if (btn) btn.classList.toggle('active', _wbMarker);
   const eBtn = document.getElementById('board-eraser-btn');
   if (eBtn) eBtn.classList.remove('active');
+  const panel = document.getElementById('board-panel');
+  if (panel) panel.classList.toggle('wb-marker-mode-active', _wbMarker);
 }
 function initWhiteboard() {
   const canvas = document.getElementById('board-canvas');
@@ -4226,7 +4235,7 @@ function _wbMarkerComposite(canvas) {
   _wbCtx.globalCompositeOperation = 'source-over';
   _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
   _wbCtx.drawImage(_wbMarkerSnap, 0, 0);
-  _wbCtx.globalAlpha = 0.4;
+  _wbCtx.globalAlpha = 0.5;
   _wbCtx.drawImage(_wbMarkerTemp, 0, 0);
   _wbCtx.restore();
 }
@@ -4350,7 +4359,7 @@ function wbPrintPages(list) {
 }
 function wbPrintCurrent() {
   wbSaveCurrentPage();
-  wbCompositeForPage(_wbCurrent).then(function(src) {
+  wbCompositeForPage(_wbCurrent, '#ffffff').then(function(src) {
     wbPrintPages([{ src: src, idx: _wbCurrent }]);
   });
 }
@@ -4358,7 +4367,7 @@ function wbPrintAll() {
   wbSaveCurrentPage();
   const idxs = [];
   _wbPages.forEach(function(src, i) { if (_wbHasContent[i]) idxs.push(i); });
-  Promise.all(idxs.map(wbCompositeForPage)).then(function(srcs) {
+  Promise.all(idxs.map(function(idx) { return wbCompositeForPage(idx, '#ffffff'); })).then(function(srcs) {
     const list = idxs.map(function(idx, k) { return { src: srcs[k], idx: idx }; });
     wbPrintPages(list);
   });
@@ -4424,7 +4433,10 @@ function resizeCanvas(canvas) {
   canvas.height = Math.floor(r.height * _wbDpr);
   const ctx = canvas.getContext('2d');
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#faf6ec'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  /* キャンバス自体は塗りつぶさない（クリーム色は .board-canvas-wrap の背景で
+     画面表示のみ担う）。ここで不透明フィルを焼き込むと、保存PNGにクリームが
+     混入し、リサイズを経たページだけ印刷時に背景色が食い違う原因になる。 */
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
   _wbApplyStyle();
 }
@@ -4495,6 +4507,7 @@ function wbStandaloneHTML() {
     + '.tb button.pri{background:linear-gradient(135deg,#C8A96A,#D4BC8A);color:#040d1c;border:none}'
     + '.tb button.pri:hover{opacity:0.9}'
     + '.tb button.wact{background:rgba(200,169,106,0.22);color:#C8A96A;border-color:rgba(200,169,106,0.4)}'
+    + '.tb button[data-mw]{display:none}body.marker-mode .tb button[data-mw]{display:inline-block}body.marker-mode .tb button[data-w]{display:none}'
     + '.tb .div{width:1px;height:20px;background:rgba(255,255,255,0.12)}'
     + '.swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;display:inline-block;vertical-align:middle}'
     + '.swatch.sact{border-color:#C8A96A}'
@@ -4548,11 +4561,11 @@ function wbStandaloneHTML() {
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
     + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
     + 'function _style(){x.lineCap="round";x.lineJoin="round";x.globalAlpha=1;x.globalCompositeOperation="source-over";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*5,44)*_dpr;}else if(_marking){x.strokeStyle=_col;x.lineWidth=_mwid*_dpr;}else{x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
-    + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.fillStyle="#faf8f2";x.fillRect(0,0,c.width,c.height);x.drawImage(tmp,0,0,c.width,c.height);}'
+    + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.drawImage(tmp,0,0,c.width,c.height);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
     + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="round";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=_mwid*_dpr;_markTempCtx.beginPath();_markTempCtx.moveTo(p.x,p.y);_markTempCtx.lineTo(p.x+0.01,p.y+0.01);_markTempCtx.stroke();_markComposite();}'
     + 'function _markExtend(from,to){_markTempCtx.beginPath();_markTempCtx.moveTo(from.x,from.y);_markTempCtx.lineTo(to.x,to.y);_markTempCtx.stroke();_markComposite();}'
-    + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.4;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
+    + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.5;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
     + 'function _markEnd(){_markSnap=null;_markTemp=null;_markTempCtx=null;}'
     + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
     + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
@@ -4589,8 +4602,8 @@ function wbStandaloneHTML() {
     + 'printAll:function(){pi.save();var list=[];_p.forEach(function(s,i){if(_hasContent[i])list.push({src:s,idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
     + 'color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},'
     + 'width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},'
-    + 'eraser:function(){_erasing=!_erasing;if(_erasing)_marking=false;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");_style();},'
-    + 'marker:function(){_marking=!_marking;if(_marking)_erasing=false;var m=document.getElementById("markerBtn");if(m)m.classList.toggle("wact",_marking);var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");_style();},'
+    + 'eraser:function(){_erasing=!_erasing;if(_erasing)_marking=false;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");document.body.classList.remove("marker-mode");_style();},'
+    + 'marker:function(){_marking=!_marking;if(_marking)_erasing=false;var m=document.getElementById("markerBtn");if(m)m.classList.toggle("wact",_marking);var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");document.body.classList.toggle("marker-mode",_marking);_style();},'
     + 'markerWidth:function(btn,w){_mwid=w;var els=document.querySelectorAll("[data-mw]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();}'
     + '};'
     + '_wbResize();'

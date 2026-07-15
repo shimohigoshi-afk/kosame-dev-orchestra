@@ -128,11 +128,11 @@ body::before{
   overflow:visible;
 }
 .auth-lockup-umbrella-wrap{
-  width:100%;height:130px;
+  width:100%;height:112px;
   display:flex;align-items:center;justify-content:center;
   overflow:visible;margin-bottom:10px;
 }
-.auth-lockup-umbrella-svg{width:auto;height:130px;display:block;overflow:visible}
+.auth-lockup-umbrella-svg{width:auto;height:112px;display:block;overflow:visible}
 .auth-lockup-text{display:flex;flex-direction:column;align-items:center;gap:8px}
 .auth-lockup-kosame{
   font-size:40px;font-weight:600;letter-spacing:0.24em;color:var(--gold);line-height:1;
@@ -251,24 +251,25 @@ input:-webkit-autofill:focus {
 .topbar-left{display:flex;align-items:center;gap:16px}
 .topbar-logo-wrap{
   position:relative;
-  width:61px;height:59px;
-  flex:0 0 61px;
+  width:56px;height:56px;
+  flex:0 0 56px;
   display:grid;place-items:center;
   overflow:visible;
 }
 .kosame-header-animation{
-  width:52px;height:65px;
+  width:52px;height:56px;
   display:block;
   overflow:visible;
 }
 /* ブランド傘アニメ：マスターサイクルは1箇所（--kosame-brand-cycle）で調整する。
-   周期の最初の23%だけ揺れて雫が落ち、残りは完全に静止する「揺れる→止まる」構成。
-   参照実装：public/kosame-live-cockpit.html 2079〜2100行付近（読み取りのみ）。 */
-:root{--kosame-brand-cycle:13s;}
+   雫が先に落ちて傘に当たり、そのあと傘が揺れて、雨が上がると傘も収まる、
+   という因果を意識した構成。参照実装：public/kosame-live-cockpit.html
+   2079〜2100行付近（読み取りのみ）。 */
+:root{--kosame-brand-cycle:8s;}
 .kosame-brand-umbrella-image{
   opacity:1;
   transform-box:fill-box;
-  transform-origin:50% 10%;
+  transform-origin:50% 15%;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.32)) drop-shadow(0 0 2px rgba(212,188,125,.12));
   animation:kosameUmbrellaSwayCycle var(--kosame-brand-cycle) ease-in-out infinite;
 }
@@ -279,25 +280,32 @@ input:-webkit-autofill:focus {
   transform-origin:50% 50%;
   animation:kosameRainDropCycle var(--kosame-brand-cycle) ease-in infinite;
 }
+/* ディレイは絶対秒ではなく --kosame-brand-cycle に対する比率(0%/2%/4%)で
+   算出する。サイクル長を変えてもズレの比率が保たれる。
+   3滴は .kosame-brand-rain の直接の子（各々ラップ用<g>を挟まない）である
+   必要がある。ラップすると各pathが自分の親の唯一の子になり:nth-childが
+   常に1にしか一致せず、3滴とも同じディレイになってしまう（雫が実質見えない
+   ように見えていた一因）。 */
 .kosame-brand-drop:nth-child(1){animation-delay:0s}
-.kosame-brand-drop:nth-child(2){animation-delay:0.18s}
-.kosame-brand-drop:nth-child(3){animation-delay:0.36s}
+.kosame-brand-drop:nth-child(2){animation-delay:calc(var(--kosame-brand-cycle) * 0.02)}
+.kosame-brand-drop:nth-child(3){animation-delay:calc(var(--kosame-brand-cycle) * 0.04)}
 
 @keyframes kosameUmbrellaSwayCycle{
   0%{transform:rotate(0deg)}
-  3.29%{transform:rotate(-8deg)}
-  6.57%{transform:rotate(8deg)}
-  9.86%{transform:rotate(-8deg)}
-  13.14%{transform:rotate(8deg)}
-  16.43%{transform:rotate(-8deg)}
-  19.71%{transform:rotate(8deg)}
-  23%{transform:rotate(0deg)}
+  3%{transform:rotate(0deg)}
+  8.43%{transform:rotate(-8deg)}
+  13.86%{transform:rotate(8deg)}
+  19.29%{transform:rotate(-8deg)}
+  24.71%{transform:rotate(8deg)}
+  30.14%{transform:rotate(-8deg)}
+  35.57%{transform:rotate(8deg)}
+  41%{transform:rotate(0deg)}
   100%{transform:rotate(0deg)}
 }
 @keyframes kosameRainDropCycle{
   0%{opacity:0;transform:translateY(-40px)}
-  3%{opacity:0;transform:translateY(-40px)}
-  10%{opacity:1;transform:translateY(0)}
+  2%{opacity:0;transform:translateY(-40px)}
+  8%{opacity:1;transform:translateY(0)}
   20%{opacity:0;transform:translateY(40px)}
   100%{opacity:0;transform:translateY(40px)}
 }
@@ -1265,12 +1273,12 @@ canvas{display:block;width:100%;border-radius:8px}
     <div class="auth-logo">
       <div class="auth-logo-lockup">
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
-<svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 -110 651 810">
+<svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 <g class="kosame-brand-rain">
-<g transform="translate(172,88)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(312,55)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(487,116)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
+<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
+<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
+<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
 </g>
 </svg>
         </span>
@@ -1305,12 +1313,12 @@ canvas{display:block;width:100%;border-radius:8px}
     <div class="auth-logo">
       <div class="auth-logo-lockup">
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
-<svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 -110 651 810">
+<svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 <g class="kosame-brand-rain">
-<g transform="translate(172,88)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(312,55)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(487,116)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
+<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
+<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
+<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
 </g>
 </svg>
         </span>
@@ -1353,12 +1361,12 @@ canvas{display:block;width:100%;border-radius:8px}
   <header class="topbar">
     <div class="topbar-left">
       <span class="topbar-logo-wrap" aria-hidden="true">
-<svg class="kosame-header-animation" viewBox="0 -110 651 810">
+<svg class="kosame-header-animation" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 <g class="kosame-brand-rain">
-<g transform="translate(172,88)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(312,55)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
-<g transform="translate(487,116)"><path class="kosame-brand-drop" d="M18 3C18 3 3 25.2 3 33.6A15 15 0 0 0 33 33.6C33 25.2 18 3 18 3Z"/></g>
+<path class="kosame-brand-drop" d="M190 91C190 91 175 113.2 175 121.6A15 15 0 0 0 205 121.6C205 113.2 190 91 190 91Z"/>
+<path class="kosame-brand-drop" d="M330 58C330 58 315 80.2 315 88.6A15 15 0 0 0 345 88.6C345 80.2 330 58 330 58Z"/>
+<path class="kosame-brand-drop" d="M505 119C505 119 490 141.2 490 149.6A15 15 0 0 0 520 149.6C520 141.2 505 119 505 119Z"/>
 </g>
 </svg>
 </span>
@@ -3943,6 +3951,10 @@ window.kosameWbBridge = {
 function wbSaveCurrentPage() {
   const canvas = document.getElementById('board-canvas');
   if (!canvas) return;
+  /* 幅または高さが0のcanvas（非表示直後や生成直後など）からは保存しない。
+     ここで空スナップショットを保存すると、正本の描画データが上書きされて
+     消えてしまう。 */
+  if (!canvas.width || !canvas.height) return;
   _wbPages[_wbCurrent] = canvas.toDataURL('image/png');
 }
 function wbLoadPage(idx) {
@@ -4198,10 +4210,36 @@ function initWhiteboard() {
   const rect = canvas.getBoundingClientRect();
   const w = rect.width || canvas.offsetWidth || 400;
   const h = rect.height || canvas.offsetHeight || 400;
-  canvas.width = Math.round(w * _wbDpr);
-  canvas.height = Math.round(h * _wbDpr);
-  _wbCtx = canvas.getContext('2d');
-  _wbApplyStyle();
+  const newW = Math.round(w * _wbDpr);
+  const newH = Math.round(h * _wbDpr);
+  /* canvas.width/height への代入は（同じ値であっても）ビットマップを
+     破棄する。実際に寸法が変わる場合だけ代入し、その際も直前の内容を
+     退避してから復元することで、2回目以降の呼び出し（再オープン等）でも
+     既存の描画を壊さない＝冪等にする。 */
+  const needsResize = canvas.width !== newW || canvas.height !== newH;
+  if (needsResize) {
+    let tmp = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+      tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = canvas.height;
+      tmp.getContext('2d').drawImage(canvas, 0, 0);
+    }
+    canvas.width = newW;
+    canvas.height = newH;
+    _wbCtx = canvas.getContext('2d');
+    _wbApplyStyle();
+    if (tmp) {
+      _wbCtx.globalAlpha = 1;
+      _wbCtx.globalCompositeOperation = 'source-over';
+      _wbCtx.drawImage(tmp, 0, 0, newW, newH);
+    }
+  } else {
+    _wbCtx = canvas.getContext('2d');
+    _wbApplyStyle();
+  }
+  _wbCtx.globalAlpha = 1;
+  _wbCtx.globalCompositeOperation = 'source-over';
+  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
   if (_wbPages[_wbCurrent]) {
     const img = new Image();
     img.onload = function() {
@@ -4229,6 +4267,7 @@ function getWbPos(e) {
    描画し、都度「元のcanvas + 一時レイヤーをalpha=0.4で合成」した結果を
    本canvasに描き直すことで、重なり部分も含めて均一な半透明の帯になるようにする。 */
 let _wbMarkerSnap = null, _wbMarkerTemp = null, _wbMarkerTempCtx = null;
+let _wbMarkerStart = null, _wbMarkerMaxDist = 0;
 function _wbMarkerBegin(canvas, p) {
   _wbMarkerSnap = document.createElement('canvas');
   _wbMarkerSnap.width = canvas.width; _wbMarkerSnap.height = canvas.height;
@@ -4241,14 +4280,17 @@ function _wbMarkerBegin(canvas, p) {
   _wbMarkerTempCtx.strokeStyle = _wbColor;
   _wbMarkerTempCtx.fillStyle = _wbColor;
   _wbMarkerTempCtx.globalAlpha = 1;
-  const _mw = _wbMarkerWidth * _wbDpr;
-  _wbMarkerTempCtx.lineWidth = _mw;
-  /* lineCap:butt では長さ0のストロークは描画されない（タップが消える）ため、
-     開始点に太さぶんの矩形を描いてタップでも点が残るようにする。 */
-  _wbMarkerTempCtx.fillRect(p.x - _mw / 2, p.y - _mw / 2, _mw, _mw);
-  _wbMarkerComposite(canvas);
+  _wbMarkerTempCtx.lineWidth = _wbMarkerWidth * _wbDpr;
+  /* fillRectのタップ救済フォールバックはここでは描かない。通常の長い
+     ストロークの書き出しにまで角の塊が乗ってしまう（lineCap:buttの
+     意味が失われる）ため、実際の移動距離が確定する _wbMarkerEnd 側で
+     「単一点・極短ストロークだった場合だけ」描く。 */
+  _wbMarkerStart = p;
+  _wbMarkerMaxDist = 0;
 }
 function _wbMarkerExtend(canvas, from, to) {
+  const dx = to.x - _wbMarkerStart.x, dy = to.y - _wbMarkerStart.y;
+  _wbMarkerMaxDist = Math.max(_wbMarkerMaxDist, Math.sqrt(dx * dx + dy * dy));
   _wbMarkerTempCtx.beginPath();
   _wbMarkerTempCtx.moveTo(from.x, from.y);
   _wbMarkerTempCtx.lineTo(to.x, to.y);
@@ -4265,8 +4307,13 @@ function _wbMarkerComposite(canvas) {
   _wbCtx.drawImage(_wbMarkerTemp, 0, 0);
   _wbCtx.restore();
 }
-function _wbMarkerEnd() {
-  _wbMarkerSnap = null; _wbMarkerTemp = null; _wbMarkerTempCtx = null;
+function _wbMarkerEnd(canvas) {
+  const mw = _wbMarkerWidth * _wbDpr;
+  if (_wbMarkerTempCtx && _wbMarkerStart && _wbMarkerMaxDist < mw) {
+    _wbMarkerTempCtx.fillRect(_wbMarkerStart.x - mw / 2, _wbMarkerStart.y - mw / 2, mw, mw);
+    _wbMarkerComposite(canvas);
+  }
+  _wbMarkerSnap = null; _wbMarkerTemp = null; _wbMarkerTempCtx = null; _wbMarkerStart = null;
 }
 function startDraw(e) {
   if (!_wbCtx) return;
@@ -4310,7 +4357,10 @@ function draw(e) {
 function stopDraw() {
   _wbDrawing = false;
   _wbLastPoint = null;
-  if (_wbMarker) _wbMarkerEnd();
+  if (_wbMarker) {
+    const canvas = document.getElementById('board-canvas');
+    if (canvas) _wbMarkerEnd(canvas);
+  }
 }
 function clearBoard() {
   if (!_wbCtx) return;
@@ -4444,6 +4494,10 @@ function openBoardModal() {
 function closeBoard() {
   const panel = document.getElementById('board-panel');
   if (!panel) return;
+  /* 直前に描いた内容（まだページ送り等で正本に反映されていないもの）を
+     非表示にする前に必ず保存する。これを怠ると開き直した際に最後の
+     編集内容が失われる。 */
+  wbSaveCurrentPage();
   panel.classList.remove('open');
 }
 
@@ -4501,10 +4555,17 @@ function toggleMaximize() {
       marginLeft: panel.style.marginLeft || ''
     };
     // Maximize
-    panel.style.left = '24px'; panel.style.top = '24px';
+    /* 100vw/100vh はスクロールバーの分だけ実際の可視ビューポートより大きく
+       解決される場合があり、それを使うとパネルの右端・下端が画面外に
+       はみ出す原因になる。window.innerWidth/innerHeight（スクロールバーを
+       含まない実測値）から絶対px値を都度計算することで確実に収める。 */
+    var _mgz = 24;
+    var _mw = Math.max(320, window.innerWidth - _mgz * 2);
+    var _mh = Math.max(240, window.innerHeight - _mgz * 2);
+    panel.style.left = _mgz + 'px'; panel.style.top = _mgz + 'px';
     panel.style.right = 'auto'; panel.style.bottom = 'auto';
-    panel.style.width = 'calc(100vw - 48px)';
-    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.width = _mw + 'px';
+    panel.style.height = _mh + 'px';
     panel.style.marginLeft = '0';
     panel.classList.add('wb-maximized');
     btn.textContent = '↙'; btn.title = '元に戻す';
@@ -4586,16 +4647,16 @@ function wbStandaloneHTML() {
     + 'if(typeof _i!=="number"||_i<0||_i>=_p.length)_i=0;'
     + 'var _loadTok=0,_pending=false;'
     + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_marking=false,_mwid=20,_dpr=window.devicePixelRatio||1,_last=null;'
-    + 'var _markSnap=null,_markTemp=null,_markTempCtx=null;'
+    + 'var _markSnap=null,_markTemp=null,_markTempCtx=null,_markStart=null,_markMaxDist=0;'
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
     + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
     + 'function _style(){x.lineCap="round";x.lineJoin="round";x.globalAlpha=1;x.globalCompositeOperation="source-over";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*5,44)*_dpr;}else if(_marking){x.strokeStyle=_col;x.lineWidth=_mwid*_dpr;}else{x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
     + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.drawImage(tmp,0,0,c.width,c.height);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
-    + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="butt";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.fillStyle=_col;_markTempCtx.globalAlpha=1;var _mw=_mwid*_dpr;_markTempCtx.lineWidth=_mw;_markTempCtx.fillRect(p.x-_mw/2,p.y-_mw/2,_mw,_mw);_markComposite();}'
-    + 'function _markExtend(from,to){_markTempCtx.beginPath();_markTempCtx.moveTo(from.x,from.y);_markTempCtx.lineTo(to.x,to.y);_markTempCtx.stroke();_markComposite();}'
+    + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="butt";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.fillStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=_mwid*_dpr;_markStart=p;_markMaxDist=0;}'
+    + 'function _markExtend(from,to){var dx=to.x-_markStart.x,dy=to.y-_markStart.y;_markMaxDist=Math.max(_markMaxDist,Math.sqrt(dx*dx+dy*dy));_markTempCtx.beginPath();_markTempCtx.moveTo(from.x,from.y);_markTempCtx.lineTo(to.x,to.y);_markTempCtx.stroke();_markComposite();}'
     + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.5;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
-    + 'function _markEnd(){_markSnap=null;_markTemp=null;_markTempCtx=null;}'
+    + 'function _markEnd(){var mw=_mwid*_dpr;if(_markTempCtx&&_markStart&&_markMaxDist<mw){_markTempCtx.fillRect(_markStart.x-mw/2,_markStart.y-mw/2,mw,mw);_markComposite();}_markSnap=null;_markTemp=null;_markTempCtx=null;_markStart=null;}'
     + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
     + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
     + 'function _stop(){if(!_d){return;}_d=false;_last=null;if(_marking)_markEnd();pi.save();}'
@@ -4732,10 +4793,17 @@ function toggleMemoMaximize() {
       marginLeft: panel.style.marginLeft || ''
     };
     // Maximize
-    panel.style.left = '24px'; panel.style.top = '24px';
+    /* 100vw/100vh はスクロールバーの分だけ実際の可視ビューポートより大きく
+       解決される場合があり、それを使うとパネルの右端・下端が画面外に
+       はみ出す原因になる。window.innerWidth/innerHeight（スクロールバーを
+       含まない実測値）から絶対px値を都度計算することで確実に収める。 */
+    var _mgz = 24;
+    var _mw = Math.max(320, window.innerWidth - _mgz * 2);
+    var _mh = Math.max(240, window.innerHeight - _mgz * 2);
+    panel.style.left = _mgz + 'px'; panel.style.top = _mgz + 'px';
     panel.style.right = 'auto'; panel.style.bottom = 'auto';
-    panel.style.width = 'calc(100vw - 48px)';
-    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.width = _mw + 'px';
+    panel.style.height = _mh + 'px';
     panel.style.marginLeft = '0';
     panel.classList.add('memo-maximized');
     btn.textContent = '↙'; btn.title = '元に戻す';
@@ -4777,10 +4845,17 @@ function toggleCalcMaximize() {
       height: panel.style.height || rect.height + 'px',
       marginLeft: panel.style.marginLeft || ''
     };
-    panel.style.left = '24px'; panel.style.top = '24px';
+    /* 100vw/100vh はスクロールバーの分だけ実際の可視ビューポートより大きく
+       解決される場合があり、それを使うとパネルの右端・下端が画面外に
+       はみ出す原因になる。window.innerWidth/innerHeight（スクロールバーを
+       含まない実測値）から絶対px値を都度計算することで確実に収める。 */
+    var _mgz = 24;
+    var _mw = Math.max(320, window.innerWidth - _mgz * 2);
+    var _mh = Math.max(240, window.innerHeight - _mgz * 2);
+    panel.style.left = _mgz + 'px'; panel.style.top = _mgz + 'px';
     panel.style.right = 'auto'; panel.style.bottom = 'auto';
-    panel.style.width = 'calc(100vw - 48px)';
-    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.width = _mw + 'px';
+    panel.style.height = _mh + 'px';
     panel.style.marginLeft = '0';
     panel.classList.add('calc-maximized');
     btn.textContent = '↙'; btn.title = '元に戻す';
@@ -4817,10 +4892,17 @@ function toggleCmemoMaximize() {
       height: panel.style.height || rect.height + 'px',
       marginLeft: panel.style.marginLeft || ''
     };
-    panel.style.left = '24px'; panel.style.top = '24px';
+    /* 100vw/100vh はスクロールバーの分だけ実際の可視ビューポートより大きく
+       解決される場合があり、それを使うとパネルの右端・下端が画面外に
+       はみ出す原因になる。window.innerWidth/innerHeight（スクロールバーを
+       含まない実測値）から絶対px値を都度計算することで確実に収める。 */
+    var _mgz = 24;
+    var _mw = Math.max(320, window.innerWidth - _mgz * 2);
+    var _mh = Math.max(240, window.innerHeight - _mgz * 2);
+    panel.style.left = _mgz + 'px'; panel.style.top = _mgz + 'px';
     panel.style.right = 'auto'; panel.style.bottom = 'auto';
-    panel.style.width = 'calc(100vw - 48px)';
-    panel.style.height = 'calc(100vh - 48px)';
+    panel.style.width = _mw + 'px';
+    panel.style.height = _mh + 'px';
     panel.style.marginLeft = '0';
     panel.classList.add('cmemo-maximized');
     btn.textContent = '↙'; btn.title = '元に戻す';

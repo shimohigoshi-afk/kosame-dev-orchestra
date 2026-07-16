@@ -47,7 +47,7 @@ body{
   background:
     radial-gradient(ellipse 900px 600px at 12% -8%, rgba(212,188,125,0.045) 0%, transparent 60%),
     radial-gradient(ellipse 700px 550px at 100% 105%, rgba(212,188,125,0.035) 0%, transparent 55%),
-    linear-gradient(180deg, #040a16 0%, #02070f 45%, #010409 100%);
+    linear-gradient(180deg, #010f22 0%, #010a1a 45%, #010308 100%);
   color:var(--text);
   line-height:1.7;
   -webkit-font-smoothing:antialiased;
@@ -241,7 +241,7 @@ input:-webkit-autofill:focus {
 }
 
 .topbar{
-  min-height:112px;background:rgba(10,24,44,0.95);
+  min-height:112px;background:rgba(1,17,37,0.95);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
@@ -332,17 +332,23 @@ input:-webkit-autofill:focus {
   41%{transform:rotate(0deg)}
   100%{transform:rotate(0deg)}
 }
-/* translateYの単位はem（=傘の実寸基準）。SVGのviewBox内部にいた頃は
-   ここがSVGユーザー単位（±40 / 700viewBox ≒ ±5.7%）だったが、雫を
-   viewBoxの外に出したことで通常のCSS px相当になったため、雫自身の高さ
-   (0.15em)に対して同程度（約1.3倍）落下するよう em に置き換えて同じ
-   見え方の比率を保っている。0%/2%/8%/20%/100%のタイミング自体は変更しない。 */
+/* translateYの単位はem（=傘の実寸基準）。.kosame-brand-rainのtop:-0.22emに
+   より、雫はキャノピーの0.22em上から降り始める（=1）。以前は20%時点で
+   translateY(0.2em)止まりで終えていたため、実際の到達点は-0.22em+0.2em＝
+   -0.02em、つまりキャノピー上端に届く直前で止まって消えていた（報告の
+   不具合の実体）。0.24emまで下げることで確実にキャノピー上端を超えて
+   到達させる。また8%(可視化開始)から26%まではopacity:1を保ったまま
+   位置だけを動かし、26%→28%の短い区間だけでフェードアウトさせることで、
+   「空中で消える」のではなく「キャノピーに当たった瞬間に消える」ように
+   見せる。0%/2%/8%のタイミング・落下距離の比率(雫の高さに対し約1.3倍)は
+   変更していない。落下終了・消滅点のみ20%→28%に広げた。 */
 @keyframes kosameRainDropCycle{
   0%{opacity:0;transform:translateY(-0.2em)}
   2%{opacity:0;transform:translateY(-0.2em)}
   8%{opacity:1;transform:translateY(0)}
-  20%{opacity:0;transform:translateY(0.2em)}
-  100%{opacity:0;transform:translateY(0.2em)}
+  26%{opacity:1;transform:translateY(0.24em)}
+  28%{opacity:0;transform:translateY(0.24em)}
+  100%{opacity:0;transform:translateY(0.24em)}
 }
 @media(prefers-reduced-motion:reduce){
   .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
@@ -399,10 +405,20 @@ input:-webkit-autofill:focus {
 .section{display:none;max-width:1600px;margin:0 auto;padding:0 8px}
 .section.active{display:block}
 
-/* ═══ STATUS BAR (replaces hero panel) ═══ */
-.status-bar{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+/* ═══ STATUS BAR (replaces hero panel) ═══
+   目標画像の実測値(輝度12.4)に合わせた地の暗さ。.content の左右上パディング
+   (32px/28px)をマイナスマージンで打ち消し、画面幅いっぱいの帯として敷く
+   （下端の金線を画面幅いっぱいに引くための構造でもある）。 */
+.status-bar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin:-32px -28px 24px;padding:14px 28px;
+  background:#000e21;
+  border-bottom:1px solid #f3bf78;
+  box-shadow:0 1px 8px rgba(243,191,120,0.10);
+}
 .status-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);letter-spacing:0.04em}
-.status-build-tag{margin-left:auto;opacity:0.7}
+.status-build-tag{opacity:0.7}
+.status-clock{margin-left:auto;font-size:10px;letter-spacing:0.04em;color:rgba(251,219,88,0.72);font-variant-numeric:tabular-nums}
 .status-chip svg{width:12px;height:12px;stroke:var(--gold);fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:0.6}
 
 /* ═══ CARD GRID ═══ */
@@ -797,6 +813,7 @@ input:-webkit-autofill:focus {
 .board-panel.wb-marker-mode-active .wb-width-swatch:not(.wb-marker-width-swatch){display:none}
 #board-eraser-btn.active{background:rgba(212,188,125,0.22);border-color:rgba(212,188,125,0.6);color:var(--gold-refined)}
 #board-marker-btn.active{background:rgba(245,217,10,0.22);border-color:rgba(245,217,10,0.6);color:#f5d90a}
+#board-pen-btn.active{background:rgba(212,188,125,0.22);border-color:rgba(212,188,125,0.6);color:var(--gold-refined)}
 .board-btn{
   padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;
   cursor:pointer;transition:all 0.2s;border:none;
@@ -1090,6 +1107,40 @@ input:-webkit-autofill:focus {
 .ins-highlight{background:rgba(200,169,106,0.20);border-left-width:4px}
 .ins-highlight .result-highlight-value{color:#7a5f22;font-size:26px}
 
+/* 必要保障額 大型結果カード */
+.ins-result-card{
+  background:linear-gradient(135deg,rgba(200,169,106,0.10),rgba(200,169,106,0.04));
+  border:1px solid rgba(200,169,106,0.28);border-radius:14px;
+  padding:24px 28px;margin-bottom:20px;text-align:center;
+}
+.ins-result-label{font-size:12px;color:var(--card-text-muted);letter-spacing:0.06em;margin-bottom:6px}
+.ins-result-big{font-size:36px;font-weight:800;color:#d4bc7d;letter-spacing:0.02em;line-height:1.2}
+.ins-result-monthly{margin-top:8px;font-size:13px;color:rgba(212,188,125,0.75)}
+.ins-result-monthly-note{margin-top:6px;font-size:10px;color:#8fa5b8;line-height:1.5}
+.ins-result-age{margin-top:6px;font-size:11px;color:rgba(212,188,125,0.55)}
+/* タイムライン */
+.ins-timeline{margin-top:8px;font-size:10px;color:var(--card-text-muted);line-height:1.6}
+.ins-timeline-bar{display:flex;align-items:center;gap:6px;margin:3px 0;padding:3px 0}
+.ins-timeline-bar-fill{height:8px;border-radius:4px;min-width:4px}
+.ins-timeline-bar-fill.ins-tl-household{background:#4fc3f7}
+.ins-timeline-bar-fill.ins-tl-pension{background:rgba(200,169,106,0.5)}
+/* 子どもの行 */
+.ins-child-row{display:flex;align-items:center;gap:10px;margin:4px 0;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.04)}
+.ins-child-row input{width:70px;height:34px;font-size:13px;border:1px solid rgba(0,0,0,0.2);border-radius:6px;padding:4px 8px;background:#fffdf9;color:#0d1220}
+.ins-child-row .ins-child-label{font-size:11px;color:var(--card-text-muted);min-width:48px}
+.ins-child-row .ins-child-del{background:none;border:none;color:rgba(220,60,60,0.55);cursor:pointer;font-size:14px;padding:2px 6px}
+.ins-child-row .ins-child-del:hover{color:rgba(220,60,60,0.9)}
+/* 必要年数手動モード */
+.ins-years-mode{font-size:10px;margin-left:6px;color:#d4bc7d}
+/* アコーディオン */
+.ins-accordion-trigger{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:12px;color:var(--card-text);padding:4px 0}
+.ins-accordion-trigger .collapse-arrow{display:inline-flex;align-items:center;color:#d4bc7d}
+.ins-accordion-trigger .collapse-arrow svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ins-accordion-body{padding:8px 0 0 0}
+.ins-accordion-section{margin-bottom:10px}
+.ins-accordion-title{font-size:11px;font-weight:700;color:var(--card-text);margin-bottom:3px}
+.ins-accordion-section p{font-size:10px;color:#8fa5b8;line-height:1.7;margin:0}
+
 /* Results */
 .result-box{
   background:#f8f6f0;border:1px solid rgba(200,169,106,0.2);
@@ -1256,6 +1307,7 @@ canvas{display:block;width:100%;border-radius:8px}
   .topbar-divider{display:none}
   .topbar-title{display:none}
   .content{padding:20px 16px}
+  .status-bar{margin:-20px -16px 20px;padding:12px 16px}
   .nav-cards{grid-template-columns:repeat(2,1fr);gap:10px}
   .nav-cards-3col{grid-template-columns:repeat(2,1fr)}
   .nav-cards-core{grid-template-columns:1fr}
@@ -1461,9 +1513,8 @@ canvas{display:block;width:100%;border-radius:8px}
     <section id="section-dashboard" class="section active">
 
       <div class="status-bar">
-        <span class="status-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg> Local only</span>
-        <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg> No server save</span>
-        <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print ready</span>
+        <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg> サーバー未保存</span>
+        <span class="status-clock" id="kd-status-clock"></span>
         <span class="status-chip status-build-tag" id="kd-build-tag"></span>
       </div>
 
@@ -2117,13 +2168,25 @@ canvas{display:block;width:100%;border-radius:8px}
         <div class="tool-title">必要保障額</div>
         <div class="tool-subtitle">遺族の生活費・教育費から必要な保障額を試算します</div>
       </div>
+      <!-- 必要保障額の結果カード（大型表示） -->
+      <div class="ins-result-card" id="ins-result-card">
+        <div class="ins-result-label">純粋に必要な保障額</div>
+        <div class="ins-result-big" id="ins-r-needed-big">—</div>
+        <div class="ins-result-monthly" id="ins-r-monthly"></div>
+        <div class="ins-result-monthly-note" id="ins-r-monthly-note" style="display:none">一時金相当額を必要期間で単純に均等割りした参考値です。特定商品の保険金額、推奨額、加入額を示すものではありません。</div>
+        <div class="ins-result-age" id="ins-r-age"></div>
+      </div>
       <div class="tool-grid">
         <div>
           <div class="card">
-            <div class="card-title">収入・社会保険料</div>
+            <div class="card-title">基本情報</div>
             <div class="form-group" style="margin-bottom:14px">
               <label>年収（万円）</label>
-              <input type="number" class="ins-field" id="ins-income" value="600" min="0" oninput="calcInsurance()">
+              <input type="number" class="ins-field" id="ins-income" value="400" min="0" oninput="calcInsurance()">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label>主たる収入者の年齢</label>
+              <input type="number" class="ins-field" id="ins-age" value="35" min="18" max="80" oninput="calcInsurance()">
             </div>
             <div class="result-box ins-resultbox" id="ins-social" style="background:#f8f6f0">
               <div class="result-row"><span class="result-label">健康保険料（本人負担）</span><span class="result-value" id="ins-health">—</span></div>
@@ -2136,20 +2199,27 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="card-title">遺族の必要費用</div>
             <div class="form-grid">
               <div class="form-group"><label>月間生活費（万円）</label><input type="number" class="ins-field" id="ins-living" value="20" min="0" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>必要年数（年）</label><input type="number" class="ins-field" id="ins-years" value="25" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>必要年数（年）</label><input type="number" class="ins-field" id="ins-years" value="25" min="0" oninput="insYearsManual()"><span class="ins-years-mode" id="ins-years-mode"></span><button class="board-btn clear" id="ins-years-auto-btn" style="display:none;margin-top:4px;font-size:10px;padding:2px 8px" onclick="insResetYearsToAuto()">自動計算に戻す</button></div>
               <div class="form-group"><label>生活費インフレ率（％/年）</label><input type="number" class="ins-field" id="ins-inflation" value="0" min="0" step="0.1" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>教育費合計（万円）</label><input type="number" class="ins-field" id="ins-education" value="800" min="0" oninput="calcInsurance()"></div>
-              <div class="form-group"><label>住居費合計（万円）</label><input type="number" class="ins-field" id="ins-housing" value="1200" min="0" oninput="calcInsurance()"></div>
+              <div class="form-group"><label>教育費合計（万円）</label><input type="number" class="ins-field" id="ins-education" value="800" min="0" readonly style="background:#f0ede4!important;color:#6b5a3a!important;cursor:default" title="子どもの教育費合計（自動計算）"></div>
+              <div class="form-group"><label>住居費合計（万円）</label><input type="number" class="ins-field" id="ins-housing" value="4000" min="0" oninput="calcInsurance()"></div>
+            </div>
+            <!-- 子どもの動的追加 -->
+            <div style="margin-top:12px;border-top:1px solid rgba(0,0,0,0.06);padding-top:10px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="font-size:12px;font-weight:700;color:var(--card-text)">子ども</span>
+                <button class="board-btn clear" onclick="insAddChild()" style="font-size:10px;padding:2px 10px">＋ 子どもを追加</button>
+              </div>
+              <div id="ins-children"></div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-title">公的保障・必要保障額</div>
           <div class="form-grid" style="margin-bottom:14px">
-            <div class="form-group"><label>遺族年金（月額・万円）</label><input type="number" class="ins-field" id="ins-survivor-pension" value="12" min="0" oninput="calcInsurance()"></div>
-            <div class="form-group"><label>遺族年金受給年数</label><input type="number" class="ins-field" id="ins-pension-years" value="20" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>確認済みの想定月額を入力（万円）</label><input type="number" class="ins-field" id="ins-survivor-pension" value="12" min="0" oninput="calcInsurance()"></div>
+            <div class="form-group"><label>遺族年金受給想定年数</label><input type="number" class="ins-field" id="ins-pension-years" value="20" min="0" oninput="calcInsurance()"></div>
             <div class="form-group"><label>その他の資産（万円）</label><input type="number" class="ins-field" id="ins-assets" value="500" min="0" oninput="calcInsurance()"></div>
-            <div class="form-group"><label>既存の保険金額（万円）</label><input type="number" class="ins-field" id="ins-existing" value="0" min="0" oninput="calcInsurance()"></div>
           </div>
           <div class="result-box ins-resultbox">
             <div class="result-row"><span class="result-label">生活費総計</span><span class="result-value" id="ins-r-living">—</span></div>
@@ -2157,17 +2227,41 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="result-row" style="border-top:1px solid rgba(0,0,0,0.08)"><span class="result-label">必要総額</span><span class="result-value" id="ins-r-total-need">—</span></div>
             <div class="result-row"><span class="result-label">－ 遺族年金</span><span class="result-value blue" id="ins-r-pension">—</span></div>
             <div class="result-row"><span class="result-label">－ その他の資産</span><span class="result-value blue" id="ins-r-assets">—</span></div>
-            <div class="result-row"><span class="result-label">－ 既存保険</span><span class="result-value blue" id="ins-r-existing">—</span></div>
-            <div class="result-highlight ins-highlight">
-              <div class="result-highlight-label">純粋に必要な保障額</div>
-              <div class="result-highlight-value" id="ins-r-needed">—</div>
+            <div class="result-row" style="border-top:1px solid rgba(0,0,0,0.08)"><span class="result-label">－ 既存保険</span><span class="result-value blue" id="ins-r-existing">—</span></div>
+            <div style="margin-top:12px">
+              <div class="form-group"><label>既存の保険金額（万円）</label><input type="number" class="ins-field" id="ins-existing" value="0" min="0" oninput="calcInsurance()" style="max-width:180px"></div>
             </div>
           </div>
-          <div style="margin-top:12px;font-size:11px;color:var(--card-text-muted);line-height:1.7">
-            ※遺族年金は概算です。実際の受給額は年金事務所へご確認ください
+          <!-- タイムライン -->
+          <div style="margin-top:14px;font-size:11px;color:var(--card-text);font-weight:700">参考期間</div>
+          <div class="ins-timeline" id="ins-timeline"></div>
+          <div style="margin-top:10px;font-size:11px;color:var(--card-text-muted);line-height:1.6">
+            <span style="color:#4fc3f7">■</span> 家計上の保障必要期間（末子22歳まで）　
+            <span style="color:rgba(200,169,106,0.6)">■</span> 遺族基礎年金 子の対象期間（18歳年度末・参考）
           </div>
-          <div style="margin-top:8px;font-size:11px;color:#8fa5b8;line-height:1.7">
-            ※本試算は簡易的な概算であり、将来の金額を保証するものではありません。あくまでご参考としてご活用ください。
+          <!-- 遺族年金注記 -->
+          <div style="margin-top:10px;font-size:11px;color:var(--card-text-muted);line-height:1.7">
+            ※確認済みの想定月額を入力してください。年収だけからの自動計算は行いません。実際の受給額は年金事務所へご確認ください。
+          </div>
+          <!-- 障害年金・介護制度（折り畳み） -->
+          <div style="margin-top:16px;border-top:1px solid rgba(0,0,0,0.06);padding-top:10px">
+            <div class="ins-accordion-trigger" onclick="insToggleAccordion('ins-accordion-public')" role="button" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();insToggleAccordion('ins-accordion-public')}">
+              <span>公的制度の一般説明</span><span class="collapse-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <div class="collapse-content ins-accordion-body" id="ins-accordion-public">
+              <div class="ins-accordion-section">
+                <div class="ins-accordion-title">障害年金</div>
+                <p>障害年金には障害基礎年金（1級・2級）と障害厚生年金（1級・2級・3級）があります。障害者手帳とは別の制度であり、障害者手帳の等級と障害年金の等級が一致するとは限りません。個別の受給可否・金額は公的窓口（年金事務所等）でご確認ください。</p>
+              </div>
+              <div class="ins-accordion-section">
+                <div class="ins-accordion-title">公的介護制度</div>
+                <p>要介護認定は市区町村が行います。居宅サービスの区分支給限度額は現金給付ではなく、サービス利用の上限目安です（原則1〜3割の利用者負担）。施設費・食費等は別途必要な場合があります。特定保険商品の給付条件と要介護度を直接結びつけるものではありません。</p>
+              </div>
+            </div>
+          </div>
+          <!-- コンプラ注記 -->
+          <div style="margin-top:14px;padding:12px 14px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.1);border-radius:8px;font-size:10px;color:#8fa5b8;line-height:1.8">
+            本機能は一般的な確認・試算・整理を目的とした補助機能です。特定の保険商品・保険会社の推奨、契約申込の誘導を目的とするものではありません。公的制度の表示は一般的な説明であり、個別の受給額・認定・給付を保証するものではありません。実際の内容は各制度の窓口へご確認ください。
           </div>
         </div>
       </div>
@@ -2649,6 +2743,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <button class="wb-width-swatch active" data-width="4" onclick="setPenWidth(4)">中</button>
         <button class="wb-width-swatch" data-width="6" onclick="setPenWidth(6)">太</button>
         <span class="wb-tool-divider"></span>
+        <button class="board-btn clear active" id="board-pen-btn" onclick="togglePen()" title="ペン">ペン</button>
         <button class="board-btn clear" id="board-marker-btn" onclick="toggleMarker()" title="マーカー（半透明・蛍光ペン風）">マーカー</button>
         <button class="wb-width-swatch wb-marker-width-swatch" data-mwidth="12" onclick="setMarkerWidth(12)" title="マーカー：細">細</button>
         <button class="wb-width-swatch wb-marker-width-swatch active" data-mwidth="20" onclick="setMarkerWidth(20)" title="マーカー：中">中</button>
@@ -2807,8 +2902,28 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-16-a';
+var KOSAME_BUILD_ID = 'build 2026-07-16-b';
 (function() { var el = document.getElementById('kd-build-tag'); if (el) el.textContent = KOSAME_BUILD_ID; })();
+
+/* ═══ ステータス行の日時表示（JST固定・曜日は実日付から算出・1分ごと更新） ═══ */
+function _kdFormatClock() {
+  var parts = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short'
+  }).formatToParts(new Date());
+  var map = {};
+  parts.forEach(function(p) { map[p.type] = p.value; });
+  return map.year + '年' + map.month + '月' + map.day + '日(' + map.weekday + ')　' + map.hour + ':' + map.minute;
+}
+function _kdUpdateClock() {
+  var el = document.getElementById('kd-status-clock');
+  if (el) el.textContent = _kdFormatClock();
+}
+_kdUpdateClock();
+setTimeout(function() {
+  _kdUpdateClock();
+  setInterval(_kdUpdateClock, 60000);
+}, 60000 - (Date.now() % 60000));
 
 /* ── Formatting ── */
 function fmt(n) {
@@ -3568,6 +3683,11 @@ function qid(id) {
   return document.getElementById(id);
 }
 function calcInsurance() {
+  /* 必要年数の自動提案を先に行い、その値で計算する */
+  _insProgrammaticUpdate = true;
+  insUpdateYearsAuto();
+  _insProgrammaticUpdate = false;
+
   const income = parseFloat(qid('ins-income').value) || 0;
   const health = income * 0.0499;
   const pension = income * 0.0915;
@@ -3578,10 +3698,16 @@ function calcInsurance() {
   qid('ins-employ').textContent = fmt(employ);
   qid('ins-social-total').textContent = fmt(socialTotal);
 
+  /* 子どもの教育費を合算し、ins-educationのreadonly表示へ反映（二重加算防止） */
+  var childrenEdu = 0;
+  _insChildren.forEach(function(c) { childrenEdu += (c.edu || 0); });
+  var eduInput = qid('ins-education');
+  if (eduInput) { eduInput.value = childrenEdu; }
+
   const living = parseFloat(qid('ins-living').value) || 0;
   const years = parseFloat(qid('ins-years').value) || 0;
   const inflation = parseFloat(qid('ins-inflation').value) || 0;
-  const education = parseFloat(qid('ins-education').value) || 0;
+  const education = childrenEdu;
   const housing = parseFloat(qid('ins-housing').value) || 0;
   const survivorPension = parseFloat(qid('ins-survivor-pension').value) || 0;
   const pensionYears = parseFloat(qid('ins-pension-years').value) || 0;
@@ -3606,6 +3732,207 @@ function calcInsurance() {
   qid('ins-r-assets').textContent = fmt(assets);
   qid('ins-r-existing').textContent = fmt(existing);
   qid('ins-r-needed').textContent = fmt(needed);
+
+  /* 大型結果カード */
+  var bigEl = qid('ins-r-needed-big');
+  if (bigEl) bigEl.textContent = fmt(needed);
+  var monthlyEl = qid('ins-r-monthly');
+  var monthlyNoteEl = qid('ins-r-monthly-note');
+  if (monthlyEl && monthlyNoteEl) {
+    if (yearsN > 0 && needed > 0) {
+      var monthly = needed / yearsN / 12;
+      monthlyEl.textContent = '参考月額（単純均等割）　約' + (monthly < 10000 ? monthly.toFixed(1) : Math.round(monthly)) + '万円／月';
+      monthlyEl.style.display = '';
+      monthlyNoteEl.style.display = '';
+    } else {
+      monthlyEl.textContent = '';
+      monthlyEl.style.display = 'none';
+      monthlyNoteEl.style.display = 'none';
+    }
+  }
+  /* 年齢から終了時年齢を表示 */
+  var ageEl = qid('ins-r-age');
+  if (ageEl) {
+    var age = parseInt(qid('ins-age').value) || 0;
+    if (age > 0 && yearsN > 0) {
+      ageEl.textContent = '現在' + age + '歳 → 必要期間終了時' + (age + yearsN) + '歳';
+      ageEl.style.display = '';
+    } else {
+      ageEl.style.display = 'none';
+    }
+  }
+
+  /* 手動モード表示の更新 */
+  if (_insYearsManual) {
+    var modeEl = qid('ins-years-mode');
+    var autoBtn = qid('ins-years-auto-btn');
+    if (modeEl) modeEl.textContent = '（手動）';
+    if (autoBtn) autoBtn.style.display = 'inline-block';
+  }
+
+  /* タイムライン更新 */
+  insUpdateTimeline();
+}
+
+/* ═══ Insurance Children ═══ */
+let _insChildren = [];
+let _insChildCounter = 0;
+let _insYearsManual = false;
+let _insProgrammaticUpdate = false;
+let _insSavedState = null;
+
+function _insSaveState() {
+  _insSavedState = {
+    income: qid('ins-income') ? qid('ins-income').value : '',
+    age: qid('ins-age') ? qid('ins-age').value : '',
+    living: qid('ins-living') ? qid('ins-living').value : '',
+    inflation: qid('ins-inflation') ? qid('ins-inflation').value : '',
+    housing: qid('ins-housing') ? qid('ins-housing').value : '',
+    survivorPension: qid('ins-survivor-pension') ? qid('ins-survivor-pension').value : '',
+    pensionYears: qid('ins-pension-years') ? qid('ins-pension-years').value : '',
+    assets: qid('ins-assets') ? qid('ins-assets').value : '',
+    existing: qid('ins-existing') ? qid('ins-existing').value : '',
+    years: qid('ins-years') ? qid('ins-years').value : '',
+    children: _insChildren.map(function(c) { return {id: c.id, age: c.age, edu: c.edu}; }),
+    childCounter: _insChildCounter,
+    yearsManual: _insYearsManual,
+  };
+}
+function _insRestoreState() {
+  if (!_insSavedState) return;
+  var s = _insSavedState;
+  var fields = { 'ins-income': s.income, 'ins-age': s.age, 'ins-living': s.living,
+    'ins-inflation': s.inflation, 'ins-housing': s.housing,
+    'ins-survivor-pension': s.survivorPension, 'ins-pension-years': s.pensionYears,
+    'ins-assets': s.assets, 'ins-existing': s.existing, 'ins-years': s.years };
+  for (var id in fields) {
+    var el = qid(id); if (el && fields[id] !== undefined && fields[id] !== '') el.value = fields[id];
+  }
+  _insChildren = (s.children || []).map(function(c) { return {id: c.id, age: c.age, edu: c.edu}; });
+  _insChildCounter = s.childCounter || 0;
+  _insYearsManual = s.yearsManual || false;
+  insRenderChildren();
+  if (_insYearsManual) {
+    var modeEl = qid('ins-years-mode'); if (modeEl) modeEl.textContent = '（手動）';
+    var autoBtn = qid('ins-years-auto-btn'); if (autoBtn) autoBtn.style.display = 'inline-block';
+  }
+}
+
+function insAddChild() {
+  _insChildCounter++;
+  var id = 'ins-child-' + _insChildCounter;
+  _insChildren.push({ id: id, age: 5, edu: 300 });
+  insRenderChildren();
+  if (!_insYearsManual) calcInsurance();
+}
+function insRemoveChild(id) {
+  _insChildren = _insChildren.filter(function(c) { return c.id !== id; });
+  insRenderChildren();
+  if (!_insYearsManual) calcInsurance();
+}
+function insRenderChildren() {
+  var container = qid('ins-children');
+  if (!container) return;
+  if (_insChildren.length === 0) {
+    container.innerHTML = '<div style="font-size:10px;color:#8fa5b8;padding:4px 0">子どもはいません</div>';
+    return;
+  }
+  container.innerHTML = _insChildren.map(function(c, i) {
+    var idx = i + 1;
+    var label = idx === 1 ? '第一子' : idx === 2 ? '第二子' : idx === 3 ? '第三子' : '第' + idx + '子';
+    return '<div class="ins-child-row" data-child-id="' + c.id + '">'
+      + '<span class="ins-child-label">' + label + '</span>'
+      + '<span style="font-size:10px;color:var(--card-text-muted)">年齢</span>'
+      + '<input type="number" value="' + (c.age || 5) + '" min="0" max="25" data-child-id="' + c.id + '" data-field="age" onchange="insChildUpdate(\'' + c.id + '\',\'age\',this.value)" oninput="insChildUpdate(\'' + c.id + '\',\'age\',this.value)">'
+      + '<span style="font-size:10px;color:var(--card-text-muted)">教育費(万)</span>'
+      + '<input type="number" value="' + (c.edu || 300) + '" min="0" data-child-id="' + c.id + '" data-field="edu" onchange="insChildUpdate(\'' + c.id + '\',\'edu\',this.value)" oninput="insChildUpdate(\'' + c.id + '\',\'edu\',this.value)">'
+      + '<button class="ins-child-del" onclick="insRemoveChild(\'' + c.id + '\')" title="削除">✕</button>'
+      + '</div>';
+  }).join('');
+}
+function insChildUpdate(id, field, val) {
+  var child = _insChildren.find(function(c) { return c.id === id; });
+  if (!child) return;
+  if (field === 'age') child.age = parseInt(val) || 0;
+  else if (field === 'edu') child.edu = parseInt(val) || 0;
+  insUpdateYearsAuto();
+  calcInsurance();
+}
+function insUpdateYearsAuto() {
+  if (_insYearsManual) return;
+  var ages = _insChildren.map(function(c) { return c.age || 0; });
+  var youngest = ages.length > 0 ? Math.min.apply(null, ages) : null;
+  var yearsInput = qid('ins-years');
+  var modeEl = qid('ins-years-mode');
+  var autoBtn = qid('ins-years-auto-btn');
+  if (youngest !== null && youngest < 22) {
+    var autoYears = 22 - youngest;
+    if (yearsInput) yearsInput.value = autoYears;
+    if (modeEl) modeEl.textContent = '（自動）';
+    if (autoBtn) autoBtn.style.display = 'none';
+  } else {
+    if (modeEl) modeEl.textContent = '';
+    if (autoBtn) autoBtn.style.display = 'none';
+  }
+}
+function insYearsManual() {
+  if (_insProgrammaticUpdate) return;
+  _insYearsManual = true;
+  var modeEl = qid('ins-years-mode');
+  var autoBtn = qid('ins-years-auto-btn');
+  if (modeEl) modeEl.textContent = '（手動）';
+  if (autoBtn) autoBtn.style.display = 'inline-block';
+  calcInsurance();
+}
+function insResetYearsToAuto() {
+  _insYearsManual = false;
+  insUpdateYearsAuto();
+  var modeEl = qid('ins-years-mode');
+  var autoBtn = qid('ins-years-auto-btn');
+  if (modeEl) modeEl.textContent = '（自動）';
+  if (autoBtn) autoBtn.style.display = 'none';
+  calcInsurance();
+}
+function insUpdateTimeline() {
+  var el = qid('ins-timeline');
+  if (!el) return;
+  var years = parseFloat(qid('ins-years').value) || 0;
+  var yearsN = Math.max(0, Math.round(years));
+  var ages = _insChildren.map(function(c) { return c.age || 0; });
+  var youngest = ages.length > 0 ? Math.min.apply(null, ages) : null;
+  var childYears = (youngest !== null && youngest < 22) ? (22 - youngest) : 0;
+  var pensionLimit = (youngest !== null && youngest < 18) ? Math.max(0, 18 - youngest) : 0;
+  var maxBar = Math.max(yearsN, childYears, pensionLimit, 1);
+
+  var html = '';
+  if (childYears > 0) {
+    var pctA = Math.round(childYears / maxBar * 100);
+    html += '<div class="ins-timeline-bar"><span style="min-width:80px;font-size:10px">家計保障期間</span><span class="ins-timeline-bar-fill ins-tl-household" style="width:' + pctA + '%"></span><span style="font-size:9px">' + childYears + '年</span></div>';
+  }
+  if (pensionLimit > 0) {
+    var pctB = Math.round(pensionLimit / maxBar * 100);
+    html += '<div class="ins-timeline-bar"><span style="min-width:80px;font-size:10px">子の対象期間</span><span class="ins-timeline-bar-fill ins-tl-pension" style="width:' + pctB + '%"></span><span style="font-size:9px;color:rgba(200,169,106,0.6)">' + pensionLimit + '年（参考）</span></div>';
+  }
+  if (!html) html = '<div style="font-size:10px;color:#8fa5b8;padding:4px 0">子ども情報がありません</div>';
+  el.innerHTML = html;
+}
+function insToggleAccordion(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var trigger = el.previousElementSibling;
+  var arrow = trigger ? trigger.querySelector('.collapse-arrow') : null;
+  var isOpen = el.classList.contains('expanded') || el.style.display === 'block';
+  if (isOpen) {
+    el.classList.remove('expanded');
+    el.style.display = 'none';
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (arrow) arrow.style.transform = '';
+  } else {
+    el.classList.add('expanded');
+    el.style.display = 'block';
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
 }
 
 /* ── Gift Tax ── */
@@ -4046,7 +4373,6 @@ function wbSaveCurrentPage() {
 function wbLoadPage(idx) {
   const canvas = document.getElementById('board-canvas');
   if (!canvas || !_wbCtx) return;
-  _wbCtx.save();
   _wbCtx.globalAlpha = 1;
   _wbCtx.globalCompositeOperation = 'source-over';
   _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
@@ -4059,7 +4385,7 @@ function wbLoadPage(idx) {
     };
     img.src = _wbPages[idx];
   }
-  _wbCtx.restore();
+  _wbApplyStyle();
   wbRedrawWithBg();
 }
 /* ═══ 背景レイヤー（画像/PDFドラッグ&ドロップ） ═══ */
@@ -4267,27 +4593,43 @@ function setMarkerWidth(w) {
     el.classList.toggle('active', parseFloat(el.getAttribute('data-mwidth')) === _wbMarkerWidth);
   });
 }
+/* ペン／マーカー／消しゴムは常にどれか1つだけが選択された排他状態を保つ
+   （どれも選ばれていない状態を作らない）。既定はペン。 */
+function togglePen() {
+  _wbEraser = false; _wbMarker = false;
+  _wbApplyStyle();
+  const penBtn = document.getElementById('board-pen-btn');
+  if (penBtn) penBtn.classList.add('active');
+  const mBtn = document.getElementById('board-marker-btn');
+  if (mBtn) mBtn.classList.remove('active');
+  const eBtn = document.getElementById('board-eraser-btn');
+  if (eBtn) eBtn.classList.remove('active');
+  const panel = document.getElementById('board-panel');
+  if (panel) panel.classList.remove('wb-marker-mode-active');
+}
 function toggleEraser() {
-  _wbEraser = !_wbEraser;
-  if (_wbEraser) _wbMarker = false;
+  _wbEraser = true; _wbMarker = false;
   _wbApplyStyle();
   const btn = document.getElementById('board-eraser-btn');
-  if (btn) btn.classList.toggle('active', _wbEraser);
+  if (btn) btn.classList.add('active');
+  const penBtn = document.getElementById('board-pen-btn');
+  if (penBtn) penBtn.classList.remove('active');
   const mBtn = document.getElementById('board-marker-btn');
   if (mBtn) mBtn.classList.remove('active');
   const panel = document.getElementById('board-panel');
   if (panel) panel.classList.remove('wb-marker-mode-active');
 }
 function toggleMarker() {
-  _wbMarker = !_wbMarker;
-  if (_wbMarker) _wbEraser = false;
+  _wbMarker = true; _wbEraser = false;
   _wbApplyStyle();
   const btn = document.getElementById('board-marker-btn');
-  if (btn) btn.classList.toggle('active', _wbMarker);
+  if (btn) btn.classList.add('active');
+  const penBtn = document.getElementById('board-pen-btn');
+  if (penBtn) penBtn.classList.remove('active');
   const eBtn = document.getElementById('board-eraser-btn');
   if (eBtn) eBtn.classList.remove('active');
   const panel = document.getElementById('board-panel');
-  if (panel) panel.classList.toggle('wb-marker-mode-active', _wbMarker);
+  if (panel) panel.classList.add('wb-marker-mode-active');
 }
 function initWhiteboard() {
   const canvas = document.getElementById('board-canvas');
@@ -4734,6 +5076,7 @@ function wbStandaloneHTML() {
     + '<button data-w="2" onclick="pi.width(this,2)">細</button>'
     + '<button data-w="4" class="wact" onclick="pi.width(this,4)">中</button>'
     + '<button data-w="6" onclick="pi.width(this,6)">太</button>'
+    + '<button id="penBtn" class="wact" onclick="pi.pen()" title="ペン">ペン</button>'
     + '<button id="markerBtn" onclick="pi.marker()" title="マーカー（半透明・蛍光ペン風）">マーカー</button>'
     + '<button data-mw="12" onclick="pi.markerWidth(this,12)" title="マーカー：細">細</button>'
     + '<button data-mw="20" class="wact" onclick="pi.markerWidth(this,20)" title="マーカー：中">中</button>'
@@ -4796,7 +5139,7 @@ function wbStandaloneHTML() {
     + 'add:function(){pi.save();_p.splice(_i+1,0,"");_hasContent.splice(_i+1,0,false);_i++;pi.clear();pi.upd();},'
     + 'del:function(){if(_p.length<=1)return;pi.save();_p.splice(_i,1);_hasContent.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},'
     + 'clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";_hasContent[_i]=false;},'
-    + 'save:function(){if(_pending)return;var c=document.getElementById("mc");if(!c)return;_p[_i]=c.toDataURL("image/png");},'
+    + 'save:function(){if(_pending)return;var c=document.getElementById("mc");if(!c||!c.width||!c.height)return;_p[_i]=c.toDataURL("image/png");},'
     + 'load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");_loadTok++;var tok=_loadTok;x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);if(_p[_i]){_pending=true;var img=new Image();img.onload=function(){if(tok!==_loadTok)return;x.globalAlpha=1;x.globalCompositeOperation="source-over";x.drawImage(img,0,0);_pending=false;};img.src=_p[_i];}else{_pending=false;}},'
     + 'upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+"ページ";_bind();if(_bridge){try{_bridge.setCurrent(_i);_bridge.notifyChanged();}catch(e){}}},'
     + 'savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},'
@@ -4805,14 +5148,23 @@ function wbStandaloneHTML() {
     + 'printAll:function(){pi.save();var list=[];_p.forEach(function(s,i){if(_hasContent[i])list.push({src:s,idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
     + 'color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},'
     + 'width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},'
-    + 'eraser:function(){_erasing=!_erasing;if(_erasing)_marking=false;var e=document.getElementById("eraserBtn");if(e)e.classList.toggle("wact",_erasing);var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");document.body.classList.remove("marker-mode");_style();},'
-    + 'marker:function(){_marking=!_marking;if(_marking)_erasing=false;var m=document.getElementById("markerBtn");if(m)m.classList.toggle("wact",_marking);var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");document.body.classList.toggle("marker-mode",_marking);_style();},'
+    + 'pen:function(){_erasing=false;_marking=false;var p=document.getElementById("penBtn");if(p)p.classList.add("wact");var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");document.body.classList.remove("marker-mode");_style();},'
+    + 'eraser:function(){_erasing=true;_marking=false;var e=document.getElementById("eraserBtn");if(e)e.classList.add("wact");var p=document.getElementById("penBtn");if(p)p.classList.remove("wact");var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");document.body.classList.remove("marker-mode");_style();},'
+    + 'marker:function(){_marking=true;_erasing=false;var m=document.getElementById("markerBtn");if(m)m.classList.add("wact");var p=document.getElementById("penBtn");if(p)p.classList.remove("wact");var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");document.body.classList.toggle("marker-mode",_marking);_style();},'
     + 'markerWidth:function(btn,w){_mwid=w;var els=document.querySelectorAll("[data-mw]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();}'
     + '};'
-    + '_wbResize();'
-    + 'var _rt;window.onresize=function(){clearTimeout(_rt);_rt=setTimeout(_wbResize,150);};'
     + '_bind();'
-    + 'if(_p[_i]){var img=new Image();img.onload=function(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.drawImage(img,0,0);};img.src=_p[_i];}'
+    + '/* 別ウィンドウを開いた直後はレイアウトが未確定で、canvasのCSSサイズが'
+    + '   0のまま_wbResize()が走ることがある（そうなるとcanvas.width/heightが'
+    + '   0になり、直後に描き戻した復元画像が実質失われる）。getBoundingClientRect()'
+    + '   が実寸を返すまでrequestAnimationFrameで待ってから、リサイズ・復元の'
+    + '   順で必ず実行する。復元は既存のpi.load()（_pendingフラグで非同期読込中を'
+    + '   表す仕組みを既に持つ）を再利用することで、初回読込中にpi.save()が'
+    + '   呼ばれても（_pendingガードにより）空白のキャンバスで正本を上書きしない'
+    + '   ようにする。 */'
+    + 'function _waitForCanvasSize(cb){var r=c.getBoundingClientRect();if(r.width>0&&r.height>0){cb();}else{requestAnimationFrame(function(){_waitForCanvasSize(cb);});}}'
+    + '_waitForCanvasSize(function(){_wbResize();pi.load();});'
+    + 'var _rt;window.onresize=function(){clearTimeout(_rt);_rt=setTimeout(_wbResize,150);};'
     + 'pi.upd();'
     + 'window.addEventListener("beforeunload",function(){pi.save();if(_bridge){try{_bridge.setCurrent(_i);_bridge.notifyChanged();}catch(e){}}});'
     + '<\/script></body></html>';
@@ -5424,7 +5776,7 @@ function openWorkspace(key) {
   }
   setTimeout(() => {
     if (key==='mortgage'){calcMortgage();drawMortgageChart();}
-    if (key==='insurance') calcInsurance();
+    if (key==='insurance') { _insRestoreState(); calcInsurance(); }
     if (key==='tax') calcGiftTax();
     if (key==='bmi') calcBMI();
     if (key==='asset'){calcAsset();drawAssetChart();}
@@ -5434,6 +5786,8 @@ function openWorkspace(key) {
   }, 100);
 }
 function closeWorkspace() {
+  /* 必要保障額の状態を閉じる前に保存 */
+  _insSaveState();
   const panel = document.getElementById('workspace-panel');
   if (!panel) return;
   panel.classList.remove('open');
@@ -5638,11 +5992,21 @@ function formatInsCond() {
   const income = qid('ins-income') ? qid('ins-income').value : '?';
   const living = qid('ins-living') ? qid('ins-living').value : '?';
   const years = qid('ins-years') ? qid('ins-years').value : '?';
-  const education = qid('ins-education') ? qid('ins-education').value : '?';
-  const housing = qid('ins-housing') ? qid('ins-housing').value : '?';
-  return '年収' + income + '万・生活費' + living + '万×' + years + '年・教育' + education + '・住居' + housing;
+  const age = qid('ins-age') ? qid('ins-age').value : '';
+  var childCnt = _insChildren.length;
+  var childrenEdu = 0;
+  _insChildren.forEach(function(c) { childrenEdu += (c.edu || 0); });
+  var cond = '年収' + income + '万・生活費' + living + '万×' + years + '年・教育' + childrenEdu + '万';
+  if (age) cond += '・年齢' + age + '歳';
+  if (childCnt > 0) cond += '・子' + childCnt + '人';
+  return cond;
 }
-function formatInsResult() { return (qid('ins-r-needed') ? qid('ins-r-needed').textContent : '—'); }
+function formatInsResult() {
+  var needed = (qid('ins-r-needed-big') ? qid('ins-r-needed-big').textContent : (qid('ins-r-needed') ? qid('ins-r-needed').textContent : '—'));
+  var ageEl = qid('ins-r-age');
+  var ageText = (ageEl && ageEl.textContent) ? '　' + ageEl.textContent : '';
+  return needed + '万円' + ageText;
+}
 function formatAssetCond() {
   const m = document.getElementById('ast-monthly'); const y = document.getElementById('ast-years'); const r = document.getElementById('ast-rate');
   if (!m || !y || !r) return '';

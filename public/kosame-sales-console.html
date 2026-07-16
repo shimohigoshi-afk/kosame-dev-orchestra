@@ -402,6 +402,7 @@ input:-webkit-autofill:focus {
 /* ═══ STATUS BAR (replaces hero panel) ═══ */
 .status-bar{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
 .status-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);letter-spacing:0.04em}
+.status-build-tag{margin-left:auto;opacity:0.7}
 .status-chip svg{width:12px;height:12px;stroke:var(--gold);fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:0.6}
 
 /* ═══ CARD GRID ═══ */
@@ -616,7 +617,7 @@ input:-webkit-autofill:focus {
   box-shadow:0 8px 40px rgba(0,0,0,0.4);
   left:auto;top:auto;transform:none;flex:0 0 auto;
 }
-.calc-panel.open{display:block}
+.calc-panel.open{display:flex;flex-direction:column}
 .calc-panel.calc-maximized{display:flex;flex-direction:column}
 /* ═══ RESIZE HANDLE (calc / memo / cmemo 共通) ═══ */
 .resize-handle{
@@ -650,7 +651,7 @@ input:-webkit-autofill:focus {
 .rz8-sw{bottom:0;left:0;width:18px;height:18px;cursor:nesw-resize}
 .board-panel.wb-maximized .rz8,.memo-panel.memo-maximized .rz8,.cmemo-panel.cmemo-maximized .rz8,.calc-panel.calc-maximized .rz8{display:none}
 .calc-panel *{min-height:0}
-.calc-tabs{display:flex;gap:4px;margin:0 0 8px}
+.calc-tabs{display:flex;gap:4px;margin:0 0 8px;flex-shrink:0}
 .calc-tab{padding:3px 12px;border-radius:12px;font-size:10px;font-weight:600;color:var(--text-dim);cursor:pointer;border:1px solid rgba(200,169,106,0.15);transition:all 0.15s;white-space:nowrap}
 .calc-tab:hover{color:var(--text);border-color:rgba(200,169,106,0.35)}
 .calc-tab.active{color:var(--gold);border-color:rgba(200,169,106,0.45);background:rgba(200,169,106,0.08)}
@@ -661,13 +662,15 @@ input:-webkit-autofill:focus {
   color:var(--gold);font-size:20px;font-weight:700;
   text-align:right;line-height:44px;overflow:hidden;
   font-variant-numeric:tabular-nums;
+  flex-shrink:0;
 }
 .calc-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);
+  display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(7,1fr);
   gap:6px;margin-top:10px;
+  flex:1;min-height:0;
 }
 .calc-btn{
-  height:40px;border:none;border-radius:8px;
+  border:none;border-radius:8px;
   font-size:14px;font-weight:600;cursor:pointer;
   transition:all 0.15s;
   /* 実測ピクセル値に基づく調整：パネル背景(#102540系・輝度約34.5)に対して
@@ -677,7 +680,10 @@ input:-webkit-autofill:focus {
      グロー等を使わず明度差と隙間だけでボタンとして独立して見えるようにする。 */
   background:#1d4374;
   color:#fff;
+  width:100%;height:100%;
 }
+.calc-btn:disabled{opacity:0.35;cursor:default}
+.calc-btn:disabled:hover{background:#1d4374;color:#fff}
 .calc-btn:hover{background:#23518c;color:var(--gold)}
 .calc-btn:active{background:#18375f}
 .calc-btn.op{
@@ -1458,6 +1464,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="status-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg> Local only</span>
         <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M17 17.5a4 4 0 000-8 5.5 5.5 0 00-10.4 1.7A3.5 3.5 0 007 17.5h10z"/><line x1="3" y1="3" x2="21" y2="21"/></svg> No server save</span>
         <span class="status-chip"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print ready</span>
+        <span class="status-chip status-build-tag" id="kd-build-tag"></span>
       </div>
 
       <!-- MEETING DESK -->
@@ -2762,32 +2769,46 @@ canvas{display:block;width:100%;border-radius:8px}
   </div>
   <div class="calc-display" id="calc-display">0</div>
   <div class="calc-grid">
+    <button class="calc-btn" id="calc-mc-btn" onclick="calcInput('MC')">MC</button>
+    <button class="calc-btn" id="calc-mr-btn" onclick="calcInput('MR')">MR</button>
+    <button class="calc-btn" onclick="calcInput('M+')">M+</button>
+    <button class="calc-btn" onclick="calcInput('M-')">M−</button>
+    <button class="calc-btn" onclick="calcInput('%')">%</button>
+    <button class="calc-btn" onclick="calcInput('CE')">CE</button>
     <button class="calc-btn clr" onclick="calcInput('C')">C</button>
     <button class="calc-btn" onclick="calcInput('⌫')">⌫</button>
-    <button class="calc-btn op" onclick="calcInput('/')">÷</button>
-    <button class="calc-btn op" onclick="calcInput('*')">×</button>
     <button class="calc-btn" onclick="calcInput('7')">7</button>
     <button class="calc-btn" onclick="calcInput('8')">8</button>
     <button class="calc-btn" onclick="calcInput('9')">9</button>
-    <button class="calc-btn op" onclick="calcInput('-')">−</button>
+    <button class="calc-btn op" onclick="calcInput('/')">÷</button>
     <button class="calc-btn" onclick="calcInput('4')">4</button>
     <button class="calc-btn" onclick="calcInput('5')">5</button>
     <button class="calc-btn" onclick="calcInput('6')">6</button>
-    <button class="calc-btn op" onclick="calcInput('+')">＋</button>
+    <button class="calc-btn op" onclick="calcInput('*')">×</button>
     <button class="calc-btn" onclick="calcInput('1')">1</button>
     <button class="calc-btn" onclick="calcInput('2')">2</button>
     <button class="calc-btn" onclick="calcInput('3')">3</button>
-    <button class="calc-btn eq" onclick="calcInput('=')">＝</button>
-    <button class="calc-btn" onclick="calcInput('0')" style="grid-column:span 2">0</button>
+    <button class="calc-btn op" onclick="calcInput('-')">−</button>
+    <button class="calc-btn" onclick="calcInput('±')">±</button>
+    <button class="calc-btn" onclick="calcInput('0')">0</button>
     <button class="calc-btn" onclick="calcInput('.')">.</button>
-    <button class="calc-btn copy" onclick="calcCopy()" style="grid-column:span 4;height:32px;font-size:11px">📋 コピー</button>
+    <button class="calc-btn op" onclick="calcInput('+')">＋</button>
+    <button class="calc-btn eq" style="grid-column:span 4" onclick="calcInput('=')">＝</button>
   </div>
+  <button class="calc-btn copy" onclick="calcCopy()" style="width:100%;height:32px;font-size:11px;margin-top:6px;flex-shrink:0">📋 コピー</button>
 </div>
 
 <script>
 /* ═══════════════════════════════════════════
    KOSAME Sales Console — JS
    ═══════════════════════════════════════════ */
+
+/* このファイルを変更するたびに末尾のアルファベットを更新する（b, c, d...）。
+   ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
+   フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
+   ようにするための唯一の情報源。 */
+var KOSAME_BUILD_ID = 'build 2026-07-16-a';
+(function() { var el = document.getElementById('kd-build-tag'); if (el) el.textContent = KOSAME_BUILD_ID; })();
 
 /* ── Formatting ── */
 function fmt(n) {
@@ -4573,18 +4594,21 @@ function closeBoard() {
      非表示にする前に必ず保存する。これを怠ると開き直した際に最後の
      編集内容が失われる。 */
   wbSaveCurrentPage();
+  /* 'open'除去を最優先・無条件で行う（下のtry節のコメント参照）。 */
   panel.classList.remove('open');
-  /* 最大化したまま閉じられた場合、_wbMaximized/クラス/インラインの
-     width・heightが残ったままになる。次にopenBoardModal()で開いた際、
-     位置だけ通常位置にリセットされ、サイズは最大化時の値が残ってしまい
-     「開いたら画面外にはみ出て消えたように見える」原因になるため、
-     閉じる時点で最大化状態を必ず解除しておく。 */
-  if (_wbMaximized) {
+  try {
+    /* .board-panel.wb-maximized{display:flex} は 'open' クラスの有無に
+       関係なく単独で適用されるため、_wbMaximized フラグがDOM上の
+       wb-maximizedクラスと食い違っていると、'open'を消してもこの
+       クラスだけでパネルが表示されたままになる。閉じる時点でフラグの
+       値に関わらずクラス自体を無条件で外す（面談メモと同一の対策）。 */
     panel.classList.remove('wb-maximized');
     panel.style.width = ''; panel.style.height = '';
     _wbMaximized = false;
     const btn = document.getElementById('board-max-btn');
     if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  } catch (e) {
+    console.error('[KOSAME] closeBoard: 最大化状態リセットに失敗しましたが、パネルは閉じます', e);
   }
 }
 
@@ -4688,6 +4712,7 @@ function wbStandaloneHTML() {
     + '.cwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;background:#faf8f2;margin:12px;border-radius:12px;border:1px solid rgba(0,0,0,0.08);overflow:hidden}'
     + 'canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}'
     + '.note{padding:6px 16px;font-size:10px;color:rgba(255,255,255,0.3);text-align:center;flex-shrink:0}'
+    + '.buildtag{padding:0 16px 6px;font-size:10px;color:rgba(255,255,255,0.3);text-align:center;flex-shrink:0}'
     + '@media print{body>*:not(.cwrap){display:none!important}html,body{height:auto!important}.cwrap{flex:none!important;margin:0;border:none;border-radius:0;padding:0;width:100%;height:100vh}}'
     + '</style></head><body>'
     + '<div class="hdr"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="14" y2="12"/></svg>'
@@ -4721,6 +4746,7 @@ function wbStandaloneHTML() {
     + '<button onclick="pi.saveAllPng()">全PNG保存</button>'
     + '</div><div class="cwrap"><canvas id="mc"></canvas></div>'
     + '<div class="note">入力内容はサーバーに保存されません。印刷・保存はご利用端末上で行われます。</div>'
+    + '<div class="buildtag">' + KOSAME_BUILD_ID + '</div>'
     + '<script>'
     + 'var _op=null,_bridge=null;try{_op=(window.opener&&!window.opener.closed)?window.opener:null;_bridge=(_op&&_op.kosameWbBridge)?_op.kosameWbBridge:null;}catch(e){_op=null;_bridge=null;}'
     + '/* 正本(_wbPages等)はメインコンソール側が保持する。別ウィンドウはコピーを持たず、'
@@ -4840,17 +4866,25 @@ function openMemo() {
 function closeMemo() {
   const panel = document.getElementById('memo-panel');
   if (!panel) return;
+  /* 'open'除去を最優先・無条件で行う。これが最後まで到達すれば
+     パネルは必ず閉じる（CSS上 .memo-panel.open だけが表示条件ではない
+     点に注意。下のtry節を参照）。 */
   panel.classList.remove('open');
-  /* 最大化したまま閉じると_memoMaximized/クラス/インラインwidth・heightが
-     残り、再度openMemo()で開いた時に位置だけ通常位置・サイズは最大化時の
-     まま、という不整合な状態になり画面外にはみ出て消えて見える。閉じる
-     時点で必ず最大化状態を解除する。 */
-  if (_memoMaximized) {
+  try {
+    /* .memo-panel.memo-maximized{display:flex} は 'open' クラスの有無に
+       関係なく単独で適用される（両クラスとも詳細度が同じため、後勝ちで
+       maximizedが優先される）。そのため _memoMaximized フラグが何らかの
+       理由でDOM上のmemo-maximizedクラスと食い違っていると、'open'を
+       消してもこのクラスだけでパネルが表示されたままになり、「×を押しても
+       閉じない」ように見える。この不整合を閉じる時点で必ず解消するため、
+       フラグの値に関わらずクラス自体は無条件で外す。 */
     panel.classList.remove('memo-maximized');
     panel.style.width = ''; panel.style.height = '';
     _memoMaximized = false;
     const btn = document.getElementById('memo-max-btn');
     if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  } catch (e) {
+    console.error('[KOSAME] closeMemo: 最大化状態リセットに失敗しましたが、パネルは閉じます', e);
   }
 }
 
@@ -5028,6 +5062,7 @@ function memoOpenWindow() {
       + '#t1{height:160px}#t2{height:120px}#t3{height:120px}'
       + 'button{margin-top:14px;padding:8px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#C8A96A,#D4BC8A);color:#040d1c;font-weight:700;font-size:12px;cursor:pointer}'
       + '.note{margin-top:16px;font-size:10px;color:rgba(255,255,255,0.35)}'
+      + '.buildtag{margin-top:6px;font-size:10px;color:rgba(255,255,255,0.35)}'
       + '@media print{body{background:#fff;color:#000}textarea{border:1px solid #999;background:#fff}button{display:none}}'
       + '</style></head><body>'
       + '<h2>面談メモ / Meeting Notes</h2>'
@@ -5036,6 +5071,7 @@ function memoOpenWindow() {
       + '<div class="sec"><div class="lbl">次回アクション</div><textarea id="t3">' + escHtml(actions) + '</textarea></div>'
       + '<button onclick="window.print()">印刷</button>'
       + '<div class="note">入力内容はサーバーに保存されません。印刷はご利用端末上で行われます。このウィンドウでの編集はメインコンソールにも即時反映されます。</div>'
+      + '<div class="buildtag">' + KOSAME_BUILD_ID + '</div>'
       + '<script>'
       + '(function(){'
       + 'var op=null;try{op=(window.opener&&!window.opener.closed)?window.opener:null;}catch(e){op=null;}'
@@ -5239,6 +5275,7 @@ function cmemoOpenWindow() {
       + '<div id="list">' + itemsHtml + '</div>'
       + '<button onclick="window.print()">印刷</button>'
       + '<div class="note-ft">この内容は保存されません。</div>'
+      + '<div class="note-ft">' + KOSAME_BUILD_ID + '</div>'
       + '</body></html>');
     w.document.close();
   } catch (e) { return false; }
@@ -5402,8 +5439,9 @@ function closeWorkspace() {
   panel.classList.remove('open');
 }
 
-/* ═══ Calculator ═══ */
-let _calcExpr = '', _calcClearNext = false;
+/* ═══ Calculator (標準タブ: Windows電卓準拠のキー配列・挙動) ═══ */
+let _calcCur = '0', _calcAcc = null, _calcOp = null, _calcOverwrite = true;
+let _calcLastOp = null, _calcLastOperand = null, _calcMemory = null;
 function toggleCalc() {
   const panel = document.getElementById('calc-panel');
   if (!panel) return;
@@ -5414,35 +5452,141 @@ function toggleCalc() {
     panel.style.right = ''; panel.style.bottom = '';
     panel.style.transform = ''; panel.style.margin = '';
     panel.style.marginLeft = '';
-  } else if (_calcMaximized) {
-    /* 最大化したまま閉じると_calcMaximized/クラス/インラインwidth・height
-       が残り、次にopeningブロックで通常位置に戻ってもサイズは最大化時の
-       まま、という不整合な状態になり画面外にはみ出て消えて見える。閉じる
-       時点で必ず最大化状態を解除する。 */
-    panel.classList.remove('calc-maximized');
-    panel.style.width = ''; panel.style.height = '';
-    _calcMaximized = false;
-    const btn = document.getElementById('calc-max-btn');
-    if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+  } else {
+    try {
+      /* .calc-panel.calc-maximized{display:flex} は 'open' クラスの有無に
+         関係なく単独で適用されるため、_calcMaximized フラグがDOM上の
+         calc-maximizedクラスと食い違っていると、'open'を消してもこの
+         クラスだけでパネルが表示されたままになる。閉じる時点でフラグの
+         値に関わらずクラス自体を無条件で外す（面談メモと同一の対策）。 */
+      panel.classList.remove('calc-maximized');
+      panel.style.width = ''; panel.style.height = '';
+      _calcMaximized = false;
+      const btn = document.getElementById('calc-max-btn');
+      if (btn) { btn.textContent = '□'; btn.title = '最大化'; }
+    } catch (e) {
+      console.error('[KOSAME] toggleCalc(close): 最大化状態リセットに失敗しましたが、パネルは閉じます', e);
+    }
   }
+}
+function _calcFmtNum(n) {
+  if (!isFinite(n)) return 'Error';
+  return String(parseFloat(n.toPrecision(12)));
+}
+function _calcApply(op, a, b) {
+  if (op === '+') return a + b;
+  if (op === '-') return a - b;
+  if (op === '*') return a * b;
+  if (op === '/') return b === 0 ? NaN : a / b;
+  return b;
+}
+function _calcUpdateMemButtons() {
+  const has = _calcMemory !== null;
+  const mc = document.getElementById('calc-mc-btn');
+  const mr = document.getElementById('calc-mr-btn');
+  if (mc) mc.disabled = !has;
+  if (mr) mr.disabled = !has;
+}
+function _calcRender() {
+  const display = document.getElementById('calc-display');
+  if (display) display.textContent = _calcCur;
+  _calcUpdateMemButtons();
+}
+/* '%' はWindows電卓と同じく直前の演算に対する百分率として動作する。
+   + − は現在の合計(_calcAcc)に対する割合を加減算し、× ÷ は入力値自体を
+   1/100にした値を演算子に渡す（例: 200+10%→220 / 200-10%→180 / 200×10%→20）。
+   結果はその場で確定する（=を押したのと同じ扱い）。 */
+function _calcPercent() {
+  const cur = parseFloat(_calcCur) || 0;
+  if (_calcOp && _calcAcc !== null) {
+    const pct = (_calcOp === '+' || _calcOp === '-') ? (_calcAcc * cur / 100) : (cur / 100);
+    const result = _calcApply(_calcOp, _calcAcc, pct);
+    _calcAcc = null; _calcOp = null;
+    _calcCur = _calcFmtNum(result);
+  } else {
+    _calcCur = _calcFmtNum(cur / 100);
+  }
+  _calcOverwrite = true;
+}
+function _calcEquals() {
+  let op = _calcOp, operand;
+  if (op && _calcAcc !== null) {
+    operand = parseFloat(_calcCur);
+    _calcLastOp = op; _calcLastOperand = operand;
+  } else if (_calcLastOp) {
+    /* 演算子を挟まず=を連続で押した場合、直前の演算を繰り返す
+       （Windows電卓と同じ挙動）。 */
+    op = _calcLastOp; operand = _calcLastOperand;
+    _calcAcc = parseFloat(_calcCur);
+  } else {
+    _calcOverwrite = true;
+    return;
+  }
+  const result = _calcApply(op, _calcAcc, operand);
+  _calcAcc = null; _calcOp = null;
+  _calcCur = _calcFmtNum(result);
+  _calcOverwrite = true;
 }
 function calcInput(v) {
   const display = document.getElementById('calc-display');
   if (!display) return;
-  if (v === 'C') { _calcExpr = ''; _calcClearNext = false; display.textContent = '0'; return; }
-  if (v === '⌫') { _calcExpr = _calcExpr.slice(0, -1); display.textContent = _calcExpr || '0'; _calcClearNext = false; return; }
-  if (v === '=') {
-    try {
-      let expr = _calcExpr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/＋/g, '+');
-      let result = Function('"use strict"; return (' + expr + ')')();
-      if (!isFinite(result)) { display.textContent = 'Error'; _calcExpr = ''; return; }
-      result = parseFloat(result.toPrecision(12));
-      display.textContent = result; _calcExpr = String(result); _calcClearNext = true;
-    } catch(e) { display.textContent = 'Error'; _calcExpr = ''; }
+  if (v === 'C') {
+    _calcCur = '0'; _calcAcc = null; _calcOp = null; _calcOverwrite = true;
+    _calcLastOp = null; _calcLastOperand = null;
+    _calcRender(); return;
+  }
+  if (v === 'CE') { _calcCur = '0'; _calcOverwrite = true; _calcRender(); return; }
+  if (v === '⌫') {
+    if (_calcOverwrite) return;
+    _calcCur = _calcCur.length > 1 ? _calcCur.slice(0, -1) : '0';
+    if (_calcCur === '-') _calcCur = '0';
+    _calcRender(); return;
+  }
+  if (v === '±') {
+    if (_calcCur !== '0') {
+      _calcCur = _calcCur.charAt(0) === '-' ? _calcCur.slice(1) : ('-' + _calcCur);
+      _calcRender();
+    }
     return;
   }
-  if (_calcClearNext && /[0-9.]/.test(v)) { _calcExpr = ''; _calcClearNext = false; }
-  _calcExpr += v; display.textContent = _calcExpr;
+  if (v === 'MC') { _calcMemory = null; _calcRender(); return; }
+  if (v === 'MR') {
+    if (_calcMemory === null) return;
+    _calcCur = _calcFmtNum(_calcMemory); _calcOverwrite = true;
+    _calcRender(); return;
+  }
+  if (v === 'M+') {
+    _calcMemory = (_calcMemory || 0) + (parseFloat(_calcCur) || 0);
+    _calcOverwrite = true; _calcRender(); return;
+  }
+  if (v === 'M-') {
+    _calcMemory = (_calcMemory || 0) - (parseFloat(_calcCur) || 0);
+    _calcOverwrite = true; _calcRender(); return;
+  }
+  if (v === '%') { _calcPercent(); _calcRender(); return; }
+  if (v === '=') { _calcEquals(); _calcRender(); return; }
+  if (v === '+' || v === '-' || v === '*' || v === '/') {
+    if (_calcOp && !_calcOverwrite) {
+      _calcAcc = _calcApply(_calcOp, _calcAcc, parseFloat(_calcCur));
+      _calcCur = _calcFmtNum(_calcAcc);
+    } else if (_calcAcc === null) {
+      _calcAcc = parseFloat(_calcCur) || 0;
+    }
+    _calcOp = v;
+    _calcLastOp = null; _calcLastOperand = null;
+    _calcOverwrite = true;
+    _calcRender(); return;
+  }
+  if (v === '.') {
+    if (_calcOverwrite) { _calcCur = '0.'; _calcOverwrite = false; _calcRender(); return; }
+    if (_calcCur.indexOf('.') === -1) { _calcCur += '.'; _calcRender(); }
+    return;
+  }
+  if (/^[0-9]$/.test(v)) {
+    if (_calcOverwrite) { _calcCur = v; _calcOverwrite = false; }
+    else { _calcCur = (_calcCur === '0') ? v : (_calcCur + v); }
+    _calcRender(); return;
+  }
 }
 function calcCopy() {
   const display = document.getElementById('calc-display');
@@ -5451,6 +5595,29 @@ function calcCopy() {
   if (text === '0' || text === 'Error') return;
   navigator.clipboard.writeText(text).catch(() => {});
 }
+/* ═══ Calculator keyboard input(電卓パネルが開いていて、かつテキスト入力欄に
+   フォーカスが無い時のみ有効。面談メモ等への入力を横取りしないための条件) ═══ */
+document.addEventListener('keydown', function(e) {
+  const panel = document.getElementById('calc-panel');
+  if (!panel || !panel.classList.contains('open')) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) return;
+  const k = e.key;
+  let mapped = null;
+  if (/^[0-9]$/.test(k)) mapped = k;
+  else if (k === '.') mapped = '.';
+  else if (k === '+') mapped = '+';
+  else if (k === '-') mapped = '-';
+  else if (k === '*') mapped = '*';
+  else if (k === '/') mapped = '/';
+  else if (k === '%') mapped = '%';
+  else if (k === 'Enter' || k === '=') mapped = '=';
+  else if (k === 'Backspace') mapped = '⌫';
+  else if (k === 'Escape') mapped = 'C';
+  if (mapped === null) return;
+  e.preventDefault();
+  calcInput(mapped);
+});
 
 /* ═══ Calc Log Format Helpers ═══ */
 function formatMortgageCond() {
@@ -5789,6 +5956,7 @@ try { calcBMI(); } catch(e) {}
 try { calcAsset(); } catch(e) {}
 try { calcLifetime(); } catch(e) {}
 try { calcSocialSecurity(); } catch(e) {}
+try { _calcUpdateMemButtons(); } catch(e) {}
 </script>
 
 </body>

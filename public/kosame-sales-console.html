@@ -400,18 +400,27 @@ input:-webkit-autofill:focus {
 .topbar-back:hover{border-color:var(--gold);color:var(--gold)}
 .topbar-back.visible{display:inline-flex}
 
-/* ═══ CONTENT ═══ */
-.content{padding:32px 28px;flex:1}
-.section{display:none;max-width:1600px;margin:0 auto;padding:0 8px}
+/* ═══ CONTENT ═══
+   --kd-content-pad-x/top と --kd-section-pad-x は、.status-bar が「画面幅
+   いっぱいの帯」として抜け出すために打ち消す必要のあるパディングの
+   唯一の情報源。値をここでしか持たないことで、将来 .content や .section の
+   パディングを変えても .status-bar 側が追従し、実測値のハードコードによる
+   破綻（旧実装：.section の8pxパディングを数えず金線が両端で8pxずつ
+   途切れていたバグ）を構造的に起こさないようにする。 */
+:root{--kd-content-pad-x:28px;--kd-content-pad-top:32px;--kd-section-pad-x:8px;}
+.content{padding:var(--kd-content-pad-top) var(--kd-content-pad-x);flex:1}
+.section{display:none;max-width:1600px;margin:0 auto;padding:0 var(--kd-section-pad-x)}
 .section.active{display:block}
 
 /* ═══ STATUS BAR (replaces hero panel) ═══
-   目標画像の実測値(輝度12.4)に合わせた地の暗さ。.content の左右上パディング
-   (32px/28px)をマイナスマージンで打ち消し、画面幅いっぱいの帯として敷く
-   （下端の金線を画面幅いっぱいに引くための構造でもある）。 */
+   目標画像の実測値(輝度12.4)に合わせた地の暗さ。.status-bar の実DOM親は
+   .content ではなく .section（.content の子）であるため、打ち消すべき
+   パディングは .content分 と .section分 の合計になる（上のカスタム
+   プロパティ参照）。 */
 .status-bar{
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  margin:-32px -28px 24px;padding:14px 28px;
+  margin:calc(-1 * var(--kd-content-pad-top)) calc(-1 * (var(--kd-content-pad-x) + var(--kd-section-pad-x))) 24px;
+  padding:14px calc(var(--kd-content-pad-x) + var(--kd-section-pad-x));
   background:#000e21;
   border-bottom:1px solid #f3bf78;
   box-shadow:0 1px 8px rgba(243,191,120,0.10);
@@ -1306,8 +1315,8 @@ canvas{display:block;width:100%;border-radius:8px}
   .tbg{font-size:14px}.tbs{font-size:10px}
   .topbar-divider{display:none}
   .topbar-title{display:none}
-  .content{padding:20px 16px}
-  .status-bar{margin:-20px -16px 20px;padding:12px 16px}
+  :root{--kd-content-pad-x:16px;--kd-content-pad-top:20px;}
+  .status-bar{margin-bottom:20px}
   .nav-cards{grid-template-columns:repeat(2,1fr);gap:10px}
   .nav-cards-3col{grid-template-columns:repeat(2,1fr)}
   .nav-cards-core{grid-template-columns:1fr}
@@ -2902,7 +2911,7 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-16-b';
+var KOSAME_BUILD_ID = 'build 2026-07-16-c';
 (function() { var el = document.getElementById('kd-build-tag'); if (el) el.textContent = KOSAME_BUILD_ID; })();
 
 /* ═══ ステータス行の日時表示（JST固定・曜日は実日付から算出・1分ごと更新） ═══ */
@@ -4338,10 +4347,26 @@ function logoutUser() {
 }
 
 /* ═══ Whiteboard ═══ */
-let _wbDrawing = false, _wbCtx = null, _wbPages = [null], _wbCurrent = 0;
+/* ═══ ページの保持方式：ラスタ(dataURL)ではなくベクタのストローク配列 ═══
+   以前は各ページを canvas.toDataURL() のPNG文字列として保持していた。
+   これは (1) 別ウィンドウでの復元が new Image()+img.onload の非同期処理に
+   なり、キャンバスサイズ確定前の保存や復元未完了時の保存で正本を白紙で
+   上書きしうる、(2) Brave等のフィンガープリント対策でcanvas読み出し
+   (toDataURL/getImageData) の結果が改変・ノイズ付加される可能性があり、
+   dataURLを正本として保持すると影響を受けうる、という2つの構造的リスクが
+   あった。ストロークを「点の配列・色・太さ・種別」というプレーンな
+   JSON化可能データとして保持し、表示は常にそこから同期的に再描画する
+   方式に変更することで、両方のリスクを構造的に排除する。canvas読み出し
+   APIは印刷・PNG書き出しという「1回限りのラスタ化」にのみ用い、
+   正本の保存・復元には一切使わない。
+   各ストローク: {t:'p'|'m'|'e' (ペン/マーカー/消しゴム), c:色, w:太さ設定値,
+   pts:[{x,y}...] (0〜1に正規化した座標。canvasの実寸に依存しないため、
+   別ウィンドウ・メイン間やリサイズ後もそのまま使い回せる)}。 */
+let _wbDrawing = false, _wbCtx = null, _wbPages = [[]], _wbCurrent = 0;
 let _wbHasContent = [false];
 let _wbBgImages = [null];
 let _wbColor = '#2b2b2b', _wbWidth = 4, _wbEraser = false, _wbMarker = false, _wbMarkerWidth = 20, _wbLastPoint = null, _wbDpr = 1;
+let _wbCurrentStroke = null;
 
 /* ═══ 別ウィンドウ連携ブリッジ ═══
    _wbPages 等は let 宣言のため window のプロパティとして自動露出しない
@@ -4361,32 +4386,87 @@ window.kosameWbBridge = {
   }
 };
 
-function wbSaveCurrentPage() {
-  const canvas = document.getElementById('board-canvas');
-  if (!canvas) return;
-  /* 幅または高さが0のcanvas（非表示直後や生成直後など）からは保存しない。
-     ここで空スナップショットを保存すると、正本の描画データが上書きされて
-     消えてしまう。 */
-  if (!canvas.width || !canvas.height) return;
-  _wbPages[_wbCurrent] = canvas.toDataURL('image/png');
-}
+/* ベクタ方式では描画内容は _stopDraw() 時点でストローク配列へ直接
+   push済みであり、キャンバスのビットマップから改めて保存する処理は
+   不要になった。呼び出し元（ページ送り・別ウィンドウを開く・印刷等）を
+   個別に書き換える手間とリスクを避けるため、関数自体は残し何もしない。 */
+function wbSaveCurrentPage() {}
 function wbLoadPage(idx) {
   const canvas = document.getElementById('board-canvas');
   if (!canvas || !_wbCtx) return;
-  _wbCtx.globalAlpha = 1;
-  _wbCtx.globalCompositeOperation = 'source-over';
-  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
-  if (_wbPages[idx]) {
-    const img = new Image();
-    img.onload = function() {
-      _wbCtx.globalAlpha = 1;
-      _wbCtx.globalCompositeOperation = 'source-over';
-      _wbCtx.drawImage(img, 0, 0);
-    };
-    img.src = _wbPages[idx];
-  }
+  _wbRenderPage(_wbCtx, canvas, _wbPages[idx], _wbDpr);
   _wbApplyStyle();
   wbRedrawWithBg();
+}
+/* ═══ ベクタストロークの描画（ライブ描画・復元・ラスタ化の全てで共有） ═══ */
+function _wbRenderStroke(ctx, canvas, s, dpr) {
+  const pts = s.pts.map(function(p) { return { x: p.x * canvas.width, y: p.y * canvas.height }; });
+  if (!pts.length) return;
+  if (s.t === 'm') {
+    const temp = document.createElement('canvas');
+    temp.width = canvas.width; temp.height = canvas.height;
+    const tctx = temp.getContext('2d');
+    tctx.lineCap = 'butt'; tctx.lineJoin = 'round';
+    tctx.strokeStyle = s.c; tctx.fillStyle = s.c; tctx.lineWidth = s.w * dpr;
+    if (pts.length === 1) {
+      const mw = s.w * dpr;
+      tctx.fillRect(pts[0].x - mw / 2, pts[0].y - mw / 2, mw, mw);
+    } else {
+      tctx.beginPath();
+      tctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) tctx.lineTo(pts[i].x, pts[i].y);
+      tctx.stroke();
+      let maxDist = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const dx = pts[i].x - pts[0].x, dy = pts[i].y - pts[0].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d > maxDist) maxDist = d;
+      }
+      if (maxDist < s.w * dpr) {
+        const mw2 = s.w * dpr;
+        tctx.fillRect(pts[0].x - mw2 / 2, pts[0].y - mw2 / 2, mw2, mw2);
+      }
+    }
+    ctx.save();
+    ctx.globalAlpha = 0.5; ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(temp, 0, 0);
+    ctx.restore();
+    return;
+  }
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (s.t === 'e') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.lineWidth = Math.max(s.w * 5, 44) * dpr;
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = s.c;
+    ctx.lineWidth = s.w * dpr;
+  }
+  if (pts.length === 1) {
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[0].x + 0.01, pts[0].y + 0.01); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[0].x + 0.01, pts[0].y + 0.01); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+    let last = pts[0];
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i];
+      const midX = (last.x + p.x) / 2, midY = (last.y + p.y) / 2;
+      ctx.quadraticCurveTo(last.x, last.y, midX, midY);
+      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(midX, midY);
+      last = p;
+    }
+  }
+  ctx.restore();
+}
+function _wbRenderPage(ctx, canvas, page, dpr) {
+  ctx.save();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+  (page || []).forEach(function(s) { _wbRenderStroke(ctx, canvas, s, dpr); });
 }
 /* ═══ 背景レイヤー（画像/PDFドラッグ&ドロップ） ═══ */
 function wbRedrawWithBg() {
@@ -4486,11 +4566,21 @@ function wbInitDragDrop() {
 /* 背景+ペンを1枚に合成（印刷・PNG保存用）。背景が無ければ従来通り単層のまま返す */
 function wbCompositeForPage(idx, fillColor) {
   return new Promise(function(resolve) {
-    const strokeSrc = _wbPages[idx];
-    const bgSrc = _wbBgImages[idx];
-    if (!bgSrc) { resolve(strokeSrc); return; }
     const canvas = document.getElementById('board-canvas');
     const w = (canvas && canvas.width) || 800, h = (canvas && canvas.height) || 600;
+    const bgSrc = _wbBgImages[idx];
+    if (!bgSrc) {
+      /* 背景画像も描画内容も無いページは、元の実装同様「保存対象なし」を
+         意味する null を返す（呼び出し側の !src チェックで空PNGの
+         ダウンロードを防ぐ）。 */
+      if (!_wbHasContent[idx]) { resolve(null); return; }
+      const off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      const octx = off.getContext('2d');
+      (_wbPages[idx] || []).forEach(function(s) { _wbRenderStroke(octx, off, s, _wbDpr); });
+      resolve(off.toDataURL('image/png'));
+      return;
+    }
     const off = document.createElement('canvas');
     off.width = w; off.height = h;
     const octx = off.getContext('2d');
@@ -4502,16 +4592,13 @@ function wbCompositeForPage(idx, fillColor) {
       const dw = bgImg.width * scale, dh = bgImg.height * scale;
       const dx = (w - dw) / 2, dy = (h - dh) / 2;
       octx.drawImage(bgImg, dx, dy, dw, dh);
-      if (strokeSrc) {
-        const strokeImg = new Image();
-        strokeImg.onload = function() { octx.drawImage(strokeImg, 0, 0, w, h); resolve(off.toDataURL('image/png')); };
-        strokeImg.onerror = function() { resolve(off.toDataURL('image/png')); };
-        strokeImg.src = strokeSrc;
-      } else {
-        resolve(off.toDataURL('image/png'));
-      }
+      (_wbPages[idx] || []).forEach(function(s) { _wbRenderStroke(octx, off, s, _wbDpr); });
+      resolve(off.toDataURL('image/png'));
     };
-    bgImg.onerror = function() { resolve(strokeSrc); };
+    bgImg.onerror = function() {
+      (_wbPages[idx] || []).forEach(function(s) { _wbRenderStroke(octx, off, s, _wbDpr); });
+      resolve(off.toDataURL('image/png'));
+    };
     bgImg.src = bgSrc;
   });
 }
@@ -4529,7 +4616,7 @@ function wbNextPage() {
 }
 function wbAddPage() {
   wbSaveCurrentPage();
-  _wbPages.splice(_wbCurrent + 1, 0, null);
+  _wbPages.splice(_wbCurrent + 1, 0, []);
   _wbHasContent.splice(_wbCurrent + 1, 0, false);
   _wbBgImages.splice(_wbCurrent + 1, 0, null);
   _wbCurrent++;
@@ -4640,43 +4727,17 @@ function initWhiteboard() {
   const h = rect.height || canvas.offsetHeight || 400;
   const newW = Math.round(w * _wbDpr);
   const newH = Math.round(h * _wbDpr);
-  /* canvas.width/height への代入は（同じ値であっても）ビットマップを
-     破棄する。実際に寸法が変わる場合だけ代入し、その際も直前の内容を
-     退避してから復元することで、2回目以降の呼び出し（再オープン等）でも
-     既存の描画を壊さない＝冪等にする。 */
+  /* ベクタ方式では canvas のビットマップは常に _wbPages のストローク配列
+     から再描画できるため、リサイズ前に内容を退避・復元する必要が無い。
+     サイズを合わせて _wbCtx を取り直し、現在ページを再描画するだけでよい。 */
   const needsResize = canvas.width !== newW || canvas.height !== newH;
   if (needsResize) {
-    let tmp = null;
-    if (canvas.width > 0 && canvas.height > 0) {
-      tmp = document.createElement('canvas');
-      tmp.width = canvas.width; tmp.height = canvas.height;
-      tmp.getContext('2d').drawImage(canvas, 0, 0);
-    }
     canvas.width = newW;
     canvas.height = newH;
-    _wbCtx = canvas.getContext('2d');
-    _wbApplyStyle();
-    if (tmp) {
-      _wbCtx.globalAlpha = 1;
-      _wbCtx.globalCompositeOperation = 'source-over';
-      _wbCtx.drawImage(tmp, 0, 0, newW, newH);
-    }
-  } else {
-    _wbCtx = canvas.getContext('2d');
-    _wbApplyStyle();
   }
-  _wbCtx.globalAlpha = 1;
-  _wbCtx.globalCompositeOperation = 'source-over';
-  _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
-  if (_wbPages[_wbCurrent]) {
-    const img = new Image();
-    img.onload = function() {
-      _wbCtx.globalAlpha = 1;
-      _wbCtx.globalCompositeOperation = 'source-over';
-      _wbCtx.drawImage(img, 0, 0);
-    };
-    img.src = _wbPages[_wbCurrent];
-  }
+  _wbCtx = canvas.getContext('2d');
+  _wbApplyStyle();
+  _wbRenderPage(_wbCtx, canvas, _wbPages[_wbCurrent], _wbDpr);
   wbUpdateIndicator();
   wbRedrawWithBg();
   wbInitDragDrop();
@@ -4764,6 +4825,12 @@ function startDraw(e) {
   }
   const p = getWbPos(e);
   _wbLastPoint = p;
+  _wbCurrentStroke = {
+    t: _wbEraser ? 'e' : (_wbMarker ? 'm' : 'p'),
+    c: _wbColor,
+    w: _wbMarker ? _wbMarkerWidth : _wbWidth,
+    pts: [{ x: p.x / canvas.width, y: p.y / canvas.height }]
+  };
   if (_wbMarker) {
     _wbMarkerBegin(canvas, p);
     return;
@@ -4780,6 +4847,7 @@ function draw(e) {
   const canvas = document.getElementById('board-canvas');
   if (!canvas) return;
   const p = getWbPos(e);
+  if (_wbCurrentStroke) _wbCurrentStroke.pts.push({ x: p.x / canvas.width, y: p.y / canvas.height });
   if (_wbMarker) {
     _wbMarkerExtend(canvas, _wbLastPoint, p);
     _wbLastPoint = p;
@@ -4799,13 +4867,17 @@ function stopDraw() {
     const canvas = document.getElementById('board-canvas');
     if (canvas) _wbMarkerEnd(canvas);
   }
+  if (_wbCurrentStroke && _wbCurrentStroke.pts.length) {
+    _wbPages[_wbCurrent].push(_wbCurrentStroke);
+  }
+  _wbCurrentStroke = null;
 }
 function clearBoard() {
   if (!_wbCtx) return;
   const canvas = document.getElementById('board-canvas');
   if (!canvas) return;
   _wbCtx.clearRect(0, 0, canvas.width, canvas.height);
-  _wbPages[_wbCurrent] = null;
+  _wbPages[_wbCurrent] = [];
   _wbHasContent[_wbCurrent] = false;
   _wbBgImages[_wbCurrent] = null;
   wbRedrawWithBg();
@@ -4897,8 +4969,8 @@ function wbSavePng() {
 }
 function wbSaveAllPng() {
   wbSaveCurrentPage();
-  _wbPages.forEach(function(src, i) {
-    if (!src) return;
+  _wbPages.forEach(function(page, i) {
+    if (!_wbHasContent[i]) return;
     setTimeout(function() {
       wbCompositeForPage(i).then(function(compSrc) {
         const a = document.createElement('a');
@@ -4957,21 +5029,16 @@ function closeBoard() {
 /* ═══ Board Maximize ═══ */
 let _wbMaximized = false, _wbPreState = null;
 function resizeCanvas(canvas) {
-  const tmp = document.createElement('canvas');
-  tmp.width = canvas.width; tmp.height = canvas.height;
-  tmp.getContext('2d').drawImage(canvas, 0, 0);
   const r = canvas.parentElement.getBoundingClientRect();
   _wbDpr = window.devicePixelRatio || 1;
   canvas.width = Math.floor(r.width * _wbDpr);
   canvas.height = Math.floor(r.height * _wbDpr);
   const ctx = canvas.getContext('2d');
-  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  /* キャンバス自体は塗りつぶさない（クリーム色は .board-canvas-wrap の背景で
-     画面表示のみ担う）。ここで不透明フィルを焼き込むと、保存PNGにクリームが
-     混入し、リサイズを経たページだけ印刷時に背景色が食い違う原因になる。 */
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
   _wbApplyStyle();
+  /* ベクタ方式のため、旧サイズのビットマップを一時canvasへ退避して
+     引き伸ばす必要はない。現在ページのストロークを新サイズへそのまま
+     再描画するだけで、拡大縮小によるぼやけも生じない。 */
+  _wbRenderPage(ctx, canvas, _wbPages[_wbCurrent], _wbDpr);
 }
 function toggleMaximize() {
   const panel = document.getElementById('board-panel');
@@ -5095,27 +5162,68 @@ function wbStandaloneHTML() {
     + '/* 正本(_wbPages等)はメインコンソール側が保持する。別ウィンドウはコピーを持たず、'
     + '   window.kosameWbBridge 経由で同じ配列を直接参照・変更することで、閉じても内容が'
     + '   消えないようにする。ブリッジに接続できない場合は無言でフォールバックせず、'
-    + '   コンソールエラーと画面上の警告で明示する（データを黙って捨てない）。 */'
+    + '   コンソールエラーと画面上の警告で明示する（データを黙って捨てない）。'
+    + '   ページの中身は canvas の dataURL ではなくストローク配列（点・色・太さ・種別）'
+    + '   として保持する。これにより (1) 復元がcanvas読み出しAPIに一切依存しない'
+    + '   同期処理になり、Brave等のフィンガープリント対策によるtoDataURL/'
+    + '   getImageDataの改変・ノイズの影響を受けない、(2) 復元の失敗（サイズ0や'
+    + '   非同期競合）が正本の破壊に絶対につながらない（正本は明示的にpushする'
+    + '   以外の経路では一切書き換わらない）という2点を構造的に保証する。 */'
     + 'if(!_bridge){console.error("[KOSAME] メインコンソールのブリッジAPI(window.opener.kosameWbBridge)に接続できません。この別ウィンドウでの描画内容はメインコンソールに保存されません。");var _bw=document.getElementById("bridgeWarn");if(_bw)_bw.style.display="block";}'
-    + 'var _p=_bridge?_bridge.getPages():[""];'
+    + 'var _p=_bridge?_bridge.getPages():[[]];'
     + 'var _hasContent=_bridge?_bridge.getHasContent():[false];'
     + 'var _i=_bridge?_bridge.getCurrent():0;'
     + 'if(typeof _i!=="number"||_i<0||_i>=_p.length)_i=0;'
-    + 'var _loadTok=0,_pending=false;'
     + 'var _d=false,_col="#2b2b2b",_wid=4,_erasing=false,_marking=false,_mwid=20,_dpr=window.devicePixelRatio||1,_last=null;'
     + 'var _markSnap=null,_markTemp=null,_markTempCtx=null,_markStart=null,_markMaxDist=0,_markPoints=null;'
+    + 'var _curStroke=null;'
     + 'var c=document.getElementById("mc");var x=c.getContext("2d");'
     + 'function _fmtDT(d){function p(n){return (n<10?"0":"")+n;}return d.getFullYear()+"年"+p(d.getMonth()+1)+"月"+p(d.getDate())+"日 "+p(d.getHours())+":"+p(d.getMinutes());}'
+    + '/* メインコンソール側 _wbRenderStroke/_wbRenderPage と同じアルゴリズム'
+    + '   （意図的に重複させている。別ウィンドウはメインとDOM/canvasが別なので'
+    + '   共有できない。挙動を変える場合は両方を揃えて直すこと）。 */'
+    + 'function _renderStroke(ctx,canvas,s,dpr){'
+    + 'var pts=s.pts.map(function(p){return {x:p.x*canvas.width,y:p.y*canvas.height};});'
+    + 'if(!pts.length)return;'
+    + 'if(s.t==="m"){'
+    + 'var temp=document.createElement("canvas");temp.width=canvas.width;temp.height=canvas.height;'
+    + 'var tctx=temp.getContext("2d");'
+    + 'tctx.lineCap="butt";tctx.lineJoin="round";tctx.strokeStyle=s.c;tctx.fillStyle=s.c;tctx.lineWidth=s.w*dpr;'
+    + 'if(pts.length===1){var mw=s.w*dpr;tctx.fillRect(pts[0].x-mw/2,pts[0].y-mw/2,mw,mw);}'
+    + 'else{'
+    + 'tctx.beginPath();tctx.moveTo(pts[0].x,pts[0].y);'
+    + 'for(var i=1;i<pts.length;i++)tctx.lineTo(pts[i].x,pts[i].y);'
+    + 'tctx.stroke();'
+    + 'var maxDist=0;for(var j=0;j<pts.length;j++){var dx=pts[j].x-pts[0].x,dy=pts[j].y-pts[0].y;var dd=Math.sqrt(dx*dx+dy*dy);if(dd>maxDist)maxDist=dd;}'
+    + 'if(maxDist<s.w*dpr){var mw2=s.w*dpr;tctx.fillRect(pts[0].x-mw2/2,pts[0].y-mw2/2,mw2,mw2);}'
+    + '}'
+    + 'ctx.save();ctx.globalAlpha=0.5;ctx.globalCompositeOperation="source-over";ctx.drawImage(temp,0,0);ctx.restore();'
+    + 'return;'
+    + '}'
+    + 'ctx.save();ctx.lineCap="round";ctx.lineJoin="round";'
+    + 'if(s.t==="e"){ctx.globalCompositeOperation="destination-out";ctx.strokeStyle="rgba(0,0,0,1)";ctx.lineWidth=Math.max(s.w*5,44)*dpr;}'
+    + 'else{ctx.globalCompositeOperation="source-over";ctx.strokeStyle=s.c;ctx.lineWidth=s.w*dpr;}'
+    + 'if(pts.length===1){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[0].x+0.01,pts[0].y+0.01);ctx.stroke();}'
+    + 'else{'
+    + 'ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[0].x+0.01,pts[0].y+0.01);ctx.stroke();'
+    + 'ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);'
+    + 'var lastp=pts[0];'
+    + 'for(var k=1;k<pts.length;k++){var p=pts[k];var mx=(lastp.x+p.x)/2,my=(lastp.y+p.y)/2;ctx.quadraticCurveTo(lastp.x,lastp.y,mx,my);ctx.stroke();ctx.beginPath();ctx.moveTo(mx,my);lastp=p;}'
+    + '}'
+    + 'ctx.restore();'
+    + '}'
+    + 'function _renderPage(ctx,canvas,page,dpr){ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,canvas.width,canvas.height);ctx.restore();(page||[]).forEach(function(s){_renderStroke(ctx,canvas,s,dpr);});}'
+    + 'function _rasterize(idx){var w=c.width||800,h=c.height||600;var off=document.createElement("canvas");off.width=w;off.height=h;var octx=off.getContext("2d");(_p[idx]||[]).forEach(function(s){_renderStroke(octx,off,s,_dpr);});return off.toDataURL("image/png");}'
     + 'function _style(){x.lineCap="round";x.lineJoin="round";x.globalAlpha=1;x.globalCompositeOperation="source-over";if(_erasing){x.globalCompositeOperation="destination-out";x.strokeStyle="rgba(0,0,0,1)";x.lineWidth=Math.max(_wid*5,44)*_dpr;}else if(_marking){x.strokeStyle=_col;x.lineWidth=_mwid*_dpr;}else{x.strokeStyle=_col;x.lineWidth=_wid*_dpr;}}'
-    + 'function _wbResize(){var tmp=document.createElement("canvas");tmp.width=c.width;tmp.height=c.height;tmp.getContext("2d").drawImage(c,0,0);var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();x.drawImage(tmp,0,0,c.width,c.height);}'
+    + 'function _wbResize(){var r=c.getBoundingClientRect();_dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*_dpr);c.height=Math.round(r.height*_dpr);_style();_renderPage(x,c,_p[_i],_dpr);}'
     + 'function _wbPos(cx,cy){var r=c.getBoundingClientRect();var sx=r.width?c.width/r.width:1,sy=r.height?c.height/r.height:1;return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};}'
     + 'function _markBegin(p){_markSnap=document.createElement("canvas");_markSnap.width=c.width;_markSnap.height=c.height;_markSnap.getContext("2d").drawImage(c,0,0);_markTemp=document.createElement("canvas");_markTemp.width=c.width;_markTemp.height=c.height;_markTempCtx=_markTemp.getContext("2d");_markTempCtx.lineCap="butt";_markTempCtx.lineJoin="round";_markTempCtx.strokeStyle=_col;_markTempCtx.fillStyle=_col;_markTempCtx.globalAlpha=1;_markTempCtx.lineWidth=_mwid*_dpr;_markStart=p;_markMaxDist=0;_markPoints=[p];}'
     + 'function _markExtend(from,to){var dx=to.x-_markStart.x,dy=to.y-_markStart.y;_markMaxDist=Math.max(_markMaxDist,Math.sqrt(dx*dx+dy*dy));_markPoints.push(to);_markTempCtx.clearRect(0,0,c.width,c.height);_markTempCtx.beginPath();_markTempCtx.moveTo(_markPoints[0].x,_markPoints[0].y);for(var _mi=1;_mi<_markPoints.length;_mi++){_markTempCtx.lineTo(_markPoints[_mi].x,_markPoints[_mi].y);}_markTempCtx.stroke();_markComposite();}'
     + 'function _markComposite(){x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);x.drawImage(_markSnap,0,0);x.globalAlpha=0.5;x.drawImage(_markTemp,0,0);x.globalAlpha=1;}'
     + 'function _markEnd(){var mw=_mwid*_dpr;if(_markTempCtx&&_markStart&&_markMaxDist<mw){_markTempCtx.fillRect(_markStart.x-mw/2,_markStart.y-mw/2,mw,mw);_markComposite();}_markSnap=null;_markTemp=null;_markTempCtx=null;_markStart=null;_markPoints=null;}'
-    + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
-    + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
-    + 'function _stop(){if(!_d){return;}_d=false;_last=null;if(_marking)_markEnd();pi.save();}'
+    + 'function _start(e){if(e.preventDefault)e.preventDefault();_hasContent[_i]=true;_d=true;if(e.pointerId!==undefined&&c.setPointerCapture){try{c.setPointerCapture(e.pointerId);}catch(err){}}var p=_wbPos(e.clientX,e.clientY);_last=p;_curStroke={t:_erasing?"e":(_marking?"m":"p"),c:_col,w:_marking?_mwid:_wid,pts:[{x:p.x/c.width,y:p.y/c.height}]};if(_marking){_markBegin(p);return;}x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x+0.01,p.y+0.01);x.stroke();x.beginPath();x.moveTo(p.x,p.y);}'
+    + 'function _move(e){if(!_d||!_last)return;if(e.preventDefault)e.preventDefault();var p=_wbPos(e.clientX,e.clientY);if(_curStroke)_curStroke.pts.push({x:p.x/c.width,y:p.y/c.height});if(_marking){_markExtend(_last,p);_last=p;return;}var mx=(_last.x+p.x)/2,my=(_last.y+p.y)/2;x.quadraticCurveTo(_last.x,_last.y,mx,my);x.stroke();x.beginPath();x.moveTo(mx,my);_last=p;}'
+    + 'function _stop(){if(!_d){return;}_d=false;_last=null;if(_marking)_markEnd();if(_curStroke&&_curStroke.pts.length){_p[_i].push(_curStroke);}_curStroke=null;}'
     + 'function _bind(){c.onpointerdown=_start;c.onpointermove=_move;c.onpointerup=_stop;c.onpointerleave=_stop;c.onpointercancel=_stop;_d=false;_last=null;_style();}'
     + 'function _tierHtml(item,total){if(!item)return "<div class=tier-inner></div>";return "<div class=tier-inner>"+(item.src?("<img src="+JSON.stringify(item.src)+">"):"<div class=blank>（白紙）</div>")+"<div class=tier-label>"+(item.idx+1)+" / "+total+"ページ</div></div>";}'
     + 'function _wbPrintPages(list){if(!list.length){alert("印刷できる描画があるページがありません。");return;}var w=window.open("","_blank");if(!w)return;var total=_p.length;var dt=_fmtDT(new Date());var pagesHtml="";'
@@ -5134,18 +5242,21 @@ function wbStandaloneHTML() {
     + '+"</style></head><body>"+pagesHtml+"</body></html>";'
     + 'w.document.write(html);w.document.close();setTimeout(function(){var ot=w.document.title;function pf(n){return (n<10?"0":"")+n;}var nd=new Date();var ft=nd.getFullYear()+"年"+pf(nd.getMonth()+1)+"月"+pf(nd.getDate())+"日_"+pf(nd.getHours())+"時"+pf(nd.getMinutes())+"分_手書きボード";function rt(){w.document.title=ot;}w.document.title=ft;w.addEventListener("afterprint",rt,{once:true});w.print();setTimeout(rt,2000);},300);}'
     + 'var pi={'
-    + 'prev:function(){pi.save();if(_i>0)_i--;pi.load();pi.upd();},'
-    + 'next:function(){pi.save();if(_i<_p.length-1)_i++;pi.load();pi.upd();},'
-    + 'add:function(){pi.save();_p.splice(_i+1,0,"");_hasContent.splice(_i+1,0,false);_i++;pi.clear();pi.upd();},'
-    + 'del:function(){if(_p.length<=1)return;pi.save();_p.splice(_i,1);_hasContent.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},'
-    + 'clear:function(){var c=document.getElementById("mc");var x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);_p[_i]="";_hasContent[_i]=false;},'
-    + 'save:function(){if(_pending)return;var c=document.getElementById("mc");if(!c||!c.width||!c.height)return;_p[_i]=c.toDataURL("image/png");},'
-    + 'load:function(){var c=document.getElementById("mc"),x=c.getContext("2d");_loadTok++;var tok=_loadTok;x.globalAlpha=1;x.globalCompositeOperation="source-over";x.clearRect(0,0,c.width,c.height);if(_p[_i]){_pending=true;var img=new Image();img.onload=function(){if(tok!==_loadTok)return;x.globalAlpha=1;x.globalCompositeOperation="source-over";x.drawImage(img,0,0);_pending=false;};img.src=_p[_i];}else{_pending=false;}},'
+    + 'prev:function(){if(_i>0)_i--;pi.load();pi.upd();},'
+    + 'next:function(){if(_i<_p.length-1)_i++;pi.load();pi.upd();},'
+    + 'add:function(){_p.splice(_i+1,0,[]);_hasContent.splice(_i+1,0,false);_i++;pi.clear();pi.upd();},'
+    + 'del:function(){if(_p.length<=1)return;_p.splice(_i,1);_hasContent.splice(_i,1);if(_i>=_p.length)_i=_p.length-1;pi.load();pi.upd();},'
+    + 'clear:function(){var cc=document.getElementById("mc");var xx=cc.getContext("2d");xx.clearRect(0,0,cc.width,cc.height);_p[_i]=[];_hasContent[_i]=false;},'
+    + '/* ベクタ方式のため、キャンバスへの保存(canvas.toDataURL)は一切行わない。'
+    + '   ストロークは_stop()完了時点で既に正本(_p[_i])へpush済みであり、'
+    + '   このsave()は互換のために残した何もしない関数。 */'
+    + 'save:function(){},'
+    + 'load:function(){_renderPage(x,c,_p[_i],_dpr);},'
     + 'upd:function(){var el=document.getElementById("pi");if(el)el.textContent=(_i+1)+"ページ";_bind();if(_bridge){try{_bridge.setCurrent(_i);_bridge.notifyChanged();}catch(e){}}},'
-    + 'savePng:function(){pi.save();var s=_p[_i];if(!s)return;var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},'
-    + 'saveAllPng:function(){pi.save();_p.forEach(function(s,i){if(!s)return;setTimeout(function(){var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},'
-    + 'printCur:function(){pi.save();_wbPrintPages([{src:_p[_i],idx:_i}]);},'
-    + 'printAll:function(){pi.save();var list=[];_p.forEach(function(s,i){if(_hasContent[i])list.push({src:s,idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
+    + 'savePng:function(){if(!_hasContent[_i])return;var s=_rasterize(_i);var a=document.createElement("a");a.href=s;a.download="whiteboard-page-" + (_i+1)+".png";a.click();},'
+    + 'saveAllPng:function(){_p.forEach(function(pg,i){if(!_hasContent[i])return;setTimeout(function(){var s=_rasterize(i);var a=document.createElement("a");a.href=s;a.download="whiteboard-page-"+(i+1)+".png";a.click();},i*200);});},'
+    + 'printCur:function(){_wbPrintPages([{src:_hasContent[_i]?_rasterize(_i):null,idx:_i}]);},'
+    + 'printAll:function(){var list=[];_p.forEach(function(pg,i){if(_hasContent[i])list.push({src:_rasterize(i),idx:i});});if(!list.length){alert("印刷できる描画があるページがありません。");return;}_wbPrintPages(list);},'
     + 'color:function(btn,c){_col=c;_erasing=false;var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");var els=document.querySelectorAll(".swatch");for(var i=0;i<els.length;i++)els[i].classList.remove("sact");btn.classList.add("sact");_style();},'
     + 'width:function(btn,w){_wid=w;var els=document.querySelectorAll("[data-w]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();},'
     + 'pen:function(){_erasing=false;_marking=false;var p=document.getElementById("penBtn");if(p)p.classList.add("wact");var m=document.getElementById("markerBtn");if(m)m.classList.remove("wact");var e=document.getElementById("eraserBtn");if(e)e.classList.remove("wact");document.body.classList.remove("marker-mode");_style();},'
@@ -5154,19 +5265,16 @@ function wbStandaloneHTML() {
     + 'markerWidth:function(btn,w){_mwid=w;var els=document.querySelectorAll("[data-mw]");for(var i=0;i<els.length;i++)els[i].classList.remove("wact");btn.classList.add("wact");_style();}'
     + '};'
     + '_bind();'
-    + '/* 別ウィンドウを開いた直後はレイアウトが未確定で、canvasのCSSサイズが'
-    + '   0のまま_wbResize()が走ることがある（そうなるとcanvas.width/heightが'
-    + '   0になり、直後に描き戻した復元画像が実質失われる）。getBoundingClientRect()'
-    + '   が実寸を返すまでrequestAnimationFrameで待ってから、リサイズ・復元の'
-    + '   順で必ず実行する。復元は既存のpi.load()（_pendingフラグで非同期読込中を'
-    + '   表す仕組みを既に持つ）を再利用することで、初回読込中にpi.save()が'
-    + '   呼ばれても（_pendingガードにより）空白のキャンバスで正本を上書きしない'
-    + '   ようにする。 */'
+    + '/* 別ウィンドウを開いた直後はレイアウトが未確定で、canvasのCSSサイズが0の'
+    + '   ままリサイズ処理が走ることがある。ベクタ方式では復元に失敗しても正本を'
+    + '   破壊することは無いが（正本はpushでしか変わらない）、開いた瞬間に白紙が'
+    + '   一瞬見えるのを避けるため、実寸が確定するまでrequestAnimationFrameで'
+    + '   待ってから最初の描画を行う。 */'
     + 'function _waitForCanvasSize(cb){var r=c.getBoundingClientRect();if(r.width>0&&r.height>0){cb();}else{requestAnimationFrame(function(){_waitForCanvasSize(cb);});}}'
-    + '_waitForCanvasSize(function(){_wbResize();pi.load();});'
+    + '_waitForCanvasSize(function(){_wbResize();});'
     + 'var _rt;window.onresize=function(){clearTimeout(_rt);_rt=setTimeout(_wbResize,150);};'
     + 'pi.upd();'
-    + 'window.addEventListener("beforeunload",function(){pi.save();if(_bridge){try{_bridge.setCurrent(_i);_bridge.notifyChanged();}catch(e){}}});'
+    + 'window.addEventListener("beforeunload",function(){if(_bridge){try{_bridge.setCurrent(_i);_bridge.notifyChanged();}catch(e){}}});'
     + '<\/script></body></html>';
 }
 

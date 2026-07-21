@@ -3601,7 +3601,7 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-20-lp-a';
+var KOSAME_BUILD_ID = 'build 2026-07-21-lp-a';
 (function() { var el = document.getElementById('kd-build-tag'); if (el) el.textContent = KOSAME_BUILD_ID; })();
 
 /* ═══ LINE Contact ═══ */
@@ -5720,6 +5720,7 @@ function lpRender() {
   }
   var childInputs = '';
   var cc = lpClamp(lpIntOr(c.childCount, 0), 0, 5);
+  c.childAges.length = cc;
   for (var ci = 0; ci < cc; ci++) {
     childInputs += lpField('childAge:' + ci, '第' + (ci + 1) + '子 現在年齢（歳）');
   }
@@ -6049,6 +6050,7 @@ function lpWizFinish() {
   LIFE_PLAN_STATE.ui.step = 4;
   if (LIFE_PLAN_STATE.ui.maxReachedStep < 4) LIFE_PLAN_STATE.ui.maxReachedStep = 4;
   lpRender();
+  lpRecalcResults();
 }
 function lpWizConfirm() {
   var c = lpCase();
@@ -6824,6 +6826,7 @@ function lpPrint() {
     + '<div class="kpi"><div class="l">住宅費総額</div><div class="v">' + (c.housingMode === 'none' ? '対象外' : lpMan(s.housingTotal)) + '</div><div class="s">' + (sim.loanEndAge ? 'ローン完済 ' + sim.loanEndAge + '歳' : '') + '</div></div>'
     + '<div class="kpi"><div class="l">老後生活資金の参考差額</div><div class="v' + (s.oldAgeGap < 0 ? ' warn' : '') + '">' + lpMan(s.oldAgeGap) + '</div><div class="s">退職翌年〜終了年齢の収支合計</div></div>'
     + '</div>';
+  var premises = lpPremises(c, sim);
   var premisesHtml = '<div class="note">' + premises.map(lpEsc).join('<br>') + '</div>';
   var taxNotice = '<div class="notice">本レポートは、一般的な制度・税率等をもとにした概算表示です。税務相談、税務書類の作成、申告判断を行うものではありません。個別の税務判断、特例の適用可否、申告については、税理士または所轄税務署へご確認ください。<br>'
     + '想定利回りは入力値による仮定であり、特定の商品を推奨するものではなく、運用成果・元本を保証するものではありません。<br>'

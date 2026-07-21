@@ -2586,7 +2586,7 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="card" style="margin-bottom:12px">
               <div class="card-title">土地面積と価格参考</div>
               <div class="form-grid-2" style="margin-bottom:10px">
-                <div class="form-group"><label id="land-area-label">土地面積（㎡）</label><input type="number" id="land-area-sqm" placeholder="" min="0" oninput="landCalcPrice()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                <div class="form-group"><label id="land-area-label">土地面積（㎡）</label><input type="number" id="land-area-sqm" placeholder="" min="0" oninput="landCalcPriceFromSqm()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
                 <div class="form-group"><label id="land-area-tsubo-label">土地面積（坪）</label><input type="number" id="land-area-tsubo" placeholder="" min="0" oninput="landCalcPriceFromTsubo()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
                 <!-- マンション用追加入力 -->
                 <div id="land-condo-extra" style="display:none">
@@ -6385,6 +6385,12 @@ function landCalcPriceFromTsubo() {
   var tsubo = parseFloat(landEl('land-area-tsubo').value) || 0;
   if (tsubo > 0) { var sqm = tsubo * 3.305785; landEl('land-area-sqm').value = sqm.toFixed(2); }
   else { landEl('land-area-sqm').value = ''; }
+  landCalcPrice();
+}
+function landCalcPriceFromSqm() {
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  if (sqm > 0) { landEl('land-area-tsubo').value = (sqm / 3.305785).toFixed(2); }
+  else { landEl('land-area-tsubo').value = ''; }
   landCalcPrice();
 }
 function landCalcCondoTotal() {

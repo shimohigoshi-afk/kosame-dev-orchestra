@@ -53,7 +53,7 @@ function mlitGeoFetch(apiCode, params, apiKey) {
     var parts = [];
     Object.keys(params).forEach(function(k) { var v = params[k]; if (v !== undefined && v !== null && v !== '') parts.push(encodeURIComponent(k)+'='+encodeURIComponent(String(v))); });
     if (parts.length) urlStr += '?' + parts.join('&');
-    var opts = { headers: { 'Ocp-Apim-Subscription-Key': apiKey, 'Accept-Encoding': 'gzip, deflate, br' }, timeout: 15000 };
+    var opts = { headers: { 'X-API-KEY': apiKey, 'Ocp-Apim-Subscription-Key': apiKey, 'Accept-Encoding': 'gzip, deflate, br' }, timeout: 15000 };
     var chunks = [];
     var req = https.get(urlStr, opts, function(upstreamRes) {
       upstreamRes.on('data', function(c) { chunks.push(Buffer.isBuffer(c)?c:Buffer.from(c)); });
@@ -77,6 +77,7 @@ function mlitFetch(params, apiKey, cityCode, year) {
     const reqUrl = `${MLIT_BASE}/XIT001?${query}`;
     const opts = {
       headers: {
+        'X-API-KEY': apiKey,
         'Ocp-Apim-Subscription-Key': apiKey,
         'Accept-Encoding': 'gzip, deflate, br',
       },

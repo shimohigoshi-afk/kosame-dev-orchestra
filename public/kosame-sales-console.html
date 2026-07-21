@@ -3704,11 +3704,11 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-22-cov-main-a';
+var KOSAME_BUILD_ID = 'build 2026-07-22-cov-main-b';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
-const SALES_CONTACT = { enabled: true, lineEnabled: true, displayName:'下吹越 淳也', lineQrImage:'assets/sales-console/contacts/shimohigoshi-line-qr.png', email:'' };
+const SALES_CONTACT = { enabled: true, lineEnabled: true, displayName:'下吹越 淳也', lineQrImage:'', email:'' };
 function toggleContactMenu() {
   var menu = document.getElementById('contact-menu');
   if (!menu) return;
@@ -3720,9 +3720,14 @@ function showContactQR() {
   var panel = document.getElementById('contact-qr-panel');
   if (!panel) return;
   panel.style.display = 'flex';
+  var img = document.getElementById('contact-qr-img');
+  var fallback = document.getElementById('contact-qr-fallback');
   if (SALES_CONTACT.lineQrImage) {
-    var img = document.getElementById('contact-qr-img');
     if (img) { img.src = SALES_CONTACT.lineQrImage; img.style.display = 'block'; }
+    if (fallback) fallback.style.display = 'none';
+  } else {
+    if (img) { img.removeAttribute('src'); img.style.display = 'none'; }
+    if (fallback) fallback.style.display = 'block';
   }
 }
 function hideContactQR() {

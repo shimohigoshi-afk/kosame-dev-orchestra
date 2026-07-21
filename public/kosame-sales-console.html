@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/sales-console/auth/auth-login.css">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <style>
 :root {
   --navy: #040d1c;
@@ -1392,6 +1393,24 @@ canvas{display:block;width:100%;border-radius:8px}
 #sales-support-content .tool-card{min-height:190px!important}
 
 @media(max-width:768px){.tool-card{padding:20px 24px!important}.card-visual{display:none!important}.tool-card .tool-card-body{max-width:100%}}
+
+/* ═══ LAND / LEAFLET WORKSPACE ═══ */
+#workspace-panel.open #ws-body #land-map {
+  display: block;
+  width: 100%;
+  height: clamp(400px, 60vh, 680px);
+  min-height: 400px;
+  position: relative;
+  overflow: hidden;
+}
+#workspace-panel.open #ws-body #land-map .leaflet-map-pane { z-index: 1; }
+#workspace-panel.open #ws-body #land-map .leaflet-tile-pane { z-index: 200; }
+#workspace-panel.open #ws-body #land-map .leaflet-overlay-pane { z-index: 400; }
+#workspace-panel.open #ws-body #land-map .leaflet-marker-pane { z-index: 600; }
+#workspace-panel.open #ws-body #land-map .leaflet-tooltip-pane { z-index: 650; }
+#workspace-panel.open #ws-body #land-map .leaflet-popup-pane { z-index: 700; }
+#workspace-panel.open #ws-body #land-map .leaflet-popup { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -1657,9 +1676,9 @@ canvas{display:block;width:100%;border-radius:8px}
             <div class="tool-card" onclick="openWorkspace('realestate')">
               <div class="icon-ring"><svg class="card-icon" viewBox="0 0 24 24"><polygon points="3,5 9,3 15,5 21,3 21,19 15,21 9,19 3,21"/><line x1="9" y1="3" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="21"/><path d="M17 7c-1.4 0-2.5 1.1-2.5 2.5c0 1.9 2.5 5 2.5 5s2.5-3.1 2.5-5c0-1.4-1.1-2.5-2.5-2.5z"/><circle cx="17" cy="9.5" r="0.7"/></svg></div>
               <div class="tool-card-body">
-                <div class="tool-card-title">土地・エリア情報</div>
+                <div class="tool-card-title">土地・エリア相場</div>
                 <div class="tool-card-subtitle">Land &amp; Area Info</div>
-                <div class="tool-card-desc">土地・周辺エリアを確認</div>
+                <div class="tool-card-desc">周辺の取引価格・地価情報・土地価格の目安を確認</div>
               </div>
               <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/land-area.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -2489,16 +2508,128 @@ canvas{display:block;width:100%;border-radius:8px}
     <!-- ═══ REAL ESTATE TOOL ═══ -->
     <section id="section-realestate" class="section">
       <div class="tool-header">
-        <button class="tool-back-btn" onclick="goDashboard()">← ダッシュボードに戻る</button>
-        <div class="tool-title">土地・エリア情報</div>
-        <div class="tool-subtitle">エリアの不動産価格や土地情報を参照</div>
+        <div class="tool-title">土地・エリア相場</div>
+        <div class="tool-subtitle">住所や地図から、周辺の土地取引価格を参考確認</div>
       </div>
-      <div class="tool-grid-1">
-        <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
-          <span class="ph-icon">🏡</span>
-          <div class="ph-title">準備中</div>
-          <div class="ph-desc">エリア分析・不動産価格参照機能は現在準備中です。<br>国交省API連携は今後のアップデートで対応予定です。</div>
+      <!-- 検索バー -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="land-search-input" placeholder="住所・駅名・施設名を入力" style="flex:1;height:44px;font-size:14px;border:1px solid rgba(200,169,106,0.3);border-radius:10px;padding:0 16px;background:rgba(255,255,255,0.04);color:var(--text)" onkeydown="if(event.key==='Enter')landSearch()">
+        <button class="board-btn print" onclick="landSearch()" style="height:44px;padding:0 20px">検索</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="board-btn clear" onclick="landUseCurrentLocation()" style="font-size:10px;padding:4px 10px">現在地</button>
+        <button class="board-btn clear" onclick="landClear()" style="font-size:10px;padding:4px 10px">選択解除</button>
+        <span style="font-size:10px;color:var(--text-dim);display:flex;align-items:center;margin-left:auto"><span id="land-status">地点を検索してください</span></span>
+      </div>
+      <!-- 検索候補 -->
+      <div id="land-candidates" style="display:none;max-height:200px;overflow-y:auto;margin-bottom:12px;background:rgba(8,20,36,0.6);border:1px solid rgba(200,169,106,0.2);border-radius:10px;padding:8px"></div>
+      <!-- 利用目的モード -->
+      <div id="land-results">
+        <!-- 物件種別タブ -->
+        <div style="display:flex;gap:4px;background:rgba(8,20,36,0.5);border-radius:10px;padding:3px;width:fit-content;margin-bottom:8px">
+          <span class="sim-tab active" id="land-prop-land" style="margin:0;cursor:pointer" onclick="switchLandPropType('land')">土地</span>
+          <span class="sim-tab" id="land-prop-condo" style="margin:0;cursor:pointer" onclick="switchLandPropType('condo')">中古マンション</span>
         </div>
+        <!-- 利用目的モード -->
+        <div style="display:flex;gap:4px;background:rgba(8,20,36,0.5);border-radius:10px;padding:3px;width:fit-content;margin-bottom:14px">
+          <span class="sim-tab active" id="land-mode-housing" style="margin:0;cursor:pointer" onclick="switchLandMode('housing')">住宅検討</span>
+          <span class="sim-tab" id="land-mode-inheritance" style="margin:0;cursor:pointer" onclick="switchLandMode('inheritance')">相続・売却検討</span>
+        </div>
+        <!-- 比較用途 -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+          <span style="font-size:11px;color:#8fa5b8">比較用途:</span>
+          <select id="land-compare-use" onchange="landChangeCompareUse()" style="font-size:11px;background:#0d1b2e;color:var(--text);border:1px solid rgba(200,169,106,0.2);border-radius:4px;padding:2px 6px">
+            <option value="residential" selected>住宅用</option>
+            <option value="commercial">商業用</option>
+            <option value="none">指定なし</option>
+          </select>
+        </div>
+        <!-- 地図（全幅） -->
+        <div id="land-map" style="height:clamp(400px, 60vh, 680px);border-radius:10px;border:1px solid rgba(200,169,106,0.3);margin-bottom:14px;background:#0d1b2e"></div>
+        <!-- 参考成約価格カード（全幅） -->
+        <div class="card" style="margin-bottom:14px;background:rgba(8,20,36,0.8);border-color:rgba(200,169,106,0.35)">
+          <div class="card-title" style="font-size:17px">参考成約価格</div>
+          <div id="land-price-range" style="font-size:11px;color:#8fa5b8">土地面積を入力すると参考成約価格が表示されます</div>
+        </div>
+        <div class="tool-grid" style="grid-template-columns:1fr 1fr">
+          <div>
+            <!-- 選択地点 -->
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-title">選択地点</div>
+              <div style="font-size:14px;color:var(--text)" id="land-address-display">—</div>
+              <div style="font-size:13px;color:#8fa5b8;margin-top:4px">対象期間: <span id="land-years-display">5年</span> / <span id="land-radius-display">—</span></div>
+              <div style="font-size:13px;color:#8fa5b8;margin-top:2px" id="land-basis-display"></div>
+              <div id="land-value-ref"></div>
+              <div id="land-safety-gate"></div>
+              <div id="land-top5"></div>
+              <div style="display:flex;gap:4px;margin-top:6px">
+                <select id="land-years" onchange="landChangeYears()" style="font-size:10px;background:#0d1b2e;color:var(--text);border:1px solid rgba(200,169,106,0.2);border-radius:4px;padding:2px 4px">
+                  <option value="3">3年</option><option value="5" selected>5年</option>
+                </select>
+              </div>
+            </div>
+            <!-- 周辺相場 -->
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-title">周辺取引価格の参考帯</div>
+              <div id="land-price-summary" style="font-size:11px;color:#8fa5b8">データを取得中...</div>
+              <div id="land-price-detail" style="margin-top:8px"></div>
+            </div>
+            <!-- 比較事例一覧 -->
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-title">近隣取引事例</div>
+              <div class="lp-table-wrap"><table class="lp-table" style="font-size:9.5px"><tbody id="land-records-body"></tbody></table></div>
+              <div style="margin-top:4px;font-size:9px;color:#8fa5b8">個人情報を含まない公的データから抽出。実際の取引時期・条件により金額は変動します。</div>
+            </div>
+          </div>
+          <div>
+            <!-- 土地面積・価格試算 -->
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-title">土地面積と価格参考</div>
+              <div class="form-grid-2" style="margin-bottom:10px">
+                <div class="form-group"><label id="land-area-label">土地面積（㎡）</label><input type="number" id="land-area-sqm" placeholder="" min="0" oninput="landCalcPrice()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                <div class="form-group"><label id="land-area-tsubo-label">土地面積（坪）</label><input type="number" id="land-area-tsubo" placeholder="" min="0" oninput="landCalcPriceFromTsubo()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                <!-- マンション用追加入力 -->
+                <div id="land-condo-extra" style="display:none">
+                  <div class="form-group"><label>最寄駅</label><select id="land-condo-station" onchange="landCalcPrice()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"><option value="">指定なし</option></select></div>
+                  <div class="form-group"><label>建築年</label><input type="number" id="land-condo-year" placeholder="例: 2005" min="1960" max="2030" oninput="landCalcPrice()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                  <div class="form-group"><label>間取り</label><input type="text" id="land-condo-layout" placeholder="例: 3LDK" oninput="landCalcPrice()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                  <div class="form-group"><label>購入諸費用（万円）</label><input type="number" id="land-condo-fees" placeholder="" min="0" oninput="landCalcCondoTotal()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                  <div class="form-group"><label>リフォーム予算（万円）</label><input type="number" id="land-condo-reno" placeholder="" min="0" oninput="landCalcCondoTotal()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                  <div id="land-condo-total" style="font-size:13px;color:#8fa5b8;margin-top:8px"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 住宅検討モード -->
+            <div id="land-housing-panel">
+              <div class="card" style="margin-bottom:12px">
+                <div class="card-title">総予算の概算</div>
+                <div class="form-grid-2" style="margin-bottom:10px">
+                  <div class="form-group"><label>建物予算（万円）</label><input type="number" id="land-building-budget" placeholder="" min="0" oninput="landCalcTotal()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                  <div class="form-group"><label>諸費用（万円）</label><input type="number" id="land-incidental" placeholder="" min="0" oninput="landCalcTotal()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100%"></div>
+                </div>
+                <div id="land-total-budget" style="font-size:13px;color:var(--text)">建物予算を入力すると総予算が表示されます</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="board-btn clear" onclick="openWorkspace('building')" style="font-size:10px;padding:4px 10px">建物価格シミュレーション</button>
+                <button class="board-btn clear" onclick="openWorkspace('mortgage')" style="font-size:10px;padding:4px 10px">住宅ローン試算</button>
+              </div>
+            </div>
+            <!-- 相続・売却検討モード -->
+            <div id="land-inheritance-panel" style="display:none">
+              <div class="card" style="margin-bottom:12px">
+                <div class="card-title">所有持分</div>
+                <div class="form-group"><label>所有持分（%）</label><input type="number" id="land-ownership" value="100" min="0" max="100" oninput="landCalcInheritance()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100px"></div>
+                <div id="land-inheritance-range" style="font-size:12px;color:var(--text);margin-top:8px">—</div>
+              </div>
+              <div style="font-size:10px;color:#8fa5b8;line-height:1.6;margin-top:8px">
+                本表示は周辺の不動産取引価格をもとにした市場価格の参考です。相続税評価額、固定資産税評価額、不動産鑑定評価額、実際の売却価格を示すものではありません。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.1);border-radius:8px;font-size:10px;color:#8fa5b8;line-height:1.8">
+        本機能は、国土交通省等から取得可能な不動産取引情報をもとに、周辺の土地価格を一般的に確認するための参考機能です。表示価格は、取引時期、土地形状、接道、用途地域、建築条件、高低差、インフラ、個別事情等を反映した査定価格ではありません。実際の購入価格、売却価格、不動産鑑定評価額、固定資産税評価額、相続税評価額を示すものではありません。個別の取引や税務判断は、不動産会社、税理士等の専門家へご確認ください。
       </div>
     </section>
 
@@ -2905,6 +3036,7 @@ canvas{display:block;width:100%;border-radius:8px}
   <button class="calc-btn copy" onclick="calcCopy()" style="width:100%;height:32px;font-size:11px;margin-top:6px;flex-shrink:0">📋 コピー</button>
 </div>
 
+<script src="vendor/leaflet/leaflet.js"></script>
 <script>
 /* ═══════════════════════════════════════════
    KOSAME Sales Console — JS
@@ -3002,7 +3134,7 @@ function navigateTo(key) {
     const titles = {
       mortgage:'住宅ローン試算',insurance:'必要保障額',tax:'税金・贈与チェック',
       bmi:'健康・体格バランス',asset:'ファンド確認',lifetime:'匿名ライフプラン',
-      security:'公的保障チェック',realestate:'土地・エリア情報',education:'教育資金チェック',
+      security:'公的保障チェック',realestate:'土地・エリア相場',education:'教育資金チェック',
       underwriting:'医務査定確認','medical-check':'医療保障チェック',
       memo:'面談メモ',building:'建物価格シミュレーション',whiteboard:'手書きボード','calc-memo':'計算メモ',
       'corp-analysis':'決算書分析','corp-insurance':'法人必要保障額','corp-retire':'役員退職金・事業保障メモ',
@@ -5859,6 +5991,9 @@ function openWorkspace(key) {
     }
   }
   panel.classList.add('open');
+  if (key === 'realestate') {
+    requestAnimationFrame(function() { requestAnimationFrame(function() { landEnsureWorkspaceReady(); }); });
+  }
   kosameStatus('think');
   // Inject "計算メモに追加" button for calc-log-enabled tools
   const logKeys = ['mortgage','tax','security','insurance','medical-check','asset'];
@@ -5895,6 +6030,533 @@ function openWorkspace(key) {
     if (key==='security') calcSocialSecurity();
     kosameStatus('done');
   }, 100);
+}
+/* ═══ Land Area Market ═══ */
+let _landMode = 'housing', _landPropType = 'land', _landCompareUse = 'residential', _landRecords = [], _landSummary = null, _landLat = null, _landLng = null, _landAddress = '', _landValuePoints = [];
+function landGet(id) { return document.getElementById(id); }
+var _landSavedLandInputs = null, _landSavedCondoInputs = null;
+function switchLandPropType(type) {
+  /* 現在の入力を保存 */
+  var cur = { areaSqm: landEl('land-area-sqm').value, areaTsubo: landEl('land-area-tsubo').value, condoYear: landEl('land-condo-year').value, condoLayout: landEl('land-condo-layout').value };
+  if (_landPropType === 'land') _landSavedLandInputs = cur; else _landSavedCondoInputs = cur;
+  _landPropType = type;
+  /* 切替先の入力を復元 */
+  var rest = type === 'land' ? _landSavedLandInputs : _landSavedCondoInputs;
+  if (rest) { landEl('land-area-sqm').value = rest.areaSqm||''; landEl('land-area-tsubo').value = rest.areaTsubo||''; landEl('land-condo-year').value = rest.condoYear||''; landEl('land-condo-layout').value = rest.condoLayout||''; }
+  else if (type === 'condo') { landEl('land-area-sqm').value = ''; landEl('land-area-tsubo').value = ''; }
+  /* 表示切替 */
+  landEl('land-prop-land').classList.toggle('active', type==='land');
+  landEl('land-prop-condo').classList.toggle('active', type==='condo');
+  var inhPanel = landEl('land-inheritance-panel');
+  if (inhPanel) inhPanel.style.display = (type==='land' && _landMode==='inheritance')?'':'none';
+  var condoExtra = landEl('land-condo-extra');
+  if (condoExtra) condoExtra.style.display = (type==='condo')?'':'none';
+  var al = landEl('land-area-label'); if (al) al.textContent = type==='condo' ? '専有面積（㎡）' : '土地面積（㎡）';
+  var tl = landEl('land-area-tsubo-label'); if (tl) tl.style.display = type==='condo' ? 'none' : '';
+  /* マンション時は建物予算・総予算・相続パネルを非表示 */
+  var housingPanel = landEl('land-housing-panel');
+  if (housingPanel) housingPanel.style.display = (type==='land' && _landMode==='housing')?'':'none';
+  if (_landLat && _landLng) fetchLandData();
+  if (_landMap) { setTimeout(function() { _landMap.invalidateSize(); }, 200); }
+}
+const LAND_AREA_STATE = { mode:'housing', query:'', selectedAddress:'', lat:null, lng:null, radiusKm:1, years:5, areaSqm:null, areaTsubo:null, buildingBudget:null, incidentalCosts:null, ownershipShare:100, records:[], summary:null, fetchedAt:null };
+
+function landEl(id) {
+  var panel = document.getElementById('workspace-panel');
+  var body = document.getElementById('ws-body');
+  if (!panel || !body || !panel.classList.contains('open')) return null;
+  var el = body.querySelector('#' + id);
+  if (id === 'land-map' && el && el.getClientRects().length === 0) return null;
+  return el;
+}
+function landSetStatus(message) { var el = landEl('land-status'); if (el) el.textContent = message; }
+function landScheduleInvalidate(map) {
+  if (!map) return;
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    if (_landMap === map) map.invalidateSize({pan:false});
+    setTimeout(function() { if (_landMap === map) map.invalidateSize({pan:false}); }, 180);
+  }); });
+}
+
+function switchLandMode(mode) {
+  _landMode = mode;
+  landEl('land-mode-housing').classList.toggle('active', mode==='housing');
+  landEl('land-mode-inheritance').classList.toggle('active', mode==='inheritance');
+  landEl('land-housing-panel').style.display = mode==='housing'?'':'none';
+  landEl('land-inheritance-panel').style.display = mode==='inheritance'?'':'none';
+  landCalcPrice();
+}
+function landSearch() {
+  var q = landEl('land-search-input').value.trim();
+  if (!q) return;
+  landEl('land-status').textContent = '検索中...';
+  landEl('land-candidates').style.display = 'none';
+  fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(q))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var cands = landEl('land-candidates');
+      if (!data || data.length === 0) { landEl('land-status').textContent = '該当する地点を確認できませんでした'; cands.style.display='none'; return; }
+      var html = ''; data.slice(0,5).forEach(function(d,i) { html += '<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid rgba(200,169,106,0.08);font-size:12px" onclick="landSelectCandidate('+d.geometry.coordinates[1]+','+d.geometry.coordinates[0]+',\''+(d.properties.title||'').replace(/'/g,"\\'")+'\')">'+d.properties.title+'</div>'; });
+      cands.innerHTML = html; cands.style.display = 'block'; landEl('land-status').textContent = data.length+'件の候補';
+    })
+    .catch(function(e) { landEl('land-status').textContent = '現在、地点情報を取得できません'; });
+}
+function landSelectCandidate(lat, lng, title) {
+  landEl('land-candidates').style.display = 'none';
+  landEl('land-search-input').value = title;
+  _landLat = lat; _landLng = lng; _landAddress = title;
+  landEl('land-address-display').textContent = title;
+  landEl('land-results').style.display = '';
+  landEl('land-status').textContent = title;
+  /* XPT002 地価公示等を取得 */
+  fetch('http://localhost:3002/api/land-value?lat='+lat+'&lng='+lng)
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d.ok && d.data.length>0){ _landValuePoints = d.data; landShowValueRef(); } })
+    .catch(function(){});
+  /* XPT001 駅単位集約マーカーを取得 */
+  fetch('http://localhost:3002/api/land-cases?lat='+lat+'&lng='+lng+'&from=20211&to=20254&priceClassification=02')
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d.ok && d.stations){ landShowStationMarkers(d); if (d.data) { _landXptRecords = d.data; if (_landPropType === 'land') landShowTop5(); } } })
+    .catch(function(){});
+  /* 地図更新 */
+  if (_landMap) { _landMap.setView([lat, lng], 15); if (!_landMarker) { _landMarker = L.marker([lat, lng], {draggable:true}).addTo(_landMap); _landMarker.on('dragend', function(e){ var p=e.target.getLatLng(); landUpdateFromCoords(p.lat, p.lng); }); } else { _landMarker.setLatLng([lat, lng]); } }
+  else { initLandMap(lat, lng); }
+  fetchLandData();
+}
+var _landMap = null, _landMarker = null;
+function landEnsureWorkspaceReady() {
+  var el = landEl('land-map');
+  if (!el) { landSetStatus('地図の表示領域を準備しています'); return; }
+  if (typeof window.L === 'undefined' || !window.L.map) { landSetStatus('地図ライブラリを読み込めませんでした。住所検索と価格計算は引き続き利用できます'); return; }
+  if (_landMap && _landMap.getContainer() !== el) { _landMap.remove(); _landMap=null; _landMarker=null; _landValueMarkers=null; _landCaseMarkers=null; }
+  if (_landMap) { landScheduleInvalidate(_landMap); return; }
+  initLandMap(_landLat, _landLng);
+}
+function initLandMap(lat, lng) {
+  var el = landEl('land-map'); if (!el) { landSetStatus('地図の表示領域を準備しています'); return; }
+  if (typeof window.L === 'undefined' || !window.L.map) { landSetStatus('地図ライブラリを読み込めませんでした。住所検索と価格計算は引き続き利用できます'); return; }
+  if (_landMap && _landMap.getContainer() !== el) { _landMap.remove(); _landMap=null; _landMarker=null; _landValueMarkers=null; _landCaseMarkers=null; }
+  if (_landMap) { landScheduleInvalidate(_landMap); return; }
+  var center=[lat||35.68,lng||139.76];
+  _landMap = L.map(el, { attributionControl: true, zoomControl: true }).setView(center, 15);
+  L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 }).addTo(_landMap);
+  _landMarker = L.marker(center, {draggable:true}).addTo(_landMap);
+  _landMarker.on('dragend', function(e){ var p=e.target.getLatLng(); landUpdateFromCoords(p.lat, p.lng); });
+  _landMap.on('click', function(e){ if(!_landMarker)_landMarker=L.marker(e.latlng,{draggable:true}).addTo(_landMap);else _landMarker.setLatLng(e.latlng); landUpdateFromCoords(e.latlng.lat, e.latlng.lng); });
+  landScheduleInvalidate(_landMap);
+}
+function landUpdateFromCoords(lat, lng) { _landLat=lat; _landLng=lng; landEl('land-status').textContent='地点更新中...'; fetch('https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat='+lat+'&lon='+lng).then(function(r){return r.json();}).then(function(d){ var addr=d.results?(d.results.lv01Nm||'')+(d.results.lv02Nm||''):('緯度'+lat.toFixed(4)+' 経度'+lng.toFixed(4)); _landAddress=addr; landEl('land-address-display').textContent=addr; landEl('land-status').textContent=addr; fetchLandData(); }).catch(function(){fetchLandData();}); }
+
+function landClear() {
+  var results=landEl('land-results');if(results)results.style.display='';
+  var candidates=landEl('land-candidates');if(candidates)candidates.style.display='none';
+  landSetStatus('地点を検索してください');
+  _landLat=null;_landLng=null;_landAddress='';_landRecords=[];_landSummary=null;_landValuePoints=[];_landXptRecords=[];
+  if(_landMap){[_landMarker,_landValueMarkers,_landCaseMarkers].forEach(function(layer){if(layer&&_landMap.hasLayer(layer))_landMap.removeLayer(layer);});_landMarker=null;_landValueMarkers=null;_landCaseMarkers=null;_landMap.setView([35.68,139.76],15);landScheduleInvalidate(_landMap);}
+  ['land-search-input','land-area-sqm','land-area-tsubo','land-building-budget','land-incidental','land-condo-year','land-condo-layout','land-condo-fees','land-condo-reno'].forEach(function(id){var el=landEl(id);if(el)el.value='';});
+  var address=landEl('land-address-display');if(address)address.textContent='—';
+  var summary=landEl('land-price-summary');if(summary)summary.textContent='地点を選択すると周辺相場を確認できます';
+  var detail=landEl('land-price-detail');if(detail)detail.innerHTML='';
+  var records=landEl('land-records-body');if(records)records.innerHTML='';
+  var price=landEl('land-price-range');if(price)price.textContent='土地面積を入力すると参考成約価格が表示されます';
+  ['land-value-ref','land-safety-gate','land-top5','land-basis-display'].forEach(function(id){var el=landEl(id);if(el)el.innerHTML='';});
+}
+function landUseCurrentLocation() {
+  if (!navigator.geolocation) { landEl('land-status').textContent = '位置情報が利用できません'; return; }
+  landEl('land-status').textContent = '位置情報取得中...';
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var lat = pos.coords.latitude, lng = pos.coords.longitude;
+    _landLat = lat; _landLng = lng;
+    fetch('https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat='+lat+'&lon='+lng)
+      .then(function(r){return r.json();})
+      .then(function(d) {
+        var addr = d.results ? (d.results.lv01Nm||'')+(d.results.lv02Nm||'') : '';
+        _landAddress = addr;
+        landEl('land-address-display').textContent = addr;
+        landEl('land-status').textContent = addr;
+        landEl('land-results').style.display = '';
+        if (_landMap) { _landMap.setView([lat,lng], 15); if (!_landMarker) { _landMarker = L.marker([lat,lng],{draggable:true}).addTo(_landMap); _landMarker.on('dragend',function(e){var p=e.target.getLatLng();landUpdateFromCoords(p.lat,p.lng);}); } else { _landMarker.setLatLng([lat,lng]); } }
+        else { initLandMap(lat, lng); }
+        fetchLandData();
+      }).catch(function(){ fetchLandData(); });
+  }, function() { landEl('land-status').textContent = '位置情報の取得が拒否されました'; });
+}
+function fetchLandData() {
+  var mySeq = ++_landSeqId;
+  landEl('land-price-summary').textContent = 'データを取得中...';
+  var yearsN = parseInt(landEl('land-years').value) || 5;
+  landEl('land-years-display').textContent = yearsN+'年';
+  if (!_landLat || !_landLng) { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">選択した地域で確認できる土地取引データがありません。地点を選択してください。</span>'; return; }
+  /* 逆ジオコードで市区町村コードを取得 */
+  fetch('https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat='+_landLat+'&lon='+_landLng)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var muniCd = d.results ? d.results.muniCd : '';
+      var districtRaw = d.results ? (d.results.lv01Nm || d.results.lv02Nm || '') : '';
+      _landCityCode = muniCd; _landDistrictRaw = districtRaw;
+      if (!muniCd || muniCd.length < 5) { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">住所から市区町村情報を確認できませんでした</span>'; return; }
+      /* 取得年をリスト化（最新年から指定年分） */
+      var currentYear = new Date().getFullYear();
+      var reqYears = []; for (var i=0; i<yearsN; i++) { reqYears.push(currentYear - i); }
+      var yearsParam = reqYears.join(',');
+      /* MLIT Bridge へ5桁cityで問い合わせ */
+      return fetch('http://localhost:3002/api/realestate?city='+muniCd+'&years='+yearsParam+'&propertyType='+_landPropType+'&priceClassification=02')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          if (!data.ok) {
+            if (mySeq !== _landSeqId) return;
+            if (data.code==='LAND_API_NOT_CONFIGURED') { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">土地取引情報APIの設定が必要です</span>'; }
+            else { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">土地取引情報を取得できませんでした</span>'; }
+            return;
+          }
+          var records02 = data.data || [];
+          records02.forEach(function(r){ r.unitPrice=r.size>0?r.totalPrice/r.size:0; r.priceCat='02'; });
+          var normDistrict = districtNormalize(districtRaw);
+          var sameDistrict02 = records02.filter(function(r){ return districtNormalize(r.districtName)===normDistrict; });
+          /* 02の地区一致が3件以上なら02を採用 */
+          if (sameDistrict02.length >= 3) {
+            _landScope = 'district'; _landPriceCat = '02';
+            landEl('land-radius-display').textContent = '成約価格情報・同じ町名・地区（'+sameDistrict02.length+'件）';
+            landProcessRecords(sameDistrict02, mySeq, data);
+            return;
+          }
+          /* 02不足 → 01を再取得 */
+          return fetch('http://localhost:3002/api/realestate?city='+muniCd+'&years='+yearsParam+'&propertyType='+_landPropType+'&priceClassification=01')
+            .then(function(r){return r.json();})
+            .then(function(data01){
+              if (!data01.ok || mySeq !== _landSeqId) return;
+              var records01 = (data01.data||[]);
+              records01.forEach(function(r){ r.unitPrice=r.size>0?r.totalPrice/r.size:0; r.priceCat='01'; });
+              var sameDistrict01 = records01.filter(function(r){ return districtNormalize(r.districtName)===normDistrict; });
+              if (sameDistrict01.length >= 3) {
+                _landScope = 'district'; _landPriceCat = '01';
+                landEl('land-radius-display').textContent = '取引価格情報・同じ町名・地区（'+sameDistrict01.length+'件）';
+                landProcessRecords(sameDistrict01, mySeq, data01);
+              } else {
+                /* 01も地区不足 → 市区町村全体の02を使用 */
+                var sameDistrict02All = sameDistrict02.length > 0 ? sameDistrict02 : records02;
+                _landScope = 'ward'; _landPriceCat = sameDistrict02.length>0 ? '02' : '02';
+                landEl('land-radius-display').textContent = '市区町村全体・参考（'+(sameDistrict02.length>0?'成約':'取引')+'価格情報 '+records02.length+'件）';
+                landProcessRecords(records02, mySeq, data);
+              }
+            });
+        });
+    })
+    .catch(function(e){ landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">現在、土地取引情報を取得できません</span>'; });
+}
+function districtNormalize(s) {
+  return (s||'').replace(/[\uFF10-\uFF19]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);}).replace(/[\s\u3000]/g,'');
+}
+function landProcessRecords(records, seqId, apiData) {
+  if (seqId !== _landSeqId) return; /* 古いリクエストを破棄 */
+  if (records.length===0) {
+    landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">選択した地域で確認できる' + (_landPropType==='condo'?'中古マンション':'土地') + '取引データがありません</span>';
+    _landRecords=[]; _landSummary=null; return;
+  }
+  _landRecords = records;
+  var yearsForDisplay = apiData.succeededYears || apiData.years || [];
+  landComputeSummary(records, yearsForDisplay);
+  if (_landPropType === 'condo') { landPopulateStations(records); landCalcCondoTotal(); }
+  if (_landPropType === 'land') { landShowTop5(); }
+  if (apiData.partial) {
+    landEl('land-price-detail').innerHTML += '<br><span style="font-size:9px;color:#e08040">一部年度の情報を取得できませんでした</span>';
+  }
+}
+var _landScope = 'none', _landPriceCat = '02', _landCityCode = '', _landDistrictRaw = '', _landSeqId = 0;
+
+function landRenderRecordsTable(records) {
+  var el = landEl('land-records-body');
+  if (!el) return;
+  if (!records || records.length === 0) { el.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8fa5b8;padding:20px">取引事例がありません</td></tr>'; return; }
+  var isCondo = _landPropType === 'condo';
+  var header = isCondo
+    ? '<tr style="background:rgba(200,169,106,0.06);font-weight:700"><th style="text-align:left;padding:4px 6px">地区／駅</th><th>時期</th><th>専有面積</th><th>総額</th><th>㎡単価</th><th>間取</th><th>築年</th></tr>'
+    : '<tr style="background:rgba(200,169,106,0.06);font-weight:700"><th style="text-align:left;padding:4px 6px">地区</th><th>時期</th><th>面積</th><th>総額</th><th>坪単価</th><th>形状</th><th>前面道路</th></tr>';
+  var rows = records.slice(0, 8).map(function(r) {
+    var total = r.totalPrice ? Math.round(r.totalPrice).toLocaleString() + '万円' : '—';
+    var unitSqm = r.unitPrice ? Math.round(r.unitPrice).toLocaleString() + '万円/㎡' : '—';
+    if (isCondo) {
+      return '<tr><td>' + (r.districtName || '—') + (r.station ? '／' + r.station : '') + '</td>'
+        + '<td>' + (r.period || '—') + '</td><td>' + (r.size || '—') + '㎡</td><td>' + total + '</td>'
+        + '<td>' + unitSqm + '</td><td>' + (r.floorPlan || '—') + '</td><td>' + (r.buildingYear || '—') + '</td></tr>';
+    }
+    var tsuboUnit = r.unitPrice ? Math.round(r.unitPrice * 3.305785).toLocaleString() + '万円/坪' : '—';
+    return '<tr><td>' + (r.districtName || '—') + '</td>'
+      + '<td>' + (r.period || '—') + '</td><td>' + (r.size || '—') + '㎡</td><td>' + total + '</td>'
+      + '<td>' + tsuboUnit + '</td><td>' + (r.landShape || '—') + '</td><td>' + (r.frontage || '—') + '</td></tr>';
+  }).join('');
+  el.innerHTML = header + rows;
+}
+
+function landComputeSummary(records, years) {
+  /* Type でフィルター: land=宅地(土地), condo=中古マンション等 */
+  var typeFilter = (_landPropType === 'condo') ? '中古マンション等' : '宅地(土地)';
+  var filtered = records.filter(function(r){ return r.type === typeFilter; });
+  if (filtered.length === 0 && _landPropType === 'land') {
+    filtered = records.filter(function(r){ return !r.type || r.type.indexOf('土地') >= 0 || r.type.indexOf('宅地') >= 0; });
+  }
+  if (filtered.length === 0) {
+    _landSummary = { count: 0, median: 0 };
+    landEl('land-price-summary').innerHTML = '<span style="color:#8fa5b8">' + (_landPropType === 'condo' ? '中古マンション' : '土地') + 'の取引事例がありません</span>';
+    landEl('land-price-detail').innerHTML = '';
+    landCalcPrice();
+    return;
+  }
+  /* 面積フィルター: 対象面積の50%〜150%を優先 */
+  var targetArea = parseFloat(landEl('land-area-sqm').value) || 0;
+  if (targetArea > 0) {
+    var nearArea = filtered.filter(function(r){ var a=r.size||0; return a >= targetArea*0.5 && a <= targetArea*1.5; });
+    if (nearArea.length >= 3) filtered = nearArea;
+  }
+  var prices = filtered.map(function(r){ return r.unitPrice || 0; }).filter(function(p){ return p > 0; });
+  prices.sort(function(a,b){ return a - b; });
+  var n = prices.length;
+  var yearRange = years.length > 0 ? years[0] : new Date().getFullYear();
+  var yearNote = (years.length > 1 ? years[years.length-1] + '〜' + years[0] : yearRange);
+  if (n >= 5) {
+    /* IQR外れ値除外 */
+    var q1Idx = Math.floor(n * 0.25), q3Idx = Math.floor(n * 0.75);
+    var q1 = prices[q1Idx], q3 = prices[q3Idx];
+    var iqr = q3 - q1;
+    var lo = q1 - 1.5 * iqr, hi = q3 + 1.5 * iqr;
+    var cleanPrices = prices.filter(function(p){ return p >= lo && p <= hi; });
+    var cn = cleanPrices.length;
+    var cq1 = cleanPrices[Math.floor(cn * 0.25)];
+    var median = cleanPrices[Math.floor(cn * 0.5)];
+    var cq3 = cleanPrices[Math.floor(cn * 0.75)];
+    var outlierCount = n - cn;
+    _landSummary = { count: cn, q1: cq1, median: median, q3: cq3, totalCount: n, outlierCount: outlierCount, usedRecords: filtered, cleanRecords: cleanPrices };
+    landEl('land-price-summary').innerHTML = '低め参考: <b>' + Math.round(cq1).toLocaleString() + '</b>万円/㎡　中央参考: <b style="color:#d4bc7d">' + Math.round(median).toLocaleString() + '</b>万円/㎡　高め参考: <b>' + Math.round(cq3).toLocaleString() + '</b>万円/㎡';
+  } else if (n >= 1) {
+    _landSummary = { count: n, q1: prices[0], median: prices[Math.floor(n * 0.5)], q3: prices[n - 1], totalCount: n, outlierCount: 0, usedRecords: filtered };
+    landEl('land-price-summary').innerHTML = '参考取引単価: ' + prices.map(function(p) { return Math.round(p).toLocaleString() + '万円/㎡'; }).join(' / ') + '<br><span style="font-size:9px;color:#8fa5b8">参照件数が少ないため参考幅が大きくなる可能性があります</span>';
+  } else {
+    _landSummary = { count: 0, median: 0 };
+    landEl('land-price-summary').innerHTML = '<span style="color:#8fa5b8">有効な取引事例がありません</span>';
+    landEl('land-price-detail').innerHTML = '';
+    landCalcPrice();
+    return;
+  }
+  var extra = _landSummary.outlierCount > 0 ? '　外れ値除外: ' + _landSummary.outlierCount + '件' : '';
+  landEl('land-price-detail').innerHTML = '<div style="font-size:13px;color:#8fa5b8;margin-top:4px">採用件数: ' + _landSummary.count + '件 / ' + yearNote + extra + (n >= 3 ? '　坪単価 中央参考: ' + Math.round((_landSummary.median || prices[0]) * 3.305785).toLocaleString() + '万円/坪' : '') + '</div>';
+  /* 比較事例表 */
+  _landRecords = _landSummary.usedRecords || filtered;
+  _landRecords.sort(function(a, b) { var da = Math.abs((a.size || 0) - targetArea); var db = Math.abs((b.size || 0) - targetArea); if (da !== db) return da - db; return (b.unitPrice || 0) - (a.unitPrice || 0); });
+  landRenderRecordsTable(_landRecords.slice(0, 8));
+  landCalcPrice();
+}
+function landChangeYears() { fetchLandData(); }
+
+function landCalcPrice() {
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  var tsubo = parseFloat(landEl('land-area-tsubo').value) || 0;
+  var el = landEl('land-price-range');
+  if (!el) return;
+  if (sqm <= 0 && tsubo <= 0) { el.innerHTML = '<span style="font-size:11px;color:#8fa5b8">' + (_landPropType==='condo'?'専有面積':'土地面積') + 'を入力すると参考成約価格が表示されます</span>'; landCalcTotal(); landCalcInheritance(); return; }
+  if (_landSummary && _landSummary.count >= 3) {
+    var area = sqm > 0 ? sqm : tsubo * 3.305785;
+    var lo = (_landSummary.q1||_landSummary.min) * area;
+    var mid = _landSummary.median * area;
+    var hi = (_landSummary.q3||_landSummary.max) * area;
+    el.innerHTML = '<div style="font-size:56px;font-weight:800;color:#d4bc7d;line-height:1.1">約' + fmtYen(mid) + '</div>'
+      + '<div style="font-size:13px;color:rgba(212,188,125,0.7);margin-top:2px">近隣事例からみた参考価格（中央値）</div>'
+      + '<div style="font-size:32px;color:rgba(212,188,125,0.45);margin-top:8px;line-height:1.2">約' + fmtYen(lo) + ' ～ 約' + fmtYen(hi) + '</div>'
+      + '<div style="font-size:13px;color:#8fa5b8;margin-top:2px">近隣事例からみた参考価格帯</div>';
+    /* 算出根拠を表示 */
+    var basisEl = landEl('land-basis-display');
+    if (basisEl) {
+      var medUnit = _landSummary.median;
+      var scope = _landScope === 'district' ? '同じ町名・地区' : '市区町村全体';
+      var catLabel = (_landPriceCat==='02'?'成約価格':'取引価格') + '情報';
+      var basis = scope + 'の' + catLabel + ' ' + _landSummary.count + '件を使用　中央値: ' + medUnit.toFixed(1) + '万円/㎡　' + area.toFixed(2) + '㎡ × ' + medUnit.toFixed(1) + '万円/㎡ = ' + fmtYen(mid);
+      /* 参考精度 */
+      var reliability = '中';
+      if (_landScope === 'district' && _landSummary.count >= 5 && _landPriceCat === '02') reliability = '高';
+      else if (_landScope === 'ward' || _landSummary.count < 3) reliability = '低';
+      basis += '　【参考精度：' + reliability + '】';
+      basisEl.textContent = basis;
+    }
+    landCalcTotal(); landCalcInheritance(); landCalcCondoTotal(); landShowTop5();
+  } else {
+    el.innerHTML = '<span style="font-size:11px;color:#8fa5b8">参考データが不足しているため成約価格を計算できません</span>';
+  }
+}
+function landCalcPriceFromTsubo() {
+  var tsubo = parseFloat(landEl('land-area-tsubo').value) || 0;
+  if (tsubo > 0) { var sqm = tsubo * 3.305785; landEl('land-area-sqm').value = sqm.toFixed(2); }
+  else { landEl('land-area-sqm').value = ''; }
+  landCalcPrice();
+}
+function landCalcCondoTotal() {
+  if (_landPropType !== 'condo') return;
+  var el = landEl('land-condo-total'); if (!el) return;
+  var fees = parseFloat(landEl('land-condo-fees').value) || 0;
+  var reno = parseFloat(landEl('land-condo-reno').value) || 0;
+  if (!_landSummary || _landSummary.count < 1) { el.innerHTML = '<span style="font-size:13px;color:#8fa5b8">参考成約価格が利用可能になると購入総額が表示されます</span>'; return; }
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  if (sqm <= 0) { el.innerHTML = '<span style="font-size:13px;color:#8fa5b8">専有面積を入力してください</span>'; return; }
+  var mid = _landSummary.median * sqm;
+  var total = mid + fees + reno;
+  el.innerHTML = '<div style="font-size:36px;font-weight:700;color:#d4bc7d">約' + fmtYen(total) + '</div>'
+    + '<div style="font-size:12px;color:#8fa5b8;margin-top:4px">購入総額の目安</div>'
+    + '<div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.8">参考成約価格 ' + fmtYen(mid) + '　諸費用 ' + fmtYen(fees) + '　リフォーム ' + fmtYen(reno) + '</div>';
+}
+function landPopulateStations(records) {
+  var sel = landEl('land-condo-station'); if (!sel) return;
+  var stations = {}; records.forEach(function(r) { var s = (r.location||'').replace(/駅.*$/,'駅'); if (s && s !== '駅') stations[s] = (stations[s]||0)+1; });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">指定なし</option>';
+  Object.keys(stations).sort(function(a,b){ return stations[b]-stations[a]; }).slice(0, 20).forEach(function(s) {
+    sel.innerHTML += '<option value="' + s + '">' + s + '（' + stations[s] + '件）</option>';
+  });
+  if (cur) { var opts = sel.options; for (var i=0; i<opts.length; i++) { if (opts[i].value === cur) { sel.selectedIndex = i; break; } } }
+}
+function landShowValueRef() {
+  var el = landEl('land-value-ref'); if (!el) return;
+  if (_landValuePoints.length===0) { el.innerHTML = ''; return; }
+  var residential = [], commercial = [], other = [];
+  _landValuePoints.forEach(function(p) { var u = (p.use||'').replace(/\s/g,''); if (u.includes('住宅')||u.includes('居住')) residential.push(p); else if (u.includes('商業')||u.includes('店舗')||u.includes('事務所')) commercial.push(p); else other.push(p); });
+  var html = '';
+  if (residential.length > 0) { html += '<div style="font-size:12px;color:#d4bc7d;margin-top:4px;font-weight:700">最寄り住宅地</div>';
+    residential.slice(0,2).forEach(function(p) { html += '<div style="font-size:11px;color:rgba(255,255,255,0.7)">' + (p.use||'') + ' ' + (p.priceManPerM2||(p.priceYenPerM2/10000).toFixed(1)) + '万円/㎡ ' + (p.distanceMeters||'') + 'm</div>'; }); }
+  if (commercial.length > 0) { html += '<div style="font-size:12px;color:#d4bc7d;margin-top:6px;font-weight:700">最寄り商業地</div>';
+    commercial.slice(0,2).forEach(function(p) { html += '<div style="font-size:11px;color:rgba(255,255,255,0.7)">' + (p.use||'') + ' ' + (p.priceManPerM2||(p.priceYenPerM2/10000).toFixed(1)) + '万円/㎡ ' + (p.distanceMeters||'') + 'm</div>'; }); }
+  html += '<div style="font-size:9px;color:#8fa5b8;margin-top:4px">公示価格等を販売価格として表現するものではありません</div>';
+  el.innerHTML = html;
+  /* 地図上に金色マーカー */
+  if (_landMap && _landValueMarkers) { _landMap.removeLayer(_landValueMarkers); }
+  if (!_landMap || typeof window.L === 'undefined') return;
+  _landValueMarkers = L.layerGroup().addTo(_landMap);
+  _landValuePoints.forEach(function(p) {
+    if (p.lat && p.lng) {
+      var priceMan = p.priceManPerM2 || (p.priceYenPerM2/10000).toFixed(1);
+      var popup = '<b>' + (p.landPriceTypeName||p.use||'') + '</b><br>'
+        + (p.location||p.address||'') + '<br>'
+        + '価格: ' + (p.priceYenPerM2||'').toLocaleString() + '円/㎡（' + priceMan + '万円/㎡）<br>'
+        + '距離: ' + (p.distanceMeters||'') + 'm'
+        + (p.nearestStation ? '<br>最寄駅: ' + p.nearestStation + (p.stationDistance ? '(' + p.stationDistance + ')' : '') : '')
+        + (p.frontRoadWidth ? '<br>前面道路: ' + p.frontRoadWidth + 'm' : '')
+        + (p.targetDate ? '<br>基準日: ' + p.targetDate : '')
+        + (p.yearOnYearChangeRate ? '<br>前年比: ' + p.yearOnYearChangeRate + '%' : '')
+        + '<br><span style="font-size:9px;color:#8fa5b8">販売中の物件価格ではありません</span>';
+      L.circleMarker([p.lat, p.lng], { radius: 6, color: '#d4bc7d', fillColor: '#d4bc7d', fillOpacity: 0.6, weight: 2 }).bindPopup(popup).addTo(_landValueMarkers);
+    }
+  });
+  landCheckSafetyGate();
+}
+var _landValueMarkers = null, _landCaseMarkers = null;
+function landShowStationMarkers(data) {
+  if (_landMap && _landCaseMarkers) { _landMap.removeLayer(_landCaseMarkers); }
+  if (!data || !data.stations || data.stations.length === 0) return;
+  if (!_landMap || typeof window.L === 'undefined') return;
+  _landCaseMarkers = L.layerGroup().addTo(_landMap);
+  var totalRecords = data.count || 0;
+  data.stations.forEach(function(s) {
+    if (!s.lat || !s.lng) return;
+    var name = s.stationName || '取引事例の集約ポイント';
+    var popup = '<b>' + name + '</b><br>取引件数: ' + (s.count || totalRecords) + '件'
+      + '<br><span style="font-size:9px;color:#8fa5b8">個別取引地点ではなく、最寄駅等の集約ポイントです</span>';
+    L.circleMarker([s.lat, s.lng], { radius: 8, color: '#4fc3f7', fillColor: '#4fc3f7', fillOpacity: 0.4, weight: 2 })
+      .bindPopup(popup).addTo(_landCaseMarkers);
+  });
+}
+function landCheckSafetyGate() {
+  if (_landPropType !== 'land' || !_landSummary || _landSummary.count < 3 || _landValuePoints.length === 0) return;
+  if (_landCompareUse === 'none') { var gateEl = landEl('land-safety-gate'); if (gateEl) gateEl.innerHTML = '<div style="color:#e08040;font-size:12px;margin-top:8px">比較用途未指定のため算定保留</div>'; var priceEl = landEl('land-price-range'); if (priceEl) priceEl.innerHTML = '<div style="font-size:18px;color:#e08040;padding:12px">参考価格 算定保留</div><div style="font-size:12px;color:#8fa5b8">比較用途が指定されていません。</div>'; return; }
+  var tradePrice = _landSummary.median;
+  function findNearestByUse(target) {
+    var best = null; _landValuePoints.forEach(function(p) { var u = (p.use||'').replace(/\s/g,''); if (u.includes(target) && (!best || (p.distanceMeters||999999) < (best.distanceMeters||999999))) best = p; });
+    return best;
+  }
+  var targetUse = _landCompareUse === 'commercial' ? '商業' : '住宅';
+  var nearest = findNearestByUse(targetUse) || findNearestByUse(targetUse === '商業' ? '店舗' : '居住') || _landValuePoints[0];
+  var nearestLabel = _landCompareUse === 'commercial' ? '商業地' : '住宅地';
+  var gateEl = landEl('land-safety-gate'); if (!gateEl) return;
+  var nearestPriceMan = nearest.priceManPerM2 || (nearest.priceYenPerM2 / 10000);
+  if (!nearest || tradePrice <= 0 || nearestPriceMan <= 0) return;
+  var ratio = tradePrice / nearestPriceMan;
+  gateEl.innerHTML = '<div style="font-size:11px;color:#8fa5b8;margin-top:4px">比較用途: ' + (_landCompareUse==='commercial'?'商業用':'住宅用') + '、最寄り' + nearestLabel + 'の公示等と比較（倍率:' + ratio.toFixed(1) + '）</div>';
+  var priceEl = landEl('land-price-range');
+  if (ratio < 0.5 || ratio > 2.0) {
+    gateEl.innerHTML += '<div style="color:#e08040;font-size:12px;margin-top:4px">⚠ 取引事例と' + nearestLabel + 'の公示等単価に大きな差があります。面積・用途・道路条件を確認してください。</div>';
+    if (priceEl) { priceEl.innerHTML = '<div style="font-size:18px;color:#e08040;padding:12px">参考価格 算定保留</div><div style="font-size:12px;color:#8fa5b8">取引事例と周辺の同用途の地価公示・地価調査に大きな価格差があります。</div>'; }
+  }
+}
+function landChangeCompareUse() { _landCompareUse = landEl('land-compare-use').value; landCheckSafetyGate(); if (_landRecords.length > 0) landShowTop5(); }
+var _landTop5Shown = false, _landXptRecords = [];
+function landShowTop5() {
+  var records = _landXptRecords.length > 0 ? _landXptRecords : _landRecords;
+  if (!records || records.length === 0) return;
+  var el = landEl('land-top5'); if (!el) return;
+  /* XPT001 sourceのみをフィルタ */
+  var xptRecords = records.filter(function(r) { return r.source === 'XPT001'; });
+  if (xptRecords.length === 0) { el.innerHTML = ''; return; }
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  var compareUse = _landCompareUse;
+  var districtTarget = _landCityCode || '';
+  var normDistrictTarget = districtNormalize(_landDistrictRaw);
+  var scored = xptRecords.map(function(r) {
+    var score = 0, reasons = [];
+    /* 地区コード一致（重複加点なし） */
+    if (r.districtCode && districtTarget && String(r.districtCode) === String(districtTarget)) { score += 40; reasons.push('地区コード一致'); }
+    else if (r.districtName && normDistrictTarget && districtNormalize(String(r.districtName||'')) === normDistrictTarget) { score += 25; reasons.push('地区名一致'); }
+    /* 面積一致 */
+    if (sqm > 0 && r.areaM2 > 0) { var ar = Math.abs(r.areaM2 - sqm) / sqm; if (ar <= 0.2) { score += 20; reasons.push('面積±20%'); } else if (ar <= 0.4) { score += 12; reasons.push('面積±40%'); } }
+    /* 用途一致 */
+    if (compareUse !== 'none' && r.useCategory) {
+      var uc = (r.useCategory||'').replace(/\s/g,'');
+      if (compareUse === 'residential' && (uc.includes('住宅') || uc.includes('住居'))) { score += 15; reasons.push('住宅用途'); }
+      if (compareUse === 'commercial' && (uc.includes('商業') || uc.includes('店舗') || uc.includes('事務所'))) { score += 15; reasons.push('商業用途'); }
+    }
+    /* 市街化調整区域は住宅用/商業用で加点なし、明示 */
+    if (r.landUse && String(r.landUse||'').includes('市街化調整')) { reasons.push('市街化調整区域'); }
+    /* 特殊事情なし */
+    if (!r.remarks || r.remarks === '') { score += 5; reasons.push('特殊事情なし'); }
+    /* 時期 */
+    if (r.pointInTime) { var pt = parseInt(String(r.pointInTime).replace(/[^0-9]/g,'')) || 0; if (pt >= 2024) { score += 5; reasons.push('2024年以降'); } else if (pt >= 2022) { score += 3; reasons.push('2022年以降'); } }
+    return { record: r, score: score, reasons: reasons.join('、') };
+  });
+  scored.sort(function(a,b) { return b.score - a.score; });
+  scored = scored.slice(0, 5);
+  var html = '<div style="font-size:14px;font-weight:700;color:#d4bc7d;margin-top:16px;margin-bottom:8px">条件が近い取引事例</div>';
+  if (_landSummary && _landSummary.count > 0) html += '<div style="font-size:11px;color:#8fa5b8;margin-bottom:8px">参考価格は' + _landSummary.count + '件を基に算出（表示はXPT001 ' + xptRecords.length + '件から近い5件）</div>';
+  scored.forEach(function(s) {
+    var r = s.record;
+    html += '<div style="background:rgba(8,20,36,0.6);border:1px solid rgba(200,169,106,0.15);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:11px;color:rgba(255,255,255,0.7);line-height:1.6">'
+      + '<b>' + (r.districtName||'') + '</b> ' + (r.pointInTime||'') + '<br>'
+      + '面積' + (r.areaM2||'') + '㎡・総額' + (r.totalPrice||'') + '万円 '
+      + (r.unitPriceM2 ? (Number(r.unitPriceM2).toFixed(1) + '万円/㎡') : '') + '<br>'
+      + (r.useCategory||'') + (r.landUse?'・'+r.landUse:'') + (r.landShape?'・'+r.landShape:'')
+      + (r.frontRoadWidth?'・前面' + r.frontRoadWidth + 'm':'')
+      + '<br><span style="font-size:10px;color:#8fa5b8">理由: ' + (s.reasons||'総合') + '　類似度: ' + s.score + '点</span>'
+      + '</div>';
+  });
+  html += '<div style="font-size:10px;color:#8fa5b8;margin-top:4px">公開情報から確認できる条件を基にした参考順位です。</div>';
+  el.innerHTML = html;
+}
+function landCalcTotal() {
+  var el = landEl('land-total-budget');
+  if (!el || _landMode !== 'housing') return;
+  var build = parseFloat(landEl('land-building-budget').value) || 0;
+  var inc = parseFloat(landEl('land-incidental').value) || 0;
+  if (!_landSummary || _landSummary.count < 3 || build <= 0) { el.innerHTML = '<span style="font-size:13px;color:#8fa5b8">建物予算を入力すると総予算が表示されます</span>'; return; }
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  if (sqm <= 0) { el.innerHTML = '<span style="font-size:13px;color:#8fa5b8">土地面積を入力してください</span>'; return; }
+  var mid = _landSummary.median * sqm;
+  var total = mid + build + inc;
+  el.innerHTML = '<div style="font-size:36px;font-weight:700;color:#d4bc7d">' + fmtYen(total) + '</div>'
+    + '<div style="font-size:12px;color:#8fa5b8;margin-top:4px">総予算目安</div>'
+    + '<div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.8">土地参考 ' + fmtYen(mid) + '　建物 ' + fmtYen(build) + '　諸費用 ' + fmtYen(inc) + '</div>';
+}
+function landCalcInheritance() {
+  var el = landEl('land-inheritance-range');
+  if (!el || _landMode !== 'inheritance') return;
+  var share = parseFloat(landEl('land-ownership').value) || 100;
+  if (!_landSummary || _landSummary.count < 3) { el.textContent = '参考データが不足しています'; return; }
+  var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
+  if (sqm <= 0) { el.textContent = '土地面積を入力してください'; return; }
+  var mid = _landSummary.median * sqm * share / 100;
+  el.innerHTML = '持分'+share+'%を考慮した中央参考: <b style="color:#d4bc7d">'+fmtYen(mid)+'</b>万円';
 }
 function closeWorkspace() {
   /* 必要保障額の状態を閉じる前に保存 */

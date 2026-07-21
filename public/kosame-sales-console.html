@@ -1773,6 +1773,9 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
   .auth-lockup-umbrella-svg{height:118px}.auth-lockup-kosame{font-size:34px}
   .topbar{min-height:82px;padding:0 14px}.topbar-logo-wrap{width:64px;height:64px;flex-basis:64px}
   .topbar-logo-wrap .kosame-header-animation{width:62px;height:66px}.topbar-logo-wrap .kosame-brand-icon-box{font-size:66px}
+  .topbar{gap:6px}.topbar-left{gap:6px;min-width:0}.topbar-right{flex:1;min-width:0;gap:4px;justify-content:flex-end}
+  .topbar-brand{max-width:70px}.topbar-right .topbar-user-chip{min-width:44px;max-width:48px;padding:5px!important;justify-content:center}
+  #topbar-user-email{display:none}.topbar-right .topbar-logout{min-width:44px;padding:6px!important;white-space:nowrap}
   .workspace-panel,.board-panel,.memo-panel,.cmemo-panel,.calc-panel{max-width:100vw!important;width:100vw!important;inset:0!important;border-radius:0!important}
   .workspace-body{padding:16px!important}
   #land-results>.tool-grid{grid-template-columns:minmax(0,1fr)!important}
@@ -3803,7 +3806,7 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-22-ui-master-c';
+var KOSAME_BUILD_ID = 'build 2026-07-22-ui-master-d';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */

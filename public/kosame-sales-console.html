@@ -1692,6 +1692,104 @@ canvas{display:block;width:100%;border-radius:8px}
 .lp-premises-fold{margin-top:12px}
 .lp-premises-fold .lp-premises-trigger{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;font-size:10px;color:#6b7a8c}
 .lp-premises-fold .lp-premises-body{display:none;margin-top:6px}
+
+/* ═══ UI master audit — shared advisory-lounge system ═══ */
+:root{
+  --surface-1:#07172a;--surface-2:#0a1d34;--surface-3:#0d2440;
+  --ui-line:rgba(212,188,125,.24);--ui-line-strong:rgba(212,188,125,.44);
+  --ui-copy:#eef3f8;--ui-muted:#9fb0c2;--ui-focus:#e0c98d;
+  --kosame-brand-cycle:10s;
+}
+:where(button,[role="button"],input,select,textarea,a):focus-visible{
+  outline:2px solid var(--ui-focus)!important;outline-offset:3px!important;
+}
+:where(button,[role="button"],input,select,textarea){font:inherit}
+:where(input,select,textarea):not(.calc-display){
+  min-height:44px;border-radius:10px!important;border-color:var(--ui-line)!important;
+}
+:where(button,.board-btn,.sim-tab,.calc-tab,.mtoggle-btn,.tool-back-btn){min-height:44px}
+button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:saturate(.6)}
+.card,.section-box,.placeholder-block,.lp-card,.lp-result-card{
+  background:linear-gradient(155deg,rgba(13,36,64,.96),rgba(6,19,36,.98))!important;
+  color:var(--ui-copy)!important;border:1px solid var(--ui-line)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.16)!important;
+}
+.card :where(label,p,span,div),.section-box :where(label,p,span,div){color:inherit}
+.card-title,.section-label{color:#d9c38a!important;letter-spacing:.06em}
+.tool-subtitle,.ph-desc{color:var(--ui-muted)!important}
+.placeholder-block{padding:36px 24px!important}
+.workspace-panel{background:#041326!important}
+.workspace-header{background:rgba(4,19,38,.98)!important;border-color:var(--ui-line)!important}
+.workspace-body{padding:clamp(18px,3vw,34px)!important}
+.workspace-close,.board-close,.memo-close,.cmemo-close,.calc-close{min-width:44px;min-height:44px}
+.auth-lockup-umbrella-wrap{height:184px;margin-bottom:14px}
+.auth-lockup-umbrella-svg{height:170px}
+.auth-lockup-kosame{font-size:42px}
+.topbar{min-height:116px}
+.topbar-logo-wrap{width:96px;height:96px;flex-basis:96px}
+.topbar-logo-wrap .kosame-header-animation{width:90px;height:96px}
+.topbar-logo-wrap .kosame-brand-icon-box{font-size:96px}
+@keyframes kosameUmbrellaSwayCycle{
+  0%,4%,42%,100%{transform:rotate(0deg)}
+  10%{transform:rotate(-7deg)}
+  17%{transform:rotate(7deg)}
+  24%{transform:rotate(-6deg)}
+  31%{transform:rotate(6deg)}
+  37%{transform:rotate(-3deg)}
+}
+
+/* Land workspace: a clear control deck, map/results comparison and readable states. */
+#section-realestate>.tool-header{margin-bottom:20px}
+#ws-body #section-realestate{display:block}
+#ws-body #land-search-input,#section-realestate>#land-search-input{font-size:16px!important}
+#section-realestate>div[style*="display:flex;gap:8px"],
+#ws-body>div[style*="display:flex;gap:8px"]{
+  padding:14px;background:var(--surface-1);border:1px solid var(--ui-line);border-radius:14px;
+}
+#land-status{display:inline-flex;align-items:center;min-height:36px;padding:7px 12px;border-radius:999px;
+  background:rgba(212,188,125,.08);border:1px solid var(--ui-line);color:var(--ui-muted)!important;font-size:12px!important}
+#land-results{min-width:0}
+#land-map{height:clamp(360px,52vh,600px)!important;border-radius:14px!important;border-color:var(--ui-line-strong)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.25);isolation:isolate}
+#land-results>.tool-grid{gap:16px!important;align-items:start}
+#land-results .card{padding:20px!important;margin-bottom:16px!important}
+#land-results .form-group input,#land-results .form-group select,#land-compare-use,#land-years{
+  min-height:46px!important;font-size:14px!important;padding:0 12px!important;width:100%!important;
+}
+#land-price-range{font-size:14px!important;line-height:1.6}
+#land-price-summary,#land-price-detail,#land-address-display{font-size:14px!important;line-height:1.7}
+#land-records-body td,#land-records-body th{padding:9px 8px!important;font-size:11px}
+#land-candidates>div{min-height:44px;display:flex;align-items:center;font-size:14px!important}
+@media(min-width:1100px){
+  #land-results{display:grid;grid-template-columns:minmax(420px,.92fr) minmax(520px,1.08fr);gap:18px;align-items:start}
+  #land-results>#land-map{grid-column:1;grid-row:3 / span 4;position:sticky;top:132px}
+  #land-results>.tool-grid,#land-results>.card{grid-column:2}
+  #land-results>.tool-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:767px){
+  #auth-overlay{padding:12px}
+  #auth-overlay .auth-box{padding:28px 18px 24px;border-radius:20px}
+  .auth-logo{gap:10px;margin-bottom:22px}.auth-lockup-umbrella-wrap{height:126px;margin-bottom:6px}
+  .auth-lockup-umbrella-svg{height:118px}.auth-lockup-kosame{font-size:34px}
+  .topbar{min-height:82px;padding:0 14px}.topbar-logo-wrap{width:64px;height:64px;flex-basis:64px}
+  .topbar-logo-wrap .kosame-header-animation{width:62px;height:66px}.topbar-logo-wrap .kosame-brand-icon-box{font-size:66px}
+  .workspace-panel,.board-panel,.memo-panel,.cmemo-panel,.calc-panel{max-width:100vw!important;width:100vw!important;inset:0!important;border-radius:0!important}
+  .workspace-body{padding:16px!important}
+  #land-results>.tool-grid{grid-template-columns:minmax(0,1fr)!important}
+  #land-map{height:360px!important;min-height:360px}
+  #land-results .card{padding:16px!important}
+  .lp-table-wrap{max-width:100%;overflow-x:auto}
+  .tool-card .card-expand-inner{display:none!important}
+  .tool-card{height:auto!important;min-height:88px!important;overflow:hidden!important}
+  .tool-card-body{min-width:0!important}
+  .tool-card-desc,.tool-card-note{white-space:normal!important;overflow-wrap:anywhere}
+}
+@media(max-width:420px){
+  .auth-lockup-sub{font-size:11px}.auth-logo-sub{font-size:11px}
+  #section-realestate>div[style*="display:flex;gap:8px"],#ws-body>div[style*="display:flex;gap:8px"]{flex-direction:column}
+  #section-realestate>div[style*="display:flex;gap:8px"]>* ,#ws-body>div[style*="display:flex;gap:8px"]>*{width:100%!important}
+  #land-map{height:320px!important;min-height:320px}
+}
 </style>
 </head>
 <body>
@@ -1704,7 +1802,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
 <span class="kosame-brand-icon-box">
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
-<image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
+<image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
 <span class="kosame-brand-rain">
 <svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
@@ -1746,7 +1844,7 @@ canvas{display:block;width:100%;border-radius:8px}
         <span class="auth-lockup-umbrella-wrap" aria-hidden="true">
 <span class="kosame-brand-icon-box">
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
-<image class="kosame-brand-umbrella-image" href="./assets/sales-console/brand-umbrella-transparent.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
+<image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
 <span class="kosame-brand-rain">
 <svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
@@ -2081,9 +2179,9 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="tool-card" onclick="navigateTo('proposal')">
                 <div class="icon-ring"><svg class="card-icon" viewBox="0 0 32 32"><rect x="2" y="4" width="28" height="24" rx="1" fill="none"/><rect x="10" y="1" width="12" height="4"/><line x1="16" y1="4" x2="16" y2="28"/><line x1="8" y1="10" x2="24" y2="10"/><rect x="8" y="22" width="6" height="4" rx="1"/><rect x="18" y="22" width="6" height="4" rx="1"/></svg></div>
                 <div class="tool-card-body">
-                  <div class="tool-card-title">提案資料作成</div>
-                  <div class="tool-card-subtitle">Proposal Document</div>
-                  <div class="tool-card-desc">資料の下書きを作成</div>
+                  <div class="tool-card-title">PowerPoint 提案資料</div>
+                  <div class="tool-card-subtitle">Presentation Welcome</div>
+                  <div class="tool-card-desc">提案資料作成の入口と利用状況を確認</div>
                 </div>
                 <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/proposal-doc.png" alt=""></div>
                 <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
@@ -3128,7 +3226,7 @@ canvas{display:block;width:100%;border-radius:8px}
       <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
         <button class="board-btn clear" onclick="landUseCurrentLocation()" style="font-size:10px;padding:4px 10px">現在地</button>
         <button class="board-btn clear" onclick="landClear()" style="font-size:10px;padding:4px 10px">選択解除</button>
-        <span style="font-size:10px;color:var(--text-dim);display:flex;align-items:center;margin-left:auto"><span id="land-status">地点を検索してください</span></span>
+        <span style="font-size:10px;color:var(--text-dim);display:flex;align-items:center;margin-left:auto" role="status" aria-live="polite"><span id="land-status">検索地点を確定してください</span></span>
       </div>
       <!-- 検索候補 -->
       <div id="land-candidates" style="display:none;max-height:200px;overflow-y:auto;margin-bottom:12px;background:rgba(8,20,36,0.6);border:1px solid rgba(200,169,106,0.2);border-radius:10px;padding:8px"></div>
@@ -3165,8 +3263,8 @@ canvas{display:block;width:100%;border-radius:8px}
             <!-- 選択地点 -->
             <div class="card" style="margin-bottom:12px">
               <div class="card-title">選択地点</div>
-              <div style="font-size:14px;color:var(--text)" id="land-address-display">—</div>
-              <div style="font-size:13px;color:#8fa5b8;margin-top:4px">対象期間: <span id="land-years-display">5年</span> / <span id="land-radius-display">—</span></div>
+              <div style="font-size:14px;color:var(--text)" id="land-address-display">検索地点を確定してください</div>
+              <div style="font-size:13px;color:#8fa5b8;margin-top:4px">対象期間: <span id="land-years-display">5年</span> / <span id="land-radius-display">条件不足</span></div>
               <div style="font-size:13px;color:#8fa5b8;margin-top:2px" id="land-basis-display"></div>
               <div id="land-value-ref"></div>
               <div id="land-safety-gate"></div>
@@ -3180,7 +3278,7 @@ canvas{display:block;width:100%;border-radius:8px}
             <!-- 周辺相場 -->
             <div class="card" style="margin-bottom:12px">
               <div class="card-title">周辺取引価格の参考帯</div>
-              <div id="land-price-summary" style="font-size:11px;color:#8fa5b8">データを取得中...</div>
+              <div id="land-price-summary" style="font-size:11px;color:#8fa5b8" role="status" aria-live="polite">検索地点を確定してください</div>
               <div id="land-price-detail" style="margin-top:8px"></div>
             </div>
             <!-- 比較事例一覧 -->
@@ -3229,7 +3327,7 @@ canvas{display:block;width:100%;border-radius:8px}
               <div class="card" style="margin-bottom:12px">
                 <div class="card-title">所有持分</div>
                 <div class="form-group"><label>所有持分（%）</label><input type="number" id="land-ownership" value="100" min="0" max="100" oninput="landCalcInheritance()" style="height:36px;font-size:13px;border:1px solid rgba(200,169,106,0.2);border-radius:6px;padding:0 10px;background:#0d1b2e;color:var(--text);width:100px"></div>
-                <div id="land-inheritance-range" style="font-size:12px;color:var(--text);margin-top:8px">—</div>
+              <div id="land-inheritance-range" style="font-size:12px;color:var(--text);margin-top:8px">条件不足</div>
               </div>
               <div style="font-size:10px;color:#8fa5b8;line-height:1.6;margin-top:8px">
                 本表示は周辺の不動産取引価格をもとにした市場価格の参考です。相続税評価額、固定資産税評価額、不動産鑑定評価額、実際の売却価格を示すものではありません。
@@ -3262,14 +3360,14 @@ canvas{display:block;width:100%;border-radius:8px}
     </section>
     <section id="section-proposal" class="section">
       <div class="tool-header">
-        <div class="tool-title">提案資料作成</div>
-        <div class="tool-subtitle">計算結果をもとにした提案資料の下書き</div>
+        <div class="tool-title">PowerPoint 提案資料</div>
+        <div class="tool-subtitle">提案ストーリーを資料化するためのウェルカム画面</div>
       </div>
       <div class="tool-grid-1">
         <div class="placeholder-block" style="background:var(--card-bg);border:1px solid rgba(200,169,106,0.20);border-radius:var(--radius);padding:60px 20px">
-          <span class="ph-icon">📄</span>
-          <div class="ph-title">準備中</div>
-          <div class="ph-desc">提案資料作成機能は現在準備中です。</div>
+          <span class="ph-icon" aria-hidden="true">▤</span>
+          <div class="ph-title">PowerPoint へようこそ</div>
+          <div class="ph-desc">入口は準備済みです。資料生成機能は現在連携待ちのため、ここではデータの作成や書き出しを行いません。</div>
         </div>
       </div>
     </section>
@@ -3705,7 +3803,7 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-22-cov-main-b';
+var KOSAME_BUILD_ID = 'build 2026-07-22-ui-master-c';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
@@ -3862,7 +3960,7 @@ function navigateTo(key) {
       underwriting:'医務査定確認','medical-check':'治療・療養資金の目安',
       memo:'面談メモ',building:'建物価格シミュレーション',whiteboard:'手書きボード','calc-memo':'計算メモ',
       'corp-analysis':'決算書分析','corp-insurance':'法人必要保障額','corp-retire':'役員退職金・事業保障メモ',
-      mail:'メール文章作成',proposal:'提案資料作成',report:'会社報告テンプレート',minutes:'議事録作成'
+      mail:'メール文章作成',proposal:'PowerPoint 提案資料',report:'会社報告テンプレート',minutes:'議事録作成'
     };
     document.getElementById('topbar-title').textContent = titles[key] || key;
   }
@@ -4624,10 +4722,10 @@ function calcInsurance() {
     var lt = 0; for (var t = 0; t < yearsN; t++) lt += living * 12 * Math.pow(1+inflR,t);
     var pt = survivorPension * 12 * pensionYears;
     needed = Math.max(0, lt + childrenEdu + housing - pt - assets - existing);
-    qid('ins-r-living').textContent = fmt(lt); qid('ins-r-fixed').textContent = fmt(childrenEdu + housing);
-    qid('ins-r-total-need').textContent = fmt(lt+childrenEdu+housing);
-    qid('ins-r-pension').textContent = fmt(pt); qid('ins-r-assets').textContent = fmt(assets); qid('ins-r-existing').textContent = fmt(existing);
-    qid('ins-r-needed').textContent = fmt(needed);
+    var rLiving=qid('ins-r-living'),rFixed=qid('ins-r-fixed'),rTotal=qid('ins-r-total-need');
+    var rPension=qid('ins-r-pension'),rAssets=qid('ins-r-assets'),rExisting=qid('ins-r-existing'),rNeeded=qid('ins-r-needed');
+    if(rLiving)rLiving.textContent=fmt(lt);if(rFixed)rFixed.textContent=fmt(childrenEdu+housing);if(rTotal)rTotal.textContent=fmt(lt+childrenEdu+housing);
+    if(rPension)rPension.textContent=fmt(pt);if(rAssets)rAssets.textContent=fmt(assets);if(rExisting)rExisting.textContent=fmt(existing);if(rNeeded)rNeeded.textContent=fmt(needed);
     if (bigEl) bigEl.textContent = fmt(needed);
     if (monthlyEl) { if (yearsN > 0) { monthly = needed/yearsN/12; monthlyEl.textContent = '月額換算　約' + monthly.toFixed(1) + '万円／月'; monthlyEl.style.display = ''; if (noteEl) noteEl.style.display = ''; } else { monthlyEl.textContent = '必要年数を入力してください'; monthlyEl.style.display = ''; if (noteEl) noteEl.style.display = 'none'; } }
   } else if (_insMethod === 'incomeGap' && _insCause === 'death') {
@@ -4887,22 +4985,23 @@ function insDisSumDetailed() {
   calcInsurance();
 }
 function insDisUpdateGrade() {
-  var sys = qid('ins-dis-system').value;
+  var sysEl = qid('ins-dis-system');
   var gradeSel = qid('ins-dis-grade');
+  if (!sysEl || !gradeSel) return;
+  var sys = sysEl.value;
   var curGrade = gradeSel.value;
   if (sys === 'kokumin') {
     gradeSel.innerHTML = '<option value="1">1級</option><option value="2">2級</option>';
     if (curGrade === '3') gradeSel.value = '2';
-    qid('ins-dis-ref-btn').textContent = '障害基礎年金の参考額を反映';
-    qid('ins-dis-grade3-note').style.display = 'none';
-    qid('ins-dis-kosei-simple-hint').style.display = 'none';
+    var refBtn=qid('ins-dis-ref-btn'),gradeNote=qid('ins-dis-grade3-note'),simpleHint=qid('ins-dis-kosei-simple-hint');
+    if(refBtn)refBtn.textContent='障害基礎年金の参考額を反映';if(gradeNote)gradeNote.style.display='none';if(simpleHint)simpleHint.style.display='none';
   } else {
     gradeSel.innerHTML = '<option value="1">1級</option><option value="2">2級</option><option value="3">3級</option>';
     if (curGrade) gradeSel.value = curGrade;
-    qid('ins-dis-ref-btn').textContent = '基礎年金部分を参考入力';
-    qid('ins-dis-grade3-note').style.display = curGrade === '3' ? '' : 'none';
+    var refBtn2=qid('ins-dis-ref-btn'),gradeNote2=qid('ins-dis-grade3-note');
+    if(refBtn2)refBtn2.textContent='基礎年金部分を参考入力';if(gradeNote2)gradeNote2.style.display=curGrade==='3'?'':'none';
     var detailed = qid('ins-dis-grade3-note-detailed'); if (detailed) detailed.style.display = curGrade === '3' ? '' : 'none';
-    qid('ins-dis-kosei-simple-hint').style.display = _insDisMode === 'simple' ? '' : 'none';
+    var simpleHint2=qid('ins-dis-kosei-simple-hint');if(simpleHint2)simpleHint2.style.display=_insDisMode==='simple'?'':'none';
   }
 }
 function insDisApplyRef() {
@@ -7953,6 +8052,10 @@ function initAuth() {
     setupBox.style.display = 'block';
     return;
   }
+  /* 外部CSS・BFCache・前回表示状態に依存せず、既存ユーザーがいる場合は
+     必ずログインフォームを表示する。認証方式と保存先は変更しない。 */
+  setupBox.style.display = 'none';
+  loginBox.style.display = 'block';
   const session = getSession();
   if (session) { showAppUI(session); return; }
 }
@@ -9678,17 +9781,17 @@ function switchLandMode(mode) {
 function landSearch() {
   var q = landEl('land-search-input').value.trim();
   if (!q) return;
-  landEl('land-status').textContent = '検索中...';
+  landEl('land-status').textContent = '読み込み中';
   landEl('land-candidates').style.display = 'none';
   fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(q))
     .then(function(r){ return r.json(); })
     .then(function(data) {
       var cands = landEl('land-candidates');
-      if (!data || data.length === 0) { landEl('land-status').textContent = '該当する地点を確認できませんでした'; cands.style.display='none'; return; }
+      if (!data || data.length === 0) { landEl('land-status').textContent = '該当データなし'; cands.style.display='none'; return; }
       var html = ''; data.slice(0,5).forEach(function(d,i) { html += '<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid rgba(200,169,106,0.08);font-size:12px" onclick="landSelectCandidate('+d.geometry.coordinates[1]+','+d.geometry.coordinates[0]+',\''+(d.properties.title||'').replace(/'/g,"\\'")+'\')">'+d.properties.title+'</div>'; });
-      cands.innerHTML = html; cands.style.display = 'block'; landEl('land-status').textContent = data.length+'件の候補';
+      cands.innerHTML = html; cands.style.display = 'block'; landEl('land-status').textContent = data.length+'件の候補・検索地点を確定してください';
     })
-    .catch(function(e) { landEl('land-status').textContent = '現在、地点情報を取得できません'; });
+    .catch(function(e) { landEl('land-status').textContent = 'API接続エラー・再試行'; });
 }
 function landSelectCandidate(lat, lng, title) {
   landEl('land-candidates').style.display = 'none';
@@ -9696,7 +9799,7 @@ function landSelectCandidate(lat, lng, title) {
   _landLat = lat; _landLng = lng; _landAddress = title;
   landEl('land-address-display').textContent = title;
   landEl('land-results').style.display = '';
-  landEl('land-status').textContent = title;
+  landEl('land-status').textContent = '読み込み中';
   /* XPT002 地価公示等を取得 */
   fetch('http://localhost:3002/api/land-value?lat='+lat+'&lng='+lng)
     .then(function(r){return r.json();})
@@ -9730,7 +9833,8 @@ function landUpdateFromCoords(lat, lng) { _landLat=lat; _landLng=lng; landEl('la
 function landClear() {
   landEl('land-results').style.display = 'none';
   landEl('land-candidates').style.display = 'none';
-  landEl('land-status').textContent = '地点を検索してください';
+  landEl('land-status').textContent = '検索地点を確定してください';
+  landEl('land-address-display').textContent = '検索地点を確定してください';
   _landLat = null; _landLng = null; _landRecords = []; _landSummary = null;
   if (_landMap && _landMarker) { _landMap.removeLayer(_landMarker); _landMarker = null; }
 }
@@ -9756,10 +9860,10 @@ function landUseCurrentLocation() {
 }
 function fetchLandData() {
   var mySeq = ++_landSeqId;
-  landEl('land-price-summary').textContent = 'データを取得中...';
+  landEl('land-price-summary').textContent = '読み込み中';
   var yearsN = parseInt(landEl('land-years').value) || 5;
   landEl('land-years-display').textContent = yearsN+'年';
-  if (!_landLat || !_landLng) { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">選択した地域で確認できる土地取引データがありません。地点を選択してください。</span>'; return; }
+  if (!_landLat || !_landLng) { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">条件不足 — 検索地点を確定してください</span>'; return; }
   /* 逆ジオコードで市区町村コードを取得 */
   fetch('https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat='+_landLat+'&lon='+_landLng)
     .then(function(r){return r.json();})
@@ -9778,8 +9882,8 @@ function fetchLandData() {
         .then(function(data){
           if (!data.ok) {
             if (mySeq !== _landSeqId) return;
-            if (data.code==='LAND_API_NOT_CONFIGURED') { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">土地取引情報APIの設定が必要です</span>'; }
-            else { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">土地取引情報を取得できませんでした</span>'; }
+            if (data.code==='LAND_API_NOT_CONFIGURED') { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">条件不足 — 土地取引情報APIの設定が必要です</span>'; }
+            else { landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">API接続エラー</span> <button type="button" class="board-btn clear" onclick="fetchLandData()">再試行</button>'; }
             return;
           }
           var records02 = data.data || [];
@@ -9815,7 +9919,7 @@ function fetchLandData() {
             });
         });
     })
-    .catch(function(e){ landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">現在、土地取引情報を取得できません</span>'; });
+    .catch(function(e){ landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">API接続エラー</span> <button type="button" class="board-btn clear" onclick="fetchLandData()">再試行</button>'; });
 }
 function districtNormalize(s) {
   return (s||'').replace(/[\uFF10-\uFF19]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);}).replace(/[\s\u3000]/g,'');
@@ -9823,7 +9927,7 @@ function districtNormalize(s) {
 function landProcessRecords(records, seqId, apiData) {
   if (seqId !== _landSeqId) return; /* 古いリクエストを破棄 */
   if (records.length===0) {
-    landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">選択した地域で確認できる' + (_landPropType==='condo'?'中古マンション':'土地') + '取引データがありません</span>';
+    landEl('land-price-summary').innerHTML='<span style="color:#8fa5b8">該当データなし — 選択地点の' + (_landPropType==='condo'?'中古マンション':'土地') + '取引情報は確認できませんでした</span>';
     _landRecords=[]; _landSummary=null; return;
   }
   _landRecords = records;
@@ -9840,7 +9944,7 @@ var _landScope = 'none', _landPriceCat = '02', _landCityCode = '', _landDistrict
 function landRenderRecordsTable(records) {
   var el = landEl('land-records-body');
   if (!el) return;
-  if (!records || records.length === 0) { el.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8fa5b8;padding:20px">取引事例がありません</td></tr>'; return; }
+  if (!records || records.length === 0) { el.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8fa5b8;padding:20px">該当データなし</td></tr>'; return; }
   var isCondo = _landPropType === 'condo';
   var header = isCondo
     ? '<tr style="background:rgba(200,169,106,0.06);font-weight:700"><th style="text-align:left;padding:4px 6px">地区／駅</th><th>時期</th><th>専有面積</th><th>総額</th><th>㎡単価</th><th>間取</th><th>築年</th></tr>'
@@ -9905,7 +10009,7 @@ function landComputeSummary(records, years) {
     landEl('land-price-summary').innerHTML = '参考取引単価: ' + prices.map(function(p) { return Math.round(p).toLocaleString() + '万円/㎡'; }).join(' / ') + '<br><span style="font-size:9px;color:#8fa5b8">参照件数が少ないため参考幅が大きくなる可能性があります</span>';
   } else {
     _landSummary = { count: 0, median: 0 };
-    landEl('land-price-summary').innerHTML = '<span style="color:#8fa5b8">有効な取引事例がありません</span>';
+    landEl('land-price-summary').innerHTML = '<span style="color:#8fa5b8">参考価格算出不可 — 有効な取引事例がありません</span>';
     landEl('land-price-detail').innerHTML = '';
     landCalcPrice();
     return;

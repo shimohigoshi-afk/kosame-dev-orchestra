@@ -7885,7 +7885,15 @@ async function hashPassword(password, salt) {
     { name:'PBKDF2', salt:enc.encode(salt), iterations:100000, hash:'SHA-256' }, key, 256);
   return btoa(String.fromCharCode(...new Uint8Array(bits)));
 }
-function getUsers() { return JSON.parse(localStorage.getItem('auth_users') || '[]'); }
+function readAuthArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch (e) {
+    return [];
+  }
+}
+function getUsers() { return readAuthArray('auth_users'); }
 function saveUsers(u) { localStorage.setItem('auth_users', JSON.stringify(u)); }
 function getSession() {
   try {
@@ -7900,13 +7908,13 @@ function createSession(email, role) {
   return s;
 }
 function logLoginAttempt(email, success, note) {
-  const h = JSON.parse(localStorage.getItem('auth_history') || '[]');
+  const h = readAuthArray('auth_history');
   h.unshift({ email, success, note, time: new Date().toISOString() });
   if (h.length > 200) h.length = 200;
   localStorage.setItem('auth_history', JSON.stringify(h));
 }
 function checkBruteForce(email) {
-  const h = JSON.parse(localStorage.getItem('auth_history') || '[]');
+  const h = readAuthArray('auth_history');
   const cut = new Date(Date.now() - 5 * 60 * 1000).toISOString();
   return h.filter(x => x.email === email && !x.success && x.time >= cut).length >= 5;
 }

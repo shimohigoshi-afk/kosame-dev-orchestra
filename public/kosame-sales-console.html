@@ -3601,7 +3601,7 @@ canvas{display:block;width:100%;border-radius:8px}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-21-int-b';
+var KOSAME_BUILD_ID = 'build 2026-07-21-int-c';
 (function() { var el = document.getElementById('kd-build-tag'); if (el) el.textContent = KOSAME_BUILD_ID; })();
 
 /* ═══ LINE Contact ═══ */
@@ -5758,8 +5758,7 @@ function lpRender() {
     + lpField('selfBasicMonths', '本人 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })
     + ' <button type="button" class="board-btn clear" style="font-size:9px;padding:2px 8px;margin-top:4px" onclick="lpResetBasicMonths(\'self\')">自動値へ戻す</button>'
     + '</div>'
-    + (c.spouse === 'yes' ? '<div class="lp-subhead">配偶者の公的年金</div><div class="lp-grid2">'+'<div class="form-group"><label>配偶者の働き方</label><select data-lp="spousePensionWorkType" onchange="lpStruct()">'+'<option value=""' + (c.spousePensionWorkType === '' ? ' selected' : '') + '>未設定</option>'+'<option value="employee"' + (c.spousePensionWorkType === 'employee' ? ' selected' : '') + '>会社員・公務員</option>'+'<option value="self_employed"' + (c.spousePensionWorkType === 'self_employed' ? ' selected' : '') + '>自営業・国民年金中心</option>'+'<option value="none"' + (c.spousePensionWorkType === 'none' ? ' selected' : '') + '>年金未加入</option></select></div>'+ lpField('spouseCareerStart', '配偶者就業開始年齢（歳）', { ph: '例: 22' })+ lpField('spouseAvgIncome', '配偶者生涯平均年収（万円・未入力=現在年収）', { ph: '空欄で現在年収を使用' })+ lpField('spouseMissingMonths', '配偶者 年金額に反映されない月数', { ph: '0' })+ '</div>' : '')
-    + lpField('spouseBasicMonths', '配偶者 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })
+    + (c.spouse === 'yes' ? '<div class="lp-subhead">配偶者の公的年金</div><div class="lp-grid2">'+'<div class="form-group"><label>配偶者の働き方</label><select data-lp="spousePensionWorkType" onchange="lpStruct()">'+'<option value=""' + (c.spousePensionWorkType === '' ? ' selected' : '') + '>未設定</option>'+'<option value="employee"' + (c.spousePensionWorkType === 'employee' ? ' selected' : '') + '>会社員・公務員</option>'+'<option value="self_employed"' + (c.spousePensionWorkType === 'self_employed' ? ' selected' : '') + '>自営業・国民年金中心</option>'+'<option value="none"' + (c.spousePensionWorkType === 'none' ? ' selected' : '') + '>年金未加入</option></select></div>'+ lpField('spouseCareerStart', '配偶者就業開始年齢（歳）', { ph: '例: 22' })+ lpField('spouseAvgIncome', '配偶者生涯平均年収（万円・未入力=現在年収）', { ph: '空欄で現在年収を使用' })+ lpField('spouseMissingMonths', '配偶者 年金額に反映されない月数', { ph: '0' })+ lpField('spouseBasicMonths', '配偶者 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })+ '</div>' : '')
     + (c.spouse === 'yes' ? ' <button type="button" class="board-btn clear" style="font-size:9px;padding:2px 8px;margin-top:4px" onclick="lpResetBasicMonths(\'spouse\')">自動値へ戻す</button>' : '')
     + '<div class="lp-subhead">年金受給</div><div class="lp-grid2">'
     + '<div class="lp-subhead">年金受給開始年齢</div><div class="lp-grid2">'
@@ -5924,6 +5923,7 @@ function lpRender() {
     + '<option value=""' + (c.selfPensionWorkType === '' ? ' selected' : '') + '>未設定</option>'
     + '<option value="employee"' + (c.selfPensionWorkType === 'employee' ? ' selected' : '') + '>会社員・公務員</option>'
     + '<option value="self_employed"' + (c.selfPensionWorkType === 'self_employed' ? ' selected' : '') + '>自営業・国民年金中心</option>'
+    + '<option value="none"' + (c.selfPensionWorkType === 'none' ? ' selected' : '') + '>年金未加入</option>'
     + '</select></div>'
     + (c.spouse === 'yes' ? lpField('spousePensionStartAge', '配偶者年金開始年齢（歳）', { ph: '65' }) : '')
     + '<div style="font-size:9.5px;color:#8fa5b8;margin-top:4px">年金概算には「会社員・公務員」または「自営業」の選択が必要です</div>';

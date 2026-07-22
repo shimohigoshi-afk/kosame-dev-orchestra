@@ -274,15 +274,13 @@ input:-webkit-autofill:focus {
   position:relative;display:inline-flex;
   font-size:56px;
 }
-/* ブランド傘アニメ：マスターサイクルは1箇所（--kosame-brand-cycle）で調整する。
-   雫が先に落ちて傘に当たり、そのあと傘が揺れて、雨が上がると傘も収まる、
-   という因果を意識した構成。参照実装：public/kosame-live-cockpit.html
-   2079〜2100行付近（読み取りのみ）。 */
-:root{--kosame-brand-cycle:8s;}
+/* ブランド傘アニメ：10秒のマスター周期。前半4.5秒だけ傘と小雨が動き、
+   後半5.5秒は完全に静止する。 */
+:root{--kosame-brand-cycle:10s;}
  .kosame-brand-umbrella-image{
    opacity:1;
    transform-box:fill-box;
-   transform-origin:50% 15%;
+   transform-origin:50% 6%;
    filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)) drop-shadow(0 0 3px rgba(212,188,125,.20));
    animation:kosameUmbrellaSwayCycle var(--kosame-brand-cycle) ease-in-out infinite;
    position:relative;z-index:1;
@@ -299,65 +297,44 @@ input:-webkit-autofill:focus {
    基準にすることで、wrapの箱の高さに関係なく傘の直上（参照実装のtop:-22%
    相当）に正しく揃う。 */
 .kosame-brand-rain{
-  position:absolute;top:-0.5em;left:50%;
-  transform:translateX(-50%);
-  display:flex;align-items:flex-start;gap:0.16em;
+  position:absolute;top:-0.18em;left:50%;width:1.18em;height:.48em;
+  transform:translateX(-50%);overflow:hidden;
   pointer-events:none;z-index:0;
+  animation:kosameRainWindow var(--kosame-brand-cycle) linear infinite;
 }
 .kosame-brand-drop{
-  display:block;
-  /* 傘の実寸（親のfont-size）に対して高さ約15%。参照実装の傘20px:雫3px
-     という比率に合わせている。 */
-  width:0.11em;height:0.15em;
-  opacity:0;
-  animation:kosameRainDropCycle var(--kosame-brand-cycle) ease-in infinite;
+  position:absolute;top:0;display:block;width:.025em;height:.13em;
+  border-radius:999px;background:rgba(151,210,232,.58);opacity:0;
+  animation:kosameRainDropFall 1.35s linear infinite;
 }
-.kosame-brand-drop:nth-child(1){margin-left:-0.15em}
-.kosame-brand-drop:nth-child(3){margin-left:0.15em}
-.kosame-brand-drop:nth-child(2){width:0.09em;height:0.12em;margin-top:-0.05em}
-/* ディレイは絶対秒ではなく --kosame-brand-cycle に対する比率(0%/2%/4%)で
-   算出する。サイクル長を変えてもズレの比率が保たれる。
-   3滴は .kosame-brand-rain の直接の子（各々ラップ用<g>を挟まない）である
-   必要がある。ラップすると各要素が自分の親の唯一の子になり:nth-childが
-   常に1にしか一致せず、3滴とも同じディレイになってしまう（雫が実質見えない
-   ように見えていた一因）。 */
-.kosame-brand-drop:nth-child(1){animation-delay:0s}
-.kosame-brand-drop:nth-child(2){animation-delay:calc(var(--kosame-brand-cycle) * 0.02)}
-.kosame-brand-drop:nth-child(3){animation-delay:calc(var(--kosame-brand-cycle) * 0.04)}
-
+.kosame-brand-drop:nth-child(1){left:9%;animation-delay:-.18s}
+.kosame-brand-drop:nth-child(2){left:25%;height:.10em;animation-delay:-.91s}
+.kosame-brand-drop:nth-child(3){left:41%;animation-delay:-.44s}
+.kosame-brand-drop:nth-child(4){left:58%;height:.11em;animation-delay:-1.16s}
+.kosame-brand-drop:nth-child(5){left:74%;animation-delay:-.68s}
+.kosame-brand-drop:nth-child(6){left:90%;height:.10em;animation-delay:-1.32s}
+/* 6本の短いカプセルを横に分散し、位相をずらして小雨に見せる。 */
 @keyframes kosameUmbrellaSwayCycle{
   0%{transform:rotate(0deg)}
-  3%{transform:rotate(0deg)}
-  8.43%{transform:rotate(-8deg)}
-  13.86%{transform:rotate(8deg)}
-  19.29%{transform:rotate(-8deg)}
-  24.71%{transform:rotate(8deg)}
-  30.14%{transform:rotate(-8deg)}
-  35.57%{transform:rotate(8deg)}
-  41%{transform:rotate(0deg)}
+  7.5%{transform:rotate(-7deg)}
+  15%{transform:rotate(7deg)}
+  22.5%{transform:rotate(-7deg)}
+  30%{transform:rotate(7deg)}
+  37.5%{transform:rotate(-7deg)}
+  45%{transform:rotate(0deg)}
   100%{transform:rotate(0deg)}
 }
-/* translateYの単位はem（=傘の実寸基準）。.kosame-brand-rainのtop:-0.22emに
-   より、雫はキャノピーの0.22em上から降り始める（=1）。以前は20%時点で
-   translateY(0.2em)止まりで終えていたため、実際の到達点は-0.22em+0.2em＝
-   -0.02em、つまりキャノピー上端に届く直前で止まって消えていた（報告の
-   不具合の実体）。0.24emまで下げることで確実にキャノピー上端を超えて
-   到達させる。また8%(可視化開始)から26%まではopacity:1を保ったまま
-   位置だけを動かし、26%→28%の短い区間だけでフェードアウトさせることで、
-   「空中で消える」のではなく「キャノピーに当たった瞬間に消える」ように
-   見せる。0%/2%/8%のタイミング・落下距離の比率(雫の高さに対し約1.3倍)は
-   変更していない。落下終了・消滅点のみ20%→28%に広げた。 */
- @keyframes kosameRainDropCycle{
-   0%{opacity:0;transform:translateY(-0.5em)}
-   2%{opacity:0;transform:translateY(-0.5em)}
-   8%{opacity:1;transform:translateY(0)}
-   38%{opacity:1;transform:translateY(0.7em)}
-   40%{opacity:0;transform:translateY(0.7em)}
-   100%{opacity:0;transform:translateY(0.7em)}
- }
+/* 雨は傘の上方からキャノピー付近までだけ落ち、マスター周期の45%で消える。 */
+@keyframes kosameRainWindow{0%,43%{opacity:1}45%,100%{opacity:0}}
+@keyframes kosameRainDropFall{
+  0%{opacity:0;transform:translateY(-.12em)}
+  16%{opacity:.28}
+  76%{opacity:.58}
+  100%{opacity:0;transform:translateY(.42em)}
+}
 @media(prefers-reduced-motion:reduce){
   .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
-  .kosame-brand-drop{animation:none!important;opacity:0!important}
+  .kosame-brand-rain,.kosame-brand-drop{animation:none!important;opacity:0!important}
 }
 
 .topbar-brand{
@@ -1730,12 +1707,13 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
 .topbar-logo-wrap .kosame-header-animation{width:90px;height:96px}
 .topbar-logo-wrap .kosame-brand-icon-box{font-size:96px}
 @keyframes kosameUmbrellaSwayCycle{
-  0%,4%,42%,100%{transform:rotate(0deg)}
-  10%{transform:rotate(-7deg)}
-  17%{transform:rotate(7deg)}
-  24%{transform:rotate(-6deg)}
-  31%{transform:rotate(6deg)}
-  37%{transform:rotate(-3deg)}
+  0%{transform:rotate(0deg)}
+  7.5%{transform:rotate(-7deg)}
+  15%{transform:rotate(7deg)}
+  22.5%{transform:rotate(-7deg)}
+  30%{transform:rotate(7deg)}
+  37.5%{transform:rotate(-7deg)}
+  45%,100%{transform:rotate(0deg)}
 }
 
 /* Land workspace: a clear control deck, map/results comparison and readable states. */
@@ -1854,11 +1832,7 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain">
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-</span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
         </span>
         <div class="auth-lockup-text">
@@ -1896,11 +1870,7 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain">
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-</span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
         </span>
         <div class="auth-lockup-text">
@@ -1946,11 +1916,7 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
 <svg class="kosame-header-animation" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain">
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-<svg class="kosame-brand-drop" viewBox="0 0 30 31" aria-hidden="true"><path d="M15 0C15 0 0 22.2 0 30.6A15 15 0 0 0 30 30.6C30 22.2 15 0 15 0Z" fill="#00bcd4"/></svg>
-</span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
 </span>
       <span class="topbar-brand"><span class="tbg">KOSAME</span><span class="tbs">Sales Console</span></span>

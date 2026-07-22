@@ -5868,6 +5868,7 @@ function lpNewCase(name) {
     selfPensionWorkType: '', selfCareerStart: '', selfAvgIncome: '', selfMissingMonths: '',
     spousePensionWorkType: '', spouseCareerStart: '', spouseAvgIncome: '', spouseMissingMonths: '',
     selfPensionManual: '', spousePensionManual: '',
+    selfBasicMonths: '', spouseBasicMonths: '', housingStatus: 'none',
   };
 }
 const LIFE_PLAN_STATE = {
@@ -6018,8 +6019,7 @@ function lpRender() {
     + lpField('selfBasicMonths', '本人 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })
     + ' <button type="button" class="board-btn clear" style="font-size:9px;padding:2px 8px;margin-top:4px" onclick="lpResetBasicMonths(\'self\')">自動値へ戻す</button>'
     + '</div>'
-    + (c.spouse === 'yes' ? '<div class="lp-subhead">配偶者の公的年金</div><div class="lp-grid2">'+'<div class="form-group"><label>配偶者の働き方</label><select data-lp="spousePensionWorkType" onchange="lpStruct()">'+'<option value=""' + (c.spousePensionWorkType === '' ? ' selected' : '') + '>未設定</option>'+'<option value="employee"' + (c.spousePensionWorkType === 'employee' ? ' selected' : '') + '>会社員・公務員</option>'+'<option value="self_employed"' + (c.spousePensionWorkType === 'self_employed' ? ' selected' : '') + '>自営業・国民年金中心</option>'+'<option value="none"' + (c.spousePensionWorkType === 'none' ? ' selected' : '') + '>年金未加入</option></select></div>'+ lpField('spouseCareerStart', '配偶者就業開始年齢（歳）', { ph: '例: 22' })+ lpField('spouseAvgIncome', '配偶者生涯平均年収（万円・未入力=現在年収）', { ph: '空欄で現在年収を使用' })+ lpField('spouseMissingMonths', '配偶者 年金額に反映されない月数', { ph: '0' })+ '</div>' : '')
-    + lpField('spouseBasicMonths', '配偶者 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })
+    + (c.spouse === 'yes' ? '<div class="lp-subhead">配偶者の公的年金</div><div class="lp-grid2">'+'<div class="form-group"><label>配偶者の働き方</label><select data-lp="spousePensionWorkType" onchange="lpStruct()">'+'<option value=""' + (c.spousePensionWorkType === '' ? ' selected' : '') + '>未設定</option>'+'<option value="employee"' + (c.spousePensionWorkType === 'employee' ? ' selected' : '') + '>会社員・公務員</option>'+'<option value="self_employed"' + (c.spousePensionWorkType === 'self_employed' ? ' selected' : '') + '>自営業・国民年金中心</option>'+'<option value="none"' + (c.spousePensionWorkType === 'none' ? ' selected' : '') + '>年金未加入</option></select></div>'+ lpField('spouseCareerStart', '配偶者就業開始年齢（歳）', { ph: '例: 22' })+ lpField('spouseAvgIncome', '配偶者生涯平均年収（万円・未入力=現在年収）', { ph: '空欄で現在年収を使用' })+ lpField('spouseMissingMonths', '配偶者 年金額に反映されない月数', { ph: '0' })+ lpField('spouseBasicMonths', '配偶者 基礎年金反映月数（空欄=自動）', { ph: '480−未反映月数' })+ '</div>' : '')
     + (c.spouse === 'yes' ? ' <button type="button" class="board-btn clear" style="font-size:9px;padding:2px 8px;margin-top:4px" onclick="lpResetBasicMonths(\'spouse\')">自動値へ戻す</button>' : '')
     + '<div class="lp-subhead">年金受給</div><div class="lp-grid2">'
     + '<div class="lp-subhead">年金受給開始年齢</div><div class="lp-grid2">'
@@ -6306,8 +6306,10 @@ function lpWizFinish() {
   var c = lpCase();
   var age = lpIntOr(c.selfAge, null);
   if (!age) { LIFE_PLAN_STATE.ui.step = 1; lpRender(); return; }
-  LIFE_PLAN_STATE.ui.mode = 'results';
+  LIFE_PLAN_STATE.ui.step = 4;
+  if (LIFE_PLAN_STATE.ui.maxReachedStep < 4) LIFE_PLAN_STATE.ui.maxReachedStep = 4;
   lpRender();
+  lpRecalcResults();
 }
 function lpWizConfirm() {
   var c = lpCase();
@@ -7082,7 +7084,8 @@ function lpPrint() {
     + '<div class="kpi"><div class="l">教育費総額</div><div class="v">' + (s.eduTotal > 0 ? lpMan(s.eduTotal) : '未設定') + '</div><div class="s">' + (s.eduPeakAge ? 'ピーク ' + s.eduPeakAge + '歳時 年間' + lpMan(s.eduPeakAmt) : '') + '</div></div>'
     + '<div class="kpi"><div class="l">住宅費総額</div><div class="v">' + (c.housingMode === 'none' ? '対象外' : lpMan(s.housingTotal)) + '</div><div class="s">' + (sim.loanEndAge ? 'ローン完済 ' + sim.loanEndAge + '歳' : '') + '</div></div>'
     + '<div class="kpi"><div class="l">老後生活資金の参考差額</div><div class="v' + (s.oldAgeGap < 0 ? ' warn' : '') + '">' + lpMan(s.oldAgeGap) + '</div><div class="s">退職翌年〜終了年齢の収支合計</div></div>'
-    + '</div>';
+     + '</div>';
+  var premises = lpPremises(c, sim);
   var premisesHtml = '<div class="note">' + premises.map(lpEsc).join('<br>') + '</div>';
   var taxNotice = '<div class="notice">本レポートは、一般的な制度・税率等をもとにした概算表示です。税務相談、税務書類の作成、申告判断を行うものではありません。個別の税務判断、特例の適用可否、申告については、税理士または所轄税務署へご確認ください。<br>'
     + '想定利回りは入力値による仮定であり、特定の商品を推奨するものではなく、運用成果・元本を保証するものではありません。<br>'

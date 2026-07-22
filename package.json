@@ -922,6 +922,7 @@
     "fetch:education-costs": "node tools/fetch-education-costs.js",
     "import:underwriting-pdf": "node tools/import-underwriting-pdf.js",
     "start:mlit-bridge": "node tools/kosame-mlit-api-bridge.js",
+    "smoke:land-runtime": "node smoke/land-runtime-stability-smoke.js",
     "smoke:v113-3-49": "node smoke/v113-3-49-auto-responder-executor-pack-smoke.js",
     "run:executor": "bash .kosame-executor/run-latest.sh",
     "gen:executor": "bash scripts/kosame-run-latest.sh",

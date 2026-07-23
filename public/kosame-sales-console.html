@@ -274,9 +274,14 @@ input:-webkit-autofill:focus {
   position:relative;display:inline-flex;
   font-size:56px;
 }
-/* ブランド傘アニメ：10秒のマスター周期。前半4.5秒だけ傘と小雨が動き、
-   後半5.5秒は完全に静止する。 */
-:root{--kosame-brand-cycle:10s;}
+/* ログインとDashboardで共有するブランドモーション。
+   9.6秒のうち約4秒だけ3往復し、残りは完全に静止する。 */
+:root{
+  --kosame-brand-cycle:9.6s;
+  --kosame-brand-sway:8deg;
+  --kosame-brand-rain-blue:rgba(163,215,232,.72);
+  --kosame-brand-rain-gold:rgba(224,207,158,.60);
+}
  .kosame-brand-umbrella-image{
    opacity:1;
    transform-box:fill-box;
@@ -285,52 +290,40 @@ input:-webkit-autofill:focus {
    animation:kosameUmbrellaSwayCycle var(--kosame-brand-cycle) ease-in-out infinite;
    position:relative;z-index:1;
  }
-/* 雫は傘SVGのviewBoxの外側、SVGの兄弟要素として重ねる（参照実装
-   public/kosame-live-cockpit.html 2079〜2100行付近と同じ構造）。
-   傘viewBoxは傘の実寸に密着させたまま維持しつつ、雫だけ独立して
-   好きな比率で配置・拡大できるようにするための構造分離。
-   position:absoluteの基準は親（.auth-lockup-umbrella-wrap /
-   .topbar-logo-wrap、いずれもposition:relative）。topはパーセントではなく
-   emで指定する。.auth-lockup-umbrella-wrapは高さ112pxの中央寄せflexボックス
-   だが傘の実描画サイズは56pxしかないため、wrapの高さに対する%では傘の
-   実際のキャノピー位置とズレる。em（=傘の実寸として設定したfont-size）を
-   基準にすることで、wrapの箱の高さに関係なく傘の直上（参照実装のtop:-22%
-   相当）に正しく揃う。 */
+/* 雫は傘の実寸に追従するem基準の独立レイヤー。レイアウト寸法を持たず、
+   周期内の短い一場面だけ3滴がキャノピー周辺へ落ちる。 */
 .kosame-brand-rain{
-  position:absolute;top:-0.18em;left:50%;width:1.18em;height:.48em;
+  position:absolute;top:-0.17em;left:50%;width:1.08em;height:.48em;
   transform:translateX(-50%);overflow:hidden;
   pointer-events:none;z-index:0;
-  animation:kosameRainWindow var(--kosame-brand-cycle) linear infinite;
 }
 .kosame-brand-drop{
-  position:absolute;top:0;display:block;width:.025em;height:.13em;
-  border-radius:999px;background:rgba(151,210,232,.58);opacity:0;
-  animation:kosameRainDropFall 1.35s linear infinite;
+  position:absolute;top:0;display:block;width:.052em;height:.125em;
+  border-radius:70% 70% 62% 62%;
+  background:linear-gradient(165deg,var(--kosame-brand-rain-blue),var(--kosame-brand-rain-gold));
+  box-shadow:0 .012em .025em rgba(120,180,205,.12);
+  opacity:0;
+  animation:kosameRainDropBurst var(--kosame-brand-cycle) ease-in infinite;
 }
-.kosame-brand-drop:nth-child(1){left:9%;animation-delay:-.18s}
-.kosame-brand-drop:nth-child(2){left:25%;height:.10em;animation-delay:-.91s}
-.kosame-brand-drop:nth-child(3){left:41%;animation-delay:-.44s}
-.kosame-brand-drop:nth-child(4){left:58%;height:.11em;animation-delay:-1.16s}
-.kosame-brand-drop:nth-child(5){left:74%;animation-delay:-.68s}
-.kosame-brand-drop:nth-child(6){left:90%;height:.10em;animation-delay:-1.32s}
-/* 6本の短いカプセルを横に分散し、位相をずらして小雨に見せる。 */
+.kosame-brand-drop:nth-child(1){left:18%;transform:rotate(7deg);animation-delay:0s}
+.kosame-brand-drop:nth-child(2){left:49%;height:.105em;transform:rotate(-4deg);animation-delay:.16s}
+.kosame-brand-drop:nth-child(3){left:78%;height:.115em;transform:rotate(5deg);animation-delay:.31s}
 @keyframes kosameUmbrellaSwayCycle{
   0%{transform:rotate(0deg)}
-  7.5%{transform:rotate(-7deg)}
-  15%{transform:rotate(7deg)}
-  22.5%{transform:rotate(-7deg)}
-  30%{transform:rotate(7deg)}
-  37.5%{transform:rotate(-7deg)}
-  45%{transform:rotate(0deg)}
+  7%{transform:rotate(calc(var(--kosame-brand-sway) * -1))}
+  14%{transform:rotate(var(--kosame-brand-sway))}
+  21%{transform:rotate(calc(var(--kosame-brand-sway) * -1))}
+  28%{transform:rotate(var(--kosame-brand-sway))}
+  35%{transform:rotate(calc(var(--kosame-brand-sway) * -1))}
+  42%{transform:rotate(0deg)}
   100%{transform:rotate(0deg)}
 }
-/* 雨は傘の上方からキャノピー付近までだけ落ち、マスター周期の45%で消える。 */
-@keyframes kosameRainWindow{0%,43%{opacity:1}45%,100%{opacity:0}}
-@keyframes kosameRainDropFall{
-  0%{opacity:0;transform:translateY(-.12em)}
-  16%{opacity:.28}
-  76%{opacity:.58}
-  100%{opacity:0;transform:translateY(.42em)}
+@keyframes kosameRainDropBurst{
+  0%,10%{opacity:0;translate:0 -.08em}
+  11.5%{opacity:.34}
+  15.5%{opacity:.72}
+  19%{opacity:0;translate:0 .40em}
+  19.1%,100%{opacity:0;translate:0 -.08em}
 }
 @media(prefers-reduced-motion:reduce){
   .kosame-brand-umbrella-image{animation:none!important;transform:none!important}
@@ -1997,7 +1990,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
         </span>
         <div class="auth-lockup-text">
@@ -2035,7 +2028,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
 <svg class="kosame-header-animation auth-lockup-umbrella-svg" viewBox="60 30 136 150">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="60" y="30" width="136" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
         </span>
         <div class="auth-lockup-text">
@@ -2081,7 +2074,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
 <svg class="kosame-header-animation" viewBox="0 0 651 700">
 <image class="kosame-brand-umbrella-image" href="./assets/sales-console/auth/kosame-brand-umbrella-transparent-cleaned.png" x="0" y="0" width="651" height="700" preserveAspectRatio="xMidYMid meet"/>
 </svg>
-<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
+<span class="kosame-brand-rain"><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i><i class="kosame-brand-drop"></i></span>
 </span>
 </span>
       <span class="topbar-brand"><span class="tbg">KOSAME</span><span class="tbs">Sales Console</span></span>
@@ -3990,7 +3983,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-23-dashboard-canon-a';
+var KOSAME_BUILD_ID = 'build 2026-07-23-umbrella-rain-canon-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */

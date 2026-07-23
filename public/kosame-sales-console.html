@@ -1956,10 +1956,6 @@ body:has(#section-dashboard.active){background:#e7e5e0}
 #section-dashboard .collapse-arrow{margin-left:auto;color:#7a6842}
 #section-dashboard .privacy-notice{border-color:rgba(23,36,51,.10);background:rgba(243,241,236,.62);color:#68727c}
 #section-dashboard .privacy-notice-text{color:#68727c!important}
-#kd-card-preview{position:fixed;z-index:10000;box-sizing:border-box;width:min(400px,calc(100vw - 32px));min-height:132px;padding:18px 19px;display:flex;align-items:center;gap:18px;color:#172433;background:#f8f6f1;border:1px solid rgba(178,154,98,.48);border-radius:15px;box-shadow:0 20px 48px rgba(14,24,36,.19);opacity:0;visibility:hidden;transform:translateY(-5px) scale(.992);transition:opacity 180ms ease,transform 180ms ease,visibility 0s linear 180ms;pointer-events:none}
-#kd-card-preview.kd-open{opacity:1;visibility:visible;transform:translateY(0) scale(1);transition-delay:0s}
-.kd-preview-copy{flex:1 1 64%;min-width:0}.kd-preview-kicker{margin:0 0 6px;color:#8b7749;font-size:10.5px;letter-spacing:.07em}.kd-preview-title{margin:0 0 7px;color:#172433;font-size:16px;font-weight:700;line-height:1.45}.kd-preview-desc{color:#68727c;font-size:12.5px;line-height:1.65}
-.kd-preview-visual{flex:0 1 36%;width:160px;height:116px;padding:4px;display:flex;align-items:center;justify-content:center;overflow:visible}.kd-preview-visual[hidden]{display:none}.kd-preview-visual img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
 @media(max-width:1100px){
   #section-dashboard .nav-cards,#section-dashboard .tool-cards-row,#section-dashboard .nav-cards-3col,#section-dashboard .tool-cards-row.cols-1,#section-dashboard .tool-cards-row.cols-2,#section-dashboard .tool-cards-row.cols-3,#section-dashboard .tool-cards-row.cols-5{grid-template-columns:repeat(2,minmax(0,1fr))}
   #section-dashboard .tool-cards-row.cols-1>.tool-card{grid-column:span 2}
@@ -1973,9 +1969,104 @@ body:has(#section-dashboard.active){background:#e7e5e0}
   #section-dashboard .section-label-ja{font-size:17px}
   #section-dashboard .card-visual{display:none!important}
   #section-dashboard .tool-card:has(.card-visual) .tool-card-body{max-width:calc(100% - 58px)!important}
-  #kd-card-preview{display:none!important}
 }
-@media(prefers-reduced-motion:reduce){#section-dashboard .tool-card,#section-dashboard .nav-card,#section-dashboard .nav-card-core,#kd-card-preview{transition:none!important}}
+@media(prefers-reduced-motion:reduce){#section-dashboard .tool-card,#section-dashboard .nav-card,#section-dashboard .nav-card-core{transition:none!important}}
+
+/* ═══ FINAL VISUAL UNIFICATION — warm shell / navy structure / quiet gold ═══ */
+:root{
+  --kosame-warm-canvas:#e7e3dc;--kosame-ivory:#fbfaf6;--kosame-ivory-soft:#f4f1ea;
+  --kosame-ink:#202a34;--kosame-muted:#65707a;--kosame-shell-navy:#0b1724;
+  --kosame-accent:#b79b5b;--kosame-soft-line:rgba(31,42,54,.14);
+}
+#auth-overlay .auth-logo{gap:10px;margin-bottom:30px}
+#auth-overlay .auth-logo-lockup{width:min(320px,82%)}
+#auth-overlay .auth-lockup-umbrella-wrap{height:208px;margin-bottom:-10px}
+#auth-overlay .auth-lockup-umbrella-svg{height:204px}
+#auth-overlay .auth-lockup-text{gap:7px}
+#section-dashboard .card-visual{isolation:isolate}
+#section-dashboard .card-visual::after{
+  content:"";position:absolute;right:5px;bottom:5px;width:20px;height:4px;border-radius:99px;
+  background:var(--kosame-accent);box-shadow:0 0 0 4px rgba(183,155,91,.11);
+}
+#section-dashboard .card-visual-img{
+  filter:brightness(0) saturate(100%) invert(10%) sepia(17%) saturate(1417%) hue-rotate(169deg) brightness(92%) contrast(93%)!important;
+}
+#section-dashboard .tool-card-subtitle{color:#6c675e!important}
+#section-dashboard .tool-card-desc,#section-dashboard .privacy-notice-text{color:#5d6872!important}
+@media(hover:hover) and (pointer:fine){
+  #section-dashboard .tool-card:hover .card-arrow,#section-dashboard .nav-card:hover .card-arrow,
+  #section-dashboard .nav-card-core:hover .card-arrow,#section-dashboard .tool-card:focus-visible .card-arrow,
+  #section-dashboard .nav-card:focus-visible .card-arrow,#section-dashboard .nav-card-core:focus-visible .card-arrow{
+    transform:translate(3px,-50%);
+  }
+}
+@media(hover:none),(pointer:coarse){
+  #section-dashboard .tool-card:hover,#section-dashboard .nav-card:hover,#section-dashboard .nav-card-core:hover{
+    transform:none;box-shadow:0 3px 12px rgba(14,24,36,.045)!important;
+  }
+}
+.workspace-panel{background:rgba(93,88,80,.42)!important}
+.workspace-box,.board-panel,.memo-panel,.cmemo-panel,.calc-panel{
+  background:var(--kosame-warm-canvas)!important;border-color:rgba(11,23,36,.20)!important;
+  box-shadow:0 28px 80px rgba(28,31,34,.28)!important;
+}
+.ws-header,.board-header{
+  background:var(--kosame-shell-navy)!important;border-bottom-color:rgba(183,155,91,.42)!important;color:#f8f5ec!important;
+}
+.ws-header-title,.board-header-title{color:#fffdf7!important}
+.ws-header-sub{color:#d7d1c2!important}
+.ws-close,.board-btn.close-btn{
+  background:rgba(255,255,255,.07)!important;color:#fffdf7!important;border-color:rgba(231,213,165,.34)!important;
+}
+.ws-body,.board-body{background:var(--kosame-warm-canvas)!important;color:var(--kosame-ink)!important}
+#ws-body>.tool-header .tool-title,#ws-body .tool-title{color:var(--kosame-shell-navy)!important}
+#ws-body>.tool-header .tool-subtitle,#ws-body .tool-subtitle{color:var(--kosame-muted)!important}
+#ws-body :is(.card,.lp-card,.lp-group,.ed-child-card,.result-box,.placeholder-block,.ins-result-card,.lp-kpi),
+.board-body :is(.card,.section-box){
+  background:var(--kosame-ivory)!important;color:var(--kosame-ink)!important;
+  border:1px solid var(--kosame-soft-line)!important;box-shadow:0 8px 24px rgba(31,42,54,.06)!important;
+}
+#ws-body :is(.card,.lp-card,.lp-group,.ed-child-card,.result-box,.placeholder-block,.ins-result-card,.lp-kpi)
+  :is(label,p,span,div,th,td){color:inherit}
+#ws-body :is(.card-title,.lp-subhead,.lp-chart-title,.lp-kpi-value.gold){color:var(--kosame-shell-navy)!important}
+#ws-body :is(.form-group label,.lp-hint,.lp-kpi-label,.lp-kpi-sub,.lp-premises-trigger,.result-label,.ph-desc){color:var(--kosame-muted)!important}
+#ws-body :is(input,select,textarea,.ins-field),.memo-textarea{
+  color:var(--kosame-shell-navy)!important;background:#fff!important;border-color:rgba(11,23,36,.18)!important;
+  -webkit-text-fill-color:var(--kosame-shell-navy)!important;box-shadow:none!important;
+}
+#ws-body :is(input,select,textarea):focus,.memo-textarea:focus{
+  color:var(--kosame-shell-navy)!important;background:#fff!important;border-color:var(--kosame-accent)!important;
+}
+#ws-body :is(.board-btn.print,.land-primary,.calc-btn.eq){
+  background:var(--kosame-accent)!important;color:var(--kosame-shell-navy)!important;border-color:var(--kosame-accent)!important;
+}
+#ws-body :is(.board-btn.clear,.sim-tab,.lp-chip,.ed-seg-btn),.board-body .board-btn{
+  background:#fff!important;color:var(--kosame-shell-navy)!important;border-color:rgba(11,23,36,.24)!important;
+}
+#ws-body :is(.sim-tab,.ed-seg-btn).active{
+  background:#efe5cc!important;color:var(--kosame-shell-navy)!important;border-color:var(--kosame-accent)!important;
+}
+#ws-body :is(.result-value.big,.result-highlight-value,.ins-result-big,.ins-result-monthly,.lp-hero-value){color:#8a6d2f!important}
+#ws-body :is(.lp-chart-box,.ti-tabs,.land-control-deck,.land-filter-bar,.land-tabset){
+  background:var(--kosame-ivory-soft)!important;color:var(--kosame-ink)!important;border-color:var(--kosame-soft-line)!important;
+}
+#section-realestate .land-control-intro,#section-realestate .land-filter-label,
+#section-realestate .land-kpi-label,#section-realestate #land-status{color:var(--kosame-muted)!important}
+#section-realestate .land-kpi-hero #land-price-range{color:#806425!important}
+#section-realestate>.land-control-deck>p,#section-realestate>.land-control-deck>div:first-child,
+#section-realestate>div:last-child{color:#5f6973!important}
+#section-realestate>div:last-child{background:#f2ede2!important;border-color:rgba(128,100,37,.13)!important}
+#land-map{border-color:rgba(11,23,36,.20)!important;box-shadow:0 12px 32px rgba(31,42,54,.12)!important}
+.board-toolbar,.memo-panel .board-body,.cmemo-panel .board-body,.calc-panel{color:var(--kosame-ink)!important}
+.calc-display{background:#fff!important;color:var(--kosame-shell-navy)!important;border-color:rgba(11,23,36,.18)!important}
+.calc-btn{background:#fff!important;color:var(--kosame-shell-navy)!important;border-color:rgba(11,23,36,.16)!important}
+.calc-btn.eq{background:var(--kosame-accent)!important;color:var(--kosame-shell-navy)!important}
+@media(max-width:767px){
+  #auth-overlay .auth-logo{margin-bottom:20px}
+  #auth-overlay .auth-logo-lockup{width:min(310px,84%)}
+  #auth-overlay .auth-lockup-umbrella-wrap{height:148px;margin-bottom:-8px}
+  #auth-overlay .auth-lockup-umbrella-svg{height:142px}
+}
 </style>
 </head>
 <body>
@@ -3519,9 +3610,6 @@ body:has(#section-dashboard.active){background:#e7e5e0}
       <div style="margin-top:16px;padding:12px 14px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.1);border-radius:8px;font-size:10px;color:#8fa5b8;line-height:1.8">
         本機能は、国土交通省等から取得可能な不動産取引情報をもとに、周辺の土地価格を一般的に確認するための参考機能です。表示価格は、取引時期、土地形状、接道、用途地域、建築条件、高低差、インフラ、個別事情等を反映した査定価格ではありません。実際の購入価格、売却価格、不動産鑑定評価額、固定資産税評価額、相続税評価額を示すものではありません。個別の取引や税務判断は、不動産会社、税理士等の専門家へご確認ください。
       </div>
-      <div style="margin-top:16px;padding:12px 14px;background:rgba(200,169,106,0.04);border:1px solid rgba(200,169,106,0.1);border-radius:8px;font-size:10px;color:#8fa5b8;line-height:1.8">
-        本機能は、国土交通省等から取得可能な不動産取引情報をもとに、周辺の土地価格を一般的に確認するための参考機能です。表示価格は、取引時期、土地形状、接道、用途地域、建築条件、高低差、インフラ、個別事情等を反映した査定価格ではありません。実際の購入価格、売却価格、不動産鑑定評価額、固定資産税評価額、相続税評価額を示すものではありません。個別の取引や税務判断は、不動産会社、税理士等の専門家へご確認ください。
-      </div>
     </section>
 
     <!-- ═══ PLACEHOLDER TOOLS ═══ -->
@@ -3983,7 +4071,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-23-umbrella-rain-canon-a';
+var KOSAME_BUILD_ID = 'build 2026-07-24-ui-visual-unification-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
@@ -4057,97 +4145,15 @@ function fmtYen(n) {
 function _kosameInitCardWrappers() {
   var dashboardSection = document.getElementById('section-dashboard');
   if (!dashboardSection) return;
-  var preview = document.getElementById('kd-card-preview');
-  if (!preview) {
-    preview = document.createElement('div');
-    preview.id = 'kd-card-preview';
-    preview.setAttribute('role', 'tooltip');
-    preview.setAttribute('aria-hidden', 'true');
-    preview.innerHTML = '<div class="kd-preview-copy"><div class="kd-preview-kicker"></div><div class="kd-preview-title"></div><div class="kd-preview-desc"></div></div><div class="kd-preview-visual" hidden><img alt=""></div>';
-    document.body.appendChild(preview);
-  }
   var cards = dashboardSection.querySelectorAll('.tool-card, .nav-card, .nav-card-core');
   cards.forEach(function(card) {
-    var desc = card.querySelector('.tool-card-desc');
-    var sub = card.querySelector('.tool-card-subtitle');
-    var note = card.querySelector('.tool-card-note');
-    var imgEl = card.querySelector('.card-visual-img');
-    var imgSrc = imgEl ? imgEl.getAttribute('src') : '';
-    var descText = (desc ? desc.textContent : '') || (sub ? sub.textContent : '');
-    if (note) descText += (descText ? ' / ' : '') + note.textContent;
-    card.dataset.kdPreviewTitle = (card.querySelector('.tool-card-title,.nav-card-title') || {}).textContent || '';
-    card.dataset.kdPreviewKicker = sub ? sub.textContent : '';
-    card.dataset.kdPreviewDesc = descText;
-    card.dataset.kdPreviewImg = imgSrc;
     card.setAttribute('tabindex','0');
     card.setAttribute('role','button');
     if (!card.hasAttribute('onkeydown')) {
       card.setAttribute('onkeydown', "if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}");
     }
-    card.addEventListener('mouseenter', function(){ kdScheduleCardPreview(card); });
-    card.addEventListener('focusin', function(){ kdScheduleCardPreview(card); });
-    card.addEventListener('mouseleave', kdCloseCardPreview);
-    card.addEventListener('focusout', function(event) {
-      if (!card.contains(event.relatedTarget)) kdCloseCardPreview();
-    });
   });
 }
-
-function kdCanPreview() {
-  return window.innerWidth > 620 && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-}
-var _kdPreviewTimer = 0;
-function kdScheduleCardPreview(card) {
-  window.clearTimeout(_kdPreviewTimer);
-  kdCloseCardPreview();
-  if (!kdCanPreview()) return;
-  _kdPreviewTimer = window.setTimeout(function() {
-    _kdPreviewTimer = 0;
-    if (card.matches(':hover') || card.contains(document.activeElement)) kdOpenCardPreview(card);
-  }, 350);
-}
-function kdOpenCardPreview(card) {
-  if (!kdCanPreview()) return;
-  var preview = document.getElementById('kd-card-preview');
-  if (!preview) return;
-  preview.querySelector('.kd-preview-kicker').textContent = card.dataset.kdPreviewKicker || '';
-  preview.querySelector('.kd-preview-title').textContent = card.dataset.kdPreviewTitle || '';
-  preview.querySelector('.kd-preview-desc').textContent = card.dataset.kdPreviewDesc || '';
-  var visual = preview.querySelector('.kd-preview-visual');
-  var image = visual.querySelector('img');
-  if (card.dataset.kdPreviewImg) {
-    image.src = card.dataset.kdPreviewImg;
-    visual.hidden = false;
-  } else {
-    image.removeAttribute('src');
-    visual.hidden = true;
-  }
-  preview.classList.add('kd-open');
-  preview.setAttribute('aria-hidden', 'false');
-  var rect = card.getBoundingClientRect();
-  var gap = 10;
-  var margin = 12;
-  var previewRect = preview.getBoundingClientRect();
-  var left = rect.left;
-  if (left + previewRect.width > window.innerWidth - margin) left = rect.right - previewRect.width;
-  left = Math.max(margin, Math.min(left, window.innerWidth - previewRect.width - margin));
-  var top = rect.bottom + gap;
-  if (top + previewRect.height > window.innerHeight - margin) top = rect.top - previewRect.height - gap;
-  top = Math.max(margin, Math.min(top, window.innerHeight - previewRect.height - margin));
-  preview.style.left = Math.round(left) + 'px';
-  preview.style.top = Math.round(top) + 'px';
-}
-function kdCloseCardPreview() {
-  window.clearTimeout(_kdPreviewTimer);
-  _kdPreviewTimer = 0;
-  var preview = document.getElementById('kd-card-preview');
-  if (!preview) return;
-  preview.classList.remove('kd-open');
-  preview.setAttribute('aria-hidden', 'true');
-}
-document.addEventListener('keydown', function(event){ if (event.key === 'Escape') kdCloseCardPreview(); });
-window.addEventListener('scroll', kdCloseCardPreview, true);
-window.addEventListener('resize', kdCloseCardPreview);
 
 /* ── Navigation ── */
 let _currentSection = 'dashboard';

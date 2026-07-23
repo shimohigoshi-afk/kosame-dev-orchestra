@@ -9939,7 +9939,7 @@ function openWorkspace(key) {
     if (key==='asset'){_astRestoreState();calcAsset();drawAssetChart();}
     if (key==='lifetime') lpRender();
     if (key==='education') edRender();
-    if (key==='realestate') { landEnsureWorkspaceReady(); if (_landLat && _landLng) { _landCommittedKey=''; landCommitPoint(_landLat,_landLng,_landAddress,true); } }
+    if (key==='realestate') { landRestoreCommittedView(); }
     kosameStatus('done');
   }, 100);
 }
@@ -10022,6 +10022,30 @@ const LAND_AREA_STATE = { mode:'housing', query:'', selectedAddress:'', lat:null
 
 function landEl(id) { return document.querySelector('#ws-body #' + id) || document.getElementById(id); }
 
+function landRestoreCommittedView() {
+  landEnsureWorkspaceReady();
+  if (!_landLat || !_landLng) return;
+  landEl('land-results').style.display='';
+  landEl('land-search-input').value=_landAddress||'';
+  landEl('land-address-display').textContent=_landAddress||('緯度'+_landLat.toFixed(4)+' 経度'+_landLng.toFixed(4));
+  if (LAND_AREA_STATE.areaSqm) landEl('land-area-sqm').value=Number(LAND_AREA_STATE.areaSqm).toFixed(2).replace(/\.00$/,'');
+  if (LAND_AREA_STATE.areaTsubo) landEl('land-area-tsubo').value=Number(LAND_AREA_STATE.areaTsubo).toFixed(2);
+  landSetMarker(_landLat,_landLng);
+  if (_landMap) _landMap.setView([_landLat,_landLng],15);
+  var yearsN=parseInt(landEl('land-years').value)||5;
+  landEl('land-years-display').textContent=yearsN+'年';
+  landEl('land-radius-display').textContent='選択地点周辺・'+yearsN+'年（取引価格情報 '+_landXptRecords.length+'件）';
+  if (_landValuePoints.length) landShowValueRef();
+  else landEl('land-value-ref').innerHTML='<span style="color:#8fa5b8">実データ0件 — 周辺の地価公示等がありません</span>';
+  if (_landCaseResponse) landShowStationMarkers(_landCaseResponse);
+  landProcessRecords(_landXptRecords,_landSeqId,{periodLabel:_landCaseResponse?landFormatQuarterRange(_landCaseResponse.requestedFrom,_landCaseResponse.requestedTo):'',partial:!!(_landCaseResponse&&_landCaseResponse.partial)});
+  landEl('land-status').textContent=_landXptRecords.length?_landAddress+'・取得完了':_landAddress+'・実データ0件';
+  if (!_landXptRecords.length) {
+    landEl('land-records-body').innerHTML='<tr><td colspan="7" style="text-align:center;color:#8fa5b8;padding:20px">実データ0件 — 選択地点周辺・指定期間に土地取引事例がありません</td></tr>';
+    landEl('land-top5').innerHTML='<span style="color:#8fa5b8">実データ0件 — 近隣取引事例がありません</span>';
+  }
+}
+
 function switchLandMode(mode) {
   _landMode = mode;
   landEl('land-mode-housing').classList.toggle('active', mode==='housing');
@@ -10040,6 +10064,10 @@ function landSearch() {
     .then(function(data) {
       var cands = landEl('land-candidates');
       if (!data || data.length === 0) { landEl('land-status').textContent = '該当データなし'; cands.style.display='none'; return; }
+      /* 住所検索APIは同名の町域を駅より先に返すことがあるため、入力との完全一致を優先する。 */
+      var nq=q.replace(/[\s\u3000]/g,'').toLowerCase();
+      data=data.map(function(d,i){var t=String((d.properties||{}).title||''),nt=t.replace(/[\s\u3000]/g,'').toLowerCase();return{d:d,i:i,rank:nt===nq?0:(nt.endsWith(nq)?1:(nt.indexOf(nq)>=0?2:3))};})
+        .sort(function(a,b){return a.rank-b.rank||a.i-b.i;}).map(function(x){return x.d;});
       var html = ''; data.slice(0,5).forEach(function(d,i) { html += '<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid rgba(200,169,106,0.08);font-size:12px" onclick="landSelectCandidate('+d.geometry.coordinates[1]+','+d.geometry.coordinates[0]+',\''+(d.properties.title||'').replace(/'/g,"\\'")+'\')">'+d.properties.title+'</div>'; });
       cands.innerHTML = html; cands.style.display = 'block'; landEl('land-status').textContent = data.length+'件の候補・検索地点を確定してください';
     })
@@ -10050,7 +10078,7 @@ function landSelectCandidate(lat, lng, title) {
   landEl('land-search-input').value = title;
   landCommitPoint(lat, lng, title);
 }
-var _landMap = null, _landMapElement = null, _landMarker = null;
+var _landMap = null, _landMapElement = null, _landMarker = null, _landCaseResponse = null;
 var _landRequestController = null, _landCommittedKey = '';
 var LAND_BRIDGE_BASE = (window.KOSAME_MLIT_BRIDGE_URL || localStorage.getItem('kosame_mlit_bridge_url') || 'http://127.0.0.1:3002').replace(/\/$/, '');
 function landEnsureWorkspaceReady() {
@@ -10092,6 +10120,7 @@ function landClear() {
   ++_landSeqId; if (_landRequestController) _landRequestController.abort();
   _landLat = null; _landLng = null; _landAddress = ''; _landCommittedKey = '';
   _landRecords = []; _landXptRecords = []; _landValuePoints = []; _landSummary = null;
+  _landCaseResponse = null;
   if (_landMap && _landMarker) { _landMap.removeLayer(_landMarker); _landMarker = null; }
   if (_landMap && _landValueMarkers) { _landMap.removeLayer(_landValueMarkers); _landValueMarkers = null; }
   if (_landMap && _landCaseMarkers) { _landMap.removeLayer(_landCaseMarkers); _landCaseMarkers = null; }
@@ -10162,6 +10191,7 @@ function landCommitPoint(lat, lng, title, force) {
       var rd=rev.results||{}; _landCityCode=rd.muniCd||''; _landDistrictRaw=rd.lv01Nm||rd.lv02Nm||'';
       _landAddress=title||((rd.lv01Nm||'')+(rd.lv02Nm||''))||_landAddress;
       landEl('land-address-display').textContent=_landAddress;
+      _landCaseResponse=caseData;
       _landXptRecords=(caseData.data||[]).map(function(r){
         r.size=Number(r.areaM2)||0; r.unitPrice=Number(r.unitPriceM2)||(r.size>0?Number(r.totalPrice)/r.size:0);
         r.pricePer=r.unitPrice; r.type='宅地(土地)'; r.period=r.pointInTime||''; r.year=parseInt(r.pointInTime,10)||0; return r;
@@ -10171,13 +10201,17 @@ function landCommitPoint(lat, lng, title, force) {
       else landEl('land-value-ref').innerHTML=all[1].status==='rejected'?'<span style="color:#e08040">地価公示等APIエラー — 取引事例のみ表示しています</span>':'<span style="color:#8fa5b8">実データ0件 — 周辺の地価公示等がありません</span>';
       landShowStationMarkers(caseData); _landScope='nearby'; _landPriceCat='01';
       landEl('land-radius-display').textContent='選択地点周辺・'+yearsN+'年（取引価格情報 '+_landXptRecords.length+'件）';
-      landProcessRecords(_landXptRecords,seq,{succeededYears:[],partial:!!caseData.partial});
+      landProcessRecords(_landXptRecords,seq,{periodLabel:landFormatQuarterRange(caseData.requestedFrom,caseData.requestedTo),partial:!!caseData.partial});
       landEl('land-status').textContent=_landXptRecords.length ? _landAddress+'・取得完了' : _landAddress+'・実データ0件';
       if(!_landXptRecords.length){ landEl('land-records-body').innerHTML='<tr><td colspan="7" style="text-align:center;color:#8fa5b8;padding:20px">実データ0件 — 選択地点周辺・指定期間に土地取引事例がありません</td></tr>'; landEl('land-top5').innerHTML='<span style="color:#8fa5b8">実データ0件 — 近隣取引事例がありません</span>'; }
     }).catch(function(err){landRenderFetchError(err,seq);});
 }
 function districtNormalize(s) {
   return (s||'').replace(/[\uFF10-\uFF19]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);}).replace(/[\s\u3000]/g,'');
+}
+function landFormatQuarterRange(from,to) {
+  function one(v){v=String(v||'');return /^\d{5}$/.test(v)?v.slice(0,4)+'年第'+v.slice(4)+'四半期':v;}
+  return from&&to?one(from)+'〜'+one(to):'';
 }
 function landProcessRecords(records, seqId, apiData) {
   if (seqId !== _landSeqId) return; /* 古いリクエストを破棄 */
@@ -10186,7 +10220,7 @@ function landProcessRecords(records, seqId, apiData) {
     _landRecords=[]; _landSummary=null; return;
   }
   _landRecords = records;
-  var yearsForDisplay = apiData.succeededYears || apiData.years || [];
+  var yearsForDisplay = apiData.periodLabel ? [apiData.periodLabel] : (apiData.succeededYears || apiData.years || []);
   landComputeSummary(records, yearsForDisplay);
   if (_landPropType === 'condo') { landPopulateStations(records); landCalcCondoTotal(); }
   if (_landPropType === 'land') { landShowTop5(); }
@@ -10282,6 +10316,14 @@ function landChangeYears() { fetchLandData(); }
 function landCalcPrice() {
   var sqm = parseFloat(landEl('land-area-sqm').value) || 0;
   var tsubo = parseFloat(landEl('land-area-tsubo').value) || 0;
+  if (sqm > 0) {
+    tsubo = sqm / 3.305785;
+    landEl('land-area-tsubo').value = tsubo.toFixed(2);
+  } else {
+    landEl('land-area-tsubo').value = '';
+  }
+  LAND_AREA_STATE.areaSqm = sqm || null;
+  LAND_AREA_STATE.areaTsubo = tsubo || null;
   var el = landEl('land-price-range');
   if (!el) return;
   if (sqm <= 0 && tsubo <= 0) { el.innerHTML = '<span style="font-size:11px;color:#8fa5b8">' + (_landPropType==='condo'?'専有面積':'土地面積') + 'を入力すると参考成約価格が表示されます</span>'; landCalcTotal(); landCalcInheritance(); return; }
@@ -10317,6 +10359,8 @@ function landCalcPriceFromTsubo() {
   var tsubo = parseFloat(landEl('land-area-tsubo').value) || 0;
   if (tsubo > 0) { var sqm = tsubo * 3.305785; landEl('land-area-sqm').value = sqm.toFixed(2); }
   else { landEl('land-area-sqm').value = ''; }
+  LAND_AREA_STATE.areaTsubo = tsubo || null;
+  LAND_AREA_STATE.areaSqm = tsubo > 0 ? tsubo * 3.305785 : null;
   landCalcPrice();
 }
 function landCalcCondoTotal() {
@@ -10443,7 +10487,7 @@ function landShowTop5() {
     /* 特殊事情なし */
     if (!r.remarks || r.remarks === '') { score += 5; reasons.push('特殊事情なし'); }
     /* 時期 */
-    if (r.pointInTime) { var pt = parseInt(String(r.pointInTime).replace(/[^0-9]/g,'')) || 0; if (pt >= 2024) { score += 5; reasons.push('2024年以降'); } else if (pt >= 2022) { score += 3; reasons.push('2022年以降'); } }
+    if (r.pointInTime) { var pt = parseInt(String(r.pointInTime),10) || 0; if (pt >= 2024) { score += 5; reasons.push('2024年以降'); } else if (pt >= 2022) { score += 3; reasons.push('2022年以降'); } }
     return { record: r, score: score, reasons: reasons.join('、') };
   });
   scored.sort(function(a,b) { return b.score - a.score; });

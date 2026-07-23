@@ -439,7 +439,7 @@ const server = http.createServer((req, res) => {
     for (var dx = -1; dx <= 1; dx++) for (var dy = -1; dy <= 1; dy++) {
       tileReqs.push({ z: z, x: cx+dx, y: cy+dy, response_format: 'geojson', from: from, to: to, priceClassification: pc, landTypeCode: ltc });
     }
-    var succeededTiles = 0, failedTiles = 0;
+    var succeededTiles = 0, failedTiles = 0, invalidPrice = 0, invalidArea = 0, duplicateRecords = 0;
     Promise.allSettled(tileReqs.map(function(t) {
       return mlitGeoFetch('XPT001', t, apiKey).then(function(raw) { succeededTiles++; return raw; }).catch(function(e) { failedTiles++; console.error('[MLIT Bridge] XPT001 tile ' + t.x + ',' + t.y + ' failed:', e.message); return null; });
     })).then(function(results) {
@@ -463,7 +463,9 @@ const server = http.createServer((req, res) => {
             if (isNaN(sz) && typeof (props['u_area_ja']||props['Area']) === 'string') sz = parseJPNum(props['u_area_ja']||props['Area']) || 0;
             var glat = 0, glng = 0;
             if (geom.coordinates) { glng = geom.coordinates[0] || 0; glat = geom.coordinates[1] || 0; }
-            allRecords.push({
+            if (!(tp > 0)) { invalidPrice++; return; }
+            if (!(sz > 0)) { invalidArea++; return; }
+            var record = {
               source: 'XPT001',
               pointInTime: props['point_in_time_name_ja'] || '',
               landType: props['land_type_name_ja'] || '',
@@ -488,11 +490,15 @@ const server = http.createServer((req, res) => {
               remarks: props['remark_name_ja'] || '',
               futureUse: props['future_use_purpose_name_ja'] || '',
               stationLat: glat || null, stationLng: glng || null,
-            });
+            };
+            var dedupeKey = [record.pointInTime, record.cityCode, record.districtCode, record.totalPrice, record.areaM2, record.stationLat, record.stationLng, record.landShape, record.frontRoadWidth].join('|');
+            if (seen[dedupeKey]) { duplicateRecords++; return; }
+            seen[dedupeKey] = true;
+            allRecords.push(record);
           });
         }
       });
-      var stationMap = {}, stats = { raw: totalRawFeatures, normalized: allRecords.length };
+      var stationMap = {}, stats = { raw: totalRawFeatures, invalidPrice: invalidPrice, invalidArea: invalidArea, duplicates: duplicateRecords, normalized: allRecords.length };
       allRecords.forEach(function(r) {
         if (!r.stationLat || !r.stationLng) return;
         var key = r.stationLat.toFixed(4) + ',' + r.stationLng.toFixed(4);
@@ -504,7 +510,7 @@ const server = http.createServer((req, res) => {
       if (succeededTiles === 0 && failedTiles > 0) {
         sendJSON(res, 502, { ok: false, error: 'XPT001 upstream request failed', failedTiles: failedTiles, source: 'XPT001' });
       } else {
-        sendJSON(res, 200, { ok: true, count: allRecords.length, rawFeatureCount: totalRawFeatures, normalizationStats: stats, stationCount: stations.length, successfulTiles: succeededTiles, failedTiles: failedTiles, partial: failedTiles > 0, stations: stations.map(function(s){return{lat:s.lat,lng:s.lng,count:s.records.length,stationName:s.stationName}}), data: allRecords, source: 'XPT001' });
+        sendJSON(res, 200, { ok: true, count: allRecords.length, rawFeatureCount: totalRawFeatures, normalizationStats: stats, stationCount: stations.length, successfulTiles: succeededTiles, failedTiles: failedTiles, partial: failedTiles > 0, requestedFrom: from, requestedTo: to, stations: stations.map(function(s){return{lat:s.lat,lng:s.lng,count:s.records.length,stationName:s.stationName}}), data: allRecords, source: 'XPT001' });
       }
     }).catch(function(err) { sendJSON(res, 502, { error: err.message, source: 'XPT001' }); });
     return;

@@ -6401,8 +6401,8 @@ function lpRender() {
   }
 
   var s2 = '<div class="lp-wiz-tabs" style="margin-bottom:10px">'
-    + '<span class="ed-seg-btn'+(step2Tab==='housing'?' active':'')+'" onclick="LIFE_PLAN_STATE.ui.step2Tab=\'housing\';lpRender()">住まい</span>'
-    + '<span class="ed-seg-btn'+(step2Tab==='education'?' active':'')+'" onclick="LIFE_PLAN_STATE.ui.step2Tab=\'education\';lpRender()">教育資金</span></div>'
+    + '<span class="ed-seg-btn'+(step2Tab==='housing'?' active':'')+'" onclick="lpStep2TabSwitch(\'housing\')">住まい</span>'
+    + '<span class="ed-seg-btn'+(step2Tab==='education'?' active':'')+'" onclick="lpStep2TabSwitch(\'education\')">教育資金</span></div>'
     + (step2Tab==='housing' ? '<div style="margin-bottom:10px">'+hsBtns+'</div>'+housingFields : '')
     + (step2Tab==='education' ? eduBody : '');
   var s2extra = '';
@@ -6611,24 +6611,6 @@ function lpHiddenFields(step) {
       html += lpField('spouseRetireAge', '配偶者退職予定年齢（歳）', { ph: '例: 65' });
       html += lpField('spouseRetirePay', '配偶者退職金見込額（万円）', { ph: '0' });
     }
-  } else if (step === 2) {
-    var isOwn = c.housingMode === 'own';
-    var isRent = c.housingMode === 'rent';
-    if (isOwn) {
-      html += lpField('loanAmount', '借入額（万円）');
-      html += lpField('loanRate', '金利（%）', { step: '0.01' });
-      html += lpField('loanYears', '返済期間（年）');
-      html += lpField('loanStartAge', '返済開始年齢（歳）');
-      html += lpField('loanDown', '頭金（万円）', { ph: '0' });
-      html += lpField('ownTaxAnnual', '固定資産税等（万円/年）', { ph: '0' });
-      html += lpField('ownMaintAnnual', '維持修繕費（万円/年）', { ph: '0' });
-      html += lpField('ownMgmtAnnual', '管理費・修繕積立金（万円/年）', { ph: '0' });
-    }
-    if (isRent) {
-      html += lpField('rentMonthly', '月額家賃（万円）');
-      html += lpField('rentGrowth', '家賃上昇率（%/年）', { chips: ['0','1','2'], step: '0.1', ph: '0' });
-      html += lpField('rentAnnualExtra', '更新費等 年間費用（万円）', { ph: '0' });
-    }
   } else if (step === 3) {
     html += lpField('livingGrowth', '生活費上昇率（%/年）', { chips: ['0','1','2','3'], step: '0.1', ph: '0' });
     html += lpField('socialRatePct', '社会保険料率（%）', { step: '0.01' });
@@ -6654,6 +6636,11 @@ function lpHiddenFields(step) {
     html += lpField('drawAnnual', '年間取り崩し額（万円）', { ph: '0' });
   }
   return html;
+}
+function lpStep2TabSwitch(tab) {
+  lpSyncFromDom();
+  LIFE_PLAN_STATE.ui.step2Tab = tab;
+  lpRender();
 }
 function lpResetBasicMonths(key) {
   lpSyncFromDom();

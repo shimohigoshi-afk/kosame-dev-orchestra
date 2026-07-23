@@ -1953,14 +1953,17 @@ body:has(#section-dashboard.active){background:#e7e5e0}
 #section-dashboard .tool-card-note{color:#7a756b;font-size:10.5px;line-height:1.5}
 #section-dashboard .card-visual{display:flex!important;position:absolute!important;right:12px!important;top:50%!important;width:34%!important;height:96px!important;transform:translateY(-50%)!important;align-items:center;justify-content:center;overflow:visible!important;pointer-events:none}
 #section-dashboard .card-visual-img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important}
-#section-dashboard .card-arrow,#section-dashboard .card-risk-badges{display:none!important}
+#section-dashboard .card-arrow{display:flex!important;position:absolute;right:15px;top:50%;width:21px;height:21px;align-items:center;justify-content:center;transform:translateY(-50%);color:#8b7749;opacity:.72;pointer-events:none}
+#section-dashboard .card-arrow svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#section-dashboard .tool-card:has(.card-visual) .card-arrow{right:10px;z-index:2}
+#section-dashboard .card-risk-badges{display:none!important}
 #section-dashboard .card-expand-inner{display:none!important}
 #section-dashboard .sales-support-header{cursor:pointer;width:100%;margin:0 0 14px!important;padding:0 0 11px!important;border-radius:0!important;background:transparent!important}
 #section-dashboard .sales-support-header:hover{border-bottom-color:rgba(178,154,98,.55)!important}
 #section-dashboard .collapse-arrow{margin-left:auto;color:#7a6842}
 #section-dashboard .privacy-notice{border-color:rgba(23,36,51,.10);background:rgba(243,241,236,.62);color:#68727c}
 #section-dashboard .privacy-notice-text{color:#68727c!important}
-#kd-card-preview{position:fixed;z-index:10000;box-sizing:border-box;width:min(500px,calc(100vw - 32px));min-height:132px;padding:18px 19px;display:flex;align-items:center;gap:18px;color:#172433;background:#f8f6f1;border:1px solid rgba(178,154,98,.48);border-radius:15px;box-shadow:0 20px 48px rgba(14,24,36,.19);opacity:0;visibility:hidden;transform:translateY(-5px) scale(.992);transition:opacity 180ms ease,transform 180ms ease,visibility 0s linear 180ms;pointer-events:none}
+#kd-card-preview{position:fixed;z-index:10000;box-sizing:border-box;width:min(400px,calc(100vw - 32px));min-height:132px;padding:18px 19px;display:flex;align-items:center;gap:18px;color:#172433;background:#f8f6f1;border:1px solid rgba(178,154,98,.48);border-radius:15px;box-shadow:0 20px 48px rgba(14,24,36,.19);opacity:0;visibility:hidden;transform:translateY(-5px) scale(.992);transition:opacity 180ms ease,transform 180ms ease,visibility 0s linear 180ms;pointer-events:none}
 #kd-card-preview.kd-open{opacity:1;visibility:visible;transform:translateY(0) scale(1);transition-delay:0s}
 .kd-preview-copy{flex:1 1 64%;min-width:0}.kd-preview-kicker{margin:0 0 6px;color:#8b7749;font-size:10.5px;letter-spacing:.07em}.kd-preview-title{margin:0 0 7px;color:#172433;font-size:16px;font-weight:700;line-height:1.45}.kd-preview-desc{color:#68727c;font-size:12.5px;line-height:1.65}
 .kd-preview-visual{flex:0 1 36%;width:160px;height:116px;padding:4px;display:flex;align-items:center;justify-content:center;overflow:visible}.kd-preview-visual[hidden]{display:none}.kd-preview-visual img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
@@ -3987,7 +3990,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-23-dashboard-luxury-a';
+var KOSAME_BUILD_ID = 'build 2026-07-23-dashboard-canon-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
@@ -4088,8 +4091,8 @@ function _kosameInitCardWrappers() {
     if (!card.hasAttribute('onkeydown')) {
       card.setAttribute('onkeydown', "if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}");
     }
-    card.addEventListener('mouseenter', function(){ kdOpenCardPreview(card); });
-    card.addEventListener('focusin', function(){ kdOpenCardPreview(card); });
+    card.addEventListener('mouseenter', function(){ kdScheduleCardPreview(card); });
+    card.addEventListener('focusin', function(){ kdScheduleCardPreview(card); });
     card.addEventListener('mouseleave', kdCloseCardPreview);
     card.addEventListener('focusout', function(event) {
       if (!card.contains(event.relatedTarget)) kdCloseCardPreview();
@@ -4099,6 +4102,16 @@ function _kosameInitCardWrappers() {
 
 function kdCanPreview() {
   return window.innerWidth > 620 && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+}
+var _kdPreviewTimer = 0;
+function kdScheduleCardPreview(card) {
+  window.clearTimeout(_kdPreviewTimer);
+  kdCloseCardPreview();
+  if (!kdCanPreview()) return;
+  _kdPreviewTimer = window.setTimeout(function() {
+    _kdPreviewTimer = 0;
+    if (card.matches(':hover') || card.contains(document.activeElement)) kdOpenCardPreview(card);
+  }, 350);
 }
 function kdOpenCardPreview(card) {
   if (!kdCanPreview()) return;
@@ -4132,6 +4145,8 @@ function kdOpenCardPreview(card) {
   preview.style.top = Math.round(top) + 'px';
 }
 function kdCloseCardPreview() {
+  window.clearTimeout(_kdPreviewTimer);
+  _kdPreviewTimer = 0;
   var preview = document.getElementById('kd-card-preview');
   if (!preview) return;
   preview.classList.remove('kd-open');

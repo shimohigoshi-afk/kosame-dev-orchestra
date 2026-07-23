@@ -2067,6 +2067,65 @@ body:has(#section-dashboard.active){background:#e7e5e0}
   #auth-overlay .auth-lockup-umbrella-wrap{height:148px;margin-bottom:-8px}
   #auth-overlay .auth-lockup-umbrella-svg{height:142px}
 }
+/* ═══ UI POLISH PASS — compact auth / aligned dashboard / map-first land ═══ */
+#auth-overlay{overflow-y:auto;padding:18px}
+#auth-overlay .auth-box{max-width:480px;padding:36px 54px 34px}
+#auth-overlay .auth-logo{gap:7px;margin-bottom:22px}
+#auth-overlay .auth-logo-lockup{width:min(292px,78%)}
+#auth-overlay .auth-lockup-umbrella-wrap{height:166px;margin-bottom:-14px}
+#auth-overlay .auth-lockup-umbrella-svg{height:168px}
+#auth-overlay .auth-form-grid{gap:15px}
+#auth-overlay .auth-input{min-height:52px}
+#auth-overlay .auth-btn{min-height:54px}
+#auth-overlay .auth-notice{padding:14px 16px;line-height:1.65}
+#section-dashboard :is(.nav-cards,.tool-cards-row)>*{height:100%}
+#section-dashboard .tool-card,#section-dashboard .nav-card,#section-dashboard .nav-card-core{
+  min-height:132px!important;align-items:center!important;padding:19px 20px!important;
+}
+#section-dashboard .icon-ring,#section-dashboard .nav-card-icon-wrap{align-self:center!important}
+#section-dashboard .tool-card-body{
+  display:grid!important;grid-template-rows:auto auto minmax(2.9em,auto);align-content:center!important;
+}
+#section-dashboard .tool-card-title,#section-dashboard .nav-card-title{min-height:2.9em}
+#section-dashboard .tool-card-subtitle{min-height:1.4em}
+#section-dashboard .card-arrow{right:15px!important;top:50%!important}
+#section-dashboard .card-visual::after{right:5px;bottom:5px}
+#ws-body :is(.sim-tab,.ed-seg-btn,.lp-chip,.mtoggle-btn,.mchip).active,
+#ws-body :is(.sim-tab,.ed-seg-btn,.lp-chip,.mtoggle-btn,.mchip)[aria-pressed="true"],
+.board-body :is(.board-btn,.wb-width-swatch).active,
+.calc-tab.active{
+  background:#efe5cc!important;color:#0b1724!important;
+  border:1px solid #b79b5b!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)!important;
+}
+#ws-body :is(.sim-tab,.ed-seg-btn,.lp-chip,.mtoggle-btn,.mchip):hover,
+#ws-body :is(.sim-tab,.ed-seg-btn,.lp-chip,.mtoggle-btn,.mchip):focus-visible{
+  background:#f8f2e4!important;color:#0b1724!important;border-color:#b79b5b!important;outline:2px solid rgba(183,155,91,.24);outline-offset:2px;
+}
+#land-results{min-width:0}
+@media(min-width:768px){
+  #land-results{display:flex;flex-direction:column!important;gap:16px!important}
+  #land-results>.land-filter-bar{order:1;margin:0!important}
+  #land-results>#land-map{order:2;width:100%!important;height:clamp(400px,52vh,620px)!important;position:relative!important;top:auto!important;margin:0!important}
+  #land-results>.land-kpi-hero{order:3;margin:0!important}
+  #land-results>.land-detail-grid{order:4;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important}
+}
+.board-canvas{pointer-events:auto!important;touch-action:none!important;user-select:none;-webkit-user-select:none}
+@media(max-width:767px){
+  #auth-overlay{align-items:flex-start;padding:10px}
+  #auth-overlay .auth-box{width:min(100%,390px);padding:22px 18px 20px;margin:auto}
+  #auth-overlay .auth-logo{gap:5px;margin-bottom:15px}
+  #auth-overlay .auth-logo-lockup{width:min(250px,75%)}
+  #auth-overlay .auth-lockup-umbrella-wrap{height:116px;margin-bottom:-10px}
+  #auth-overlay .auth-lockup-umbrella-svg{height:118px}
+  #auth-overlay .auth-lockup-kosame{font-size:32px}
+  #auth-overlay .auth-form-grid{gap:12px}
+  #auth-overlay .auth-input{min-height:50px}
+  #auth-overlay .auth-btn{min-height:52px}
+  #auth-overlay .auth-notice{padding:12px 14px;font-size:11px}
+  #section-dashboard .tool-card,#section-dashboard .nav-card,#section-dashboard .nav-card-core{min-height:112px!important}
+  #section-dashboard .tool-card-title,#section-dashboard .nav-card-title{min-height:auto}
+  #land-results>.land-detail-grid{grid-template-columns:minmax(0,1fr)!important}
+}
 </style>
 </head>
 <body>
@@ -4071,7 +4130,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-24-ui-visual-unification-a';
+var KOSAME_BUILD_ID = 'build 2026-07-24-ui-polish-pass-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
@@ -8858,6 +8917,7 @@ function _wbMarkerEnd(canvas) {
   _wbMarkerPoints = null;
 }
 function startDraw(e) {
+  if (e.cancelable) e.preventDefault();
   e.stopPropagation();
   if (!_wbCtx) return;
   const canvas = document.getElementById('board-canvas');
@@ -8888,6 +8948,7 @@ function startDraw(e) {
 }
 function draw(e) {
   if (!_wbDrawing || !_wbCtx || !_wbLastPoint) return;
+  if (e.cancelable) e.preventDefault();
   const canvas = document.getElementById('board-canvas');
   if (!canvas) return;
   const p = getWbPos(e);

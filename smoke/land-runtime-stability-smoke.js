@@ -12,14 +12,21 @@ assert.match(html, /function landCommitPoint\(/, 'explicit point commit pipeline
 assert.match(html, /new AbortController\(\)/, 'previous land request is abortable');
 assert.match(html, /seq!==_landSeqId/, 'stale response guard exists');
 assert.match(html, /_landCommittedKey/, 'duplicate point searches are suppressed');
+assert.match(html, /function landRestoreCommittedView\(/, 'workspace results can be restored without refetching');
+assert.doesNotMatch(html, /key==='realestate'[^}]*landCommitPoint/, 'workspace reopen cannot start a bridge request');
 assert.match(html, /\/api\/land-cases\?/, 'XPT001 bridge route is used');
 assert.match(html, /\/api\/land-value\?/, 'XPT002 bridge route is used');
 assert.doesNotMatch(html, /_landMap\.on\(['"](?:move|moveend|zoom|zoomend|drag)/, 'map browsing cannot start a search');
 assert.match(html, /_landMapElement !== el/, 'detached workspace map is not reused');
+assert.match(html, /rank:nt===nq\?0/, 'exact station/address candidates are ranked first');
+assert.match(html, /tsubo = sqm \/ 3\.305785/, 'square metres update tsubo');
+assert.match(html, /sqm = tsubo \* 3\.305785/, 'tsubo updates square metres');
+assert.match(html, /function landFormatQuarterRange\(/, 'requested quarter range is rendered');
 assert.match(html, /APIエラー — MLIT Bridge/, 'API errors have an explicit state');
 assert.match(html, /実データ0件/, 'zero-result state is explicit');
 assert.match(bridge, /pathname === '\/api\/land-cases'/, 'bridge exposes XPT001 normalization');
 assert.match(bridge, /pathname === '\/api\/land-value'/, 'bridge exposes XPT002 normalization');
+assert.match(bridge, /duplicateRecords/, 'XPT001 duplicate normalization is tracked');
 assert.doesNotMatch(bridge, /(?:REINFOLIB_API_KEY|MLIT_API_KEY)\s*=\s*['"][^'"]{8,}/, 'no API credential is embedded');
 
 console.log('land runtime stability smoke PASSED');

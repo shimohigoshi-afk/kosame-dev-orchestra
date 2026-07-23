@@ -1244,83 +1244,7 @@ input:-webkit-autofill:focus {
 @media(min-width:640px){.risk-tab-row{grid-template-columns:repeat(auto-fit,minmax(0,1fr))}}
 @media(min-width:900px){.risk-tab-row{grid-template-columns:repeat(6,minmax(0,1fr))}}
 
-/* ═══ HANASAKU-LIFE CARD EXPAND (一体展開型カード) ═══ */
-.card-expand-inner{display:none}
-@media(hover:hover) and (pointer:fine){
-  .tool-card, .nav-card, .nav-card-core{
-    transition:transform 0.22s ease-out, border-color 0.22s ease-out, box-shadow 0.22s ease-out;
-    min-height:0!important;padding:6px 10px!important;overflow:visible!important;
-  }
-  .tool-card .tool-card-body, .nav-card .tool-card-body, .nav-card-core .tool-card-body{flex:1;min-width:0}
-  .tool-card .icon-ring, .nav-card .icon-ring, .nav-card-core .icon-ring,
-  .tool-card .nav-card-icon-wrap, .nav-card .nav-card-icon-wrap, .nav-card-core .nav-card-icon-wrap{
-    width:28px!important;height:28px!important;margin:0!important;
-  }
-  .tool-card .card-icon, .nav-card .card-icon, .nav-card-core .card-icon,
-  .tool-card .nav-card-icon, .nav-card .nav-card-icon, .nav-card-core .nav-card-icon{
-    width:16px!important;height:16px!important;
-  }
-  .tool-card .tool-card-title, .nav-card .tool-card-title, .nav-card-core .tool-card-title{
-    font-size:14px!important;margin-bottom:1px!important;
-  }
-  .tool-card .tool-card-subtitle, .nav-card .tool-card-subtitle, .nav-card-core .tool-card-subtitle{
-    font-size:10px!important;
-  }
-  .tool-card .card-visual, .nav-card .card-visual, .nav-card-core .card-visual{display:none!important}
-  .tool-card .card-watermark, .nav-card .card-watermark, .nav-card-core .card-watermark{display:none!important}
-  .tool-card .card-risk-badges, .nav-card .card-risk-badges, .nav-card-core .card-risk-badges{display:none!important}
-  .tool-card .card-arrow, .nav-card .card-arrow, .nav-card-core .card-arrow{display:none}
-  .tool-card .tool-card-desc, .nav-card .tool-card-desc, .nav-card-core .tool-card-desc{display:none}
-  .tool-card:hover, .nav-card:hover, .nav-card-core:hover,
-  .tool-card:focus-within, .nav-card:focus-within, .nav-card-core:focus-within{
-    transform:translateY(-2px);
-    border-color:rgba(212,188,125,0.75);
-    box-shadow:0 10px 30px rgba(0,0,0,0.35),0 0 24px rgba(212,188,125,0.10);
-  }
-  .card-expand-inner{
-    display:flex;align-items:flex-end;gap:14px;
-    max-height:0;overflow:hidden;opacity:0;
-    margin-top:0;padding-top:0;
-    border-top:0.5px solid transparent;
-    transition:max-height 0.22s ease-out, opacity 0.18s ease-out, margin-top 0.22s ease-out, padding-top 0.22s ease-out;
-    pointer-events:none;
-  }
-  .tool-card:hover .card-expand-inner, .nav-card:hover .card-expand-inner, .nav-card-core:hover .card-expand-inner,
-  .tool-card:focus-within .card-expand-inner, .nav-card:focus-within .card-expand-inner, .nav-card-core:focus-within .card-expand-inner{
-    max-height:130px;overflow:visible;opacity:1;
-    margin-top:8px;padding-top:8px;
-    border-color:rgba(212,188,125,0.12);
-  }
-  .ce-desc{
-    flex:1;min-width:0;font-size:11.5px;color:rgba(212,188,125,0.68);line-height:1.6;
-    letter-spacing:0.015em;
-  }
-  .ce-img-wrap{
-    flex:none;width:100px;height:75px;overflow:hidden;position:relative;
-    border-radius:6px;background:rgba(0,0,0,0.15);
-    opacity:0;transform:scale(0.92) translateY(4px);
-    transition:opacity 0.25s ease-out, transform 0.25s ease-out;
-  }
-  .ce-img-wrap img{
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:auto;height:auto;max-width:180%;max-height:180%;
-    object-fit:contain;
-  }
-  .tool-card:hover .ce-img-wrap, .nav-card:hover .ce-img-wrap, .nav-card-core:hover .ce-img-wrap,
-  .tool-card:focus-within .ce-img-wrap, .nav-card:focus-within .ce-img-wrap, .nav-card-core:focus-within .ce-img-wrap{
-    opacity:0.92;transform:scale(1) translateY(0);
-  }
-}
-@media(hover:none),(pointer:coarse){
-  .card-expand-inner{display:none!important}
-  .ce-img-wrap{display:none!important}
-}
-@media(prefers-reduced-motion:reduce){
-  .tool-card,.nav-card,.nav-card-core,.card-expand-inner,.ce-img-wrap{
-    transition:none!important;
-  }
-  .tool-card:hover,.nav-card:hover,.nav-card-core:hover{transform:none!important}
-}
+/* Card detail behavior is defined once in HANASAKU-LIFE CARD EXPAND v2 below. */
 
 /* 住宅ローン基本計算 UX(1項目1行 + トグル + プリセットチップ) */
 .mrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -1508,21 +1432,17 @@ canvas{display:block;width:100%;border-radius:8px}
 /* ═══ HANASAKU-LIFE CARD EXPAND v2 ═══ */
 .card-expand-inner{display:none}
 @media(hover:hover) and (pointer:fine){
-  .nav-cards,.tool-cards-row{align-items:start!important}
+  .nav-cards,.tool-cards-row{align-items:stretch!important}
   .tool-card, .nav-card, .nav-card-core{
     min-height:60px!important;padding:8px 14px!important;overflow:visible!important;
-    display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:wrap!important;
+    display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;
     transition:transform 0.22s ease-out, border-color 0.22s ease-out, box-shadow 0.22s ease-out;
+    isolation:isolate;
   }
   .tool-cards-row.cols-1 .tool-card, .tool-card.primary{
     flex-wrap:nowrap!important;
     padding:8px 14px!important;
   }
-  .tool-cards-row.cols-1 .tool-card:hover, .tool-card.primary:hover,
-  .tool-cards-row.cols-1 .tool-card:focus-within, .tool-card.primary:focus-within{
-    flex-wrap:wrap!important;
-  }
-  .card-expand-inner{flex-basis:100%!important;width:100%!important}
   .tool-card.primary, .nav-card-core.primary{min-height:60px!important;padding:8px 14px!important;display:flex!important}
   .tool-cards-row.cols-1 .tool-card{min-height:60px!important;display:flex!important}
   #sales-support-content .tool-card{min-height:60px!important}
@@ -1541,30 +1461,50 @@ canvas{display:block;width:100%;border-radius:8px}
   .tool-card .card-risk-badges, .nav-card .card-risk-badges, .nav-card-core .card-risk-badges{display:none!important}
   .tool-card .card-arrow, .nav-card .card-arrow, .nav-card-core .card-arrow{display:none!important}
   .tool-card .tool-card-desc, .nav-card .tool-card-desc, .nav-card-core .tool-card-desc{display:none!important}
-  .tool-card .tool-card-body, .nav-card .tool-card-body, .nav-card-core .tool-card-body{max-width:none!important}
+  .tool-card .tool-card-body, .nav-card .tool-card-body, .nav-card-core .tool-card-body{
+    flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;
+    writing-mode:horizontal-tb!important;
+  }
+  .tool-cards-row.cols-1 .tool-card .tool-card-body, .tool-card.primary .tool-card-body{
+    flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  }
+  .tool-card :is(.tool-card-title,.tool-card-subtitle,.tool-card-desc,.tool-card-note),
+  .nav-card :is(.tool-card-title,.tool-card-subtitle,.tool-card-desc,.tool-card-note),
+  .nav-card-core :is(.tool-card-title,.tool-card-subtitle,.tool-card-desc,.tool-card-note){
+    writing-mode:horizontal-tb!important;
+    white-space:normal!important;
+    word-break:keep-all!important;
+    overflow-wrap:break-word!important;
+  }
   .tool-card:hover, .nav-card:hover, .nav-card-core:hover,
   .tool-card:focus-within, .nav-card:focus-within, .nav-card-core:focus-within{
     transform:translateY(-2px);
     border-color:rgba(212,188,125,0.75);
     box-shadow:0 10px 30px rgba(0,0,0,0.35),0 0 24px rgba(212,188,125,0.10);
+    z-index:20;
   }
   .card-expand-inner{
+    position:absolute!important;z-index:30;
+    top:calc(100% + 6px);left:0;width:100%;
     display:flex;align-items:flex-end;gap:14px;
-    max-height:0;overflow:hidden;opacity:0;
-    margin-top:0;padding-top:0;
-    border-top:0.5px solid transparent;
-    transition:max-height 0.22s ease-out, opacity 0.18s ease-out, margin-top 0.22s ease-out, padding-top 0.22s ease-out;
+    padding:12px 14px;
+    overflow:visible;opacity:0;visibility:hidden;
+    transform:translateY(-5px);
+    background:#07172a;
+    border:0.5px solid rgba(212,188,125,0.28);
+    border-radius:8px;
+    box-shadow:0 14px 30px rgba(0,0,0,0.42);
+    transition:opacity 0.18s ease-out, transform 0.22s ease-out, visibility 0s linear 0.22s;
     pointer-events:none;
   }
-.tool-card:hover .card-expand-inner, .nav-card:hover .card-expand-inner, .nav-card-core:hover .card-expand-inner,
-.tool-card:focus-within .card-expand-inner, .nav-card:focus-within .card-expand-inner, .nav-card-core:focus-within .card-expand-inner{
-  max-height:200px;overflow:visible;opacity:1;
-  margin-top:8px;padding-top:8px;
-  border-color:rgba(212,188,125,0.12);
-}
-.ce-desc{flex:1;min-width:0;font-size:12px;color:rgba(212,188,125,0.72);line-height:1.65;letter-spacing:0.015em}
-.ce-img-wrap{flex:none;width:105px;height:95px;overflow:hidden;position:relative;border-radius:6px;background:rgba(0,0,0,0.15);opacity:0;transform:scale(0.92) translateY(4px);transition:opacity 0.25s ease-out, transform 0.25s ease-out}
-.ce-img-wrap img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:auto;height:auto;max-width:200%;max-height:200%;object-fit:contain}
+  .tool-card:hover .card-expand-inner, .nav-card:hover .card-expand-inner, .nav-card-core:hover .card-expand-inner,
+  .tool-card:focus-within .card-expand-inner, .nav-card:focus-within .card-expand-inner, .nav-card-core:focus-within .card-expand-inner{
+    opacity:1;visibility:visible;transform:translateY(0);
+    transition-delay:0s;
+  }
+  .ce-desc{flex:1;min-width:0;font-size:12px;color:rgba(235,224,194,0.78);line-height:1.65;letter-spacing:0.015em}
+  .ce-img-wrap{flex:none;width:105px;height:95px;overflow:hidden;position:relative;border-radius:6px;background:rgba(0,0,0,0.15);opacity:0;transform:scale(0.92) translateY(4px);transition:opacity 0.25s ease-out, transform 0.25s ease-out}
+  .ce-img-wrap img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:auto;height:auto;max-width:200%;max-height:200%;object-fit:contain}
   .tool-card:hover .ce-img-wrap, .nav-card:hover .ce-img-wrap, .nav-card-core:hover .ce-img-wrap,
   .tool-card:focus-within .ce-img-wrap, .nav-card:focus-within .ce-img-wrap, .nav-card-core:focus-within .ce-img-wrap{opacity:0.92;transform:scale(1) translateY(0)}
 }
@@ -1575,6 +1515,18 @@ canvas{display:block;width:100%;border-radius:8px}
 @media(prefers-reduced-motion:reduce){
   .tool-card,.nav-card,.nav-card-core,.card-expand-inner,.ce-img-wrap{transition:none!important}
   .tool-card:hover,.nav-card:hover,.nav-card-core:hover{transform:none!important}
+}
+
+/* Dashboard navy hierarchy: near-black canvas → deep section → distinct navy card. */
+body{background:#010711}
+#section-dashboard .section-box{background:#051326!important;border-color:rgba(212,188,125,0.20)}
+#section-dashboard .section-label{background:#051326!important}
+#section-dashboard .tool-card,
+#section-dashboard .nav-card,
+#section-dashboard .nav-card-core{
+  background:#0a1b31!important;
+  border-color:rgba(212,188,125,0.30)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.015),0 8px 24px rgba(0,0,0,0.30)!important;
 }
 
 /* ═══ LIFE & TAX PLANNING (匿名ライフプラン / 教育資金の目安 / 税・相続概算) 専用 ═══ */
@@ -3825,7 +3777,7 @@ button:disabled,[aria-disabled="true"]{opacity:.48;cursor:not-allowed;filter:sat
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-22-ui-master-d';
+var KOSAME_BUILD_ID = 'build 2026-07-23-ui-hotfix-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */

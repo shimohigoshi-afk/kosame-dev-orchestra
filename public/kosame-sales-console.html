@@ -2126,6 +2126,119 @@ body:has(#section-dashboard.active){background:#e7e5e0}
   #section-dashboard .tool-card-title,#section-dashboard .nav-card-title{min-height:auto}
   #land-results>.land-detail-grid{grid-template-columns:minmax(0,1fr)!important}
 }
+/* ═══ UI BALANCE FINAL — role-sized brand marks / symmetric cards / warm greige ═══ */
+:root{
+  --kosame-warm-canvas:#ece8e1;
+  --kosame-section:#f1eee8;
+  --kosame-ivory:#fbfaf6;
+  --kosame-ink:#172433;
+  --kosame-muted:#66717b;
+  --kosame-shell-navy:#0b1724;
+  --kosame-accent:#b79b5b;
+  --kosame-soft-line:rgba(23,36,51,.16);
+}
+body,body:has(#section-dashboard.active){background:var(--kosame-warm-canvas)}
+#section-dashboard::before{background:var(--kosame-warm-canvas)}
+
+/* Login mark is the hero; the header mark is a compact signature. */
+#auth-overlay .auth-box{max-width:480px;padding:30px 54px 30px}
+#auth-overlay .auth-logo{gap:3px;margin-bottom:18px}
+#auth-overlay .auth-logo-lockup{width:min(340px,86%)}
+#auth-overlay .auth-lockup-umbrella-wrap{height:208px;margin-bottom:-22px}
+#auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:210px}
+#auth-overlay .auth-lockup-text{gap:6px}
+.topbar{min-height:88px;padding:0 28px;background:var(--kosame-shell-navy)}
+.topbar-left{gap:13px}
+.topbar-logo-wrap{width:72px;height:72px;flex:0 0 72px}
+.topbar-logo-wrap .kosame-header-animation{width:68px;height:72px}
+.topbar-logo-wrap .kosame-brand-icon-box{font-size:72px}
+.topbar-brand{gap:2px;justify-content:center}
+.tbg{line-height:1.12}.tbs{line-height:1.2}
+
+/* Three-up standard rows, symmetric two-up rows, and true full-width features. */
+#section-dashboard{max-width:1480px;color:var(--kosame-ink)}
+#section-dashboard .card-group{margin-bottom:32px}
+#section-dashboard .section-label{margin-bottom:14px}
+#section-dashboard .section-label::after{width:24px;height:3px;background:var(--kosame-accent)}
+#section-dashboard :is(.nav-cards,.nav-cards-3col,.tool-cards-row.cols-3,.tool-cards-row.cols-5){
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:16px
+}
+#section-dashboard .tool-cards-row.cols-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#section-dashboard .tool-cards-row.cols-1{grid-template-columns:minmax(0,1fr)}
+#section-dashboard .tool-cards-row.cols-1>.tool-card{grid-column:1/-1}
+#section-dashboard .tool-card,#section-dashboard .nav-card,#section-dashboard .nav-card-core{
+  min-height:132px!important;padding:19px 20px!important;
+  color:var(--kosame-ink)!important;background:var(--kosame-ivory)!important;
+  border:1px solid var(--kosame-soft-line)!important;
+  box-shadow:0 5px 16px rgba(23,36,51,.055)!important;
+  transform:none!important;
+}
+#section-dashboard .tool-card.primary,#section-dashboard .nav-card-core.primary{
+  background:var(--kosame-ivory)!important;border-color:var(--kosame-soft-line)!important;
+}
+#section-dashboard .tool-card:hover,#section-dashboard .nav-card:hover,#section-dashboard .nav-card-core:hover,
+#section-dashboard .tool-card:focus-visible,#section-dashboard .nav-card:focus-visible,#section-dashboard .nav-card-core:focus-visible{
+  background:var(--kosame-ivory)!important;border-color:var(--kosame-accent)!important;
+  box-shadow:0 12px 28px rgba(23,36,51,.12)!important;transform:none!important;
+}
+#section-dashboard .tool-card:active,#section-dashboard .nav-card:active,#section-dashboard .nav-card-core:active,
+#section-dashboard :is(.tool-card,.nav-card,.nav-card-core)[aria-selected="true"]{
+  background:#f4ecd9!important;border-color:var(--kosame-accent)!important;color:var(--kosame-shell-navy)!important;
+}
+#section-dashboard .tool-card[aria-selected="true"],#section-dashboard .nav-card[aria-selected="true"],
+#section-dashboard .nav-card-core[aria-selected="true"]{
+  background:#f4ecd9!important;border-color:var(--kosame-accent)!important;color:var(--kosame-shell-navy)!important;
+}
+#section-dashboard .tool-card[aria-selected="true"]:hover,#section-dashboard .nav-card[aria-selected="true"]:hover,
+#section-dashboard .nav-card-core[aria-selected="true"]:hover{background:#f4ecd9!important}
+#section-dashboard .tool-cards-row.cols-1 .tool-card{
+  min-height:154px!important;padding:24px 88px 24px 24px!important
+}
+#section-dashboard .tool-cards-row.cols-1 .tool-card-body{max-width:58%!important}
+#section-dashboard .tool-cards-row.cols-1 .card-visual{
+  display:flex!important;right:54px!important;width:32%!important;height:124px!important
+}
+#section-dashboard .tool-cards-row.cols-1 .card-arrow{right:20px!important}
+#section-dashboard .card-visual::after{right:3px;bottom:3px;width:20px;transition:width 180ms ease}
+#section-dashboard .tool-card:hover .card-visual::after{width:32px}
+#section-dashboard .tool-card-title,#section-dashboard .nav-card-title{color:var(--kosame-ink)!important}
+#section-dashboard .tool-card-subtitle,#section-dashboard .tool-card-note{color:var(--kosame-muted)!important}
+#section-dashboard .tool-card-desc,#section-dashboard .privacy-notice-text{color:var(--kosame-muted)!important}
+
+/* Workspace shell uses the same four surfaces as Dashboard. */
+.workspace-panel{background:rgba(74,70,64,.42)!important}
+.workspace-box,.board-panel,.memo-panel,.cmemo-panel,.calc-panel,
+.ws-body,.board-body{background:var(--kosame-warm-canvas)!important;color:var(--kosame-ink)!important}
+.ws-header,.board-header{background:var(--kosame-shell-navy)!important}
+#ws-body :is(.card,.lp-card,.lp-group,.ed-child-card,.result-box,.placeholder-block,.ins-result-card,.lp-kpi),
+.board-body :is(.card,.section-box){background:var(--kosame-ivory)!important;border-color:var(--kosame-soft-line)!important}
+
+@media(max-width:899px) and (min-width:621px){
+  #section-dashboard :is(.nav-cards,.nav-cards-3col,.tool-cards-row.cols-2,.tool-cards-row.cols-3,.tool-cards-row.cols-5){
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+}
+@media(max-width:767px){
+  #auth-overlay{align-items:flex-start;padding:10px}
+  #auth-overlay .auth-box{width:min(100%,390px);padding:18px 18px 18px;margin:auto}
+  #auth-overlay .auth-logo{gap:2px;margin-bottom:12px}
+  #auth-overlay .auth-logo-lockup{width:min(286px,82%)}
+  #auth-overlay .auth-lockup-umbrella-wrap{height:145px;margin-bottom:-18px}
+  #auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:148px}
+  .topbar{min-height:72px;padding:0 16px}
+  .topbar-logo-wrap{width:54px;height:54px;flex-basis:54px}
+  .topbar-logo-wrap .kosame-header-animation{width:51px;height:54px}
+  .topbar-logo-wrap .kosame-brand-icon-box{font-size:54px}
+}
+@media(max-width:620px){
+  #section-dashboard :is(.nav-cards,.nav-cards-3col,.tool-cards-row.cols-2,.tool-cards-row.cols-3,.tool-cards-row.cols-5){
+    grid-template-columns:minmax(0,1fr);gap:12px
+  }
+  #section-dashboard .tool-cards-row.cols-1 .tool-card{min-height:118px!important;padding:16px 48px 16px 16px!important}
+  #section-dashboard .tool-cards-row.cols-1 .tool-card-body{max-width:calc(100% - 2px)!important}
+  #section-dashboard .tool-cards-row.cols-1 .card-visual{display:none!important}
+  #section-dashboard .tool-cards-row.cols-1 .card-arrow{right:15px!important}
+}
 </style>
 </head>
 <body>
@@ -2312,6 +2425,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
               <div class="card-risk-badges" aria-hidden="true">
                 <span class="risk-badge">死亡</span><span class="risk-badge">障害</span><span class="risk-badge">介護</span><span class="risk-badge">医療</span><span class="risk-badge">三大疾病</span><span class="risk-badge">老後</span>
               </div>
+              <div class="card-visual" aria-hidden="true"><img class="card-visual-img" src="assets/sales-console/cards/required-coverage.png" alt=""></div>
               <div class="card-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
             </div>
           </div>
@@ -4130,7 +4244,7 @@ body:has(#section-dashboard.active){background:#e7e5e0}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-24-ui-polish-pass-a';
+var KOSAME_BUILD_ID = 'build 2026-07-24-ui-balance-final-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */

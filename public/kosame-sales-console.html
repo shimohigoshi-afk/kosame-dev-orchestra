@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOSAME Sales Console</title>
-<link rel="icon" href="kosame-icon.svg" type="image/svg+xml">
+<link rel="icon" type="image/svg+xml" href="assets/sales-console/brand/kosame-favicon.svg?v=20260724a">
+<link rel="shortcut icon" href="assets/sales-console/brand/kosame-favicon.svg?v=20260724a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2142,16 +2143,16 @@ body,body:has(#section-dashboard.active){background:var(--kosame-warm-canvas)}
 
 /* Login mark is the hero; the header mark is a compact signature. */
 #auth-overlay .auth-box{max-width:480px;padding:30px 54px 30px}
-#auth-overlay .auth-logo{gap:3px;margin-bottom:18px}
+#auth-overlay .auth-logo{gap:1px;margin-bottom:14px}
 #auth-overlay .auth-logo-lockup{width:min(340px,86%)}
-#auth-overlay .auth-lockup-umbrella-wrap{height:208px;margin-bottom:-22px}
-#auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:210px}
+#auth-overlay .auth-lockup-umbrella-wrap{height:208px;margin-bottom:-38px}
+#auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:256px}
 #auth-overlay .auth-lockup-text{gap:6px}
 .topbar{min-height:88px;padding:0 28px;background:var(--kosame-shell-navy)}
 .topbar-left{gap:13px}
-.topbar-logo-wrap{width:72px;height:72px;flex:0 0 72px}
-.topbar-logo-wrap .kosame-header-animation{width:68px;height:72px}
-.topbar-logo-wrap .kosame-brand-icon-box{font-size:72px}
+.topbar-logo-wrap{width:56px;height:56px;flex:0 0 56px}
+.topbar-logo-wrap .kosame-header-animation{width:52px;height:56px}
+.topbar-logo-wrap .kosame-brand-icon-box{font-size:56px}
 .topbar-brand{gap:2px;justify-content:center}
 .tbg{line-height:1.12}.tbs{line-height:1.2}
 
@@ -2188,6 +2189,7 @@ body,body:has(#section-dashboard.active){background:var(--kosame-warm-canvas)}
 #section-dashboard .tool-card[aria-selected="true"],#section-dashboard .nav-card[aria-selected="true"],
 #section-dashboard .nav-card-core[aria-selected="true"]{
   background:#f4ecd9!important;border-color:var(--kosame-accent)!important;color:var(--kosame-shell-navy)!important;
+  outline:1px solid var(--kosame-accent);outline-offset:2px;
 }
 #section-dashboard .tool-card[aria-selected="true"]:hover,#section-dashboard .nav-card[aria-selected="true"]:hover,
 #section-dashboard .nav-card-core[aria-selected="true"]:hover{background:#f4ecd9!important}
@@ -2221,14 +2223,14 @@ body,body:has(#section-dashboard.active){background:var(--kosame-warm-canvas)}
 @media(max-width:767px){
   #auth-overlay{align-items:flex-start;padding:10px}
   #auth-overlay .auth-box{width:min(100%,390px);padding:18px 18px 18px;margin:auto}
-  #auth-overlay .auth-logo{gap:2px;margin-bottom:12px}
-  #auth-overlay .auth-logo-lockup{width:min(286px,82%)}
-  #auth-overlay .auth-lockup-umbrella-wrap{height:145px;margin-bottom:-18px}
-  #auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:148px}
+  #auth-overlay .auth-logo{gap:1px;margin-bottom:9px}
+  #auth-overlay .auth-logo-lockup{width:min(300px,86%)}
+  #auth-overlay .auth-lockup-umbrella-wrap{height:145px;margin-bottom:-30px}
+  #auth-overlay .auth-lockup-umbrella-svg{width:auto!important;height:181px}
   .topbar{min-height:72px;padding:0 16px}
-  .topbar-logo-wrap{width:54px;height:54px;flex-basis:54px}
-  .topbar-logo-wrap .kosame-header-animation{width:51px;height:54px}
-  .topbar-logo-wrap .kosame-brand-icon-box{font-size:54px}
+  .topbar-logo-wrap{width:44px;height:44px;flex-basis:44px}
+  .topbar-logo-wrap .kosame-header-animation{width:41px;height:44px}
+  .topbar-logo-wrap .kosame-brand-icon-box{font-size:44px}
 }
 @media(max-width:620px){
   #section-dashboard :is(.nav-cards,.nav-cards-3col,.tool-cards-row.cols-2,.tool-cards-row.cols-3,.tool-cards-row.cols-5){
@@ -4244,7 +4246,7 @@ body,body:has(#section-dashboard.active){background:var(--kosame-warm-canvas)}
    ダッシュボードのステータス行と、手書きボード/面談メモ/計算メモの別ウィンドウ
    フッターに同じ値を表示し、古いコードが表示されている事故をすぐ検出できる
    ようにするための唯一の情報源。 */
-var KOSAME_BUILD_ID = 'build 2026-07-24-ui-balance-final-a';
+var KOSAME_BUILD_ID = 'build 2026-07-24-ui-balance-favicon-a';
 document.addEventListener('DOMContentLoaded', function() { var el = document.getElementById('kd-build-tag'); if (el) { el.textContent = KOSAME_BUILD_ID; } });
 
 /* ═══ LINE Contact ═══ */
